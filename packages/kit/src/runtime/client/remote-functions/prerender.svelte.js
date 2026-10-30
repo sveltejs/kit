@@ -2,7 +2,8 @@
 import { app_dir, base } from '#app/paths';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
-import { app, _goto, handle_error, prerender_responses } from '../client.js';
+import { prerender_responses } from '../client.js';
+import { on_remote_reset, remote_env, reset_generation } from '#internal/remote-env';
 import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
@@ -32,11 +33,18 @@ const prerender_cache_ready = (async () => {
 })();
 
 /**
+ * Cache API writes that have not finished yet. `reset_remote_state` waits for them
+ * before it clears the cache, so that none of them can land after the reset
+ * @type {Set<Promise<void>>}
+ */
+const pending_puts = new Set();
+
+/**
  * @param {string} url
  * @param {string} encoded
  */
 function put(url, encoded) {
-	return /** @type {Cache} */ (prerender_cache)
+	const promise = /** @type {Cache} */ (prerender_cache)
 		.put(
 			url,
 			// We need to create a new response because the original response is already consumed
@@ -48,7 +56,11 @@ function put(url, encoded) {
 		)
 		.catch(() => {
 			// Nothing we can do here
-		});
+		})
+		.finally(() => pending_puts.delete(promise));
+
+	pending_puts.add(promise);
+	return promise;
 }
 
 /**
@@ -64,6 +76,8 @@ export function prerender(id) {
 
 		if (!resource) {
 			resource = new Prerender(async () => {
+				const generation = reset_generation;
+
 				await prerender_cache_ready;
 
 				const url = `${base}/${app_dir}/remote/${id}${payload ? `/${payload}` : ''}`;
@@ -71,8 +85,8 @@ export function prerender(id) {
 				if (Object.hasOwn(prerender_responses, cache_key)) {
 					const data = unwrap_node(prerender_responses[cache_key]);
 
-					if (prerender_cache) {
-						void put(url, devalue.stringify(data, app.encoders));
+					if (prerender_cache && generation === reset_generation) {
+						void put(url, devalue.stringify(data, remote_env.encoders));
 					}
 
 					return data;
@@ -89,7 +103,7 @@ export function prerender(id) {
 
 						if (cached_response) {
 							const cached_result = await cached_response.text();
-							return devalue.parse(cached_result, app.decoders);
+							return devalue.parse(cached_result, remote_env.decoders);
 						}
 					} catch {
 						void prerender_cache.delete(url);
@@ -100,15 +114,16 @@ export function prerender(id) {
 
 				if (result.redirect) {
 					// Use internal version to allow redirects to external URLs
-					await _goto(result.redirect);
+					await remote_env.goto(result.redirect);
 					return;
 				}
 
 				const data = result._;
 
-				// For successful prerender requests, save to cache
-				if (prerender_cache) {
-					void put(url, devalue.stringify(data, app.encoders));
+				// For successful prerender requests, save to cache, unless a reset
+				// happened in the meantime and the next reader expects an empty cache
+				if (prerender_cache && generation === reset_generation) {
+					void put(url, devalue.stringify(data, remote_env.encoders));
 				}
 
 				return data;
@@ -124,6 +139,19 @@ export function prerender(id) {
 
 /** @type {Map<string, WeakRef<Prerender<any>>>} */
 const prerender_resources = new Map();
+
+on_remote_reset(async () => {
+	prerender_resources.clear();
+
+	await prerender_cache_ready;
+	await Promise.all(pending_puts);
+
+	if (prerender_cache) {
+		const cache = prerender_cache;
+		const requests = await cache.keys();
+		await Promise.all(requests.map((request) => cache.delete(request)));
+	}
+});
 
 const prerender_resource_cleanup = new FinalizationRegistry((/** @type {string} */ cache_key) => {
 	const ref = prerender_resources.get(cache_key);
@@ -161,7 +189,7 @@ class Prerender {
 				return value;
 			},
 			async (e) => {
-				const error = await handle_error(e, {
+				const error = await remote_env.handle_error(e, {
 					params: {},
 					route: { id: null },
 					url: new URL(location.href)

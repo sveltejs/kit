@@ -1,6 +1,7 @@
 /** @import { RemoteQueryFunction } from '$app/server' */
 import { app_dir, base } from '#app/paths';
-import { _goto, query_map } from '../../client.js';
+import { query_map } from '../../client.js';
+import { remote_env } from '#internal/remote-env';
 import { QUERY_FUNCTION_ID, remote_request } from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { QueryProxy } from './proxy.js';
@@ -30,7 +31,7 @@ export function query(id) {
 
 			if (result.redirect) {
 				// Use internal version to allow redirects to external URLs
-				await _goto(result.redirect);
+				await remote_env.goto(result.redirect);
 			}
 		});
 	};

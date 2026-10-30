@@ -1,25 +1,21 @@
 import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { set_remote_env } from '@sveltejs/kit/internal/client';
 
 // Mock `client.js` — the real module pulls in the SvelteKit router/hydration
 // machinery and resolves `$app/paths` to a server-side virtual module that only
 // exists during a real SvelteKit build. We only need stubs for the names that
 // `shared.svelte.js` imports.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
-	app: { decoders: {} },
 	query_map: new Map(),
 	query_responses: {},
-	live_query_map: new Map(),
-	_goto: () => {}
+	live_query_map: new Map()
 }));
 
-// Mock `#app/state/client` — imports `navigating` and `page` which are reactive
-// Svelte state only available in a full SvelteKit runtime.
-vi.mock('#app/state/client', () => ({
-	navigating: { current: null },
+// `page` and `goto` would otherwise be installed by `start()`
+set_remote_env({
 	page: { url: new URL('http://localhost/') },
-	updated: { current: false, check: () => Promise.resolve(false) },
-	notify_version: () => {}
-}));
+	goto: () => Promise.resolve()
+});
 
 const { fail_unhandled_refreshes, remote_request, categorize_updates, QUERY_OVERRIDE_KEY } =
 	await import('./shared.svelte.js');

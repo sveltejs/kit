@@ -5,3 +5,6 @@ export const base = '';
 export const assets = '';
 export const app_dir = '_app';
 export const hash_routing = false;
+
+/** @param {(url: URL) => Promise<any>} _fn */
+export function set_match_implementation(_fn) {}

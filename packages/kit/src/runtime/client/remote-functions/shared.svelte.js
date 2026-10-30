@@ -2,11 +2,11 @@
 /** @import { RemoteQueryUpdate } from '$app/server' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
-import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
+import { live_query_map, query_map, query_responses } from '../client.js';
 import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
-import { navigating, page, notify_version } from '#app/state/client';
+import { remote_env, reset_generation } from '#internal/remote-env';
 import * as e from '../../../messages/client-errors.js';
 
 /** Indicates a query function, as opposed to a query instance */
@@ -98,7 +98,7 @@ export function get_remote_request_headers() {
 	// even in forks because it's state-based - therefore not using window.location.
 	// Use untrack(...) to Avoid accidental reactive dependency on pathname/search
 	return untrack(() => {
-		const url = navigating?.to?.url ?? page.url;
+		const url = remote_env.navigating?.to?.url ?? remote_env.page.url;
 
 		return {
 			'x-sveltekit-pathname': url.pathname,
@@ -113,11 +113,12 @@ export function get_remote_request_headers() {
  * @param {Set<string> | null} [refreshes]
  */
 export async function remote_request(url, init, refreshes) {
-	const response = await fetch(url, init);
+	const generation = reset_generation;
+	const response = await remote_env.fetch(url, init);
 	const status = response.status;
 
 	// detect new deployments from the response header
-	notify_version(response.headers.get('x-sveltekit-version'));
+	remote_env.notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
 		const result = await response.json().catch(() => undefined);
@@ -134,8 +135,16 @@ export async function remote_request(url, init, refreshes) {
 	}
 
 	const data = /** @type {RemoteFunctionData} */ (
-		result.data ? devalue.parse(result.data, app.decoders) : {}
+		result.data ? devalue.parse(result.data, remote_env.decoders) : {}
 	);
+
+	if (generation !== reset_generation) {
+		// `reset_remote_state` ran while this request was in flight, so the response belongs
+		// to components that are gone. Return only the result, without refreshing queries,
+		// failing requested updates or redirecting
+		refreshes?.clear();
+		return { _: data._ };
+	}
 
 	/**
 	 * @param {string} key
@@ -214,7 +223,7 @@ export function fail_unhandled_refreshes(refreshes) {
 export async function handle_side_channel_response(response) {
 	if (response.type === 'redirect') {
 		// Use internal version to allow redirects to external URLs
-		await _goto(response.location);
+		await remote_env.goto(response.location);
 		throw new Redirect(307, response.location);
 	}
 

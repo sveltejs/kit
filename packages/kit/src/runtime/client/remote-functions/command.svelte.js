@@ -9,6 +9,18 @@ import {
 	remote_request,
 	fail_unhandled_refreshes
 } from './shared.svelte.js';
+import { on_remote_reset, reset_generation } from '#internal/remote-env';
+
+/**
+ * Resets the pending count of each command, keyed by its id so that evaluating
+ * a remote module again replaces the entry instead of adding another
+ * @type {Map<string, () => void>}
+ */
+const command_resetters = new Map();
+
+on_remote_reset(() => {
+	for (const reset of command_resetters.values()) reset();
+});
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -18,6 +30,10 @@ import {
 export function command(id) {
 	/** @type {number} */
 	let pending_count = $state(0);
+
+	command_resetters.set(id, () => {
+		pending_count = 0;
+	});
 
 	// Careful: This function MUST be synchronous (can't use the async keyword) because the return type has to be a promise with an updates() method.
 	// If we make it async, the return type will be a promise that resolves to a promise with an updates() method, which is not what we want.
@@ -32,6 +48,8 @@ export function command(id) {
 		let updates_error;
 
 		// Increment pending count when command starts
+		// a call from before a reset must not decrement the count when it settles later
+		const generation = reset_generation;
 		pending_count++;
 
 		// No one should call commands during rendering, but this is belt and braces.
@@ -76,7 +94,7 @@ export function command(id) {
 						overrides?.forEach((fn) => fn());
 
 						// Decrement pending count when command completes
-						pending_count--;
+						if (generation === reset_generation) pending_count--;
 					}
 				})()
 			);
