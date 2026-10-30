@@ -1,7 +1,7 @@
 /** @import { RemoteCommand } from '$app/server' */
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
-import { get_request_store } from '@sveltejs/kit/internal/server';
+import { get_request_store, COMMAND } from '@sveltejs/kit/internal/server';
 import { create_validator, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
 import * as e from '../../../../messages/server-errors.js';
@@ -65,24 +65,21 @@ export function command(validate_or_fn, maybe_fn) {
 	/** @type {RemoteCommand<Input, Output> & { __: RemoteCommandInternals }} */
 	const wrapper = (arg) => {
 		const { event, state } = get_request_store();
+		const nested = event.in_query || event.in_prerender;
 
-		if (
-			!MUTATIVE_METHODS.includes(event.request.method) ||
-			state.is_in_remote_query ||
-			state.is_in_remote_prerender
-		) {
-			if (state.is_in_remote_query || state.is_in_remote_prerender) {
+		if (nested || !MUTATIVE_METHODS.includes(event.request.method)) {
+			if (nested) {
 				e.remote_command_readonly({ name: __.name });
 			}
 			e.remote_command_method({ name: __.name, method: event.request.method });
 		}
 
-		if (state.is_in_render) {
+		if (event.in_render) {
 			e.remote_command_render({ name: __.name });
 		}
 
 		const promise = Promise.resolve(
-			run_remote_function(event, state, true, () => validate(arg), fn)
+			run_remote_function(event, state, COMMAND, () => validate(arg), fn)
 		);
 
 		// @ts-expect-error

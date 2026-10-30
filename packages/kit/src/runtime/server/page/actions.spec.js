@@ -1,8 +1,8 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState } from 'types' */
 import { expect, test, vi } from 'vitest';
 import { fail, redirect } from '@sveltejs/kit';
 import { ActionFailure } from '@sveltejs/kit/internal';
+import { RequestEvent } from '@sveltejs/kit/internal/server';
 import { init_transport } from '#app/internal/transport';
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
@@ -13,8 +13,8 @@ const { get_action_location, handle_action_request, uneval_action_response } =
 
 /** @param {string} [search] */
 function create_event(search = '') {
-	return /** @type {RequestEvent} */ (
-		/** @type {unknown} */ ({
+	return new RequestEvent(
+		/** @type {any} */ ({
 			request: new Request(`http://localhost/a${search}`, {
 				method: 'POST',
 				headers: { 'content-type': 'application/x-www-form-urlencoded' },
@@ -22,7 +22,8 @@ function create_event(search = '') {
 			}),
 			url: new URL(`http://localhost/a${search}`),
 			route: { id: '/a' }
-		})
+		}),
+		0
 	);
 }
 
