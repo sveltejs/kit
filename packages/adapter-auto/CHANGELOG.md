@@ -1,5 +1,13 @@
 # @sveltejs/adapter-auto
 
+## 8.0.1
+
+### Patch Changes
+
+- fix: apply the Vite config and plugins of the detected adapter ([#17572](https://github.com/sveltejs/kit/pull/17572))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.2
+
 ## 8.0.0
 
 ### Major Changes

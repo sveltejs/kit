@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 3.1.2
+
+### Patch Changes
+
+- fix: reject binary remote forms referencing files with an empty file-offset table as 400 Bad Request ([#17579](https://github.com/sveltejs/kit/pull/17579))
+
+- fix: correctly populate route and params for `afterNavigate` during hydration ([#17577](https://github.com/sveltejs/kit/pull/17577))
+
+- fix: include assets imported through dynamic imports, remote functions and param matchers in `builder.findServerAssets` so that `read` can find them ([#17505](https://github.com/sveltejs/kit/pull/17505))
+
+- fix: remove empty type output directories for removed routes ([#17472](https://github.com/sveltejs/kit/pull/17472))
+
+- fix: ignore the query string and hash of an imported asset's URL when using `read` ([#17507](https://github.com/sveltejs/kit/pull/17507))
+
 ## 3.1.1
 
 ### Patch Changes
