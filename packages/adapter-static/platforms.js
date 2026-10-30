@@ -105,8 +105,9 @@ function static_vercel_config(builder) {
 		if (trailing_slash === 'always' && path !== '/' && path.endsWith('/')) {
 			// Vercel ignores trailing slashes when looking up static files, and serves `foo/index.html`
 			// at `foo`, so we rename the page to stop `/foo` from matching it. That way, `/foo` is
-			// redirected after the filesystem phase, while the `miss` route serves the page for `/foo/`
-			overrides[page.file] = { path: page.file.replace(/index\.html$/, INDEX_FILE) };
+			// redirected after the filesystem phase, while the `miss` route serves the page for `/foo/`.
+			// Unlike `page.file`, the path includes the base, which is where the `miss` route looks
+			overrides[page.file] = { path: path.slice(1) + INDEX_FILE };
 			continue;
 		}
 

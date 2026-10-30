@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assert, beforeAll, test } from 'vitest';
-import { deploy } from '../../../../../test-utils/deploy.vitest.js';
+import { assert, beforeAll, describe, test } from 'vitest';
+import { build, deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 const output = path.join(app, '.vercel/output');
@@ -32,5 +32,20 @@ test('prerendered pages are renamed so that Vercel does not serve them without a
 		src: '^(/.+)/$',
 		dest: '$1/__index.html',
 		check: true
+	});
+});
+
+describe('with paths.base', () => {
+	beforeAll(() => {
+		build(app, { BASE_PATH: '/base' });
+		config = JSON.parse(fs.readFileSync(`${output}/config.json`, 'utf8'));
+	}, 60_000);
+
+	test('renamed prerendered pages are overridden at their location under the base', () => {
+		assert.ok(fs.existsSync(`${output}/static/base/prerendered/a/index.html`));
+		assert.deepEqual(config.overrides['base/prerendered/a/index.html'], {
+			path: 'base/prerendered/a/__index.html'
+		});
+		assert.equal(config.overrides['prerendered/a/index.html'], undefined);
 	});
 });
