@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { test } from '../../../../utils.js';
+import { test, variant } from '../../../../utils.js';
 import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -2685,7 +2685,7 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply reroute to preload data', async ({ page }) => {
-		if (process.env.SVELTE_ASYNC === 'true') return; // TODO investigate
+		if (variant === 'async') return; // TODO investigate
 		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
