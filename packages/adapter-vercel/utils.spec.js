@@ -110,12 +110,17 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test.each(['node18.x', 'nodejs028.x', 'nodejs18.x', 'nodejs23.x', 'nodejs25.x', 'nodejs100.x', 'nodejs2,.x'])(
-		'throws an error when resolving to an invalid runtime (%s)',
-		(runtime) => {
-			assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
-		}
-	);
+	test.each([
+		'node18.x',
+		'nodejs028.x',
+		'nodejs18.x',
+		'nodejs23.x',
+		'nodejs25.x',
+		'nodejs100.x',
+		'nodejs2,.x'
+	])('throws an error when resolving to an invalid runtime (%s)', (runtime) => {
+		assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
+	});
 
 	test('accepts a minor-pinned bun runtime', () => {
 		const result = resolve_runtime('bun1.4.x');
@@ -206,12 +211,15 @@ describe('resolve_runtime with node detected', () => {
 		});
 	});
 
-	test.each(['18.0.0', '23.0.0', '25.0.0'])('throws for an unsupported Node major (%s)', (version) => {
-		with_node(version, () => {
-			assert.throws(
-				() => resolve_runtime(undefined, undefined),
-				/Unsupported Node\.js version.*Please use Node 22, 24, or 26 and later to build your project/
-			);
-		});
-	});
+	test.each(['18.0.0', '23.0.0', '25.0.0'])(
+		'throws for an unsupported Node major (%s)',
+		(version) => {
+			with_node(version, () => {
+				assert.throws(
+					() => resolve_runtime(undefined, undefined),
+					/Unsupported Node\.js version.*Please use Node 22, 24, or 26 and later to build your project/
+				);
+			});
+		}
+	);
 });
