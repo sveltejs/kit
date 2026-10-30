@@ -3,10 +3,8 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 
 const als = new AsyncLocalStorage();
 
-const proxy = globalThis.__sveltekit_cloudflare_platform;
-
 function get_current_env() {
-	return als.getStore() ?? proxy?.env;
+	return als.getStore() ?? globalThis.__sveltekit_cloudflare_platform?.env;
 }
 
 /** @typedef {typeof CloudflareWorkersModule} Module */
@@ -15,7 +13,7 @@ export const env = new Proxy(
 	{},
 	{
 		get(_, prop) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -26,7 +24,7 @@ export const env = new Proxy(
 		},
 
 		set(_, prop, newValue) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -37,7 +35,7 @@ export const env = new Proxy(
 		},
 
 		has(_, prop) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -48,7 +46,7 @@ export const env = new Proxy(
 		},
 
 		ownKeys(_) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -59,7 +57,7 @@ export const env = new Proxy(
 		},
 
 		deleteProperty(_, prop) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -70,7 +68,7 @@ export const env = new Proxy(
 		},
 
 		defineProperty(_, prop, attr) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -81,7 +79,7 @@ export const env = new Proxy(
 		},
 
 		getOwnPropertyDescriptor(_, prop) {
-			if (!proxy) {
+			if (!globalThis.__sveltekit_cloudflare_platform) {
 				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 			}
 			const inner = get_current_env();
@@ -95,14 +93,14 @@ export const env = new Proxy(
 
 /** @type {Module['withEnv']} */
 export function withEnv(newEnv, fn) {
-	if (!proxy) {
+	if (!globalThis.__sveltekit_cloudflare_platform) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
 	return als.run(newEnv, fn);
 }
 /** @type {Module['withEnvAndExports']} */
 export function withEnvAndExports(newEnv, _, fn) {
-	if (!proxy) {
+	if (!globalThis.__sveltekit_cloudflare_platform) {
 		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
 	}
 	return als.run(newEnv, fn);
