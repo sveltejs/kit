@@ -27,7 +27,7 @@ const manifest = /** @type {SSRManifest} */ (
 						},
 						no_line: {
 							__: {
-								type: 'command',
+								type: 'query_batch',
 								name: 'no_line',
 								dev_loc: {
 									file: 'file:///tmp/file.js'
@@ -36,7 +36,7 @@ const manifest = /** @type {SSRManifest} */ (
 						},
 						no_loc: {
 							__: {
-								type: 'command',
+								type: 'form',
 								name: 'no_loc'
 							}
 						}
@@ -104,7 +104,7 @@ test('formats a remote function request with no location', async () => {
 		new Request('http://localhost:5173/_app/remote/abc123/no_loc?x=1', {}),
 		manifest
 	);
-	expect(stripVTControlCharacters(res)).toBe('200 GET remote: no_loc() ?x=1');
+	expect(stripVTControlCharacters(res)).toBe('200 ƒ form no_loc() ?x=1');
 });
 
 test('formats a remote function request with no line number', async () => {
@@ -113,7 +113,7 @@ test('formats a remote function request with no line number', async () => {
 		new Request('http://localhost:5173/_app/remote/abc123/no_line', {}),
 		manifest
 	);
-	expect(stripVTControlCharacters(res)).toBe('200 GET remote: no_line()');
+	expect(stripVTControlCharacters(res)).toBe('200 ƒ query.batch no_line()');
 	expect(res).toContain(';file:///tmp/file.js\u0007');
 });
 
@@ -123,7 +123,7 @@ test('formats a remote function request with a line number', async () => {
 		new Request('http://localhost:5173/_app/remote/abc123/my_query', {}),
 		manifest
 	);
-	expect(stripVTControlCharacters(res)).toBe('200 GET remote: my_query()');
+	expect(stripVTControlCharacters(res)).toBe('200 ƒ query my_query()');
 	expect(res).toContain(';file:///tmp/file.js#12\u0007');
 });
 

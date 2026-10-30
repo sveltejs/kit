@@ -115,6 +115,7 @@ export async function format_response(status, request, manifest) {
 			}
 			if (url.search) log += ' ' + styleText('dim', url.search);
 		} else {
+			log += `${request.method} `;
 			const [file_hash, name, arg_hash] = id.split('/');
 			log += styleText('dim', `${url.pathname.slice(0, -id.length)}${file_hash}/`) + name;
 			if (arg_hash) log += styleText('dim', `/${arg_hash}`);
