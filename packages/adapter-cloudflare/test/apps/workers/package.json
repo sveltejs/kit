@@ -15,6 +15,8 @@
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"cjs-dep": "file:cjs-dep",
+		"conditions-dep": "file:conditions-dep",
 		"server-side-dep": "file:server-side-dep",
 		"svelte": "catalog:",
 		"vite": "catalog:",

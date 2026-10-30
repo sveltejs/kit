@@ -31,6 +31,7 @@
 		"files/worker.js",
 		"index.js",
 		"utils.js",
+		"config.js",
 		"index.d.ts"
 	],
 	"scripts": {
@@ -43,10 +44,11 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@cloudflare/workers-types": "^5.20260925.1",
+		"@cloudflare/vite-plugin": "^1.50.0",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
+		"@cloudflare/workers-types": "^5.20260925.1",
 		"@playwright/test": "catalog:",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
