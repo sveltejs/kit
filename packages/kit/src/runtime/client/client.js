@@ -898,12 +898,6 @@ async function initialize(result, target, should_hydrate) {
 		nav
 	};
 
-	// Removes the style node we used to avoid FOUC during development
-	if (__SVELTEKIT_DEV__) {
-		const style = document.querySelector('style[data-sveltekit]');
-		if (style) style.remove();
-	}
-
 	apply_navigation_result(result);
 
 	// TODO treeshake `hydrate` in csr mode

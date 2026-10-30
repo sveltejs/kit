@@ -741,7 +741,7 @@ test.describe('Page options', () => {
 			expect(await page.textContent('h1')).toBe('content was rendered');
 		} else {
 			expect(await page.$('h1')).toBeNull();
-			expect(await page.$('style[data-sveltekit]')).toBeNull();
+			expect(await page.$('style[data-vite-dev-id]')).toBeNull();
 		}
 	});
 
