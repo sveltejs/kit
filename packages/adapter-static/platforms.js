@@ -19,6 +19,22 @@ function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// `decodeURI` leaves the escapes of these characters intact: ; / ? : @ & = + $ , #
+const RESERVED_ESCAPE = /(%(?:2[346BCF]|3[ABDF]|40))/i;
+
+/**
+ * Encodes a pathname decoded by `decodeURI` back into the form a browser requests it in,
+ * without encoding the escapes that `decodeURI` left intact a second time.
+ * This function is duplicated in adapter-vercel
+ * @param {string} pathname
+ */
+function encode_pathname(pathname) {
+	return pathname
+		.split(RESERVED_ESCAPE)
+		.map((part, i) => (i % 2 === 1 ? part : encodeURI(part)))
+		.join('');
+}
+
 // Vercel rejects routes whose `src` is longer than 4096 characters
 const MAX_SRC_LENGTH = 4000;
 
@@ -55,8 +71,8 @@ function trailing_slash_redirects(pathnames, trailing_slash) {
 	};
 
 	for (const pathname of pathnames) {
-		// Vercel matches against the encoded pathname, so we encode it the same way Kit does when prerendering
-		const alternative = escape_regex(encodeURI(pathname));
+		// Vercel matches against the encoded pathname, so we encode it the way a browser requests it
+		const alternative = escape_regex(encode_pathname(pathname));
 
 		if (length + alternative.length + 1 > MAX_SRC_LENGTH) flush();
 

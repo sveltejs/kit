@@ -1,6 +1,7 @@
 import process from 'node:process';
 import { assert, test, describe } from 'vitest';
 import {
+	encode_pathname,
 	escape_src,
 	get_uniform_trailing_slash,
 	parse_isr_expiration,
@@ -254,6 +255,22 @@ describe('get_uniform_trailing_slash', () => {
 	});
 });
 
+describe('encode_pathname', () => {
+	test('matches the pathname a browser requests for a pathname decoded by decodeURI', () => {
+		for (const url of [
+			'/a%23b',
+			'/a%3Fb',
+			'/a%2Fb',
+			'/a%40b%2Cc',
+			'/caf%C3%A9',
+			'/100%25',
+			'/a%20b'
+		]) {
+			assert.equal(encode_pathname(decodeURI(url)), url);
+		}
+	});
+});
+
 describe('trailing_slash_redirects', () => {
 	test('returns no routes for no pathnames', () => {
 		assert.deepEqual(trailing_slash_redirects([], false), []);
@@ -289,6 +306,17 @@ describe('trailing_slash_redirects', () => {
 		assert.ok(regex.test('/v1.2/'));
 		assert.ok(!regex.test('/v1x2/'));
 		assert.ok(regex.test('/a%20(b)/'));
+	});
+
+	test('does not encode reserved escapes left intact by decodeURI a second time', () => {
+		const pathnames = ['a%23b', 'a%3Fb', 'a%2Fb', 'a%2fb', '100%', 'café%23'];
+		const [route] = trailing_slash_redirects(pathnames, false);
+		assert.equal(route.src, '^/(a%23b|a%3Fb|a%2Fb|a%2fb|100%25|caf%C3%A9%23)/$');
+
+		const regex = new RegExp(route.src);
+		for (const url of ['/a%23b/', '/a%3Fb/', '/a%2Fb/', '/100%25/', '/caf%C3%A9%23/']) {
+			assert.ok(regex.test(url), url);
+		}
 	});
 
 	test('splits pathnames across routes when they exceed the maximum length', () => {
