@@ -51,7 +51,11 @@ export function image_plugin(imagetools_plugin) {
 			async handler(content, filename) {
 				const plugin_context = this;
 				const s = new MagicString(content);
-				const ast = parse(content, { filename, modern: true });
+				// This runs before preprocessing, so `<style>` blocks may still contain
+				// non-CSS (e.g. SCSS). We only need the markup, so blank out the style
+				// contents before parsing. Offsets are preserved and anything that touches
+				// the stylesheet reads it from the original `content`.
+				const ast = parse(blank_styles(content), { filename, modern: true });
 
 				/**
 				 * Import path to import name
@@ -221,6 +225,24 @@ export function image_plugin(imagetools_plugin) {
 		}
 	};
 	return plugin;
+}
+
+// Comments, `<script>` tags and `<style>` tags, using the same patterns as Svelte's `preprocess`.
+// Comments and scripts are matched so that `<style>` inside them is left alone.
+const COMMENTS_SCRIPTS_AND_STYLES =
+	/<!--[^]*?-->|<script(?:(?:\s+[^=>'"/\s]+=(?:"[^"]*"|'[^']*'|[^>\s]+)|\s+[^=>'"/\s]+)*\s*)(?:\/>|>[\S\s]*?<\/script>)|<style((?:\s+[^=>'"/\s]+=(?:"[^"]*"|'[^']*'|[^>\s]+)|\s+[^=>'"/\s]+)*\s*)(?:\/>|>([\S\s]*?)<\/style>)/g;
+
+/**
+ * Replaces the contents of `<style>` tags with whitespace, keeping line breaks
+ * so that all offsets stay the same.
+ * @param {string} content
+ */
+function blank_styles(content) {
+	return content.replace(COMMENTS_SCRIPTS_AND_STYLES, (match, _attributes, styles) => {
+		if (!styles) return match;
+		const start = match.length - '</style>'.length - styles.length;
+		return match.slice(0, start) + styles.replace(/[^\n]/g, ' ') + '</style>';
+	});
 }
 
 /**
