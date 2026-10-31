@@ -323,6 +323,7 @@ test.describe('Navigation lifecycle functions', () => {
 			'route: /navigation-lifecycle/after-navigate-enter/[slug]'
 		);
 		expect(await page.textContent('p')).toBe('params: {"slug":"x"}');
+		await expect(page.locator('pre')).toHaveText('null');
 	});
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
