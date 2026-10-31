@@ -1,7 +1,8 @@
 /* eslint-disable n/prefer-global/process */
-import { describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
-import { HandledHttpError, HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError, Redirect } from '@sveltejs/kit/internal';
+import { _goto } from '../client.js';
 
 // Mock `client.js` because the real one pulls in the SvelteKit
 // router/hydration machinery and resolves `$app/paths` to a server-side
@@ -14,7 +15,7 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, async () => {
 		query_responses: {},
 		live_query_map: new Map(),
 		prerender_responses: {},
-		_goto: () => {},
+		_goto: vi.fn(async () => {}),
 		handle_error: (/** @type {any} */ error) =>
 			Promise.resolve(
 				error instanceof HttpError
@@ -58,6 +59,27 @@ describe('reactive consumption never produces unhandled rejections', () => {
 			void q.current; // reactive read triggers start()
 			await flush();
 			expect(q.error).toEqual({ message: 'nope', status: 500 });
+			expect(tracker.unhandled).toEqual([]);
+		} finally {
+			tracker.stop();
+		}
+	});
+
+	test('Query.refresh whose returned promise is ignored', async () => {
+		const tracker = track_unhandled();
+		try {
+			const query = new Query('refresh-error', () => Promise.reject(new Error('nope')));
+			void query.refresh();
+			await flush();
+			expect(query.error).toEqual({ message: 'nope', status: 500 });
+			expect(tracker.unhandled).toEqual([]);
+
+			// Awaiting callers must still receive the failure.
+			await expect(query.refresh()).rejects.toMatchObject({
+				status: 500,
+				body: { message: 'nope' }
+			});
+			await flush();
 			expect(tracker.unhandled).toEqual([]);
 		} finally {
 			tracker.stop();
@@ -129,6 +151,86 @@ describe('Query errors', () => {
 			status: 503,
 			body: { message: 'unavailable' }
 		});
+	});
+});
+
+describe('Query redirects', () => {
+	beforeEach(() => {
+		vi.mocked(_goto).mockClear();
+	});
+
+	test('replays cached redirects for awaited and reactive consumers', async () => {
+		const fn = vi.fn(
+			/** @returns {Promise<string>} */ () => Promise.reject(new Redirect(307, '/target'))
+		);
+		const query = new Query('redirect', fn);
+
+		const rejected = vi.fn();
+		const finalized = vi.fn();
+		const consumers = [
+			() => Promise.resolve(query),
+			() => query.catch(rejected),
+			() => query.finally(finalized)
+		];
+
+		for (let i = 0; i < consumers.length; i++) {
+			await expect(consumers[i]()).resolves.toBeUndefined();
+			await flush();
+			expect(_goto).toHaveBeenCalledTimes(i + 1);
+		}
+		expect(rejected).not.toHaveBeenCalled();
+		expect(finalized).toHaveBeenCalledTimes(1);
+
+		void query.current;
+		await flush();
+		expect(_goto).toHaveBeenCalledTimes(4);
+		expect(_goto).toHaveBeenLastCalledWith('/target');
+		expect(fn).toHaveBeenCalledTimes(1);
+
+		query.set('updated');
+		await expect(Promise.resolve(query)).resolves.toBe('updated');
+		await flush();
+		expect(_goto).toHaveBeenCalledTimes(4);
+	});
+
+	test('shares navigation between consumers of a batched redirect', async () => {
+		const redirect = new Redirect(307, '/target');
+		const first = new Query('batch-a', () => Promise.reject(redirect));
+		const second = new Query('batch-b', () => Promise.reject(redirect));
+
+		await expect(Promise.all([first, second, first])).resolves.toEqual([
+			undefined,
+			undefined,
+			undefined
+		]);
+		await flush();
+		expect(_goto).toHaveBeenCalledTimes(1);
+	});
+
+	test('a redirect from a newer run also redirects superseded awaiters', async () => {
+		const first = Promise.withResolvers();
+		const second = Promise.withResolvers();
+		let runs = 0;
+		const query = new Query('redirect-overlap', () =>
+			runs++ === 0 ? first.promise : second.promise
+		);
+
+		const first_result = Promise.resolve(query);
+		await tick();
+		const second_result = query.refresh();
+		second.reject(new Redirect(307, '/target'));
+
+		await expect(Promise.all([first_result, second_result])).resolves.toEqual([
+			undefined,
+			undefined
+		]);
+		await flush();
+		expect(_goto).toHaveBeenCalledTimes(1);
+
+		first.resolve('stale');
+		await flush();
+		await expect(Promise.resolve(query)).resolves.toBeUndefined();
+		expect(_goto).toHaveBeenCalledTimes(2);
 	});
 });
 

@@ -1,10 +1,13 @@
 /** @import { HttpError } from '@sveltejs/kit' */
-import { query_responses, handle_error } from '../../client.js';
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { _goto, query_responses, handle_error } from '../../client.js';
+import { HandledHttpError, Redirect } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
+
+/** @type {WeakMap<Redirect, Promise<void>>} */
+const redirects = new WeakMap();
 
 /**
  * The actual query instance. There should only ever be one active query instance per key.
@@ -19,7 +22,7 @@ export class Query {
 	/** @type {() => Promise<T>} */
 	#fn;
 	#loading = $state(true);
-	/** @type {Array<(value: undefined) => void>} */
+	/** @type {Array<{ resolve: (value: undefined) => void, reject: (reason: any) => void }>} */
 	#latest = [];
 
 	/** @type {boolean} */
@@ -49,15 +52,22 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => {
-				if (!this.#ready) {
-					throw new HandledHttpError(
-						this.#error ?? { status: 500, message: 'Query resolved without a value' }
-					);
-				}
+			const result = p.then(tick).then(
+				() => {
+					if (!this.#ready) {
+						throw new HandledHttpError(
+							this.#error ?? { status: 500, message: 'Query resolved without a value' }
+						);
+					}
 
-				return /** @type {T} */ (this.#current);
-			});
+					return /** @type {T} */ (this.#current);
+				},
+				async (error) => {
+					if (!(error instanceof Redirect)) throw error;
+					await this.#redirect(error);
+					return /** @type {T} */ (undefined);
+				}
+			);
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -92,18 +102,40 @@ export class Query {
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
-	start() {
+	/** @param {Redirect} redirect */
+	#redirect(redirect) {
+		// A redirect is not query data. Replay it for cached consumers, while sharing
+		// the navigation between concurrent consumers, including batched queries.
+		let promise = redirects.get(redirect);
+
+		if (!promise) {
+			// Defer navigation so all consumers can share it, even if it settles immediately.
+			// Use the internal version to allow redirects to external URLs.
+			promise = tick()
+				.then(() => _goto(redirect.location))
+				.finally(() => redirects.delete(redirect));
+			redirects.set(redirect, promise);
+		}
+
+		return promise;
+	}
+
+	// Awaited consumers handle redirects in #then; reactive reads handle them here.
+	start(handle_redirect = true) {
 		// there is a really weird bug with untrack and writes and initializations
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version
 		// if they do, congrats, you can remove tick.then
 		void tick()
 			.then(() => this.#get_promise())
+			.catch((error) => {
+				if (handle_redirect && error instanceof Redirect) return this.#redirect(error);
+			})
 			.catch(noop);
 	}
 
 	#clear_pending() {
-		this.#latest.forEach((r) => r(undefined));
+		this.#latest.forEach((r) => r.resolve(undefined));
 		this.#latest.length = 0;
 	}
 
@@ -117,17 +149,18 @@ export class Query {
 		// so make sure the stored promise can never become an unhandled rejection
 		promise.catch(noop);
 
-		this.#latest.push(resolve);
+		const request = { resolve, reject };
+		this.#latest.push(request);
 
 		Promise.resolve(this.#fn())
 			.then((value) => {
 				// Skip the response if resource was refreshed with a later promise while we were waiting for this one to resolve
-				const idx = this.#latest.indexOf(resolve);
+				const idx = this.#latest.indexOf(request);
 				if (idx === -1) return;
 
 				// Untrack this to not trigger mutation validation errors which can occur if you do e.g. $derived({ a: await queryA(), b: await queryB() })
 				untrack(() => {
-					this.#latest.splice(0, idx + 1).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx + 1).forEach((r) => r.resolve(undefined));
 					this.#ready = true;
 					this.#loading = false;
 					this.#raw = value;
@@ -136,11 +169,18 @@ export class Query {
 			})
 			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
-				// - We should not reject on redirects, but should hook into the router
-				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
-				if (this.#latest.indexOf(resolve) === -1) return;
+				const pending = this.#latest.indexOf(request);
+				if (pending === -1) return;
+
+				if (e instanceof Redirect) {
+					untrack(() => {
+						this.#latest.splice(0, pending + 1).forEach((r) => r.reject(e));
+						this.#loading = false;
+					});
+					return;
+				}
 
 				const error = await handle_error(e, {
 					params: {},
@@ -151,11 +191,11 @@ export class Query {
 				// Re-check after the async `handle_error` gap: a later request may have
 				// resolved/rejected while we were awaiting and superseded this one, so
 				// recompute the index and bail out if this request is no longer current
-				const idx = this.#latest.indexOf(resolve);
+				const idx = this.#latest.indexOf(request);
 				if (idx === -1) return;
 
 				untrack(() => {
-					this.#latest.splice(0, idx).forEach((r) => r(undefined));
+					this.#latest.splice(0, idx).forEach((r) => r.resolve(undefined));
 					this.#latest.shift();
 					this.#error = error;
 					this.#loading = false;
@@ -170,12 +210,12 @@ export class Query {
 	get then() {
 		// TODO this should be unnecessary but due to the bug described
 		// in #start, we need to do this in some circumstances
-		this.start();
+		this.start(false);
 		return this.#then;
 	}
 
 	get catch() {
-		this.start();
+		this.start(false);
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -183,7 +223,7 @@ export class Query {
 	}
 
 	get finally() {
-		this.start();
+		this.start(false);
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -230,7 +270,13 @@ export class Query {
 	 */
 	refresh() {
 		delete query_responses[this.#key];
-		return (this.#promise = this.#run());
+		const promise = (this.#promise = this.#run()).catch((error) => {
+			if (error instanceof Redirect) return this.#redirect(error);
+			throw error;
+		});
+		// Like the run promise, this wrapper may be ignored by reactive consumers.
+		promise.catch(noop);
+		return promise;
 	}
 
 	/**
