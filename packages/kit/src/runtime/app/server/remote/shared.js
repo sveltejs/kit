@@ -82,6 +82,13 @@ function derive_remote_function_event(event, state, allow_cookies) {
 	/** @type {RequestEvent} */
 	const derived = {
 		...event,
+		fetch: allow_cookies
+			? event.fetch
+			: (input, init) => {
+					// Retain the read-only context for captured fetches used after an await
+					// without ALS, without clearing an enclosing synchronous context.
+					return with_request_store(store, () => event.fetch(input, init), true);
+				},
 		setHeaders: () => {
 			e.remote_headers_forbidden();
 		},
@@ -124,13 +131,15 @@ function derive_remote_function_event(event, state, allow_cookies) {
 		}
 	}
 
-	return {
+	const store = {
 		event: derived,
 		state: {
 			...state,
 			is_in_remote_function: true
 		}
 	};
+
+	return store;
 }
 
 /**

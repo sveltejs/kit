@@ -409,3 +409,71 @@ test('requested records async-validator misuse at synchronous iteration without 
 		contains: ['read', '1']
 	});
 });
+
+test.each(['query', 'prerender'])(
+	'captured %s fetch retains its read-only context without AsyncLocalStorage',
+	async (kind) => {
+		vi.resetModules();
+		vi.doMock('node:async_hooks', () => {
+			throw new Error('not available');
+		});
+		try {
+			const { getRequestEvent, get_request_store, try_get_request_store, with_request_store } =
+				await import('@sveltejs/kit/internal/server');
+			const { run_remote_function } = await import('./shared.js');
+			await new Promise((resolve) => setTimeout(resolve));
+
+			const event = /** @type {any} */ ({
+				cookies: {},
+				fetch: vi.fn(() => {
+					expect(get_request_store().state).toMatchObject({
+						is_in_remote_query: kind === 'query',
+						is_in_remote_prerender: kind === 'prerender'
+					});
+					return Promise.resolve(new Response('ok'));
+				})
+			});
+			const state = /** @type {any} */ ({
+				is_in_remote_query: kind === 'query',
+				is_in_remote_prerender: kind === 'prerender'
+			});
+			/** @param {import('@sveltejs/kit').RequestEvent} event */
+			const capture = (event) =>
+				run_remote_function(
+					event,
+					state,
+					false,
+					() => undefined,
+					() => {
+						const captured = getRequestEvent();
+						void captured.fetch('/first');
+						// Fetching synchronously must not clear the enclosing synchronous store.
+						expect(getRequestEvent()).toBe(captured);
+						return captured;
+					}
+				);
+
+			const derived = await capture(event);
+			const nested = await capture(derived);
+			for (const { fetch } of [derived, nested]) {
+				// The event can be captured synchronously and used after an await without ALS.
+				expect(try_get_request_store()).toBeNull();
+				expect(await (await fetch('/later')).text()).toBe('ok');
+				expect(try_get_request_store()).toBeNull();
+
+				// A captured read-only fetch must not erase an unrelated synchronous context.
+				with_request_store(
+					{ event, state: { ...state, is_in_remote_query: false, is_in_remote_prerender: false } },
+					() => {
+						void fetch('/another');
+						expect(getRequestEvent()).toBe(event);
+					}
+				);
+				expect(try_get_request_store()).toBeNull();
+			}
+		} finally {
+			vi.doUnmock('node:async_hooks');
+			vi.resetModules();
+		}
+	}
+);

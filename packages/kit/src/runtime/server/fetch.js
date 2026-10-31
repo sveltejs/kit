@@ -1,4 +1,5 @@
 import { parseSetCookie } from 'cookie';
+import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { noop } from '../../utils/functions.js';
 import { respond } from './respond.js';
 import * as paths from '#app/paths';
@@ -20,6 +21,12 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 	 * @type {typeof fetch}
 	 */
 	const server_fetch = async (info, init) => {
+		// The fetch closure belongs to the original event, not the derived remote event.
+		// Capture the calling context before awaiting, including on runtimes without ALS.
+		const current_state = try_get_request_store()?.state ?? state;
+		const can_set_cookies =
+			!current_state.is_in_remote_query && !current_state.is_in_remote_prerender;
+
 		const original_request = normalize_fetch_input(info, init, event.url);
 
 		// some runtimes (e.g. Cloudflare) error if you access `request.mode`,
@@ -148,6 +155,10 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 				}
 
 				const response = await internal_fetch(request, state);
+
+				// Read-only remote functions may fetch endpoints that write cookies, but those
+				// writes must not affect the calling request's cookie jar or response.
+				if (!can_set_cookies) return response;
 
 				for (const str of response.headers.getSetCookie()) {
 					const { name, value, ...cookie_options } = parseSetCookie(str, { decode: (v) => v });
