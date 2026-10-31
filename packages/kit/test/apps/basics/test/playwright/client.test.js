@@ -503,6 +503,30 @@ test.describe('SPA mode / no SSR', () => {
 		);
 	});
 
+	test('afterNavigate enter navigation has no from target when SSR is disabled', async ({
+		page,
+		app
+	}) => {
+		const path = '/no-ssr/after-navigate';
+		await page.goto(path);
+		await expect(page.locator('pre.from')).toHaveText('null');
+		const target = {
+			params: {},
+			route: { id: path },
+			url: page.url(),
+			scroll: { x: 0, y: 0 }
+		};
+		expect(JSON.parse(await page.locator('pre.to').innerText())).toEqual(target);
+
+		await app.goto(`${path}?next`);
+		await expect(page.locator('p')).toHaveText('goto 2');
+		expect(JSON.parse(await page.locator('pre.from').innerText())).toEqual(target);
+
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('enter 1');
+		await expect(page.locator('pre.from')).toHaveText('null');
+	});
+
 	test('afterNavigate is only called once during start', async ({ page }) => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
