@@ -3,11 +3,10 @@ import process from 'node:process';
 import { expect } from '@playwright/test';
 import { test } from '../../../utils.js';
 
-test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
-
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('Skipped client build', () => {
+	test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 	test.skip(!!process.env.DEV);
 
 	test('omits client build output', async () => {
@@ -37,5 +36,14 @@ test.describe('Skipped client build', () => {
 
 		const worker_response = await request.get(worker_url);
 		expect(worker_response.status()).toBe(200);
+	});
+});
+
+test.describe('CSP', () => {
+	test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
+
+	test('runs the scripts in the template that use the nonce', async ({ page }) => {
+		await page.goto('/assets', { wait_for_started: false });
+		await expect(page.locator('html')).toHaveAttribute('data-template-script', 'ran');
 	});
 });

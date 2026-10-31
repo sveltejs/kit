@@ -34,6 +34,8 @@ export interface CspConfig {
 
 export interface CspOpts {
 	prerender: boolean;
+	/** Whether the app template contains `%sveltekit.nonce%` */
+	template_contains_nonce?: boolean;
 }
 
 export interface Cookie {
