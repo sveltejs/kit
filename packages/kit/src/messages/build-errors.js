@@ -938,6 +938,16 @@ export function tsconfig_parse_failed(_values, options) {
 }
 
 /**
+ * TypeScript %version% does not provide the JavaScript compiler API required by SvelteKit. Install `typescript@^6.0.0`. To use TypeScript 7 for type checking, install it separately as `@typescript/native`.
+ * @param {{ "version": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function typescript_compiler_api_missing(_values, options) {
+	throw_error('typescript_compiler_api_missing', `TypeScript ${_values.version} does not provide the JavaScript compiler API required by SvelteKit. Install \`typescript@^6.0.0\`. To use TypeScript 7 for type checking, install it separately as \`@typescript/native\`.`, options, typescript_compiler_api_missing);
+}
+
+/**
  * The configured Vite SSR environment must be a `RunnableDevEnvironment`
  * @param {void} _values
  * @param {ThrowOptions} [options]
