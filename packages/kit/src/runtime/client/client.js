@@ -3755,12 +3755,16 @@ function create_navigation(
 
 	/** @type {(Navigation | AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({
-		from: {
-			params: current.params,
-			route: { id: current.route?.id ?? null },
-			url: current.url,
-			scroll: scroll_state()
-		},
+		// the app's first navigation has no page to come from
+		from:
+			type === 'enter'
+				? null
+				: {
+						params: current.params,
+						route: { id: current.route?.id ?? null },
+						url: current.url,
+						scroll: scroll_state()
+					},
 		to: url && {
 			params: target ? target.params : (intent?.params ?? null),
 			route: { id: target ? (target.route?.id ?? null) : (intent?.route?.id ?? null) },
