@@ -380,7 +380,7 @@ function kit({ svelte_config }) {
 										vite.createRunnableDevEnvironment(name, config, {
 											// Kit imports server modules per request, which already picks up
 											// invalidations. HMR would reload the entire program instead.
-											runnerOptions: { hmr: false }
+											hot: false
 										}))
 							},
 							build: {
