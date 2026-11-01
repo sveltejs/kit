@@ -1755,6 +1755,13 @@ test.describe('getRequestEvent', () => {
 	});
 });
 
+test.describe('setHeaders', () => {
+	test('throws once the response has been generated', async ({ request }) => {
+		const response = await request.get('/?set-headers-after-resolve');
+		expect(await response.text()).toContainKitDiagnostic('set_headers_after_response');
+	});
+});
+
 test.describe('params prop', () => {
 	test('params prop is passed to the page', async ({ page, clicknav }) => {
 		await page.goto('/params-prop');

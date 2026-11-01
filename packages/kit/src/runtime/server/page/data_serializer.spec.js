@@ -1,6 +1,6 @@
-/** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RequestState, ServerHooks } from 'types' */
 import { expect, test, vi } from 'vitest';
+import { RequestEvent } from '@sveltejs/kit/internal/server';
 import { init_transport } from '#app/internal/transport';
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
@@ -11,7 +11,7 @@ const { server_data_serializer, server_data_serializer_json } =
 	await import('./data_serializer.js');
 const { set_hooks } = await import('../internal.js');
 
-const event = /** @type {RequestEvent} */ (/** @type {unknown} */ ({ route: { id: '/a' } }));
+const event = new RequestEvent(/** @type {any} */ ({ route: { id: '/a' } }), 0);
 const state = /** @type {RequestState} */ (/** @type {unknown} */ ({}));
 
 /** @param {any} data */

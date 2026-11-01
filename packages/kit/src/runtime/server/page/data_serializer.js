@@ -10,7 +10,7 @@ import * as e from '../../../messages/server-errors.js';
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializer}
  */
@@ -127,7 +127,7 @@ export function server_data_serializer(event, state) {
 /**
  * If the serialized data contains promises, `chunks` will be an
  * async iterable containing their resolutions
- * @param {import('@sveltejs/kit').RequestEvent} event
+ * @param {import('@sveltejs/kit/internal/server').RequestEvent} event
  * @param {import('types').RequestState} state
  * @returns {import('./types.js').ServerDataSerializerJson}
  */

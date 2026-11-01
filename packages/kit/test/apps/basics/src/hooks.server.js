@@ -89,6 +89,17 @@ export const handle = sequence(
 		event.locals.answer = 42;
 		return resolve(event);
 	},
+	async ({ event, resolve }) => {
+		const response = await resolve(event);
+		if (event.request.url.includes('?set-headers-after-resolve')) {
+			try {
+				event.setHeaders({ 'x-late': '1' });
+			} catch (e) {
+				return new Response(/** @type {Error} */ (e).message);
+			}
+		}
+		return response;
+	},
 	({ event, resolve }) => {
 		if (
 			event.request.url.includes('__data.json') &&
