@@ -95,18 +95,22 @@ export function generate_manifest(
 				const module_nodes = [];
 
 				if (node.component) {
-					result.component = async () => {
-						const { module_node, module } = await resolve(
-							vite,
-							vite_dev_server,
-							runner,
-							/** @type {string} */ (node.component)
-						);
-
+					// Start loading the component immediately so it is evaluated in the same module
+					// generation as root.svelte and svelte/internal/server, rather than waiting until
+					// after async load() functions finish when in-flight server edits may have triggered a reload (#17554)
+					const component_promise = resolve(
+						vite,
+						vite_dev_server,
+						runner,
+						/** @type {string} */ (node.component)
+					).then(({ module_node, module }) => {
 						module_nodes.push(module_node);
-
 						return module.default;
-					};
+					});
+
+					component_promise.catch(() => {});
+
+					result.component = () => component_promise;
 				}
 
 				if (node.universal) {
