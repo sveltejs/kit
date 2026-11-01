@@ -7,6 +7,7 @@ import { noop } from '../../utils/functions.js';
 import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
+import { write } from '../sync/utils.js';
 import { extract_svelte_config, load_vite_config } from '../config/index.js';
 import { get_route_segments } from '../../utils/routing.js';
 import { queue } from './queue.js';
@@ -165,8 +166,7 @@ async function prerender({
 		const file = output_filename('/', true);
 		const dest = `${config.outDir}/output/prerendered/pages/${file}`;
 
-		mkdirSync(dirname(dest), { recursive: true });
-		writeFileSync(dest, fallback);
+		write(dest, fallback);
 
 		prerendered.pages.set('/', { file });
 
@@ -569,9 +569,7 @@ async function prerender({
 				}
 
 				if (!headers['x-sveltekit-normalize']) {
-					mkdirSync(dirname(dest), { recursive: true });
-
-					writeFileSync(
+					write(
 						dest,
 						`<script>location.href=${devalue.uneval(
 							location
