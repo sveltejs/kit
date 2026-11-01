@@ -160,7 +160,7 @@ export async function handle_remote_call(event, state, id) {
  *
  * @param {string} id
  * @param {SSRManifest} manifest
- * @returns {Promise<{ fn: ((...args: any[]) => any) & { __: RemoteInternals }, additional_args: string } | undefined>}
+ * @returns {Promise<{ fn: ((...args: any[]) => any) & { __: RemoteInternals }, name: string, additional_args: string } | undefined>}
  */
 export async function get_remote_function(id, manifest) {
 	const first_slash = id.indexOf('/');
@@ -185,6 +185,7 @@ export async function get_remote_function(id, manifest) {
 
 	return {
 		fn: module.default[name],
+		name,
 		additional_args
 	};
 }

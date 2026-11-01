@@ -40,6 +40,12 @@ const manifest = /** @type {SSRManifest} */ (
 								name: 'no_loc'
 							}
 						},
+						original: {
+							__: {
+								type: 'query',
+								name: 'reexported'
+							}
+						},
 						null_line: {
 							__: {
 								type: 'query',
@@ -136,6 +142,15 @@ test('formats a remote function request with a line number', async () => {
 	);
 	expect(stripVTControlCharacters(res)).toBe('200 ƒ query my_query()');
 	expect(res).toContain(';file:///tmp/file.js#12\u0007');
+});
+
+test('formats a reexported remote function request using the requested name', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/original'),
+		manifest
+	);
+	expect(stripVTControlCharacters(res)).toBe('200 ƒ query original()');
 });
 
 test('formats a remote function request with an unmapped line number', async () => {

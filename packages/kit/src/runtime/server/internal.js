@@ -109,7 +109,8 @@ export async function format_response(status, request, manifest) {
 				}
 				log += `\u001B]8;;${file_link}\u0007`;
 			}
-			log += styleText(['bold'], `${internals.name}()`);
+			// internals.name is overwritten when another remote module reexports this function
+			log += styleText(['bold'], `${remote.name}()`);
 			if (internals.dev_loc) {
 				log += '\u001B]8;;\u0007';
 			}
