@@ -104,12 +104,13 @@ export async function format_response(status, request, manifest) {
 			log += styleText('magenta', `${internals.type.replace('_', '.')} `);
 			if (internals.dev_loc) {
 				let file_link = internals.dev_loc.file;
-				if (internals.dev_loc.line !== undefined) {
+				if (internals.dev_loc.line != null) {
 					file_link += `#${internals.dev_loc.line}`;
 				}
 				log += `\u001B]8;;${file_link}\u0007`;
 			}
-			log += styleText(['bold'], `${internals.name}()`);
+			// internals.name is overwritten when another remote module reexports this function
+			log += styleText(['bold'], `${remote.name}()`);
 			if (internals.dev_loc) {
 				log += '\u001B]8;;\u0007';
 			}

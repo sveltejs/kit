@@ -39,6 +39,23 @@ const manifest = /** @type {SSRManifest} */ (
 								type: 'form',
 								name: 'no_loc'
 							}
+						},
+						original: {
+							__: {
+								type: 'query',
+								name: 'reexported'
+							}
+						},
+						null_line: {
+							__: {
+								type: 'query',
+								name: 'null_line',
+								dev_loc: {
+									file: 'file:///tmp/file.js',
+									line: null,
+									column: null
+								}
+							}
 						}
 					}
 				})
@@ -125,6 +142,25 @@ test('formats a remote function request with a line number', async () => {
 	);
 	expect(stripVTControlCharacters(res)).toBe('200 ƒ query my_query()');
 	expect(res).toContain(';file:///tmp/file.js#12\u0007');
+});
+
+test('formats a reexported remote function request using the requested name', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/original'),
+		manifest
+	);
+	expect(stripVTControlCharacters(res)).toBe('200 ƒ query original()');
+});
+
+test('formats a remote function request with an unmapped line number', async () => {
+	const res = await format_response(
+		200,
+		new Request('http://localhost:5173/_app/remote/abc123/null_line'),
+		manifest
+	);
+	expect(res).toContain(';file:///tmp/file.js\u0007');
+	expect(res).not.toContain('#null');
 });
 
 test('formats an error response', async () => {

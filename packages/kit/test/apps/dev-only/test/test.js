@@ -232,3 +232,13 @@ test.describe('request abort', () => {
 		await expect(page.locator('pre')).toHaveText('{"aborted":true}');
 	});
 });
+
+test.describe('Remote functions', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('exports that are not remote functions report a helpful error', async ({ request }) => {
+		const response = await request.get('/remote/invalid-export');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toContain('remote_module_invalid_export');
+	});
+});
