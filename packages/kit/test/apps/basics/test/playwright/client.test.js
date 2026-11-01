@@ -507,6 +507,11 @@ test.describe('SPA mode / no SSR', () => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
 	});
+
+	test('afterNavigate has no origin on start', async ({ page }) => {
+		await page.goto('/no-ssr/after-navigate');
+		await expect(page.locator('h2')).toHaveText('from: null');
+	});
 });
 
 test.describe('$app/state', () => {

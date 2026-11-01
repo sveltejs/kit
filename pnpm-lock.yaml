@@ -6757,7 +6757,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 26.6.2
+      '@types/node': 22.20.4
       long: 5.3.2
 
   punycode@2.3.1: {}
