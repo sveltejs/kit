@@ -2650,6 +2650,11 @@ declare module '$app/navigation' {
 		type: 'enter';
 
 		/**
+		 * The app has just started, so there is no page it navigated from
+		 */
+		from: null;
+
+		/**
 		 * In case of a history back/forward navigation, the number of steps to go back/forward
 		 */
 		delta?: undefined;
