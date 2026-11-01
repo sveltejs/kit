@@ -30,3 +30,8 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('build/index.js includes shebang', () => {
+	const content = fs.readFileSync(path.join(app, 'build/index.js'), 'utf8');
+	expect(content.startsWith('#!/usr/bin/env node\n')).toBe(true);
+});

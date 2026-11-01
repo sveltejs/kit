@@ -75,7 +75,15 @@ export default function (opts = {}) {
 				].join('\n')
 			);
 
-			fs.writeFileSync(`${out}/index.js`, `export * from './server/adapter-index.js';\n`);
+			fs.writeFileSync(
+				`${out}/index.js`,
+				`#!/usr/bin/env node\nexport * from './server/adapter-index.js';\n`
+			);
+			try {
+				fs.chmodSync(`${out}/index.js`, 0o755);
+			} catch {
+				// Ignore chmod errors on platforms/filesystems that do not support it
+			}
 			fs.writeFileSync(`${out}/handler.js`, `export * from './server/handler.js';\n`);
 		},
 
