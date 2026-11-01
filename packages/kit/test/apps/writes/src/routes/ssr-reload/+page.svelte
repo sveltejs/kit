@@ -1,5 +1,5 @@
 <script>
-	import Header from './Header.svelte';
+	let { data } = $props();
 </script>
 
-<Header />
+<h1>value: {data.value}</h1>
