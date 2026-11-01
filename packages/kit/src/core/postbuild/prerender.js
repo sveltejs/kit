@@ -436,7 +436,7 @@ async function prerender({
 		}
 
 		if (response.status >= 400) {
-			console.log(format_response(response.status, request));
+			console.log(await format_response(response.status, request, manifest));
 		}
 
 		const body = Buffer.from(await response.arrayBuffer());

@@ -18,6 +18,7 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@jridgewell/trace-mapping": "^0.3.31",
 		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
 		"cookie": "^2.0.1",
@@ -33,8 +34,8 @@
 		"@sveltejs/message-box": "^1.1.3",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
-		"@typescript/native": "catalog:",
 		"@types/node": "catalog:",
+		"@typescript/native": "catalog:",
 		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
 		"svelte": "catalog:",
