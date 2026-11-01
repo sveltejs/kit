@@ -1,6 +1,6 @@
 import { read_implementation, manifest } from '../../server/internal.js';
 import { assets } from '#app/paths';
-import { base64_decode } from '../../utils.js';
+import { base64_decode, text_encoder } from '../../utils.js';
 import * as e from '../../../messages/server-errors.js';
 
 /**
@@ -42,11 +42,11 @@ export function read(asset) {
 			});
 		}
 
-		const decoded = decodeURIComponent(data);
+		const decoded = text_encoder.encode(decodeURIComponent(data));
 
 		return new Response(decoded, {
 			headers: {
-				'Content-Length': decoded.length.toString(),
+				'Content-Length': decoded.byteLength.toString(),
 				'Content-Type': type
 			}
 		});
