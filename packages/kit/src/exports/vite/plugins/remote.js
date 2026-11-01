@@ -144,16 +144,18 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 							for (const declaration of statement.declaration.declarations) {
 								if (declaration.id.type !== 'Identifier') continue;
 								const loc = locate(declaration.start);
-								const mapped_loc = originalPositionFor(map, {
+								const { line, column } = originalPositionFor(map, {
 									line: loc.line + 1,
 									column: loc.column
 								});
+								// unmapped positions fall back to linking to the file
+								if (line === null) continue;
 								ms.appendRight(
 									statement.end,
 									'\n' +
 										dedent`
 											if (${declaration.id.name}?.__) {
-												${declaration.id.name}.__.dev_loc = ${s(mapped_loc)}
+												${declaration.id.name}.__.dev_loc = ${s({ line, column })}
 											}
 										`
 								);
