@@ -152,7 +152,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 									statement.end,
 									'\n' +
 										dedent`
-											if (${declaration.id.name}.__) {
+											if (${declaration.id.name}?.__) {
 												${declaration.id.name}.__.dev_loc = ${s(mapped_loc)}
 											}
 										`
