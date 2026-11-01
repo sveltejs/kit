@@ -8,7 +8,8 @@ import {
 	deep_set,
 	normalize_issue,
 	flatten_issues,
-	parse_form_key
+	parse_form_key,
+	group_formdata
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
@@ -284,14 +285,14 @@ function handle_issues(output, issues, form_data, form_id) {
 	if (form_data) {
 		output.input = {};
 
-		for (const field_name of form_data.keys()) {
+		for (const [field_name, entries] of group_formdata(form_data)) {
 			const field = parse_form_key(form_id, field_name);
 			const path = split_path(field.name);
 
 			// redact sensitive fields
 			if (path.some((part) => part.startsWith('_'))) continue;
 
-			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
+			const values = entries.filter((value) => typeof value === 'string');
 
 			deep_set(
 				/** @type {Record<string, any>} */ (output.input),

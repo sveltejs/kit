@@ -51,6 +51,7 @@ export async function load_explicit_env(kit, file, root, mode) {
 	const server = await vite.createServer({
 		configFile: false,
 		logLevel: 'silent',
+		server: { watch: null },
 		mode,
 		define: {
 			// these are needed by $app/env

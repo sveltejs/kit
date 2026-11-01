@@ -65,7 +65,19 @@
 				]
 			}
 		],
-		"details": "[Server-only modules](https://svelte.dev/docs/kit/server-only-modules) — `$app/server`, `$app/env/private`, files named `*.server.js` and anything inside a `server` directory — can only be imported by code that never runs in the browser, such as `+page.server.js`, `+layout.server.js`, `+server.js` and `hooks.server.js`. The import chain in the error shows how the server-only module ends up in client code, starting from a client entry point (such as a `+page.svelte`, a universal `+page.js` or the service worker).\n\nBreak the chain by moving the import into a server-only file and passing the data you need through a server `load` function, or by moving the code that doesn't need to be secret out of the server-only module."
+		"details": "[Server-only modules](https://svelte.dev/docs/kit/server-only-modules) — `$app/server`, `$app/env/private`, files named `*.server.js` and anything inside a `server` directory — can only be imported by code that never runs in the browser, such as `+page.server.js`, `+layout.server.js`, `+server.js` and `hooks.server.js`. The import chain in the error shows how the server-only module ends up in client code, starting from a client entry point (such as a `+page.svelte`, a universal `+page.js`, `src/params.js` or the service worker).\n\nBreak the chain by moving the import into a server-only file and passing the data you need through a server `load` function, or by moving the code that doesn't need to be secret out of the server-only module."
+	},
+	"remote_module_server_only": {
+		"variants": [
+			{
+				"text": "Cannot import remote module `%module%` into code that runs in the browser because it is server-only.\n\n%chain%\n\nMove the remote module outside any `server` directory, and remove any `server` segment from its filename.",
+				"variables": [
+					"module",
+					"chain"
+				]
+			}
+		],
+		"details": "[Remote modules](https://svelte.dev/docs/kit/remote-functions) are transformed into fetch wrappers for the browser, so their server-side implementation is never exposed to the client. They can import server-only modules, but a remote module that is itself [server-only](https://svelte.dev/docs/kit/server-only-modules) — for example, in `src/lib/server` or named `data.server.remote.js` — cannot be imported by browser code. Its server-only location prevents client imports before the remote module can be transformed. It can still be imported by server-only code.\n\nMove or rename the remote module, and update its imports. Keep any other server-only modules it imports in their existing locations."
 	},
 	"config_feature_disabled": {
 		"variants": [

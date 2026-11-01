@@ -597,9 +597,12 @@ export interface Uses {
 	search_params: Set<string>;
 }
 
-export type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+export type ValidatedConfig = RecursiveRequired<
+	Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+> & {
 	adapter: Adapter & { vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
+	typescript: { config: NonNullable<Config['typescript']>['config'] };
 };
 
 export type BinaryFormMeta = {
@@ -764,9 +767,9 @@ export interface RequestState {
 		requested: null | Map<string, Set<string>>;
 		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
 		ignored: null | Set<string>;
-		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
+		/** A map of query.batch internals to payloads requested for that batch within the same macrotask */
 		batches: null | Map<
-			string,
+			RemoteQueryBatchInternals,
 			Map<
 				string,
 				{

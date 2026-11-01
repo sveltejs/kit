@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,6 +8,22 @@ import process from 'node:process';
 
 test.describe.serial('Illegal imports', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	for (const [location, module] of [
+		['directory', '#lib/server/location.remote.js'],
+		['filename', '#lib/location.server.remote.js']
+	]) {
+		test(`remote modules in a server-only ${location} report how to fix their location`, async ({
+			page
+		}) => {
+			await page.goto(`/illegal-imports/remote-${location}`, { wait_for_started: false });
+			const message = page.locator('vite-error-overlay .message-body');
+			await expect(message).toBeVisible();
+			expect(await message.innerText()).toContainKitDiagnostic('remote_module_server_only', {
+				contains: [module]
+			});
+		});
+	}
 
 	test('$app/env/private is not importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/private', {
