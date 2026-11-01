@@ -402,3 +402,41 @@ test('prunes stale entries from route_meta_data.json when routes are deleted', (
 		fs.rmSync(tmp, { force: true, recursive: true });
 	}
 });
+
+test('preserves root route $types.d.ts and route_meta_data.json on repeated sync runs', () => {
+	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sveltekit-sync-cache-test-'));
+	try {
+		const config = validate_config({});
+		config.files.assets = path.resolve(cwd, 'static');
+		const routes_dir = path.resolve(tmp, 'src', 'routes');
+		fs.mkdirSync(routes_dir, { recursive: true });
+		fs.writeFileSync(path.join(routes_dir, '+page.svelte'), '<h1>Home</h1>');
+
+		config.files.params = path.resolve(tmp, 'src', 'params');
+		config.files.routes = routes_dir;
+		config.outDir = path.resolve(tmp, '.svelte-kit');
+
+		const manifest = create_manifest_data(config, tmp);
+
+		// First sync run: generates types and route_meta_data.json
+		write_all_types(config, manifest, tmp);
+
+		const root_types_file = path.join(config.outDir, 'types', 'src', 'routes', '$types.d.ts');
+		const meta_data_file = path.join(config.outDir, 'types', 'route_meta_data.json');
+
+		expect(fs.existsSync(root_types_file)).toBe(true);
+		expect(fs.existsSync(meta_data_file)).toBe(true);
+
+		// Append a marker comment to verify the root type file and cache are retained
+		fs.appendFileSync(root_types_file, '\n// marker-test-sync-cache');
+
+		// Second sync run: should not wipe root types or route_meta_data.json
+		write_all_types(config, manifest, tmp);
+
+		expect(fs.existsSync(root_types_file)).toBe(true);
+		expect(fs.existsSync(meta_data_file)).toBe(true);
+		expect(fs.readFileSync(root_types_file, 'utf-8')).toContain('// marker-test-sync-cache');
+	} finally {
+		fs.rmSync(tmp, { force: true, recursive: true });
+	}
+});
