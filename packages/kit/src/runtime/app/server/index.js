@@ -52,10 +52,15 @@ export function read(asset) {
 		});
 	}
 
+	// Vite keeps some of the import's query or hash on the asset URL (e.g. `?v=1`, or `?no-inline`
+	// during dev), so strip it the same way as Vite's `cleanUrl`, which treats the first `?` or `#`
+	// as the end of the file path
+	const pathname = asset.replace(/[?#].*$/, '');
+
 	const file = decodeURIComponent(
-		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
-			? asset.slice(assets.length)
-			: asset.slice(assets.length + 1)
+		__SVELTEKIT_DEV__ && pathname.startsWith(assets + '/@fs')
+			? pathname.slice(assets.length)
+			: pathname.slice(assets.length + 1)
 	);
 
 	if (file in manifest.server_assets) {

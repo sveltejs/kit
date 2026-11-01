@@ -672,6 +672,24 @@ export function preview_build_missing(_values, options) {
 }
 
 /**
+ * Cannot import remote module `%module%` into code that runs in the browser because it is server-only.
+
+%chain%
+
+Move the remote module outside any `server` directory, and remove any `server` segment from its filename.
+ * @param {{ "module": string; "chain": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_module_server_only(_values, options) {
+	throw_error('remote_module_server_only', `Cannot import remote module \`${_values.module}\` into code that runs in the browser because it is server-only.
+
+${_values.chain}
+
+Move the remote module outside any \`server\` directory, and remove any \`server\` segment from its filename.`, options, remote_module_server_only);
+}
+
+/**
  * Unexpectedly called `prerender` function. Did you forget to set `{ dynamic: true }`?
  * @param {void} _values
  * @param {ThrowOptions} [options]
