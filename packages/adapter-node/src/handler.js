@@ -120,8 +120,10 @@ const ssr = async (req, res) => {
 	// `cache-control`), which breaks streaming responses like server-sent events.
 	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
+	// The header is set on the Node response rather than the `Response` object,
+	// whose headers may be immutable (e.g. when returned from `fetch`)
 	if (response.headers.get('content-type') === 'text/event-stream') {
-		response.headers.set('x-accel-buffering', 'no');
+		res.setHeader('x-accel-buffering', 'no');
 	}
 
 	setResponse(res, response);

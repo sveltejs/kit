@@ -315,6 +315,16 @@ test.describe('Navigation lifecycle functions', () => {
 		);
 	});
 
+	test('afterNavigate enter navigation includes the hydrated route and params', async ({
+		page
+	}) => {
+		await page.goto('/navigation-lifecycle/after-navigate-enter/x');
+		expect(await page.textContent('h1')).toBe(
+			'route: /navigation-lifecycle/after-navigate-enter/[slug]'
+		);
+		expect(await page.textContent('p')).toBe('params: {"slug":"x"}');
+	});
+
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
 		await page.goto('/navigation-lifecycle/on-navigate/a');
 		expect(await page.textContent('h1')).toBe('undefined -> undefined (...) false false');
