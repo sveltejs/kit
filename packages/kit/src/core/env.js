@@ -205,18 +205,31 @@ export function create_env_modules(config, variables, env, dir, entry, is_dev) {
 
 	handle_issues(issues);
 
+	const origin = config.paths.origin;
+	const origin_env = typeof origin === 'object' ? JSON.stringify(origin.env) : null;
+
+	if (origin_env) {
+		setters.push(`paths_origin = to_origin(env[${origin_env}], ${origin_env}, issues);`);
+	}
+
 	const config_blocks = [
 		entry
 			? [
 					`import { variables } from ${JSON.stringify(entry)};`,
-					`import { validate, handle_issues } from '@sveltejs/kit/internal/env';`
+					`import { validate, handle_issues, to_origin } from '@sveltejs/kit/internal/env';`
 				].join('\n')
-			: [`const variables = {};`, `const handle_issues = () => {};`].join('\n'),
+			: origin_env
+				? [
+						`const variables = {};`,
+						`import { handle_issues, to_origin } from '@sveltejs/kit/internal/env';`
+					].join('\n')
+				: [`const variables = {};`, `const handle_issues = () => {};`].join('\n'),
 		`const issues = {};`,
 		'export { variables }',
 		'export const dynamic_private_env = {};',
 		'export const explicit_public_env = {};',
 		'export const rendered_env = {};',
+		`export let paths_origin = ${devalue.uneval(typeof origin === 'string' ? origin : undefined)};`,
 		...declarations,
 		`handle_issues(issues);`,
 		dedent`

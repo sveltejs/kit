@@ -132,7 +132,8 @@ export default function (opts = {}) {
 					`export const base = ${JSON.stringify(builder.config.paths.base || '/')};`,
 					`export const embed = ${embed};`,
 					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
-					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
+					`export const origin = ${JSON.stringify(typeof builder.config.paths.origin === 'string' ? builder.config.paths.origin : undefined)};`,
+					`export const origin_env = ${JSON.stringify(typeof builder.config.paths.origin === 'object' ? builder.config.paths.origin.env : undefined)};`,
 					`export const server_options = ${JSON.stringify(serverOptions)};`,
 					...(await create_routes({ builder, out, embed, precompress: precompress && !embed }))
 				].join('\n')

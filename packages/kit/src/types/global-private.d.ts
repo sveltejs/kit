@@ -17,7 +17,6 @@ declare global {
 	const __SVELTEKIT_EMBEDDED__: boolean;
 	/** True if `config.output.linkHeaderPreload` is `true` */
 	const __SVELTEKIT_LINK_HEADER_PRELOAD__: boolean;
-	const __SVELTEKIT_PATHS_ORIGIN__: string | undefined;
 	/** True if the app has a service worker and `config.serviceWorker.register` is `true` */
 	const __SVELTEKIT_SERVICE_WORKER__: boolean;
 	/** The `__sveltekit_xxx` name the payload object is attached to, without `globalThis.` */

@@ -46,6 +46,26 @@ test('uses paths.origin as the trusted request origin when configured', async ()
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
 });
 
+test('uses the variable named by paths.origin as the trusted request origin', async () => {
+	set_env('ORIGIN', 'https://env.example/ignored');
+	const loaded = await load_handler({ origin_env: 'ORIGIN' });
+
+	await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
+
+	expect(loaded.respond.mock.calls[0][0].url).toBe('https://env.example/path');
+});
+
+test('derives the request origin when the variable named by paths.origin is unset', async () => {
+	const loaded = await load_handler({ origin_env: 'ORIGIN' });
+
+	await loaded.handler(
+		new Request('http://internal/path', { headers: { host: 'public.example' } }),
+		loaded.bun_server
+	);
+
+	expect(loaded.respond.mock.calls[0][0].url).toBe('https://public.example/path');
+});
+
 test('derives the public origin from configured proxy headers', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');
@@ -192,9 +212,10 @@ test('leaves ordinary responses and their timeouts unchanged', async () => {
 
 async function load_handler({
 	origin,
+	origin_env,
 	envPrefix = '',
 	response = new Response('ok')
-}: { origin?: string; envPrefix?: string; response?: Response } = {}) {
+}: { origin?: string; origin_env?: string; envPrefix?: string; response?: Response } = {}) {
 	const stream = new ReadableStream();
 	const asset = { stream: mock(() => stream) };
 	const init = mock(async (_options: any) => {});
@@ -205,7 +226,7 @@ async function load_handler({
 		respond = respond;
 	}
 
-	mock_handoff({ server: new Server(), origin, env_prefix: envPrefix });
+	mock_handoff({ server: new Server(), origin, origin_env, env_prefix: envPrefix });
 	mock.module('../src/routes.js', () => ({
 		routes: {},
 		server_assets: new Map([['asset.txt', asset]])

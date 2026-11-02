@@ -33,6 +33,12 @@ describe('env', () => {
 			'unexpectedly saw UNIQUE_ADAPTER_OPTION'
 		);
 	});
+
+	test('allows the variable named by paths.origin to use a configured prefix', async () => {
+		set_env('UNIQUE_ADAPTER_ORIGIN', 'https://my.site');
+
+		await expect(load_env('UNIQUE_ADAPTER_', 'UNIQUE_ADAPTER_ORIGIN')).resolves.toBeDefined();
+	});
 });
 
 describe('boolean_env', () => {
@@ -147,8 +153,8 @@ describe('bytes_env', () => {
 	);
 });
 
-async function load_env(prefix = '') {
-	mock_handoff({ env_prefix: prefix });
+async function load_env(prefix = '', origin_env?: string) {
+	mock_handoff({ env_prefix: prefix, origin_env });
 	// a fresh query string re-runs the module-level prefix check
 	const specifier = `../src/env.js?instance=${++instance}`;
 	return (await import(specifier)) as typeof import('../src/env.js');

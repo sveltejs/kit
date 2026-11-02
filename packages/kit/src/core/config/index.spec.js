@@ -420,6 +420,31 @@ test('fails if paths.origin contains a path', () => {
 	);
 });
 
+test('passes if paths.origin names an environment variable', () => {
+	const validated = validate_config({
+		paths: {
+			origin: { env: 'ORIGIN' }
+		}
+	});
+	assert.deepEqual(validated.paths.origin, { env: 'ORIGIN' });
+});
+
+test.each([{}, { env: '' }, { env: 'ORIGIN', fallback: 'https://my.site' }])(
+	'fails if paths.origin is the object %j',
+	(origin) => {
+		assert_logs_error_and_throws(
+			() => {
+				validate_config({
+					// @ts-expect-error
+					paths: { origin }
+				});
+			},
+			'config_origin_env_invalid',
+			['paths.origin']
+		);
+	}
+);
+
 test('passes if paths.origin is a valid origin', () => {
 	const validated = validate_config({
 		paths: {

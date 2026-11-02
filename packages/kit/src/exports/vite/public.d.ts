@@ -325,10 +325,12 @@ export interface Config extends VitePluginSvelteOptions {
 		 *
 		 * This is also used as the value of `url.origin` during prerendering (when unset, it defaults to `http://sveltekit-prerender`), and as the trusted origin for CSRF checks on form submissions and remote function calls.
 		 *
+		 * If the origin is only known when your app starts, you can instead name an environment variable, such as `{ env: 'ORIGIN' }`. SvelteKit reads it when your app starts and, for prerendering, when it builds. If the variable is unset or empty, SvelteKit derives the origin from `request.url` as if `paths.origin` wasn't set.
+		 *
 		 * @default undefined
 		 * @since 3.0
 		 */
-		origin?: string;
+		origin?: string | { env: string };
 		/**
 		 * Whether to use relative asset paths.
 		 *

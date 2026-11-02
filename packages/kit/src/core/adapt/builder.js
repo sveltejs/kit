@@ -182,7 +182,6 @@ export function create_builder({
 				manifest_path,
 				env,
 				out_dir: config.outDir,
-				origin: config.paths.origin || 'http://sveltekit-prerender',
 				assets: config.files.assets
 			});
 

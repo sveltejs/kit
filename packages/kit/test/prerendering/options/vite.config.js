@@ -36,7 +36,8 @@ const config = {
 
 			paths: {
 				base: '/path-base',
-				assets: 'https://cdn.example.com/stuff'
+				assets: 'https://cdn.example.com/stuff',
+				origin: { env: 'PRERENDER_ORIGIN' }
 			}
 		})
 	],

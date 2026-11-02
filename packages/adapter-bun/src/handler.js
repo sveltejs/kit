@@ -1,5 +1,5 @@
 /** @import { Server as BunServer } from 'bun' */
-import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
+import { env_prefix, origin, origin_env, server } from '#@sveltejs/adapter-bun';
 import { server_assets } from './routes.js';
 import { env, number_env } from './env.js';
 
@@ -13,6 +13,10 @@ await server.init({
 	env: Bun.env,
 	read: (file) => server_assets.get(file)?.stream() ?? null
 });
+
+// server.init has already validated the value
+const env_origin = origin_env && Bun.env[origin_env]?.trim();
+const fixed_origin = env_origin ? new URL(env_origin).origin : origin;
 
 /**
  * The Bun-native SvelteKit request handler used by the generated server.
@@ -46,7 +50,7 @@ function normalize_request(request) {
 	try {
 		// an empty Host header makes request.url relative, so parsing belongs in the try
 		const url = new URL(request.url);
-		const request_origin = origin || get_origin(request, url);
+		const request_origin = fixed_origin || get_origin(request, url);
 		return request_origin === url.origin
 			? request
 			: new Request(request_origin + url.pathname + url.search, request);

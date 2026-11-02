@@ -8,6 +8,7 @@ import {
 	base,
 	app_path,
 	origin,
+	origin_env,
 	mime_types,
 	assets,
 	prerendered_assets
@@ -39,11 +40,15 @@ await server.init({
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
+// server.init has already validated the value
+const env_origin = origin_env && process.env[origin_env]?.trim();
+const fixed_origin = env_origin ? new URL(env_origin).origin : origin;
+
 /** @type {Middleware} */
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
-	let request_origin = origin;
+	let request_origin = fixed_origin;
 
 	if (!request_origin) {
 		try {

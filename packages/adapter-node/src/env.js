@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { env_prefix } from '#@sveltejs/adapter-node';
+import { env_prefix, origin_env } from '#@sveltejs/adapter-node';
 
 const expected = new Set([
 	'SOCKET_PATH',
@@ -21,7 +21,7 @@ const expected_unprefixed = new Set(['LISTEN_PID', 'LISTEN_FDS']);
 
 if (env_prefix) {
 	for (const name in process.env) {
-		if (name.startsWith(env_prefix)) {
+		if (name.startsWith(env_prefix) && name !== origin_env) {
 			const unprefixed = name.slice(env_prefix.length);
 			if (!expected.has(unprefixed)) {
 				throw new Error(

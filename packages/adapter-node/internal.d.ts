@@ -6,6 +6,8 @@ declare module '#@sveltejs/adapter-node' {
 	export const base: string;
 	export const app_path: string;
 	export const origin: string | undefined;
+	/** the environment variable named by `paths.origin`, if any */
+	export const origin_env: string | undefined;
 	export const env_prefix: string;
 	export const mime_types: Record<string, string>;
 	export const assets: AssetTable;

@@ -192,6 +192,15 @@ const options = {
 			return input;
 		}),
 		origin: validate(undefined, (input, keypath) => {
+			if (typeof input === 'object' && input !== null && !Array.isArray(input)) {
+				const keys = Object.keys(input);
+				if (keys.length !== 1 || keys[0] !== 'env' || typeof input.env !== 'string' || !input.env) {
+					e.config_origin_env_invalid({ keypath });
+				}
+
+				return { env: input.env };
+			}
+
 			assert_string(input, keypath);
 
 			let url;

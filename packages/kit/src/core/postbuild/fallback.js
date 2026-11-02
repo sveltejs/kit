@@ -11,11 +11,10 @@ export default forked(import.meta.url, generate_fallback);
  *   manifest_path: string;
  *   env: Record<string, string>
  *   out_dir: string;
- *   origin: string;
  *   assets: string;
  * }} opts
  */
-async function generate_fallback({ manifest_path, env, out_dir, origin, assets }) {
+async function generate_fallback({ manifest_path, env, out_dir, assets }) {
 	const server_root = join(out_dir, 'output');
 
 	/** @type {import('types').ServerModule} */
@@ -24,8 +23,10 @@ async function generate_fallback({ manifest_path, env, out_dir, origin, assets }
 	/** @type {import('types').SSRManifest} */
 	const manifest = (await import(pathToFileURL(manifest_path).href)).manifest;
 
-	const { init, respond } = await configure({ building: true, manifest, env });
+	const { init, respond, paths_origin } = await configure({ building: true, manifest, env });
 	await init();
+
+	const origin = paths_origin || 'http://sveltekit-prerender';
 
 	const response = await respond(new Request(origin + '/[fallback]'), {
 		getClientAddress: () => {

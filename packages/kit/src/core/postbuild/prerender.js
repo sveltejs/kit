@@ -60,7 +60,7 @@ async function prerender({
 	/** @type {import('types').ServerModule} */
 	const { configure, format_response } = await import(pathToFileURL(`${out}/server/index.js`).href);
 
-	const { init, respond } = await configure({
+	const { init, respond, paths_origin } = await configure({
 		building: true,
 		prerendering: true,
 		env,
@@ -152,14 +152,13 @@ async function prerender({
 
 	const config = extract_svelte_config(vite_config);
 
-	const prerender_origin = config.paths.origin || 'http://sveltekit-prerender';
+	const prerender_origin = paths_origin || 'http://sveltekit-prerender';
 
 	if (hash) {
 		const fallback = await generate_fallback({
 			manifest_path,
 			env,
 			out_dir: config.outDir,
-			origin: prerender_origin,
 			assets: config.files.assets
 		});
 

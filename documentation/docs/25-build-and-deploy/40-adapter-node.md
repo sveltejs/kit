@@ -88,12 +88,39 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: process.env.ORIGIN
+				origin: 'https://my.site'
 			}
 		})
 	]
 });
 ```
+
+If the origin is only known when your app starts, name an environment variable instead:
+
+```js
+// @errors: 2307
+/// file: vite.config.js
+import adapter from '@sveltejs/adapter-node';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+	plugins: [
+		sveltekit({
+			adapter: adapter(),
+			paths: {
+				origin: { env: 'ORIGIN' }
+			}
+		})
+	]
+});
+```
+
+```sh
+ORIGIN=https://my.site node build
+```
+
+The variable is read when the server starts, and when prerendering at build time. If it's unset or empty, the origin is derived from the request as if `paths.origin` wasn't set.
 
 When `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
 

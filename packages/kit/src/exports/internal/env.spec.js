@@ -1,6 +1,14 @@
 import { assert, expect, test } from 'vitest';
 import { defineEnvVars } from '../env/index.js';
-import { ASYNC_VALIDATOR, BAD_VALIDATOR, MISSING, handle_issues, validate } from './env.js';
+import {
+	ASYNC_VALIDATOR,
+	BAD_VALIDATOR,
+	INVALID_ORIGIN,
+	MISSING,
+	handle_issues,
+	to_origin,
+	validate
+} from './env.js';
 import { bullet_list } from '../../utils/format.js';
 
 test('reports a variable without a validator as missing when it is undefined', () => {
@@ -138,4 +146,25 @@ test('reports configuration issues and forwards validator issues in one diagnost
 
 test('does not throw without issues', () => {
 	assert.equal(handle_issues({}), undefined);
+});
+
+test('turns a URL into its origin', () => {
+	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	assert.equal(to_origin('https://my.site', 'ORIGIN', issues), 'https://my.site');
+	assert.equal(to_origin('https://my.site:443/path?q#h', 'ORIGIN', issues), 'https://my.site');
+	assert.equal(to_origin('http://localhost:3000', 'ORIGIN', issues), 'http://localhost:3000');
+	assert.equal(to_origin(undefined, 'ORIGIN', issues), undefined);
+	assert.equal(to_origin('', 'ORIGIN', issues), undefined);
+	assert.equal(to_origin(' https://my.site ', 'ORIGIN', issues), 'https://my.site');
+	assert.deepEqual(issues, {});
+});
+
+test.each(['my.site', 'ftp://my.site'])('reports %s as an invalid origin', (value) => {
+	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
+	const issues = {};
+
+	assert.equal(to_origin(value, 'ORIGIN', issues), undefined);
+	assert.deepEqual(issues.ORIGIN, [INVALID_ORIGIN]);
 });

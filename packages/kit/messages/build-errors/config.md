@@ -274,6 +274,21 @@ The origin must be an absolute URL including the protocol, such as `https://my-s
 
 The origin describes where your app is publicly served, so it must use `http:` or `https:`.
 
+## config_origin_env_invalid
+
+> `%keypath%` must be an origin string or an object like `{ env: 'ORIGIN' }`
+
+To read the origin from an environment variable when your app starts, set `paths.origin` to an object whose `env` property is the variable's name:
+
+```js
+/// file: vite.config.js
+sveltekit({
+	paths: {
+		origin: { env: 'ORIGIN' }
+	}
+});
+```
+
 ## config_paths_assets_not_absolute
 
 > `%keypath%` option must be an absolute path, if specified

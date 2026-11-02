@@ -7,13 +7,12 @@ import { create_request_state } from './state.js';
 
 // These fallbacks don't render pages or use the generated environment module.
 vi.mock(import('./page/render.js'), () => ({ render_response: vi.fn() }));
-vi.mock('<sveltekit:generated>/env/config.js', () => ({}));
+vi.mock('<sveltekit:generated>/env/config.js', () => ({ paths_origin: undefined }));
 vi.mock('<sveltekit:generated>/server.js', () => ({
 	options: { csrf_trusted_origins: [] }
 }));
 
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
-vi.stubGlobal('__SVELTEKIT_PATHS_ORIGIN__', undefined);
 vi.stubGlobal('__SVELTEKIT_CSRF_CHECK_ORIGIN__', true);
 vi.stubGlobal('__SVELTEKIT_HASH_ROUTING__', false);
 afterAll(() => vi.unstubAllGlobals());

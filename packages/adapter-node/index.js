@@ -66,7 +66,8 @@ export default function (opts = {}) {
 					`export const dir = dirname(fileURLToPath(import.meta.url));`,
 					`export const base = ${JSON.stringify(base)};`,
 					`export const app_path = ${JSON.stringify(builder.getAppPath())};`,
-					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
+					`export const origin = ${JSON.stringify(typeof builder.config.paths.origin === 'string' ? builder.config.paths.origin : undefined)};`,
+					`export const origin_env = ${JSON.stringify(typeof builder.config.paths.origin === 'object' ? builder.config.paths.origin.env : undefined)};`,
 					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
 					`export const mime_types = ${JSON.stringify(builder.mimeTypes)};`,
 					// JSON.parse of a string loads about twice as fast as an object literal of the same size

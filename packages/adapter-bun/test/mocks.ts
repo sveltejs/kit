@@ -11,6 +11,7 @@ export function mock_handoff({
 	embed = false,
 	env_prefix = '',
 	origin,
+	origin_env,
 	server_options = {},
 	assets = [],
 	redirects = [],
@@ -23,6 +24,7 @@ export function mock_handoff({
 	embed?: boolean;
 	env_prefix?: string;
 	origin?: string;
+	origin_env?: string;
 	server_options?: unknown;
 	assets?: unknown[];
 	redirects?: unknown[];
@@ -36,6 +38,7 @@ export function mock_handoff({
 		embed,
 		env_prefix,
 		origin,
+		origin_env,
 		server_options,
 		assets,
 		redirects,

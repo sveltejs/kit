@@ -153,6 +153,7 @@ describe('build output', () => {
 				'export const embed = false;\n' +
 				'export const env_prefix = "APP_";\n' +
 				'export const origin = "https://example.com";\n' +
+				'export const origin_env = undefined;\n' +
 				'export const server_options = {"hostname":"127.0.0.1","port":4000,"development":true};\n'
 		);
 		// prerendered paths already contain the base
@@ -165,6 +166,14 @@ describe('build output', () => {
 		expect(handoff_source()).toContain('export const base = "/";\n');
 		expect(handoff_source()).toContain('export const origin = undefined;\n');
 		expect(handoff_source()).toContain('export const server_options = {};\n');
+	});
+
+	test('hands over the variable named by paths.origin', async () => {
+		await adapter().adapt(create_builder({ origin: { env: 'ORIGIN' } }));
+
+		expect(handoff_source()).toContain(
+			'export const origin = undefined;\n' + 'export const origin_env = "ORIGIN";\n'
+		);
 	});
 
 	test('loads instrumentation before the generated server entrypoint', async () => {
@@ -438,7 +447,7 @@ function create_builder({
 	routes?: Array<{ id: string; prerender: boolean | string }>;
 	server_assets?: string[];
 	base?: string;
-	origin?: string;
+	origin?: string | { env: string };
 	instrumentation?: boolean;
 } = {}) {
 	return {

@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { env_prefix } from '#@sveltejs/adapter-bun';
+import { env_prefix, origin_env } from '#@sveltejs/adapter-bun';
 
 const expected = new Set([
 	'SOCKET_PATH',
@@ -20,7 +20,11 @@ const expected = new Set([
 
 if (env_prefix) {
 	for (const name in process.env) {
-		if (name.startsWith(env_prefix) && !expected.has(name.slice(env_prefix.length))) {
+		if (
+			name.startsWith(env_prefix) &&
+			name !== origin_env &&
+			!expected.has(name.slice(env_prefix.length))
+		) {
 			throw new Error(
 				`You should change envPrefix (${env_prefix}) to avoid conflicts with existing environment variables — unexpectedly saw ${name}`
 			);

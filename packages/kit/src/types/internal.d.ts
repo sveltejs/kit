@@ -50,6 +50,8 @@ export interface ServerInstance {
 	init(): Promise<void>;
 	respond(request: Request, options: InternalRequestOptions): Promise<Response>;
 	set_env(env: Record<string, string | undefined>): void;
+	/** the resolved `paths.origin`, available once `set_env` has run */
+	readonly paths_origin: string | undefined;
 }
 
 /** the built `server/index.js` */

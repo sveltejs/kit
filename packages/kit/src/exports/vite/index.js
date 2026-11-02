@@ -505,7 +505,6 @@ function kit({ svelte_config }) {
 					__SVELTEKIT_GLOBAL_NAME__: s(global_name),
 					__SVELTEKIT_CSRF_CHECK_ORIGIN__: s(!kit.csrf.trustedOrigins.includes('*')),
 					__SVELTEKIT_LINK_HEADER_PRELOAD__: s(kit.output.linkHeaderPreload),
-					__SVELTEKIT_PATHS_ORIGIN__: s(kit.paths.origin) ?? 'undefined',
 					__SVELTEKIT_SERVICE_WORKER__: s(kit.serviceWorker.register && !!service_worker_entry_file)
 				};
 

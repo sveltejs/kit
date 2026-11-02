@@ -17,6 +17,9 @@ declare module '<sveltekit:generated>/env/config.js' {
 
 	/** public env vars that should be inlined when a page is rendered */
 	export const rendered_env: Record<string, any>;
+
+	/** the resolved `paths.origin`, read from the environment when it names a variable */
+	export const paths_origin: string | undefined;
 }
 
 declare module '<sveltekit:generated>/env/private/server.js' {

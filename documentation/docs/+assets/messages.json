@@ -544,6 +544,17 @@
 		],
 		"details": "The origin describes where your app is publicly served, so it must use `http:` or `https:`."
 	},
+	"config_origin_env_invalid": {
+		"variants": [
+			{
+				"text": "`%keypath%` must be an origin string or an object like `{ env: 'ORIGIN' }`",
+				"variables": [
+					"keypath"
+				]
+			}
+		],
+		"details": "To read the origin from an environment variable when your app starts, set `paths.origin` to an object whose `env` property is the variable's name:\n\n```js\n/// file: vite.config.js\nsveltekit({\n\tpaths: {\n\t\torigin: { env: 'ORIGIN' }\n\t}\n});\n```"
+	},
 	"config_paths_assets_not_absolute": {
 		"variants": [
 			{

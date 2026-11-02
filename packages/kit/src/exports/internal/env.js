@@ -12,6 +12,11 @@ export const BAD_VALIDATOR = {
 	message: 'Variable was configured with a validator that does not implement Standard Schema'
 };
 
+export const INVALID_ORIGIN = {
+	message:
+		'Variable is named by `paths.origin`, so it must be an http or https URL such as https://my.site'
+};
+
 export const ASYNC_VALIDATOR = {
 	message: 'Variable uses an async validator, which is not supported'
 };
@@ -53,6 +58,27 @@ export function validate(variables, value, name, issues) {
 	}
 
 	return result.value;
+}
+
+/**
+ * Turns the value of the environment variable named by `paths.origin` into a bare origin
+ * @param {string | undefined} value
+ * @param {string} name
+ * @param {Record<string, StandardSchemaV1.Issue[]>} issues
+ * @returns {string | undefined}
+ */
+export function to_origin(value, name, issues) {
+	const trimmed = value?.trim();
+	if (!trimmed) return;
+
+	try {
+		const url = new URL(trimmed);
+		if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin;
+	} catch {
+		// reported below
+	}
+
+	issues[name] ??= [INVALID_ORIGIN];
 }
 
 /**

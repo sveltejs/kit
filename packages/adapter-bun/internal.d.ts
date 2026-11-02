@@ -9,6 +9,8 @@ declare module '#@sveltejs/adapter-bun' {
 	export const embed: boolean;
 	export const env_prefix: string;
 	export const origin: string | undefined;
+	/** the environment variable named by `paths.origin`, if any */
+	export const origin_env: string | undefined;
 	export const server_options: Pick<
 		import('bun').Serve.Options<never>,
 		| 'development'

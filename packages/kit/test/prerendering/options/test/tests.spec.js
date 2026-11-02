@@ -18,6 +18,11 @@ test('prerenders nested /path-base', () => {
 	expect(content).toMatch('<h1>nested hello</h1>');
 });
 
+test('uses paths.origin from an environment variable when prerendering', () => {
+	const content = read('origin/index.html');
+	expect(content).toMatch('<h1>https://env.origin</h1>');
+});
+
 test('adds CSP headers via meta tag', () => {
 	const content = read('index.html');
 	expect(content).toMatch(

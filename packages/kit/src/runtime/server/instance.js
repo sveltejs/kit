@@ -167,4 +167,4 @@ function serialise(fn) {
 
 export const respond = IN_WEBCONTAINER ? serialise(respond_to) : respond_to;
 
-export { set_env } from '<sveltekit:generated>/env/config.js';
+export { set_env, paths_origin } from '<sveltekit:generated>/env/config.js';

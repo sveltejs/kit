@@ -368,6 +368,16 @@ export function config_option_removed_vite_plugin(_values, options) {
 }
 
 /**
+ * `%keypath%` must be an origin string or an object like `{ env: 'ORIGIN' }`
+ * @param {{ "keypath": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function config_origin_env_invalid(_values, options) {
+	throw_error('config_origin_env_invalid', `\`${_values.keypath}\` must be an origin string or an object like \`{ env: 'ORIGIN' }\``, options, config_origin_env_invalid);
+}
+
+/**
  * `%keypath%` must be a valid origin — received `'%input%'` which contains a path, query, or hash. Use the bare origin `'%origin%'` instead
  * @param {{ "keypath": string; "input": string; "origin": string }} _values
  * @param {ThrowOptions} [options]
