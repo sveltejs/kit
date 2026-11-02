@@ -59,7 +59,7 @@ The [environment variables](https://svelte.dev/docs/kit/environment-variables) d
 
 - **Value is missing** — a variable without a `schema` is required. Set it in the environment (or a `.env` file), or add a validator that accepts `undefined`, such as Valibot's `v.optional(v.string())` or a function that returns a default.
 - **The validator does not implement Standard Schema** — `schema` must be a function or a [Standard Schema](https://standardschema.dev), such as one created with Valibot, Zod or ArkType.
-- **Variable is named by `paths.origin`** — the variable named by [`paths.origin`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) must be set to an `http` or `https` URL such as `https://my.site`.
+- **Variable is named by `paths.origin`** — the variable named by [`paths.origin`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) must be an `http` or `https` URL such as `https://my.site`.
 - **The validator is async** — environment variables are validated synchronously, so a function validator can't return a promise, and a schema can't use asynchronous validation.
 
 To require a variable when the app starts but not while building it, use [`building`](https://svelte.dev/docs/kit/$app-env#building) from `$app/env` to choose the validator.

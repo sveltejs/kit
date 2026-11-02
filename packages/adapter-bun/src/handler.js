@@ -14,10 +14,14 @@ await server.init({
 	read: (file) => server_assets.get(file)?.stream() ?? null
 });
 
+const env_origin = origin_env && Bun.env[origin_env]?.trim();
+
+if (origin_env && !env_origin) {
+	throw new Error(`${origin_env} must be set, since paths.origin is configured to read it`);
+}
+
 // server.init has already validated the value
-const fixed_origin = origin_env
-	? new URL(/** @type {string} */ (Bun.env[origin_env])).origin
-	: origin;
+const fixed_origin = env_origin ? new URL(env_origin).origin : origin;
 
 /**
  * The Bun-native SvelteKit request handler used by the generated server.

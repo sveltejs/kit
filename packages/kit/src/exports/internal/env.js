@@ -14,7 +14,7 @@ export const BAD_VALIDATOR = {
 
 export const INVALID_ORIGIN = {
 	message:
-		'Variable is named by `paths.origin`, so it must be set to an http or https URL such as https://my.site'
+		'Variable is named by `paths.origin`, so it must be an http or https URL such as https://my.site'
 };
 
 export const ASYNC_VALIDATOR = {
@@ -68,6 +68,8 @@ export function validate(variables, value, name, issues) {
  * @returns {string | undefined}
  */
 export function to_origin(value, name, issues) {
+	if (!value?.trim()) return;
+
 	try {
 		const url = new URL(value ?? '');
 		if (url.protocol === 'http:' || url.protocol === 'https:') return url.origin;

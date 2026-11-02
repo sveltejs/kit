@@ -120,7 +120,7 @@ export default defineConfig({
 ORIGIN=https://my.site node build
 ```
 
-The variable is read during development, at build time and when the server starts. If it isn't set to an `http` or `https` URL, SvelteKit fails with an error. A `.env` file can provide the value for development and builds.
+The server fails to start if the variable is unset, or isn't an `http` or `https` URL. During development and prerendering, an unset variable is ignored.
 
 When `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
 

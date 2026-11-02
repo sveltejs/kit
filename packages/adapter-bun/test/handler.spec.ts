@@ -55,6 +55,10 @@ test('uses the variable named by paths.origin as the trusted request origin', as
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://env.example/path');
 });
 
+test('fails to start when the variable named by paths.origin is unset', async () => {
+	await expect(load_handler({ origin_env: 'ORIGIN' })).rejects.toThrow('ORIGIN must be set');
+});
+
 test('derives the public origin from configured proxy headers', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');
