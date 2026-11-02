@@ -178,13 +178,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 
 								${dev_server ? 'await Promise.resolve()' : ''}
 
-								$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)});
-
-								for (const [name, fn] of Object.entries($$_self_$$)) {
-									fn.__.id = ${s(remote.hash)} + '/' + name;
-									fn.__.name = name;
-									fn.__.file = ${s(file)};
-								}
+								$$_init_$$($$_self_$$, ${s(file)}, ${s(remote.hash)}${dev_decoration});
 							`
 					);
 

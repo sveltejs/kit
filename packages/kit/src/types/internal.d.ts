@@ -618,6 +618,11 @@ export interface BaseRemoteInternals {
 	id: string;
 	name: string;
 	file?: string;
+	dev_loc?: {
+		file: string;
+		line?: number;
+		column?: number;
+	};
 }
 
 export interface RemoteQueryInternals extends BaseRemoteInternals {
