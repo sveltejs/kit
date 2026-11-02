@@ -3,12 +3,12 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - version-2
 
 concurrency:
-  # prevent two release workflows from running at once
+  # prevent two release workflows for the same branch from running at once
   # race conditions here can result in releases failing
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
 
 permissions: {}
 jobs:
@@ -39,9 +39,11 @@ jobs:
         id: changesets
         uses: changesets/action@c47fa68bd43bb8ae0bae7e558622593deebf5955 # v2.0.0-next.3
         with:
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish-script: pnpm changeset:release
+          # Maintenance releases must not move npm's latest tag, including for adapters.
+          publish-script: pnpm changeset:release --tag version-2
           version-script: pnpm changeset:version
+          pr-base-branch: ${{ github.ref_name }}
+          pr-title: Version Packages (${{ github.ref_name }})
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # TODO alert discord

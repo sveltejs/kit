@@ -155,6 +155,21 @@ If your PR changes the generated types of SvelteKit, run `pnpm generate:types` i
 
 The [Changesets GitHub action](https://github.com/changesets/action#with-publishing) will create and update a PR that applies changesets and publishes new versions of changed packages to npm.
 
+Each release branch has its own release workflow, triggered by pushes to that branch, with separate version PRs and npm dist-tags:
+
+| Branch      | Version PR branch             | npm dist-tag |
+| ----------- | ----------------------------- | ------------ |
+| `main`      | `changeset-release/main`      | `latest`     |
+| `version-2` | `changeset-release/version-2` | `version-2`  |
+
+Keep `baseBranch` in `.changeset/config.json` set to the corresponding release branch (`version-2` on this branch, `main` on `main`).
+
+To release a SvelteKit 2 fix, merge the fix and its changeset into `version-2`. The action creates or updates a **Version Packages (version-2)** PR targeting `version-2`. Merging that PR publishes the updated packages with `changeset publish --tag version-2`. This tag applies to all packages released from the branch, including adapters, which have their own major versions.
+
+These are normal stable releases (for example, `2.x.y` for Kit). The separate npm tag ensures they do not replace `latest`, so `npm install @sveltejs/kit` continues to install the version released from `main`. Users can install SvelteKit 2 with `npm install @sveltejs/kit@2`, or explicitly select the maintenance tag with `npm install @sveltejs/kit@version-2`.
+
+When publishing a maintenance release manually, also pass `--tag version-2`: `pnpm changeset:release --tag version-2`.
+
 New packages will need to be published manually the first time if they are scoped to the `@sveltejs` organisation, by running this from the package directory:
 
 ```sh
