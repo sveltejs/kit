@@ -263,10 +263,10 @@ function batch(validate_or_fn, maybe_fn) {
 		return new Promise((resolve, reject) => {
 			const batches = (state.remote.batches ??=
 				/** @type {NonNullable<typeof state.remote.batches>} */ (new Map()));
-			let batched = batches.get(__.id);
+			let batched = batches.get(__);
 			if (!batched) {
 				batched = new Map();
-				batches.set(__.id, batched);
+				batches.set(__, batched);
 			}
 			const entry = batched.get(payload);
 
@@ -283,7 +283,7 @@ function batch(validate_or_fn, maybe_fn) {
 			if (batched.size > 1) return;
 
 			setTimeout(async () => {
-				batches.delete(__.id);
+				batches.delete(__);
 				const entries = Array.from(batched.values());
 
 				try {

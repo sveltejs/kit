@@ -57,7 +57,7 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(status: number, request: Request): string;
+	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
 }
 
 /** the built `server/internal.js` */
@@ -491,7 +491,10 @@ export interface SSRManifest {
 	/**
 	 * hashed filename -> import to that file
 	 */
-	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	remotes: Record<
+		string,
+		() => Promise<{ default: Record<string, ((...args: any[]) => any) & { __: RemoteInternals }> }>
+	>;
 	routes: SSRRoute[];
 	prerendered_routes: Set<string>;
 	matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -768,9 +771,9 @@ export interface RequestState {
 		requested: null | Map<string, Set<string>>;
 		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
 		ignored: null | Set<string>;
-		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
+		/** A map of query.batch internals to payloads requested for that batch within the same macrotask */
 		batches: null | Map<
-			string,
+			RemoteQueryBatchInternals,
 			Map<
 				string,
 				{

@@ -1,9 +1,16 @@
 /** @import { RemoteChunk, RemoteInternals, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { Plugin, ViteDevServer } from 'vite' */
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import { prefixRegex } from '@rolldown/pluginutils';
 import MagicString from 'magic-string';
-import { error_for_missing_config, is_remote_module, remote_module_pattern } from '../utils.js';
+import {
+	error_for_missing_config,
+	is_remote_module,
+	query_pattern,
+	remote_module_pattern
+} from '../utils.js';
 import { create_exported_declarations } from '../../../core/env.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -11,6 +18,7 @@ import { get_runner } from '../../../runner.js';
 import { hash } from '../../../utils/hash.js';
 import { s } from '../../../utils/misc.js';
 import { posixify } from '../../../utils/os.js';
+import { get_locator } from '../../../utils/vite.js';
 
 /**
  * @param {ValidatedConfig} svelte_config
@@ -101,7 +109,8 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 			async handler(code, id) {
 				if (!is_remote_module(id)) return;
 
-				const file = posixify(path.relative(root, id));
+				// node_modules ids get a per-environment `?v=` query in dev, which must not affect the hash
+				const file = posixify(path.relative(root, id.replace(query_pattern, '')));
 				const remote = {
 					hash: hash(file),
 					file
@@ -116,6 +125,49 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 					// loaded and transformed twice and the first time all its exports would be undefined
 					// triggering a dev server error. By adding a microtask we ensure that the module is fully loaded
 					const ms = new MagicString(code);
+
+					let dev_decoration = '';
+					// Decorate remotes with line number references
+					if (dev_server) {
+						dev_decoration = `, ${s({
+							file: pathToFileURL(path.resolve(root, file))
+						})}`;
+						const locate = get_locator(code);
+						const map = new TraceMap(
+							/** @type {ReturnType<typeof this.getCombinedSourcemap> & { version: 3 }} */ (
+								this.getCombinedSourcemap()
+							)
+						);
+
+						const ast = this.parse(code);
+						for (const statement of ast.body) {
+							if (statement.type !== 'ExportNamedDeclaration') continue;
+							if (!statement.declaration) continue;
+							if (statement.declaration.type !== 'VariableDeclaration') continue;
+							// This is currently deliberately only scoped to remotes that are exported directly.
+							// It won't catch reexports, but the fallback behavior is jumping to the file instead
+							// of directly to the line number, which is acceptable.
+							for (const declaration of statement.declaration.declarations) {
+								if (declaration.id.type !== 'Identifier') continue;
+								const loc = locate(declaration.start);
+								const { line, column } = originalPositionFor(map, {
+									line: loc.line + 1,
+									column: loc.column
+								});
+								// unmapped positions fall back to linking to the file
+								if (line === null) continue;
+								ms.appendRight(
+									statement.end,
+									'\n' +
+										dedent`
+											if (${declaration.id.name}?.__) {
+												${declaration.id.name}.__.dev_loc = ${s({ line, column })}
+											}
+										`
+								);
+							}
+						}
+					}
 
 					// Extra newlines to prevent syntax errors around missing semicolons or comments
 					ms.append(
