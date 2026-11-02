@@ -169,20 +169,25 @@ test('valid immutable asset is still cached immutably', async ({ page, request }
 });
 
 test('static file shadows a +server.js at the same path', async ({ request }) => {
-	const get = await request.get('/shadowed.txt');
-	expect(get.status()).toBe(200);
-	expect(await get.text()).toBe('static file\n');
+	// one assertion over every method, so a failure shows what each one returned
+	const results = [];
 
-	for (const method of ['PUT', 'QUERY']) {
+	for (const method of ['GET', 'PUT', 'QUERY']) {
 		const response = await request.fetch('/shadowed.txt', {
 			method,
-			headers: { 'content-type': 'application/json' },
-			data: '{}'
+			...(method !== 'GET' && { headers: { 'content-type': 'application/json' }, data: '{}' })
 		});
-		expect({ method, status: response.status(), body: await response.text() }).toEqual({
+		results.push({
 			method,
-			status: 405,
-			body: ''
+			status: response.status(),
+			allow: response.headers()['allow'],
+			body: await response.text()
 		});
 	}
+
+	expect(results).toEqual([
+		{ method: 'GET', status: 200, allow: undefined, body: 'static file\n' },
+		{ method: 'PUT', status: 405, allow: 'GET, HEAD', body: '' },
+		{ method: 'QUERY', status: 405, allow: 'GET, HEAD', body: '' }
+	]);
 });
