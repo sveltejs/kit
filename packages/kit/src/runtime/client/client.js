@@ -2052,7 +2052,8 @@ async function navigate({
 				state,
 				persist_state,
 				redirect_count: redirect_count + 1,
-				nav_token
+				nav_token,
+				scroll
 			});
 
 			nav.fulfil(undefined);
