@@ -49,7 +49,8 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => {
+			const chain = this.#ready ? p : p.then(tick);
+			const result = chain.then(() => {
 				if (!this.#ready) {
 					throw new HandledHttpError(
 						this.#error ?? { status: 500, message: 'Query resolved without a value' }

@@ -244,4 +244,21 @@ describe('QueryProxy', () => {
 
 		expect(query_map.has('q')).toBe(false);
 	});
+
+	test('awaiting an already-ready query settles in microtasks without waiting for tick', async () => {
+		const fn = () => Promise.resolve('ready-value');
+		const proxy = new QueryProxy('q-ready', undefined, fn);
+
+		const initial = await proxy;
+		expect(initial).toBe('ready-value');
+		expect(proxy.ready).toBe(true);
+
+		let resolved = false;
+		proxy.then(() => {
+			resolved = true;
+		});
+
+		await Promise.resolve();
+		expect(resolved).toBe(true);
+	});
 });

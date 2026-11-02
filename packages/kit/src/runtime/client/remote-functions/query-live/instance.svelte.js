@@ -57,7 +57,8 @@ export class LiveQuery {
 		const p = /** @type {Promise<T>} */ (this.#promise);
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => /** @type {T} */ (this.#raw));
+			const chain = this.#ready ? p : p.then(tick);
+			const result = chain.then(() => /** @type {T} */ (this.#raw));
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
