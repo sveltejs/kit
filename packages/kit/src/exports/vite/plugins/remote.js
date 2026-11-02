@@ -5,7 +5,12 @@ import { pathToFileURL } from 'node:url';
 import { TraceMap, originalPositionFor } from '@jridgewell/trace-mapping';
 import { prefixRegex } from '@rolldown/pluginutils';
 import MagicString from 'magic-string';
-import { error_for_missing_config, is_remote_module, remote_module_pattern } from '../utils.js';
+import {
+	error_for_missing_config,
+	is_remote_module,
+	query_pattern,
+	remote_module_pattern
+} from '../utils.js';
 import { create_exported_declarations } from '../../../core/env.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -104,7 +109,8 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 			async handler(code, id) {
 				if (!is_remote_module(id)) return;
 
-				const file = posixify(path.relative(root, id));
+				// node_modules ids get a per-environment `?v=` query in dev, which must not affect the hash
+				const file = posixify(path.relative(root, id.replace(query_pattern, '')));
 				const remote = {
 					hash: hash(file),
 					file
