@@ -70,7 +70,7 @@ Alternatively, the server can be configured to accept connections on a specified
 SOCKET_PATH=/tmp/socket node build
 ```
 
-### `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
+### `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, and `PORT_HEADER`
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. By default, SvelteKit will derive the origin from the request's `host` header (and the `https` protocol, if no `PROTOCOL_HEADER` is set).
 
@@ -88,14 +88,23 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: process.env.ORIGIN
+				origin: 'https://my.site'
 			}
 		})
 	]
 });
 ```
 
-When `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
+If your origin isn't known at build time, you can set the `ORIGIN` environment variable instead:
+
+```sh
+ORIGIN=https://my.site node build
+
+# or e.g. for local previewing and testing
+ORIGIN=http://localhost:3000 node build
+```
+
+When `ORIGIN` or `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls.
 
 Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
@@ -197,6 +206,7 @@ envPrefix: 'MY_CUSTOM_';
 ```sh
 MY_CUSTOM_HOST=127.0.0.1 \
 MY_CUSTOM_PORT=4000 \
+MY_CUSTOM_ORIGIN=https://my.site \
 node build
 ```
 
@@ -283,6 +293,6 @@ app.listen(3000, () => {
 });
 ```
 
-> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
+> [!NOTE] When you use `handler.js` in a custom server, only the environment variables read by the handler itself take effect: `ORIGIN`, `PROTOCOL_HEADER`, `HOST_HEADER`, `PORT_HEADER`, `ADDRESS_HEADER`, `XFF_DEPTH`, and `BODY_SIZE_LIMIT`.
 >
 > The server-lifecycle variables (`PORT`, `HOST`, `SOCKET_PATH`, `SHUTDOWN_TIMEOUT`, `IDLE_TIMEOUT`, `KEEP_ALIVE_TIMEOUT`, `HEADERS_TIMEOUT`, `LISTEN_PID`, `LISTEN_FDS`) are only honored by the default `node build` server. Implement them yourself in a custom server if you need the same behavior — for example, the snippet above listens on a hardcoded `3000` regardless of `PORT`.

@@ -7,16 +7,22 @@ import {
 	env_prefix,
 	base,
 	app_path,
-	origin,
+	origin as paths_origin,
 	mime_types,
 	assets,
 	prerendered_assets
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
-import { parse_as_bytes } from './utils.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 import { create_file_map, serve_static } from './static.js';
 
 /** @import { Middleware } from './static.js' */
+
+// parse_origin validates ORIGIN and throws descriptive errors for invalid values
+const env_origin = parse_origin(env('ORIGIN', undefined));
+
+// ORIGIN overrides paths.origin here and in the kit csrf checks
+const origin = env_origin ?? paths_origin;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -36,6 +42,7 @@ const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: process.env,
+	origin: env_origin,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 

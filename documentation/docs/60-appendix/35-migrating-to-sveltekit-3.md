@@ -64,7 +64,7 @@ The following options are obsolete and should be removed from your `vite.config.
 
 - `output.linkHeaderPreload` determines whether to use `Link` HTTP headers to preload resources like `.js` and `.css` files rather than injecting `<link>` elements in the rendered HTML. This can cause issues when the headers grow too large, so SvelteKit 3 uses `<link>` elements by default instead.
 - `csrf.trustedOrigins` allows you to specify external origins that are allowed to make form submissions.
-- `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls. If using `adapter-node`, this replaces the `ORIGIN` environment variable.
+- `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls.
 
 ### Changed options
 
@@ -498,7 +498,6 @@ await myCache.match(request);
 ### `adapter-node`
 
 - bundling now happens with `rolldown`
-- the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
 - static assets are served from a list recorded at build time; files added to the output directory afterwards are not served, and replaced ones keep their old size and `ETag` (use environment variables for runtime configuration)
 - `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
 - only `GET` and `HEAD` requests are served static assets; other methods result in a 405 response
