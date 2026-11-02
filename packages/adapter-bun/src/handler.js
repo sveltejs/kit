@@ -15,8 +15,9 @@ await server.init({
 });
 
 // server.init has already validated the value
-const env_origin = origin_env && Bun.env[origin_env]?.trim();
-const fixed_origin = env_origin ? new URL(env_origin).origin : origin;
+const fixed_origin = origin_env
+	? new URL(/** @type {string} */ (Bun.env[origin_env])).origin
+	: origin;
 
 /**
  * The Bun-native SvelteKit request handler used by the generated server.

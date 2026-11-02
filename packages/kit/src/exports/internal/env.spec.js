@@ -155,16 +155,17 @@ test('turns a URL into its origin', () => {
 	assert.equal(to_origin('https://my.site', 'ORIGIN', issues), 'https://my.site');
 	assert.equal(to_origin('https://my.site:443/path?q#h', 'ORIGIN', issues), 'https://my.site');
 	assert.equal(to_origin('http://localhost:3000', 'ORIGIN', issues), 'http://localhost:3000');
-	assert.equal(to_origin(undefined, 'ORIGIN', issues), undefined);
-	assert.equal(to_origin('', 'ORIGIN', issues), undefined);
 	assert.equal(to_origin(' https://my.site ', 'ORIGIN', issues), 'https://my.site');
 	assert.deepEqual(issues, {});
 });
 
-test.each(['my.site', 'ftp://my.site'])('reports %s as an invalid origin', (value) => {
-	/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
-	const issues = {};
+test.each([undefined, '', ' ', 'my.site', 'ftp://my.site'])(
+	'reports %s as an invalid origin',
+	(value) => {
+		/** @type {Record<string, import('@standard-schema/spec').StandardSchemaV1.Issue[]>} */
+		const issues = {};
 
-	assert.equal(to_origin(value, 'ORIGIN', issues), undefined);
-	assert.deepEqual(issues.ORIGIN, [INVALID_ORIGIN]);
-});
+		assert.equal(to_origin(value, 'ORIGIN', issues), undefined);
+		assert.deepEqual(issues.ORIGIN, [INVALID_ORIGIN]);
+	}
+);

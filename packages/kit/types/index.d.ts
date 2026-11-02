@@ -1914,7 +1914,7 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * This is also used as the value of `url.origin` during prerendering (when unset, it defaults to `http://sveltekit-prerender`), and as the trusted origin for CSRF checks on form submissions and remote function calls.
 			 *
-			 * If the origin is only known when your app starts, you can instead name an environment variable, such as `{ env: 'ORIGIN' }`. SvelteKit reads it when your app starts and, for prerendering, when it builds. If the variable is unset or empty, SvelteKit derives the origin from `request.url` as if `paths.origin` wasn't set.
+			 * If the origin is only known when your app starts, you can instead name an environment variable, such as `{ env: 'ORIGIN' }`. SvelteKit reads it during development, when your app builds and when it starts, and fails if it isn't set to an http or https URL. A `.env` file can provide the value for development and builds.
 			 *
 			 * @default undefined
 			 * @since 3.0

@@ -41,8 +41,9 @@ await server.init({
 });
 
 // server.init has already validated the value
-const env_origin = origin_env && process.env[origin_env]?.trim();
-const fixed_origin = env_origin ? new URL(env_origin).origin : origin;
+const fixed_origin = origin_env
+	? new URL(/** @type {string} */ (process.env[origin_env])).origin
+	: origin;
 
 /** @type {Middleware} */
 const ssr = async (req, res) => {
