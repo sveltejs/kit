@@ -16,7 +16,6 @@ test('initializes SvelteKit with Bun environment variables and server-readable a
 
 	expect(loaded.init).toHaveBeenCalledWith({
 		env: Bun.env,
-		origin: undefined,
 		read: expect.any(Function)
 	});
 	const { read } = loaded.init.mock.calls[0][0];
@@ -59,14 +58,12 @@ test('uses the ORIGIN environment variable as the trusted request origin', async
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://runtime.example/path');
 });
 
-test('lets the ORIGIN environment variable override paths.origin', async () => {
+test('fails at startup when both the ORIGIN environment variable and paths.origin are set', async () => {
 	set_env('ORIGIN', 'https://runtime.example');
-	const loaded = await load_handler({ origin: 'https://canonical.example' });
 
-	await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
-
-	expect(loaded.init.mock.calls[0][0].origin).toBe('https://runtime.example');
-	expect(loaded.respond.mock.calls[0][0].url).toBe('https://runtime.example/path');
+	await expect(load_handler({ origin: 'https://canonical.example' })).rejects.toThrow(
+		'ORIGIN cannot be set when paths.origin is configured'
+	);
 });
 
 test.each(['localhost:3000', '', 'ftp://localhost:3000'])(

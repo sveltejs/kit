@@ -95,7 +95,7 @@ export default defineConfig({
 });
 ```
 
-If your origin isn't known at build time, you can set the `ORIGIN` environment variable instead:
+If your origin isn't known at build time, you can set the `ORIGIN` environment variable instead. The server will fail to start if both are set:
 
 ```sh
 ORIGIN=https://my.site node build

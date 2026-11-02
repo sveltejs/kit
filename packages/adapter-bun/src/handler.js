@@ -5,7 +5,12 @@ import { env, number_env, origin_env } from './env.js';
 
 const env_origin = origin_env('ORIGIN');
 
-// ORIGIN overrides paths.origin here and in the kit csrf checks
+if (env_origin && paths_origin) {
+	throw new Error(
+		`${env_prefix}ORIGIN cannot be set when paths.origin is configured. Use one or the other`
+	);
+}
+
 const origin = env_origin ?? paths_origin;
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -16,7 +21,6 @@ const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 });
 
 await server.init({
 	env: Bun.env,
-	origin: env_origin,
 	read: (file) => server_assets.get(file)?.stream() ?? null
 });
 

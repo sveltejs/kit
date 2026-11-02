@@ -21,7 +21,12 @@ import { create_file_map, serve_static } from './static.js';
 // parse_origin validates ORIGIN and throws descriptive errors for invalid values
 const env_origin = parse_origin(env('ORIGIN', undefined));
 
-// ORIGIN overrides paths.origin here and in the kit csrf checks
+if (env_origin && paths_origin) {
+	throw new Error(
+		`${env_prefix}ORIGIN cannot be set when paths.origin is configured. Use one or the other`
+	);
+}
+
 const origin = env_origin ?? paths_origin;
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
@@ -42,7 +47,6 @@ const asset_dir = `${dir}/client${base}`;
 
 await server.init({
 	env: process.env,
-	origin: env_origin,
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
