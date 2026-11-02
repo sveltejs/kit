@@ -512,6 +512,16 @@ test.describe('SPA mode / no SSR', () => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('h2')).toHaveText('from: null');
 	});
+
+	test('afterNavigate receives the restored scroll position on reload', async ({
+		page,
+		scroll_to
+	}) => {
+		await page.goto('/no-ssr/after-navigate');
+		await scroll_to(0, 1000);
+		await page.reload();
+		await expect(page.locator('h3')).toHaveText('scroll: {"x":0,"y":1000}');
+	});
 });
 
 test.describe('$app/state', () => {
