@@ -4,7 +4,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
-import { parse_route_id, validate_route_id_params } from '../../../utils/routing.js';
+import {
+	encode_pathname_chars,
+	parse_route_id,
+	resolve_route,
+	validate_route_id_params
+} from '../../../utils/routing.js';
 import { runtime_directory } from '../../utils.js';
 import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
@@ -36,6 +41,30 @@ export default function create_manifest_data(
 	const hooks = create_hooks(config, root);
 	const params = resolve_params(config, root);
 	const { nodes, routes } = create_routes_and_nodes(root, config, fallback);
+
+	if (config.router.type !== 'hash') {
+		const asset_paths = new Map(
+			assets.map(({ file }) => [
+				'/' + file.split('/').map(encode_pathname_chars).join('/').normalize(),
+				file
+			])
+		);
+
+		for (const route of routes) {
+			// Dynamic routes can act as fallbacks for paths not served by static assets.
+			if (!is_app_route(route) || route.params.length > 0) continue;
+
+			// Encode literal pathname characters before expanding route escapes.
+			const id = route.id.split('/').map(encode_pathname_chars).join('/');
+			const file = asset_paths.get(resolve_route(id, {}).normalize());
+			if (file !== undefined) {
+				e.route_static_asset_conflict({
+					id: route.id,
+					file: posixify(path.relative(root, path.join(config.files.assets, file)))
+				});
+			}
+		}
+	}
 
 	return {
 		assets,
