@@ -4,6 +4,7 @@ import { DEV } from 'esm-env';
 import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
+import { escape_html } from '../../../utils/escape.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
@@ -602,7 +603,7 @@ export async function render_response({
 
 		if (state.prerendering.cache) {
 			head.add_http_equiv(
-				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
+				`<meta http-equiv="cache-control" content="${escape_html(state.prerendering.cache, true)}">`
 			);
 		}
 	} else {

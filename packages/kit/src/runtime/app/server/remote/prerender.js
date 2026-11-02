@@ -102,7 +102,12 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 				try {
 					// TODO adapters can provide prerendered data more efficiently than
 					// fetching from the public internet
-					const response = await fetch(new URL(url, event.url.origin).href);
+					const response = await fetch(new URL(url, event.url.origin).href, {
+						// in the unlikely event that an attacker is able to spoof the origin,
+						// this protects us against SSRF (the attacker-controlled server cannot
+						// trick us into making a request to an internal resource)
+						redirect: 'manual'
+					});
 
 					if (!response.ok) {
 						throw new Error('Prerendered response not found');
