@@ -556,15 +556,18 @@ async function _start(_app, _target, data) {
 
 		await _hydrate(target, data);
 	} else {
+		if (scroll) {
+			history.scrollRestoration = 'manual';
+		}
+
 		await navigate({
 			type: 'enter',
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true,
 			state: history_metadata?.persistState ? parse(history_metadata.state) : {},
-			persist_state: history_metadata?.persistState ?? false
+			persist_state: history_metadata?.persistState ?? false,
+			scroll
 		});
-
-		restore_reload_scroll();
 	}
 
 	_start_router();
@@ -1934,6 +1937,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *   event?: Event;
  *   intent?: NavigationIntent | undefined;
  *   action_result?: ActionResult;
+ *   scroll?: { x: number, y: number };
  * }} opts
  * @returns {Promise<void>}
  */
@@ -1951,7 +1955,8 @@ async function navigate({
 	block = noop,
 	event,
 	intent,
-	action_result
+	action_result,
+	scroll
 }) {
 	const prev_token = navigation_token;
 	const prev_invalidation_token = invalidation_token;
@@ -1960,7 +1965,7 @@ async function navigate({
 	intent ??= await get_navigation_intent(url, false);
 	const nav =
 		type === 'enter'
-			? create_navigation(current, intent, url, type)
+			? create_navigation(current, intent, url, type, scroll ?? null)
 			: _before_navigate({
 					url,
 					type,
@@ -2215,7 +2220,7 @@ async function navigate({
 		nav,
 		nav_token,
 		url,
-		popped?.scroll,
+		popped?.scroll ?? scroll,
 		reset,
 		commit_promise
 	);
