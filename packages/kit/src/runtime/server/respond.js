@@ -43,7 +43,7 @@ import {
 } from '../pathname.js';
 import { server_data_serializer } from './page/data_serializer.js';
 import { get_remote_id, handle_remote_call } from './remote-functions.js';
-import { hooks, manifest } from './internal.js';
+import { hooks, manifest, origin } from './internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import { respond_with_error, handle_fatal_error } from './page/respond_with_error.js';
 import * as e from '../../messages/server-errors.js';
@@ -100,7 +100,7 @@ export async function internal_respond(request, state) {
 
 	if (!__SVELTEKIT_DEV__) {
 		const request_origin = request.headers.get('origin');
-		const self_origin = get_self_origin(__SVELTEKIT_PATHS_ORIGIN__, url.origin);
+		const self_origin = get_self_origin(origin ?? __SVELTEKIT_PATHS_ORIGIN__, url.origin);
 
 		if (remote_id) {
 			if (

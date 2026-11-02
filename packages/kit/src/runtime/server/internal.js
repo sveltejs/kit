@@ -53,6 +53,17 @@ export function set_read_implementation(read) {
 }
 
 /**
+ * The origin an adapter passes to `server.init`, which takes precedence over `paths.origin`
+ * @type {string | undefined}
+ */
+export let origin;
+
+/** @param {string} value */
+export function set_origin(value) {
+	origin = value;
+}
+
+/**
  *
  * @param {SSRManifest} value
  */
