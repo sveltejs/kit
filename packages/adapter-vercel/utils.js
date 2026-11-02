@@ -110,7 +110,7 @@ function get_default_runtime() {
 
 		if (!valid_node_version_regex.test(version_key)) {
 			throw new Error(
-				`Unsupported Node.js version: ${process.version}. Please use Node 22, 24, or 26 and later to build your project, or explicitly specify a runtime in your adapter configuration.`
+				`Unsupported Node.js version: ${process.version}. Please use an up-to-date Node version to build your project, or explicitly specify a runtime in your adapter configuration.`
 			);
 		}
 
@@ -138,7 +138,7 @@ function assert_is_valid_runtime(key) {
 		!valid_node_version_regex.test(key)
 	) {
 		throw new Error(
-			`Unsupported runtime: ${key}. Supported runtimes are: ${valid_non_node_runtimes.join(', ')}, and Node 22, 24, or 26 and later. See the Node.js Version section in your Vercel project settings for info on the currently supported versions.`
+			`Unsupported runtime: ${key}. Supported runtimes are: ${valid_non_node_runtimes.join(', ')}, and up-to-date Node versions. See the Node.js Version section in your Vercel project settings for info on the currently supported versions.`
 		);
 	}
 }

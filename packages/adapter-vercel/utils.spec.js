@@ -217,7 +217,7 @@ describe('resolve_runtime with node detected', () => {
 			with_node(version, () => {
 				assert.throws(
 					() => resolve_runtime(undefined, undefined),
-					/Unsupported Node\.js version.*Please use Node 22, 24, or 26 and later to build your project/
+					/Unsupported Node\.js version.*Please use an up-to-date Node version to build your project/
 				);
 			});
 		}
