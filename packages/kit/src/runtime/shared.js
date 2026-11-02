@@ -1,4 +1,6 @@
 import * as devalue from 'devalue';
+import { SvelteKitError } from '@sveltejs/kit/internal';
+import { coalesce_to_error } from '../utils/error.js';
 import { base64_decode, base64_encode, text_decoder, text_encoder } from './utils.js';
 import { decoders, encoders } from '#app/internal/transport';
 import * as e from '../messages/shared-errors.js';
@@ -328,15 +330,23 @@ function url_friendly_base64_encode(string) {
  * @param {string} string
  */
 export function parse_remote_arg(string) {
-	if (!string) return undefined;
+	if (string == null || string === '') return undefined;
 
-	const json_string = text_decoder.decode(
-		// TODO replace with `Uint8Array.fromBase64(string, { alphabet: 'base64url' })` when we require Node >= 25
-		// no need to add back `=` characters, atob can handle it
-		base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
-	);
+	try {
+		const json_string = text_decoder.decode(
+			// TODO replace with `Uint8Array.fromBase64(string, { alphabet: 'base64url' })` when we require Node >= 25
+			// no need to add back `=` characters, atob can handle it
+			base64_decode(string.replaceAll('-', '+').replaceAll('_', '/'))
+		);
 
-	return devalue.parse(json_string, create_remote_arg_revivers());
+		return devalue.parse(json_string, create_remote_arg_revivers());
+	} catch (error) {
+		throw new SvelteKitError(
+			400,
+			'Bad Request',
+			`Could not deserialize remote function argument: ${coalesce_to_error(error).message}`
+		);
+	}
 }
 
 /**

@@ -6,6 +6,7 @@ import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { app_dir, base } from '#app/paths';
 import { is_form_content_type } from '../../utils/http.js';
+import { coalesce_to_error } from '../../utils/error.js';
 import { create_remote_key, parse_remote_arg, split_remote_key } from '../shared.js';
 import { stringify } from '#app/internal/transport';
 import { handle_error_and_jsonify } from './errors.js';
@@ -244,7 +245,7 @@ async function handle_remote_call_internal(event, state, id) {
 				}
 
 				/** @type {{ payloads: string[] }} */
-				const { payloads } = await event.request.json();
+				const { payloads } = await read_remote_json(event.request);
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
@@ -307,7 +308,7 @@ async function handle_remote_call_internal(event, state, id) {
 
 			case 'command': {
 				/** @type {{ payload: string, refreshes?: string[] }} */
-				const { payload, refreshes } = await event.request.json();
+				const { payload, refreshes } = await read_remote_json(event.request);
 				state.remote.requested = create_requested_map(refreshes);
 				const arg = parse_remote_arg(payload);
 
@@ -377,6 +378,28 @@ async function handle_remote_call_internal(event, state, id) {
 					'cache-control': 'private, no-store'
 				}
 			}
+		);
+	}
+}
+
+/**
+ * @param {Request} request
+ */
+async function read_remote_json(request) {
+	try {
+		const data = await request.json();
+		if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+			throw new Error('Expected an object');
+		}
+		return data;
+	} catch (error) {
+		// Preserve errors from the body stream, such as the adapter's body size limit.
+		if (error instanceof SvelteKitError) throw error;
+
+		throw new SvelteKitError(
+			400,
+			'Bad Request',
+			`Could not deserialize remote function request: ${coalesce_to_error(error).message}`
 		);
 	}
 }
