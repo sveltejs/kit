@@ -244,7 +244,7 @@ async function handle_remote_call_internal(event, state, id) {
 				}
 
 				/** @type {{ payloads: string[] }} */
-				const { payloads } = await event.request.json();
+				const { payloads } = await parse_json_body(event.request);
 
 				const args = await Promise.all(payloads.map((payload) => parse_remote_arg(payload)));
 
@@ -307,7 +307,7 @@ async function handle_remote_call_internal(event, state, id) {
 
 			case 'command': {
 				/** @type {{ payload: string, refreshes?: string[] }} */
-				const { payload, refreshes } = await event.request.json();
+				const { payload, refreshes } = await parse_json_body(event.request);
 				state.remote.requested = create_requested_map(refreshes);
 				const arg = parse_remote_arg(payload);
 
@@ -378,6 +378,17 @@ async function handle_remote_call_internal(event, state, id) {
 				}
 			}
 		);
+	}
+}
+
+/**
+ * @param {Request} request
+ */
+async function parse_json_body(request) {
+	try {
+		return await request.json();
+	} catch {
+		throw new SvelteKitError(400, 'Bad Request', 'Could not parse remote function request body');
 	}
 }
 
