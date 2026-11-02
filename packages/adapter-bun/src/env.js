@@ -5,6 +5,7 @@ const expected = new Set([
 	'SOCKET_PATH',
 	'HOST',
 	'PORT',
+	'ORIGIN',
 	'REUSE_PORT',
 	'IPV6_ONLY',
 	'CONNECTION_IDLE_TIMEOUT',
@@ -140,4 +141,27 @@ export function bytes_env(name, fallback) {
 	}
 
 	return number;
+}
+
+/**
+ * @param {string} name
+ * @returns {string | undefined}
+ */
+export function origin_env(name) {
+	const value = env(name);
+	if (value === undefined) return undefined;
+
+	/** @type {URL} */
+	let url;
+	try {
+		url = new URL(value.trim());
+	} catch {
+		parsing_error(name, value, 'an http:// or https:// URL, such as https://my.site');
+	}
+
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		parsing_error(name, value, 'an http:// or https:// URL, such as https://my.site');
+	}
+
+	return url.origin;
 }

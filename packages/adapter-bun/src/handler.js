@@ -1,7 +1,12 @@
 /** @import { Server as BunServer } from 'bun' */
-import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
+import { env_prefix, origin as paths_origin, server } from '#@sveltejs/adapter-bun';
 import { server_assets } from './routes.js';
-import { env, number_env } from './env.js';
+import { env, number_env, origin_env } from './env.js';
+
+const env_origin = origin_env('ORIGIN');
+
+// ORIGIN overrides paths.origin here and in the kit csrf checks
+const origin = env_origin ?? paths_origin;
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -11,6 +16,7 @@ const xff_depth = number_env('XFF_DEPTH', 1, { min: 1 });
 
 await server.init({
 	env: Bun.env,
+	origin: env_origin,
 	read: (file) => server_assets.get(file)?.stream() ?? null
 });
 
