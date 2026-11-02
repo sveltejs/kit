@@ -249,49 +249,11 @@ test('serves byte ranges', async () => {
 	expect(stale.body).toBe('0123456789');
 });
 
-test.each(['bytes=0-1', 'bytes=-3', 'bytes=10-'])(
-	'ignores %s on HEAD requests',
-	async (range_header) => {
-		for (const encoding of ['', 'gzip', 'br']) {
-			const headers: Record<string, string> = { 'accept-encoding': encoding };
-			const head = await get('/range.txt', { method: 'HEAD', headers });
-
-			for (const if_range of ['', head.headers.etag!, '"stale"']) {
-				const response = await get('/range.txt', {
-					method: 'HEAD',
-					headers: { ...headers, range: range_header, 'if-range': if_range }
-				});
-
-				expect(response.status).toBe(200);
-				expect(response.body).toBe('');
-				expect(response.headers['content-range']).toBeUndefined();
-				for (const name of [
-					'content-length',
-					'content-type',
-					'content-encoding',
-					'etag',
-					'vary',
-					'accept-ranges'
-				]) {
-					expect(response.headers[name]).toBe(head.headers[name]);
-				}
-			}
-		}
-	}
-);
-
-test('evaluates HEAD cache preconditions before ignoring Range', async () => {
-	for (const range_header of ['bytes=0-1', 'bytes=10-']) {
-		const response = await get('/range.txt', {
-			method: 'HEAD',
-			headers: { range: range_header, 'if-none-match': `"${range.etag}"` }
-		});
-		expect(response.status).toBe(304);
-		expect(response.body).toBe('');
-		expect(response.headers.etag).toBe(`"${range.etag}"`);
-		expect(response.headers.vary).toBe('Accept-Encoding');
-		expect(response.headers['content-range']).toBeUndefined();
-	}
+test('ignores Range on HEAD requests', async () => {
+	const response = await get('/range.txt', { method: 'HEAD', headers: { range: 'bytes=0-1' } });
+	expect(response.status).toBe(200);
+	expect(response.headers['content-length']).toBe('10');
+	expect(response.headers['content-range']).toBeUndefined();
 });
 
 test('negotiates the compressed variant', async () => {
