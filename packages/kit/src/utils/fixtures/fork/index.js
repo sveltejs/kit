@@ -6,7 +6,7 @@ export const run = forked(
 	import.meta.url,
 	/**
 	 * @param {{
-	 *   action: 'return' | 'undefined' | 'throw' | 'exit' | 'exit-code' | 'exit-error' | 'stdio';
+	 *   action: 'return' | 'undefined' | 'throw' | 'exit' | 'exit-code' | 'exit-error' | 'stdio' | 'colors';
 	 *   state?: Int32Array;
 	 *   code?: number;
 	 *   error?: unknown;
@@ -27,6 +27,8 @@ export const run = forked(
 			if (state) Atomics.store(state, 0, 1);
 
 			switch (action) {
+				case 'colors':
+					return { FORCE_COLOR: process.env.FORCE_COLOR, NO_COLOR: process.env.NO_COLOR };
 				case 'undefined':
 					return undefined;
 				case 'throw':
