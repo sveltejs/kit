@@ -8,9 +8,10 @@ import * as e from '../../../../messages/server-errors.js';
 /**
  * @param {any} validate_or_fn
  * @param {((arg?: any) => any) | undefined} [maybe_fn]
+ * @param {(() => import('types').BaseRemoteInternals | undefined) | undefined} [get_internals]
  * @returns {(arg?: any) => MaybePromise<any>}
  */
-export function create_validator(validate_or_fn, maybe_fn) {
+export function create_validator(validate_or_fn, maybe_fn, get_internals) {
 	// prevent functions without validators being called with arguments
 	if (!maybe_fn) {
 		return (arg) => {
@@ -33,7 +34,11 @@ export function create_validator(validate_or_fn, maybe_fn) {
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
-				throw new ValidationError(result.issues);
+				const internals = get_internals?.();
+				throw new ValidationError(
+					result.issues,
+					internals?.name ? { name: internals.name, file: internals.file } : undefined
+				);
 			}
 
 			return result.value;

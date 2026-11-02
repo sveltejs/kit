@@ -68,7 +68,7 @@ export function query(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	const validate = create_validator(validate_or_fn, maybe_fn, () => __);
 
 	/** @type {RemoteQueryInternals} */
 	const __ = {
@@ -155,7 +155,7 @@ function live(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	const validate = create_validator(validate_or_fn, maybe_fn, () => __);
 
 	/**
 	 * @param {any} event
@@ -247,7 +247,7 @@ function batch(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
-	const validate = create_validator(validate_or_fn, maybe_fn);
+	const validate = create_validator(validate_or_fn, maybe_fn, () => __);
 
 	/**
 	 * Enqueues a single call into the current batch (creating one if necessary)
