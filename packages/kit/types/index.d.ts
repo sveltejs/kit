@@ -729,12 +729,6 @@ declare module '@sveltejs/kit' {
 		env: Record<string, string | undefined>;
 		/** A function that turns an asset filename into a `ReadableStream`. Required for the `read` export from `$app/server` to work. */
 		read?: (file: string) => MaybePromise<ReadableStream | null>;
-		/**
-		 * The origin of your app, used for CSRF protection.
-		 *
-		 * It takes precedence over [`paths.origin`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths).
-		 */
-		origin?: string;
 	}
 
 	/**
