@@ -167,3 +167,33 @@ test.each([
 		);
 	}
 );
+
+test.each([
+	{ type: 'command', url: '', body: JSON.stringify({ payload: JSON.stringify({ name: 'a' }) }) },
+	{ type: 'command', url: '', body: 'not json' },
+	{ type: 'query_batch', url: '', body: 'not json' },
+	{ type: 'query', url: '?payload=[{"name":1},"a"]', body: undefined }
+])('remote $type rejects a malformed argument as 400 Bad Request', async ({ type, url, body }) => {
+	const handleError = vi.fn();
+	set_hooks(/** @type {any} */ ({ handleError }));
+	const fn = Object.assign(() => {}, { __: { type, name: 'fn' } });
+	set_manifest(
+		/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { fn } }) } })
+	);
+	const response = await handle_remote_call(
+		/** @type {any} */ ({
+			request: new Request(`http://localhost/_app/remote/hash/fn${url}`, {
+				method: body === undefined ? 'GET' : 'POST',
+				body
+			}),
+			tracing: { current: { setAttributes: vi.fn() } }
+		}),
+		/** @type {any} */ ({ remote: {} }),
+		'hash/fn'
+	);
+	expect(await response.json()).toEqual({
+		type: 'error',
+		error: { status: 400, message: 'Bad Request' }
+	});
+	expect(handleError).toHaveBeenCalledWith(expect.objectContaining({ kind: 'framework' }));
+});
