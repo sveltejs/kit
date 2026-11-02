@@ -387,7 +387,9 @@ async function handle_remote_call_internal(event, state, id) {
 async function parse_json_body(request) {
 	try {
 		return await request.json();
-	} catch {
+	} catch (error) {
+		// keep errors from reading the body, e.g. 413 Payload Too Large from adapter-node
+		if (error instanceof SvelteKitError) throw error;
 		throw new SvelteKitError(400, 'Bad Request', 'Could not parse remote function request body');
 	}
 }
