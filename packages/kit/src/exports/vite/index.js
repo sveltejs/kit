@@ -604,9 +604,9 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
-	/** @type {{ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string>}} */
+	/** @type {{ remotes: Map<string, RemoteChunk>; remote_original_by_hash: Map<string, string>}} */
 	let remote_metadata = {
-		remotes: [],
+		remotes: new Map(),
 		remote_original_by_hash: new Map()
 	};
 

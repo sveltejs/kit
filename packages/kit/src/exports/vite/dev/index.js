@@ -34,7 +34,7 @@ import create_manifest_data from '../../../core/sync/create_manifest_data/index.
  * @param {typeof import('vite')} vite the peer resolved vite module
  * @param {ViteDevServer} vite_dev_server
  * @param {ValidatedConfig} svelte_config
- * @param {() => RemoteChunk[]} get_remotes
+ * @param {() => Map<string, RemoteChunk>} get_remotes
  * @param {string} root The project root directory
  * @param {(manifest_data: ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
