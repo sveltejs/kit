@@ -22,3 +22,22 @@ test('read from $app/server works', async ({ request }) => {
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
 });
+
+test('static file shadows a +server.js at the same path', async ({ request }) => {
+	const get = await request.get('/shadowed.txt');
+	expect(get.status()).toBe(200);
+	expect(await get.text()).toBe('static file\n');
+
+	for (const method of ['PUT', 'QUERY']) {
+		const response = await request.fetch('/shadowed.txt', {
+			method,
+			headers: { 'content-type': 'application/json' },
+			data: '{}'
+		});
+		expect({ method, status: response.status(), body: await response.text() }).toEqual({
+			method,
+			status: 405,
+			body: ''
+		});
+	}
+});
