@@ -544,10 +544,15 @@ async function _start(_app, _target, data) {
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
 	const scroll = history_info[current_history_index]?.scroll;
-	if (scroll) history.scrollRestoration = 'manual';
+	function restore_reload_scroll() {
+		if (scroll) {
+			history.scrollRestoration = 'manual';
+			scrollTo(scroll.x, scroll.y);
+		}
+	}
 
 	if (data) {
-		if (scroll) scrollTo(scroll.x, scroll.y);
+		restore_reload_scroll();
 
 		await _hydrate(target, data);
 	} else {
@@ -556,9 +561,10 @@ async function _start(_app, _target, data) {
 			url: resolve_url(app.hash ? decode_hash(new URL(location.href)) : location.href),
 			replace_state: true,
 			state: history_metadata?.persistState ? parse(history_metadata.state) : {},
-			persist_state: history_metadata?.persistState ?? false,
-			scroll
+			persist_state: history_metadata?.persistState ?? false
 		});
+
+		restore_reload_scroll();
 	}
 
 	_start_router();
@@ -1928,7 +1934,6 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *   event?: Event;
  *   intent?: NavigationIntent | undefined;
  *   action_result?: ActionResult;
- *   scroll?: { x: number, y: number };
  * }} opts
  * @returns {Promise<void>}
  */
@@ -1946,8 +1951,7 @@ async function navigate({
 	block = noop,
 	event,
 	intent,
-	action_result,
-	scroll = popped?.scroll
+	action_result
 }) {
 	const prev_token = navigation_token;
 	const prev_invalidation_token = invalidation_token;
@@ -2043,8 +2047,7 @@ async function navigate({
 				state,
 				persist_state,
 				redirect_count: redirect_count + 1,
-				nav_token,
-				scroll
+				nav_token
 			});
 
 			nav.fulfil(undefined);
@@ -2208,7 +2211,14 @@ async function navigate({
 		await initialize(navigation_result, target, false);
 	}
 
-	const finished = await finish_navigation(nav, nav_token, url, scroll, reset, commit_promise);
+	const finished = await finish_navigation(
+		nav,
+		nav_token,
+		url,
+		popped?.scroll,
+		reset,
+		commit_promise
+	);
 	if (!finished) return;
 
 	if (type === 'popstate') {
@@ -2250,7 +2260,7 @@ async function run_on_navigate_callbacks(navigation) {
  * @param {ReturnType<typeof create_navigation>} nav
  * @param {{}} nav_token
  * @param {URL} url
- * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations and reloads
+ * @param {{ x: number, y: number } | null | undefined} popped_scroll the scroll position to restore for popstate navigations
  * @param {boolean} reset
  * @param {Promise<void> | undefined} updated
  */
@@ -2273,7 +2283,10 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 
 	// Update to.scroll to the actual scroll position after navigation completed
 	if (nav.navigation.to) {
-		nav.navigation.to.scroll = scroll_state();
+		nav.navigation.to.scroll =
+			nav.navigation.type === 'enter'
+				? (history_info[current_history_index]?.scroll ?? scroll_state())
+				: scroll_state();
 	}
 
 	after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));

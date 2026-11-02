@@ -522,6 +522,18 @@ test.describe('SPA mode / no SSR', () => {
 		await page.reload();
 		await expect(page.locator('h3')).toHaveText('scroll: {"x":0,"y":1000}');
 	});
+
+	test('restores the scroll position on reload after function snapshots grow the page', async ({
+		page,
+		scroll_to
+	}) => {
+		await page.goto('/no-ssr/snapshot/scroll');
+		await page.locator('button').click();
+		await scroll_to(0, 3000);
+		await page.reload();
+		await expect(page.locator('p')).toHaveText('scroll: {"x":0,"y":3000}');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(3000);
+	});
 });
 
 test.describe('$app/state', () => {
