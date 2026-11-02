@@ -118,11 +118,14 @@ function log_handle_error_hook_failure(error, hook_error) {
  */
 export function default_handle_error({ kind, error, issues, remote }) {
 	if (kind === 'validation') {
-		const fn = remote?.name
-			? remote.file
-				? `${remote.name} (${remote.file})`
-				: remote.name
-			: undefined;
+		let fn;
+
+		if (remote?.name && remote.file) {
+			fn = `${remote.name} (${remote.file})`;
+		} else if (remote?.name) {
+			fn = remote.name;
+		}
+
 		console.error(`Remote function ${fn ? fn + ' ' : ''}schema validation failed:`, issues);
 		return;
 	}
