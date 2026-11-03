@@ -736,7 +736,7 @@ async function prerender({
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id.toLowerCase())) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}
