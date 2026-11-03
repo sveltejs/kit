@@ -18,15 +18,15 @@ import { create_file_map, serve_static } from './static.js';
 
 /** @import { Middleware } from './static.js' */
 
-const env_origin = parse_origin(env('ORIGIN', undefined));
+const env_origin = env('ORIGIN', undefined);
 
-if (origin && env_origin) {
+if (origin && env_origin !== undefined) {
 	console.warn(
 		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
 	);
 }
 
-const public_origin = origin || env_origin;
+const public_origin = origin || parse_origin(env_origin);
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();

@@ -3,15 +3,13 @@ import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
 import { server_assets } from './routes.js';
 import { env, number_env, origin_env } from './env.js';
 
-const env_origin = origin_env('ORIGIN');
-
-if (origin && env_origin) {
+if (origin && env('ORIGIN') !== undefined) {
 	console.warn(
 		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
 	);
 }
 
-const public_origin = origin || env_origin;
+const public_origin = origin || origin_env('ORIGIN');
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();

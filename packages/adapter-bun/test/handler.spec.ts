@@ -68,6 +68,20 @@ test('prefers paths.origin over the ORIGIN environment variable and warns', asyn
 	);
 });
 
+test.each(['', 'not-a-url', 'ftp://env.example'])(
+	'ignores invalid ORIGIN %j when paths.origin is configured',
+	async (value) => {
+		const warn = spyOn(console, 'warn').mockImplementation(() => {});
+		set_env('ORIGIN', value);
+		const loaded = await load_handler({ origin: 'https://canonical.example' });
+
+		await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
+
+		expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
+		expect(warn).toHaveBeenCalled();
+	}
+);
+
 test('derives the public origin from configured proxy headers', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');
