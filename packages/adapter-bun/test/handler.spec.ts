@@ -55,21 +55,8 @@ test('uses the ORIGIN environment variable as the request origin', async () => {
 	expect(loaded.respond.mock.calls[0][0].url).toBe('http://192.168.1.10:3000/path?query=yes');
 });
 
-test('prefers paths.origin over the ORIGIN environment variable and warns', async () => {
-	const warn = spyOn(console, 'warn').mockImplementation(() => {});
-	set_env('ORIGIN', 'https://env.example');
-	const loaded = await load_handler({ origin: 'https://canonical.example' });
-
-	await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
-
-	expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
-	expect(warn).toHaveBeenCalledWith(
-		'ORIGIN is ignored because the SvelteKit configuration `paths.origin` setting was set to https://canonical.example'
-	);
-});
-
-test.each(['', 'not-a-url', 'ftp://env.example'])(
-	'ignores invalid ORIGIN %j when paths.origin is configured',
+test.each(['https://env.example', '', 'not-a-url'])(
+	'ignores ORIGIN %j and warns when paths.origin is configured',
 	async (value) => {
 		const warn = spyOn(console, 'warn').mockImplementation(() => {});
 		set_env('ORIGIN', value);
@@ -78,7 +65,9 @@ test.each(['', 'not-a-url', 'ftp://env.example'])(
 		await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
 
 		expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
-		expect(warn).toHaveBeenCalled();
+		expect(warn).toHaveBeenCalledWith(
+			'ORIGIN is ignored because the SvelteKit configuration `paths.origin` setting was set to https://canonical.example'
+		);
 	}
 );
 
