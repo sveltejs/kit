@@ -24,17 +24,17 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
-	if (req.destroyed) {
-		const readable = new ReadableStream();
-		void readable.cancel();
-		return readable;
-	}
-
 	let size = 0;
 	let cancelled = false;
 
 	return new ReadableStream({
 		start(controller) {
+			if (req.destroyed) {
+				// Close without cancelling, which would disturb the stream before Request can use it.
+				controller.close();
+				return;
+			}
+
 			if (body_size_limit !== undefined && has_content_length && content_length > body_size_limit) {
 				const error = new SvelteKitError(
 					413,
@@ -134,6 +134,11 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 	}
 
 	const controller = new AbortController();
+
+	// Either stream may have closed before we started listening.
+	if (request.readableAborted || (response?.destroyed && !response.writableEnded)) {
+		controller.abort();
+	}
 
 	request.once('close', () => {
 		if (request.readableAborted) {
