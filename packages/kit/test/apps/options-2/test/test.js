@@ -44,7 +44,58 @@ test.describe('paths', () => {
 
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${expected}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${expected}`);
+
+		// The root layout's load also runs when producing this HTML response.
+		await expect(page.getByTestId('layout-link')).toHaveJSProperty('pathname', '/basepath/hello');
+		await expect(page.getByTestId('layout-asset')).toHaveJSProperty(
+			'pathname',
+			'/basepath/answer.txt'
+		);
 	});
+
+	for (const path of ['data', 'nested/data', 'data.html', 'with-slash/']) {
+		test(`resolves server load paths against the page URL (${path})`, async ({
+			page,
+			app,
+			javaScriptEnabled
+		}) => {
+			const url = `/basepath/resolve-paths/${path}`;
+			await page.goto(url);
+
+			for (const navigate of [false, true]) {
+				if (navigate) {
+					if (!javaScriptEnabled) break;
+					await page.goto('/basepath');
+					await app.goto(url);
+				}
+
+				await expect(page.getByTestId('resolved-link')).toHaveJSProperty(
+					'pathname',
+					'/basepath/hello'
+				);
+				await expect(page.getByTestId('resolved-asset')).toHaveJSProperty(
+					'pathname',
+					'/basepath/answer.txt'
+				);
+			}
+		});
+
+		test(`resolves server redirects against the page URL (${path})`, async ({
+			page,
+			app,
+			javaScriptEnabled
+		}) => {
+			const url = `/basepath/resolve-paths/${path}?redirect`;
+			await page.goto(url);
+			expect(new URL(page.url()).pathname).toBe('/basepath/hello');
+
+			if (javaScriptEnabled) {
+				await page.goto('/basepath');
+				await app.goto(url);
+				expect(new URL(page.url()).pathname).toBe('/basepath/hello');
+			}
+		});
+	}
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {
 		await page.goto('/basepath');

@@ -44,11 +44,12 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = store.event.isDataRequest
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
+			// HTML error responses (including their root layout loads) use the data URL.
+			// Data responses are consumed at the page URL instead.
+			const pathname =
+				store.state.error && store.event.isDataRequest
+					? add_data_suffix(store.event.url.pathname)
+					: store.event.url.pathname;
 			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
