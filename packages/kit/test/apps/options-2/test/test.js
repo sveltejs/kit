@@ -46,6 +46,11 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${expected}`);
 	});
 
+	test('uses relative paths of the page URL in a __data.json response', async ({ request }) => {
+		const response = await request.get('/basepath/redirect-relative/__data.json');
+		expect(await response.json()).toEqual({ type: 'redirect', status: 303, location: './hello' });
+	});
+
 	test('serves /basepath with trailing slash always', async ({ page }) => {
 		await page.goto('/basepath');
 		expect(new URL(page.url()).pathname).toBe('/basepath/');

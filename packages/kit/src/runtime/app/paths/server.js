@@ -45,10 +45,12 @@ export function resolve(id, params) {
 
 		if (store && !store.state.prerendering?.fallback) {
 			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = store.event.isDataRequest
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
+			// for an error page rendered for a data request includes the `__data.json` suffix
+			// that was stripped during routing
+			const pathname =
+				store.event.isDataRequest && store.state.is_in_render
+					? add_data_suffix(store.event.url.pathname)
+					: store.event.url.pathname;
 			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
