@@ -351,9 +351,15 @@ export function form(id) {
 
 		/**
 		 * @param {FormData} form_data
+		 * @param {boolean} [sync_input]
 		 */
-		async function preflight(form_data) {
+		async function preflight(form_data, sync_input = false) {
 			const data = convert(form_data);
+			if (sync_input) {
+				// Sync before asynchronous validation, so edits made while it is pending
+				// are not overwritten by the older submitted values afterward.
+				merge_submitted_values(input, data);
+			}
 			const schema = preflight_schema ?? shared_preflight_schema;
 			const validated = await schema?.['~standard'].validate(data);
 
@@ -468,7 +474,7 @@ export function form(id) {
 					// the in-progress state during async preflight validation
 					pending_count++;
 
-					const valid = await preflight(form_data);
+					const valid = await preflight(form_data, true);
 					if (!valid) return;
 
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
@@ -825,6 +831,37 @@ function validate_form_data(form_data, enctype) {
 			if (value instanceof File) {
 				e.enhance_file_without_enctype();
 			}
+		}
+	}
+}
+
+/**
+ * Merges submitted data into the reactive form state. Submitted values win for
+ * fields present in the form; fields absent from the DOM keep their current state.
+ * @param {Record<string, any>} target
+ * @param {Record<string, any>} source
+ */
+function merge_submitted_values(target, source) {
+	for (const key of Object.keys(source)) {
+		const value = source[key];
+		if (
+			value !== null &&
+			typeof value === 'object' &&
+			!(value instanceof File) &&
+			!Array.isArray(value)
+		) {
+			const current = target[key];
+			if (
+				current === null ||
+				typeof current !== 'object' ||
+				current instanceof File ||
+				Array.isArray(current)
+			) {
+				target[key] = {};
+			}
+			merge_submitted_values(target[key], value);
+		} else {
+			target[key] = value;
 		}
 	}
 }
