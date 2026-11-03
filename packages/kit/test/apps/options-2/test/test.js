@@ -44,16 +44,18 @@ test.describe('paths', () => {
 
 		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${expected}`);
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${expected}`);
-		expect(await page.textContent('[data-testid="hello"]')).toBe('hello: ../../../../hello');
+		// the universal load reruns in the browser, where `resolve` returns an absolute path
+		expect(await page.textContent('[data-testid="hello"]')).toBe(
+			`hello: ${javaScriptEnabled ? '/basepath/hello' : '../../../../hello'}`
+		);
 	});
 
 	test('uses relative paths of the page URL in a __data.json response', async ({ request }) => {
 		const response = await request.get('/basepath/redirect-relative/__data.json');
 		expect(await response.json()).toEqual({ type: 'redirect', status: 303, location: './hello' });
 
-		const r = await request.get('/basepath/deeply/nested/page/__data.json');
-		const data = await r.json();
-		expect(data.nodes[0].data).toEqual([{ hello: 1 }, '../../hello']);
+		const data = await (await request.get('/basepath/relative-data/a/b/__data.json')).json();
+		expect(data.nodes.at(-1).data).toEqual([{ hello: 1 }, '../../hello']);
 	});
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {

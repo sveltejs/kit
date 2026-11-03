@@ -44,13 +44,13 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for an error page rendered for a data request includes the `__data.json` suffix
-			// that was stripped during routing
-			const pathname =
-				store.event.isDataRequest && store.state.error
-					? add_data_suffix(store.event.url.pathname)
-					: store.event.url.pathname;
+			// the relative path depth must reflect the URL the result is resolved against. For a
+			// `__data.json` response that's the page URL, but when an HTML error page is rendered
+			// for a data request, the browser is at the URL with the `__data.json` suffix that was
+			// stripped during routing
+			const pathname = store.state.is_html_for_data_request
+				? add_data_suffix(store.event.url.pathname)
+				: store.event.url.pathname;
 			const after_base = pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
