@@ -151,6 +151,22 @@ test.describe('assets path', () => {
 		expect(response.status()).toBe(200);
 	});
 
+	test('server-rendered stylesheet links have the crossorigin attribute', async ({
+		request,
+		javaScriptEnabled
+	}) => {
+		test.skip(!!process.env.DEV || javaScriptEnabled, 'only applicable to the build output');
+
+		const response = await request.get('/path-base/base/');
+		const html = await response.text();
+
+		const links = html.match(/<link [^>]*rel="stylesheet"[^>]*>/g) ?? [];
+		expect(links.length).toBeGreaterThan(0);
+		for (const link of links) {
+			expect(link).toMatch(/\scrossorigin[\s>]/);
+		}
+	});
+
 	test('client avoids generating relative URLs if paths.assets or paths.relative are truthy', async () => {
 		test.skip(!!process.env.DEV, 'only applicable to the build output');
 		const nodes = readdirSync('.custom-out-dir/output/client/_wheee/nested/immutable/nodes');

@@ -195,6 +195,18 @@ test.describe('Link header preload', () => {
 		expect(header).toContain('as="font"');
 	});
 
+	test('injects Link headers for stylesheets with crossorigin', async ({ request }) => {
+		const response = await request.get('/basepath/asset-preload');
+
+		const header = response.headers()['link'] ?? '';
+		const stylesheets = header.split(', ').filter((entry) => entry.includes('as="style"'));
+
+		expect(stylesheets.length).toBeGreaterThan(0);
+		for (const entry of stylesheets) {
+			expect(entry).toContain('; crossorigin;');
+		}
+	});
+
 	test('does not inject Link headers on prerendered pages', async ({ request }) => {
 		const response = await request.get('/basepath/asset-preload/prerendered');
 
