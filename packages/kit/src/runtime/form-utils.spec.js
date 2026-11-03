@@ -1015,7 +1015,7 @@ describe('deep_get', () => {
 });
 
 describe('create_field_proxy', () => {
-	test.each(['hidden', 'submit', 'radio'])('%s inputs require a value in development', (type) => {
+	test.each(['submit', 'radio'])('%s inputs require a value in development', (type) => {
 		const proxy = create_field_proxy({
 			form_id: 'form',
 			get: () => ({}),
@@ -1157,6 +1157,76 @@ describe('create_field_proxy', () => {
 
 		expect(edited.a.as('number', 3).value).toBe('');
 		expect(edited.a.as('checkbox', true).checked).toBe(undefined);
+	});
+
+	test('a hidden input with no value reads the field state and follows it as it changes', () => {
+		/** @type {Record<string, unknown>} */
+		let input = { a: 'x' };
+
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		const props = proxy.a.as('hidden');
+		expect(props.name).toBe('a/form');
+		expect(props.value).toBe('x');
+
+		input = { a: 'y' };
+		expect(props.value).toBe('y');
+	});
+
+	test('a hidden input with an explicit value ignores the field state', () => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({ a: 'x' }),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(proxy.a.as('hidden', 'y').value).toBe('y');
+		expect(proxy.a.as('hidden', true).value).toBe('on');
+		expect(proxy.a.as('hidden', false).value).toBe('off');
+	});
+
+	test('a hidden input with no value uses type prefixes for numeric and boolean state', () => {
+		/** @type {Record<string, unknown>} */
+		let input = { count: 42, flag: true };
+
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => input,
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		expect(proxy.count.as('hidden').name).toBe('n:count/form');
+		expect(proxy.count.as('hidden').value).toBe('42');
+		expect(proxy.flag.as('hidden').name).toBe('b:flag/form');
+		expect(proxy.flag.as('hidden').value).toBe('on');
+
+		input = { count: 42, flag: false };
+		expect(proxy.flag.as('hidden').value).toBe('off');
+	});
+
+	test('a submit input with no value still raises a missing value kit error in development', () => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+		expect(() => proxy.field.as('submit')).toThrowKitError('form_input_missing_value');
 	});
 
 	test('enumerating fields warns once per call site without diagnostic factory frames in the key', () => {

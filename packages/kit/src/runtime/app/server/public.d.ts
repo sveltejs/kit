@@ -144,10 +144,14 @@ type AsArgs<Type extends keyof InputTypeMap, Value> = Type extends 'checkbox'
 			: [type: Type, value?: Value]
 	: Type extends 'image'
 		? [type: Type]
-		: Type extends 'submit' | 'hidden'
+		: Type extends 'submit'
 			? Value extends string
 				? [type: Type, value: Value | (string & {})]
 				: [type: Type, value: Value]
+			: Type extends 'hidden'
+				? Value extends string
+					? [type: Type, value?: Value | (string & {})]
+					: [type: Type, value?: Value]
 			: Type extends 'radio'
 				? [type: Type, value: Value | (string & {}), checked?: boolean]
 				: Type extends 'file' | 'file multiple'
