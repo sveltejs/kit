@@ -9,8 +9,7 @@ import * as server_errors from '../messages/server-errors.js';
 export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
 /**
- * Whether the string starts with a scheme (`https:`) or authority (`//example.com`),
- * i.e. it is a URL rather than a path such as `about` or `/blog/[slug]`
+ * Whether the string starts with a scheme (`https:`) or authority (`//example.com`)
  * @param {string} str
  */
 export function has_scheme_or_authority(str) {

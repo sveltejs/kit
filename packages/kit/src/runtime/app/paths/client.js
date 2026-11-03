@@ -72,7 +72,7 @@ export function resolve(...args) {
 	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
 
 	if (has_scheme_or_authority(id)) {
-		e.resolve_external_url({ id });
+		e.resolve_url_input({ id });
 	}
 
 	if (id[0] === '/') {

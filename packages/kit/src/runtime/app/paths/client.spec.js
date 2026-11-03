@@ -18,7 +18,7 @@ test('hash routing resolves to a fragment without the base', () => {
 test.each(['https://example.com', 'mailto:hi@example.com', '//example.com'])(
 	'rejects URL input %s',
 	(input) => {
-		expect(() => resolve(input)).toThrowKitError('resolve_external_url', { contains: [input] });
+		expect(() => resolve(input)).toThrowKitError('resolve_url_input', { contains: [input] });
 	}
 );
 

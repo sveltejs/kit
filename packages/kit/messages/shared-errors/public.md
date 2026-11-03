@@ -62,17 +62,17 @@ The store-based `$app/stores` module was removed in SvelteKit 3. Import `page`, 
 
 [`match`](https://svelte.dev/docs/kit/$app-paths#match) resolves a URL to a route using the router of the running app, which doesn't exist inside a [service worker](https://svelte.dev/docs/kit/service-workers). The other `$app/paths` helpers, such as `asset` and `resolve`, do work there. Do the matching in the page instead, or compare URLs against the routes you care about yourself.
 
-## resolve_external_url
-
-> Cannot use `resolve(...)` with a URL (got "%id%"). External URLs should be used directly
-
-[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) is only for internal paths and route IDs. Inputs starting with a URL scheme (such as `https:` or `mailto:`) or `//` are not paths. Use those URLs directly instead of passing them to `resolve`.
-
 ## resolve_params_missing
 
 > Missing params for dynamic route ID `%id%`
 
 When you pass a route ID containing parameters to [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve), the second argument must provide their values, for example `resolve('/blog/[slug]', { slug: 'hello-world' })`. To resolve a pathname rather than a route ID, omit the leading slash: `resolve('blog/hello-world')`.
+
+## resolve_url_input
+
+> Cannot use `resolve(...)` with a URL (got "%id%"). External URLs should be used directly
+
+[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) is only for internal paths and route IDs. Inputs starting with a URL scheme (such as `https:` or `mailto:`) or `//` are not paths. Use those URLs directly instead of passing them to `resolve`.
 
 ## url_hash_unavailable
 

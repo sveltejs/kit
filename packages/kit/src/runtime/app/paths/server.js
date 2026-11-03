@@ -22,14 +22,13 @@ export function asset(file) {
 		file = file.slice(1);
 	}
 
-	// don't use `resolve`, which rejects filenames that look like URLs (e.g. `icon:example.svg`)
 	return assets !== base ? `${assets}/${file}` : prefix_path('/' + file);
 }
 
 /** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
 	if (has_scheme_or_authority(id)) {
-		e.resolve_external_url({ id });
+		e.resolve_url_input({ id });
 	}
 
 	let resolved;
