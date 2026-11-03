@@ -12,7 +12,7 @@ export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
  * Whether the string is an absolute URL (`https://...`) or a network-path reference (`//...`)
  * @param {string} str
  */
-export function is_external_url(str) {
+export function is_url_like(str) {
 	return SCHEME.test(str) || str.startsWith('//');
 }
 

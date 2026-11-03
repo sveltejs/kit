@@ -1,6 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
-import { decode_pathname, is_external_url } from '../../../utils/url.js';
+import { decode_pathname, is_url_like } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
@@ -28,7 +28,7 @@ export function asset(file) {
 
 /** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
-	if (is_external_url(id)) {
+	if (is_url_like(id)) {
 		e.resolve_external_url({ id });
 	}
 

@@ -2,7 +2,7 @@
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
-import { is_external_url } from '../../../utils/url.js';
+import { is_url_like } from '../../../utils/url.js';
 import { DEV } from 'esm-env';
 import * as e from '../../../messages/shared-errors.js';
 import * as w from '../../../messages/shared-warnings.js';
@@ -71,7 +71,7 @@ const pathname_prefix = hash_routing ? '#' : base;
 export function resolve(...args) {
 	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
 
-	if (is_external_url(id)) {
+	if (is_url_like(id)) {
 		e.resolve_external_url({ id });
 	}
 
