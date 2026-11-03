@@ -1,4 +1,5 @@
 ---
+'@sveltejs/adapter-node': patch
 '@sveltejs/adapter-bun': patch
 ---
 
