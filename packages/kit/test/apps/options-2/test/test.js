@@ -51,8 +51,9 @@ test.describe('paths', () => {
 		const response = await request.get('/basepath/redirect-relative/__data.json');
 		expect(await response.json()).toEqual({ type: 'redirect', status: 303, location: './hello' });
 
-		const data = await request.get('/basepath/deeply/nested/page/__data.json');
-		expect((await data.json()).nodes[0].data).toContain('../../hello');
+		const r = await request.get('/basepath/deeply/nested/page/__data.json');
+		const data = await r.json();
+		expect(data.nodes[0].data).toEqual([{ hello: 1 }, '../../hello']);
 	});
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {
