@@ -48,7 +48,7 @@ export function resolve(id, params) {
 			// for an error page rendered for a data request includes the `__data.json` suffix
 			// that was stripped during routing
 			const pathname =
-				store.event.isDataRequest && store.state.is_in_render
+				store.event.isDataRequest && store.state.error
 					? add_data_suffix(store.event.url.pathname)
 					: store.event.url.pathname;
 			const after_base = pathname.slice(base.length);

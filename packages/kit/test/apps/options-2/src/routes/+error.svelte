@@ -7,3 +7,4 @@
 
 <p data-testid="base">base: {resolve('')}</p>
 <p data-testid="assets">assets: {asset('answer.txt').replace('answer.txt', '')}</p>
+<p data-testid="hello">hello: {page.data.hello}</p>
