@@ -560,6 +560,284 @@ test('removed array entries are cleared on a later submission', async () => {
 	}
 });
 
+test('image submitter coordinates stay out of client field state but remain in submitted FormData', async () => {
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const title = document.createElement('input');
+	title.name = remote.fields.title.as('text').name;
+	title.value = 'synced';
+	const img = document.createElement('input');
+	img.type = 'image';
+	img.name = 'i:coords/hash/myForm';
+	element.append(title, img);
+	const detach = mount();
+
+	const OriginalFormData = globalThis.FormData;
+	/** @type {string[][]} */
+	const captured = [];
+	vi.stubGlobal(
+		'FormData',
+		class extends OriginalFormData {
+			/** @param {any[]} args */
+			constructor(...args) {
+				super(...args);
+				captured.push([...this.keys()]);
+			}
+		}
+	);
+
+	try {
+		remote.fields.coords.set('client-state');
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: img })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		// ordinary fields still synchronize
+		expect(remote.fields.title.value()).toBe('synced');
+		// the image input's existing client field state is not overwritten by click coordinates
+		expect(remote.fields.coords.value()).toBe('client-state');
+		// a single snapshot is taken even for image submissions
+		expect(captured.length).toBe(1);
+		// the server-bound FormData still captures the click coordinates
+		const with_coords = captured.find((keys) => keys.includes('i:coords/hash/myForm.x'));
+		expect(with_coords).toBeDefined();
+	} finally {
+		vi.unstubAllGlobals();
+		detach();
+	}
+});
+
+test('image submitter coordinates reach validation but not client field state', async () => {
+	/** @type {any} */
+	let validated_value;
+	const remote = form('hash/myForm').preflight({
+		'~standard': {
+			version: 1,
+			vendor: 'test',
+			validate: (value) => {
+				validated_value = value;
+				return { value };
+			}
+		}
+	});
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const img = document.createElement('input');
+	img.type = 'image';
+	img.name = 'i:coords/hash/myForm';
+	element.append(img);
+	const detach = mount();
+	try {
+		remote.fields.coords.set('client-state');
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: img })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		// validation sees the inclusive payload, click coordinates included
+		expect(validated_value.coords).toEqual({ x: 0, y: 0 });
+		// client field state still excludes the coordinates
+		expect(remote.fields.coords.value()).toBe('client-state');
+	} finally {
+		detach();
+	}
+});
+
+test('nested image submitter excludes only its coordinates from client field state', async () => {
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const label = document.createElement('input');
+	label.name = 'profile.label/hash/myForm';
+	label.value = 'synced';
+	const img = document.createElement('input');
+	img.type = 'image';
+	img.name = 'i:profile.avatar/hash/myForm';
+	element.append(label, img);
+	const detach = mount();
+	try {
+		remote.fields.profile.avatar.set({ note: 'keep' });
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: img })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		// a non-coordinate entry under the same parent still synchronizes
+		expect(remote.fields.profile.label.value()).toBe('synced');
+		// the nested image field keeps its client state; no coordinate container appears
+		expect(remote.fields.profile.avatar.value()).toEqual({ note: 'keep' });
+	} finally {
+		detach();
+	}
+});
+
+test('array-bound image submitter coordinates do not overwrite existing array state', async () => {
+	/** @type {any} */
+	let validated_value;
+	const remote = form('hash/myForm').preflight({
+		'~standard': {
+			version: 1,
+			vendor: 'test',
+			validate: (value) => {
+				validated_value = value;
+				return { value };
+			}
+		}
+	});
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const label = document.createElement('input');
+	label.name = 'profile.label/hash/myForm';
+	label.value = 'synced';
+	const img = document.createElement('input');
+	img.type = 'image';
+	img.name = 'i:profile.avatars[0]/hash/myForm';
+	element.append(label, img);
+	const detach = mount();
+	try {
+		remote.fields.profile.avatars.set([{ note: 'keep' }]);
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: img })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		// ordinary sibling under the same parent still synchronizes
+		expect(remote.fields.profile.label.value()).toBe('synced');
+		// existing array state is not overwritten by the click coordinates
+		expect(remote.fields.profile.avatars.value()).toEqual([{ note: 'keep' }]);
+		// validation still receives the inclusive payload, coordinates included
+		expect(validated_value.profile.avatars[0]).toMatchObject({ x: 0, y: 0 });
+	} finally {
+		detach();
+	}
+});
+
+test('image submitter does not change client-state outcome for submitted array siblings', async () => {
+	// The contract: client state after an image submission must equal client
+	// state after an ordinary submission of the same visible fields - base
+	// array wholesale-replacement semantics included.
+	/** @param {boolean} with_image @param {string} id */
+	const scenario = async (with_image, id) => {
+		const remote = form(id);
+		const { element, attach: mount } = attach(remote);
+		element.method = 'post';
+		element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent(id);
+		const sibling = document.createElement('input');
+		sibling.name = `profile.avatars[1].note/${id}`;
+		sibling.value = 'from-dom';
+		const button = document.createElement('button');
+		button.type = 'submit';
+		element.append(sibling, button);
+		/** @type {HTMLInputElement | undefined} */
+		let img;
+		if (with_image) {
+			img = document.createElement('input');
+			img.type = 'image';
+			img.name = `i:profile.avatars[0]/${id}`;
+			element.append(img);
+		}
+		const detach = mount();
+		try {
+			remote.fields.profile.avatars.set([{ note: 'keep' }]);
+			const enhanced = vi.fn();
+			remote.enhance(enhanced);
+			element.dispatchEvent(
+				new SubmitEvent('submit', {
+					bubbles: true,
+					cancelable: true,
+					submitter: img ?? button
+				})
+			);
+			await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+			return remote.fields.profile.avatars.value();
+		} finally {
+			detach();
+		}
+	};
+	const ordinary = await scenario(false, 'hash/controlA');
+	const with_image = await scenario(true, 'hash/controlB');
+	expect(with_image).toEqual(ordinary);
+});
+
+test('submission snapshots FormData once so formdata-event mutations stay consistent with the server payload', async () => {
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const button = document.createElement('button');
+	button.type = 'submit';
+	element.append(button);
+	const detach = mount();
+
+	const OriginalFormData = globalThis.FormData;
+	let constructions = 0;
+	vi.stubGlobal(
+		'FormData',
+		class extends OriginalFormData {
+			/** @param {any[]} args */
+			constructor(...args) {
+				super(...args);
+				// Emulates a page's `formdata` listener: per the HTML spec the
+				// constructor fires that event in browsers (jsdom does not
+				// implement it), and listeners may append per-construction data
+				// such as one-time tokens.
+				constructions++;
+				this.append('nonce/hash/myForm', 'token-' + constructions);
+			}
+		}
+	);
+
+	try {
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		// a single snapshot: the server payload and the synced client state
+		// must be the same captured data
+		expect(constructions).toBe(1);
+		expect(remote.fields.nonce.value()).toBe('token-1');
+	} finally {
+		vi.unstubAllGlobals();
+		detach();
+	}
+});
+
+test('non-image submit button value still syncs to client field state', async () => {
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+	element.method = 'post';
+	element.action = 'http://localhost/?%2Fremote=' + encodeURIComponent('hash/myForm');
+	const button = document.createElement('button');
+	button.type = 'submit';
+	button.name = 'intent/hash/myForm';
+	button.value = 'save';
+	element.append(button);
+	const detach = mount();
+	try {
+		const enhanced = vi.fn();
+		remote.enhance(enhanced);
+		element.dispatchEvent(
+			new SubmitEvent('submit', { bubbles: true, cancelable: true, submitter: button })
+		);
+		await vi.waitFor(() => expect(enhanced).toHaveBeenCalledOnce());
+		expect(remote.fields.intent.value()).toBe('save');
+	} finally {
+		detach();
+	}
+});
+
 test('async preflight preserves edits made while validation is pending', async () => {
 	/** @type {(() => void) | undefined} */
 	let finish_preflight;

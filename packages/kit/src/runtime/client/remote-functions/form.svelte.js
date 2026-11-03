@@ -188,7 +188,7 @@ export function form(id) {
 		}
 
 		/**
-		 * @param {FormData} form_data
+		 * @param {Iterable<[string, FormDataEntryValue]>} form_data
 		 * @returns {Record<string, any>}
 		 */
 		function convert(form_data) {
@@ -352,13 +352,28 @@ export function form(id) {
 		/**
 		 * @param {FormData} form_data
 		 * @param {boolean} [sync_input]
+		 * @param {string | null} [image_submitter_name]
 		 */
-		async function preflight(form_data, sync_input = false) {
+		async function preflight(form_data, sync_input = false, image_submitter_name = null) {
 			const data = convert(form_data);
 			if (sync_input) {
 				// Sync before asynchronous validation, so edits made while it is pending
 				// are not overwritten by the older submitted values afterward.
-				merge_submitted_values(input, data);
+				let sync_data = data;
+				if (image_submitter_name !== null) {
+					// Sync client state from the same captured entries, minus the image
+					// click coordinates: those are meant for the server and validation
+					// only, mirroring the submitter guard in handle_submit. Everything
+					// else merges exactly as it would without an image submitter, so
+					// array wholesale-replacement and omitted-state semantics are
+					// unchanged.
+					const coord_x = `${image_submitter_name}.x`;
+					const coord_y = `${image_submitter_name}.y`;
+					sync_data = convert(
+						[...form_data].filter(([name]) => name !== coord_x && name !== coord_y)
+					);
+				}
+				merge_submitted_values(input, sync_data);
 			}
 			const schema = preflight_schema ?? shared_preflight_schema;
 			const validated = await schema?.['~standard'].validate(data);
@@ -474,7 +489,12 @@ export function form(id) {
 					// the in-progress state during async preflight validation
 					pending_count++;
 
-					const valid = await preflight(form_data, true);
+					const image_submitter_name =
+						event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type === 'image'
+							? event.submitter.getAttribute('name')
+							: null;
+
+					const valid = await preflight(form_data, true, image_submitter_name);
 					if (!valid) return;
 
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
