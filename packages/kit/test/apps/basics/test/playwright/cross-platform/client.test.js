@@ -716,6 +716,20 @@ test.describe('Scrolling', () => {
 		await waiter;
 	});
 
+	test('scroll restoration is handed to the browser on reload', async ({ page, scroll_to }) => {
+		await page.goto('/anchor');
+		await scroll_to(0, 1000);
+		await page.addInitScript(() => {
+			// @ts-expect-error
+			window.__scroll_restoration_at_start = history.scrollRestoration;
+		});
+		await page.reload();
+
+		// @ts-expect-error
+		expect(await page.evaluate(() => window.__scroll_restoration_at_start)).toBe('auto');
+		await page.waitForFunction(() => history.scrollRestoration === 'manual');
+	});
+
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
 		await page.goto('/no-ssr/margin');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
