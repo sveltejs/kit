@@ -9,10 +9,11 @@ import * as server_errors from '../messages/server-errors.js';
 export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
 /**
- * Whether the string is an absolute URL (`https://...`) or a network-path reference (`//...`)
+ * Whether the string starts with a scheme (`https:`) or authority (`//example.com`),
+ * i.e. it is a URL rather than a path such as `about` or `/blog/[slug]`
  * @param {string} str
  */
-export function is_url_like(str) {
+export function has_scheme_or_authority(str) {
 	return SCHEME.test(str) || str.startsWith('//');
 }
 
