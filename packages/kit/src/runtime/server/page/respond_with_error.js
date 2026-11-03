@@ -24,9 +24,11 @@ import { escape_html } from '../../../utils/escape.js';
  * }} opts
  */
 export async function respond_with_error({ event, state, error, resolve_opts }) {
-	// the response is HTML for the `__data.json` URL the browser is at, so relative paths
-	// from `$app/paths` must be resolved against it (including those created in `handleError`)
-	if (event.isDataRequest) state.is_html_for_data_request = true;
+	// a data request always gets a data response, even for a missing route, so that the
+	// response is never an HTML page at a `__data.json` URL
+	if (event.isDataRequest) {
+		return handle_fatal_error(event, state, error);
+	}
 
 	// reroute to the fallback page to prevent an infinite chain of requests.
 	if (event.request.headers.get('x-sveltekit-error')) {

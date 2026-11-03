@@ -678,9 +678,10 @@ describe('Errors', () => {
 		expect(data.nodes[0].type).toBe('data');
 		expect(data.nodes[0].data).toContain('rootlayout');
 
+		// a data request without the invalidation parameter still gets a data response
 		const page_response = await get('/this-route-does-not-exist/__data.json');
 		expect(page_response.status).toBe(404);
-		expect(page_response.headers.get('content-type')).toContain('text/html');
+		expect(page_response.headers.get('content-type')).toContain('application/json');
 
 		// a single-node request that invalidates nothing is not an error-page data request
 		const crafted_response = await get(

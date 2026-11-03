@@ -1,7 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname } from '../../../utils/url.js';
-import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
@@ -44,14 +43,7 @@ export function resolve(id, params) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the result is resolved against. For a
-			// `__data.json` response that's the page URL, but when an HTML error page is rendered
-			// for a data request, the browser is at the URL with the `__data.json` suffix that was
-			// stripped during routing
-			const pathname = store.state.is_html_for_data_request
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
-			const after_base = pathname.slice(base.length);
+			const after_base = store.event.url.pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 

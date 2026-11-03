@@ -800,11 +800,6 @@ export interface RequestState {
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
-	/**
-	 * `true` while an HTML error page is rendered for a `__data.json` request,
-	 * i.e. the browser is at the URL with the data suffix
-	 */
-	is_html_for_data_request: boolean;
 }
 
 export interface RequestStore {

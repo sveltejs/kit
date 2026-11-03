@@ -18,11 +18,7 @@ import {
 	generate_route_object,
 	resolve_paths
 } from './server_routing.js';
-import {
-	add_data_suffix,
-	add_resolution_suffix,
-	route_id_resolution_pathname
-} from '../../pathname.js';
+import { add_resolution_suffix, route_id_resolution_pathname } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
 import { count_non_ssi_comments, is_prerendering } from '../utils.js';
@@ -124,12 +120,7 @@ export async function render_response({
 	// if appropriate, use relative paths for greater portability
 	if (relative) {
 		if (!state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = event.isDataRequest
-				? add_data_suffix(event.url.pathname)
-				: event.url.pathname;
-			({ base, assets } = resolve_paths(pathname));
+			({ base, assets } = resolve_paths(event.url.pathname));
 
 			// resolve e.g. '../..' against current location, then remove trailing slash
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
