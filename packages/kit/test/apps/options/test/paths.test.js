@@ -172,18 +172,11 @@ test.describe('assets path', () => {
 });
 
 test.describe('inlineStyleThreshold', () => {
-	test('inlines CSS', async ({ page, javaScriptEnabled }) => {
+	test('inlines CSS', async ({ page }) => {
 		await page.goto('/path-base/base/');
 		if (process.env.DEV) {
-			const ssr_style = await page.$('style[data-sveltekit]');
-
-			if (javaScriptEnabled) {
-				// <style data-sveltekit> is removed upon hydration
-				expect(ssr_style).toBeNull();
-			} else {
-				expect(ssr_style).not.toBeNull();
-			}
-
+			// Vite's client takes over the inlined styles on hydration, so they stay
+			expect(await page.$('style[data-vite-dev-id]')).not.toBeNull();
 			expect(await page.$('link[rel="stylesheet"]')).toBeNull();
 		} else {
 			expect(await page.$('style')).not.toBeNull();

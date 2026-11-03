@@ -136,9 +136,7 @@ export function generate_manifest(
 					/** @type {Set<EnvironmentModuleNode>} */
 					const deps = new Set();
 
-					for (const module_node of module_nodes) {
-						await find_deps(vite_dev_server, module_node, deps);
-					}
+					await find_deps(vite_dev_server, module_nodes, deps);
 
 					/** @type {Record<string, string>} */
 					const styles = {};
@@ -150,7 +148,8 @@ export function generate_manifest(
 								: dep.url + '?inline';
 							try {
 								const mod = await runner.import(inlineCssUrl);
-								styles[dep.url] = mod.default;
+								// keyed by the module's id, which Vite's client uses too when it resolves the same file
+								styles[dep.id ?? dep.url] = mod.default;
 							} catch {
 								// this can happen with dynamically imported modules, I think
 								// because the Vite module graph doesn't distinguish between
@@ -266,44 +265,58 @@ async function resolve(vite, vite_dev_server, runner, id) {
 }
 
 /**
+ * Adds `nodes` and the modules they import, directly or not, to `deps`: static imports depth first,
+ * which puts their stylesheets in the order the browser evaluates them, then the modules imported
+ * dynamically, whose order at run time is only approximated
  * @param {ViteDevServer} vite
- * @param {EnvironmentModuleNode} node
+ * @param {EnvironmentModuleNode[]} nodes
  * @param {Set<EnvironmentModuleNode>} deps
  */
-async function find_deps(vite, node, deps) {
+async function find_deps(vite, nodes, deps) {
+	/** @type {Map<EnvironmentModuleNode, { static_imports: EnvironmentModuleNode[], dynamic_imports: EnvironmentModuleNode[] }>} */
+	const imports = new Map();
+
+	/** @param {string[]} [urls] */
+	async function resolve_urls(urls = []) {
+		const nodes = await Promise.all(
+			urls.map((url) => vite.environments.ssr.moduleGraph.getModuleByUrl(url))
+		);
+		return nodes.filter((node) => node !== undefined);
+	}
+
 	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
-	/** @type {Promise<void>[]} */
-	const branches = [];
+	/** @param {EnvironmentModuleNode} node */
+	async function discover(node) {
+		if (imports.has(node)) return;
+
+		/** @type {{ static_imports: EnvironmentModuleNode[], dynamic_imports: EnvironmentModuleNode[] }} */
+		const found = { static_imports: Array.from(node.importedModules), dynamic_imports: [] };
+		imports.set(node, found);
+
+		if (node.transformResult) {
+			found.static_imports = await resolve_urls(node.transformResult.deps);
+			found.dynamic_imports = await resolve_urls(node.transformResult.dynamicDeps);
+		}
+
+		await Promise.all([...found.static_imports, ...found.dynamic_imports].map(discover));
+	}
+
+	/** @type {EnvironmentModuleNode[]} */
+	const dynamic_imports = [];
 
 	/** @param {EnvironmentModuleNode} node */
-	async function add(node) {
-		if (!deps.has(node)) {
-			deps.add(node);
-			await find_deps(vite, node, deps);
-		}
+	function add(node) {
+		if (deps.has(node)) return;
+		deps.add(node);
+
+		const found = imports.get(node);
+		found?.static_imports.forEach(add);
+		dynamic_imports.push(...(found?.dynamic_imports ?? []));
 	}
 
-	/** @param {string} url */
-	async function add_by_url(url) {
-		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
-
-		if (node) {
-			await add(node);
-		}
-	}
-
-	if (node.transformResult) {
-		if (node.transformResult.deps) {
-			node.transformResult.deps.forEach((url) => branches.push(add_by_url(url)));
-		}
-
-		if (node.transformResult.dynamicDeps) {
-			node.transformResult.dynamicDeps.forEach((url) => branches.push(add_by_url(url)));
-		}
-	} else {
-		node.importedModules.forEach((node) => branches.push(add(node)));
-	}
-
-	await Promise.all(branches);
+	await Promise.all(nodes.map(discover));
+	nodes.forEach(add);
+	// the list grows as dynamically imported modules are added
+	for (const node of dynamic_imports) add(node);
 }
