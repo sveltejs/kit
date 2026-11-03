@@ -70,9 +70,9 @@ When you pass a route ID containing parameters to [`resolve`](https://svelte.dev
 
 ## resolve_url_input
 
-> Cannot use `resolve(...)` with a URL (got "%id%"). External URLs should be used directly
+> Cannot use `resolve(...)` with an absolute or protocol-relative URL (got "%id%")
 
-[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) is only for internal paths and route IDs. Inputs starting with a URL scheme (such as `https:` or `mailto:`) or `//` are not paths. Use those URLs directly instead of passing them to `resolve`.
+[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) prepends a base path to its argument, so an absolute or protocol-relative URL would produce a broken link such as `/base/https://example.com`. Use it without `resolve` or pass only its pathname.
 
 ## url_hash_unavailable
 
