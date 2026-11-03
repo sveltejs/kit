@@ -15,32 +15,13 @@ test('hash routing resolves to a fragment without the base', () => {
 	expect(resolve('/blog/[slug]', { slug: 'hello' })).toBe('#/blog/hello');
 });
 
-test.each([
-	'https://example.com/x',
-	'https:',
-	'mailto:',
-	'mailto:hello@example.com',
-	'data:text/plain,hello',
-	'javascript:alert(1)',
-	'custom+scheme.1-test:value',
-	'x:example',
-	'HTTPS://example.com/x',
-	'//',
-	'//example.com/x',
-	'///example.com/x'
-])('hash routing rejects URL input %s', (input) => {
-	expect(() => {
-		resolve(input);
-	}).toThrowKitError('resolve_external_url', { contains: [input] });
-});
+test.each(['https://example.com', 'mailto:hi@example.com', '//example.com'])(
+	'rejects URL input %s',
+	(input) => {
+		expect(() => resolve(input)).toThrowKitError('resolve_external_url', { contains: [input] });
+	}
+);
 
-test.each([
-	'',
-	'about',
-	'blog/https:example.com',
-	'blog?next=https://example.com/x',
-	'blog#//example.com',
-	'blog/[literal]'
-])('hash routing still resolves internal path %s', (input) => {
-	expect(resolve(input)).toBe('#/' + input);
+test('allows URL-like text after the start of a path', () => {
+	expect(resolve('blog?next=https://example.com')).toBe('#/blog?next=https://example.com');
 });

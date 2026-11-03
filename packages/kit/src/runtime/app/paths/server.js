@@ -1,6 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
-import { decode_pathname, SCHEME } from '../../../utils/url.js';
+import { decode_pathname, is_external_url } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
@@ -22,12 +22,13 @@ export function asset(file) {
 		file = file.slice(1);
 	}
 
+	// don't use `resolve`, which rejects filenames that look like URLs (e.g. `icon:example.svg`)
 	return assets !== base ? `${assets}/${file}` : prefix_path('/' + file);
 }
 
 /** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
-	if (SCHEME.test(id) || id.startsWith('//')) {
+	if (is_external_url(id)) {
 		e.resolve_external_url({ id });
 	}
 

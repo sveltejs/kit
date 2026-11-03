@@ -8,6 +8,14 @@ import * as server_errors from '../messages/server-errors.js';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
+/**
+ * Whether the string is an absolute URL (`https://...`) or a network-path reference (`//...`)
+ * @param {string} str
+ */
+export function is_external_url(str) {
+	return SCHEME.test(str) || str.startsWith('//');
+}
+
 const internal = new URL('a://');
 
 /**
