@@ -1,4 +1,4 @@
-import { base, assets, relative } from './internal/server.js';
+import { base, assets, relative, relative_base } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname, has_scheme_or_authority } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
@@ -58,11 +58,7 @@ function prefix_path(resolved) {
 			const pathname = store.event.isDataRequest
 				? add_data_suffix(store.event.url.pathname)
 				: store.event.url.pathname;
-			const after_base = pathname.slice(base.length);
-			const segments = after_base.split('/').slice(2);
-			const prefix = segments.map(() => '..').join('/') || '.';
-
-			return prefix + resolved;
+			return relative_base(pathname) + resolved;
 		}
 	}
 

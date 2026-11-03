@@ -1,7 +1,7 @@
 /** @import { ParamValue } from '@sveltejs/kit/params' */
 /** @import { SSRManifest } from 'types' */
 import { base, assets } from '#app/paths';
-import { relative } from '$app/paths/internal/server';
+import { relative, relative_base } from '$app/paths/internal/server';
 import { text } from '@sveltejs/kit';
 import * as devalue from 'devalue';
 import { s } from '../../../utils/misc.js';
@@ -44,13 +44,12 @@ export function generate_route_object(route, url, client) {
 export function resolve_paths(pathname) {
 	if (!relative) return { base, assets };
 
-	const segments = pathname.slice(base.length).split('/').slice(2);
-	const relative_base = segments.map(() => '..').join('/') || '.';
+	const base_path = relative_base(pathname);
 
 	return {
-		base: relative_base,
+		base: base_path,
 		// same-origin assets are relative too, except for the placeholder used by `vite preview`
-		assets: !assets || (assets[0] === '/' && assets !== SVELTE_KIT_ASSETS) ? relative_base : assets
+		assets: !assets || (assets[0] === '/' && assets !== SVELTE_KIT_ASSETS) ? base_path : assets
 	};
 }
 

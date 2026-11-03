@@ -94,13 +94,16 @@ export async function preview(vite, svelte_config) {
 			)
 		);
 
+		const prerendered_root = fs.existsSync(
+			join(svelte_config.outDir, 'output/prerendered/pages/index.html')
+		);
+
 		vite.middlewares.use((req, res, next) => {
 			const original_url = /** @type {string} */ (req.url);
 			const { pathname, search } = new URL(original_url, 'http://dummy');
 
-			// if `paths.base === '/a/b/c`, then the root route is `/a/b/c/`,
-			// regardless of the `trailingSlash` route option
-			if (base.length > 1 && pathname === base) {
+			// if `paths.base === '/a/b/c`, then a prerendered root route is served from `/a/b/c/`
+			if (base.length > 1 && pathname === base && prerendered_root) {
 				let location = base + '/';
 				if (search) location += search;
 				res.writeHead(307, {

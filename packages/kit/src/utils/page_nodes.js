@@ -65,8 +65,9 @@ export class PageNodes {
 		return this.#get_option('prerender') ?? false;
 	}
 
-	trailing_slash() {
-		return this.#get_option('trailingSlash') ?? 'never';
+	/** @param {import('types').TrailingSlash} [fallback] */
+	trailing_slash(fallback = 'never') {
+		return this.#get_option('trailingSlash') ?? fallback;
 	}
 
 	get_config() {
