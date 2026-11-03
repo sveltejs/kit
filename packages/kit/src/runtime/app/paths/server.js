@@ -1,6 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
-import { decode_pathname } from '../../../utils/url.js';
+import { decode_pathname, SCHEME } from '../../../utils/url.js';
 import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
@@ -22,11 +22,15 @@ export function asset(file) {
 		file = file.slice(1);
 	}
 
-	return assets !== base ? `${assets}/${file}` : resolve(file);
+	return assets !== base ? `${assets}/${file}` : prefix_path('/' + file);
 }
 
 /** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
+	if (SCHEME.test(id) || id.startsWith('//')) {
+		e.resolve_external_url({ id });
+	}
+
 	let resolved;
 
 	if (id[0] === '/') {
@@ -40,6 +44,11 @@ export function resolve(id, params) {
 		resolved = '/' + id;
 	}
 
+	return prefix_path(resolved);
+}
+
+/** @param {string} resolved */
+function prefix_path(resolved) {
 	if (relative) {
 		const store = try_get_request_store();
 

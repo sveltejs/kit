@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
@@ -263,6 +263,33 @@ test.describe('Vite options', () => {
 });
 
 test.describe('$app/paths', () => {
+	test('resolve() rejects external URLs', async ({ page, javaScriptEnabled }) => {
+		await page.goto('/path-base/resolve-external/');
+
+		for (const input of [
+			'https://example.com/x',
+			'https:',
+			'mailto:hello@example.com',
+			'custom+scheme.1-test:value',
+			'HTTPS://example.com/x',
+			'//example.com/x',
+			'///example.com/x'
+		]) {
+			expect(await page.getByTestId(input).textContent()).toContainKitDiagnostic(
+				'resolve_external_url',
+				process.env.DEV ? { contains: [input] } : { url_only: true }
+			);
+		}
+
+		const prefix = javaScriptEnabled ? '/path-base' : '..';
+		await expect(page.getByTestId('path')).toHaveText(
+			`${prefix}/base/?next=https://example.com/x#//anchor`
+		);
+		await expect(page.getByTestId('route')).toHaveText(`${prefix}/base/https:example.com`);
+		await expect(page.getByTestId('empty')).toHaveText(`${prefix}/`);
+		await expect(page.getByTestId('asset')).toHaveText(`${prefix}/icon:example.svg`);
+	});
+
 	test('match() works with base paths', async ({ request }) => {
 		const response = await request.get('/path-base/match');
 

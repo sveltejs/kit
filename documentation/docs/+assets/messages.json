@@ -2588,6 +2588,17 @@
 		],
 		"details": "[`match`](https://svelte.dev/docs/kit/$app-paths#match) resolves a URL to a route using the router of the running app, which doesn't exist inside a [service worker](https://svelte.dev/docs/kit/service-workers). The other `$app/paths` helpers, such as `asset` and `resolve`, do work there. Do the matching in the page instead, or compare URLs against the routes you care about yourself."
 	},
+	"resolve_external_url": {
+		"variants": [
+			{
+				"text": "Cannot use `resolve(...)` with a URL (got \"%id%\"). External URLs should be used directly",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) is only for internal paths and route IDs. Inputs starting with a URL scheme (such as `https:` or `mailto:`) or `//` are not paths. Use those URLs directly instead of passing them to `resolve`."
+	},
 	"resolve_params_missing": {
 		"variants": [
 			{

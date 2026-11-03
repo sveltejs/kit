@@ -277,6 +277,19 @@ export function remote_argument_unsupported(_values) {
 }
 
 /**
+ * Cannot use `resolve(...)` with a URL (got "%id%"). External URLs should be used directly
+ * @param {{ "id": string }} _values
+ * @returns {never}
+ */
+export function resolve_external_url(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('resolve_external_url', `Cannot use \`resolve(...)\` with a URL (got "${_values.id}"). External URLs should be used directly`, resolve_external_url);
+	}
+
+	throw new Error('https://svelte.dev/e/kit/resolve_external_url');
+}
+
+/**
  * Missing params for dynamic route ID `%id%`
  * @param {{ "id": string }} _values
  * @returns {never}
