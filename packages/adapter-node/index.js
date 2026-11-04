@@ -161,7 +161,7 @@ function client_only_assets(builder, server) {
 	return new Set(
 		fs
 			.readdirSync(`${server}/${dir}`)
-			// Vite loads `.wasm` files from next to the server chunk, even when only a component imports them
+			// Vite's wasm helper reads `.wasm` files relative to the server chunk, even when only a component imports them
 			.filter((file) => !file.endsWith('.wasm') && !server_assets.has(`${dir}/${file}`))
 	);
 }

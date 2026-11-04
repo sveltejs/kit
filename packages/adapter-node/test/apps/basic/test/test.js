@@ -110,3 +110,9 @@ test('serves immutable assets with an immutable cache header', async ({ request 
 	expect(response.status()).toBe(200);
 	expect(response.headers()['cache-control']).toBe('public,max-age=31536000,immutable');
 });
+
+test('makes imported assets available to $app/server read', async ({ request }) => {
+	const response = await request.get('/read');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('Hello from $app/server read\n');
+});
