@@ -80,6 +80,8 @@
 	}
 </script>
 
+<a id="same-page" href="/remote/live">this page</a>
+
 <button id="increment" onclick={() => increment()}>increment</button>
 <button id="reset" onclick={() => reset()}>reset</button>
 <button id="notify-only" onclick={() => notify_only()}>notify only</button>
