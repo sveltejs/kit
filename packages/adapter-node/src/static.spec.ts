@@ -69,7 +69,16 @@ const files = create_file_map({
 			['/sub/', '/sub/index.html']
 		]
 	},
-	prerendered_assets: { entries: [['/about', about]], aliases: [] }
+	prerendered_assets: {
+		entries: [
+			['/about', about],
+			['/always/http:example.com/', about],
+			['/always/https:example.com/', about],
+			['/never/http:example.com', about],
+			['/never/https:example.com', about]
+		],
+		aliases: []
+	}
 });
 
 const middleware = serve_static(files);
@@ -172,6 +181,30 @@ test('serves prerendered pages and redirects their non-canonical trailing-slash 
 	expect(redirect.headers['location']).toBe('../about?x=1');
 });
 
+test('keeps scheme-like prerendered paths on the original origin', async () => {
+	for (const segment of ['http:example.com', 'https:example.com']) {
+		for (const trailing_slash of ['always', 'never']) {
+			const pathname = `/${trailing_slash}/${segment}`;
+			const from = trailing_slash === 'always' ? pathname : `${pathname}/`;
+			const to = trailing_slash === 'always' ? `${pathname}/` : pathname;
+			const response = await get(`${from}?ref=test`);
+			const location = response.headers['location'];
+
+			expect(response.status).toBe(308);
+			for (const protocol of ['https:', 'http:']) {
+				const base = new URL(`${protocol}//internal/mount${from}?ref=test`);
+				const target = new URL(location!, base);
+				expect(target.origin).toBe(base.origin);
+				expect(target.pathname).toBe(`/mount${to}`);
+				expect(target.search).toBe(base.search);
+			}
+			expect(location).toBe(
+				`${trailing_slash === 'always' ? `./${segment}/` : `../${segment}`}?ref=test`
+			);
+		}
+	}
+});
+
 test('answers a matching if-none-match with a 304 that carries the validators', async () => {
 	const etag = `"${range.etag}"`;
 
@@ -214,6 +247,13 @@ test('serves byte ranges', async () => {
 	const stale = await get('/range.txt', { headers: { range: 'bytes=0-1', 'if-range': '"stale"' } });
 	expect(stale.status).toBe(200);
 	expect(stale.body).toBe('0123456789');
+});
+
+test('ignores Range on HEAD requests', async () => {
+	const response = await get('/range.txt', { method: 'HEAD', headers: { range: 'bytes=0-1' } });
+	expect(response.status).toBe(200);
+	expect(response.headers['content-length']).toBe('10');
+	expect(response.headers['content-range']).toBeUndefined();
 });
 
 test('negotiates the compressed variant', async () => {

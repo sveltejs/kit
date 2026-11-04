@@ -38,10 +38,11 @@
 		"@sveltejs/eslint-config": "catalog:",
 		"@types/node": "catalog:",
 		"eslint": "catalog:",
-		"oxfmt": "^0.70.0",
+		"oxfmt": "^0.75.0",
+		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@12.5.0+sha512.9cdbaa34ffacae1768635ac0d23e94db6201c7d59bf3da236b23d67c8f6b794d1dab323bcd5bcc51b55c8cafbf6f19a24e4aa61d6ab7772aa3b5cc85e325dc4d",
+	"packageManager": "pnpm@12.16.1+sha512.091d1dee7927575661b25dab3c2ae31cafc1c54d6b71ed6a6600cf0c1cb10434a447eae14015f1b23e2e6bedeed79df94a932e2164d2832280dce3fb32f656d1",
 	"engines": {
 		"pnpm": ">=11.0.0"
 	}

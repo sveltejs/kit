@@ -1,5 +1,10 @@
 import { assert, describe, test } from 'vitest';
-import { extends_id, validate_exclusions, validate_types } from './validate.js';
+import {
+	extends_id,
+	validate_exclusions,
+	validate_resolved_config,
+	validate_types
+} from './validate.js';
 
 describe('extends_id', () => {
 	const id = 'POTATO';
@@ -56,5 +61,36 @@ describe('validate_exclusions', () => {
 			['C:/project/src/service-worker/index.ts']
 		);
 		assert.deepEqual(warnings, ['"src/service-worker" should be added to the "exclude" array']);
+	});
+});
+
+describe('validate_resolved_config', () => {
+	test('collects issues in order', () => {
+		const dir = '/path/to/project';
+
+		const warnings = validate_resolved_config(
+			dir,
+			/** @type {import('typescript').ParsedCommandLine} */ ({
+				options: {
+					types: ['node'],
+					paths: { $utils: ['./elsewhere'] },
+					pathsBasePath: dir,
+					verbatimModuleSyntax: false,
+					isolatedModules: true
+				},
+				fileNames: [`${dir}/src/service-worker.ts`],
+				errors: []
+			}),
+			{ $utils: [`${dir}/src/utils`] },
+			['$app/types'],
+			[`${dir}/src/service-worker`]
+		);
+
+		assert.deepEqual(warnings, [
+			'"types" was overwritten. It must include "$app/types"',
+			'"paths" was overwritten. Imports from "$utils" may not typecheck',
+			'"src/service-worker" should be added to the "exclude" array',
+			'"verbatimModuleSyntax" was overwritten. It should be true'
+		]);
 	});
 });

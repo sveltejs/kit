@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -9,44 +9,63 @@ import process from 'node:process';
 test.describe.serial('Illegal imports', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
+	for (const [location, module] of [
+		['directory', '#lib/server/location.remote.js'],
+		['filename', '#lib/location.server.remote.js']
+	]) {
+		test(`remote modules in a server-only ${location} report how to fix their location`, async ({
+			page
+		}) => {
+			await page.goto(`/illegal-imports/remote-${location}`, { wait_for_started: false });
+			const message = page.locator('vite-error-overlay .message-body');
+			await expect(message).toBeVisible();
+			expect(await message.innerText()).toContainKitDiagnostic('remote_module_server_only', {
+				contains: [module]
+			});
+		});
+	}
+
 	test('$app/env/private is not importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/env/private', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $app/env/private into code that runs in the browser, as this could leak sensitive information.
+		expect(await page.textContent('.message-body')).toBe(`server_only_import
+Cannot import \`$app/env/private\` into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/env/private/+page.svelte imports
   $app/env/private
 
-If you're only using the import as a type, change it to \`import type\`.`);
+If you're only using the import as a type, change it to \`import type\`.
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('$app/server module is not importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/app-server', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import $app/server into code that runs in the browser, as this could leak sensitive information.
+		expect(await page.textContent('.message-body')).toBe(`server_only_import
+Cannot import \`$app/server\` into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/app-server/+page.svelte imports
   $app/server
 
-If you're only using the import as a type, change it to \`import type\`.`);
+If you're only using the import as a type, change it to \`import type\`.
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only module is not importable from the client', async ({ page }) => {
 		await page.goto('/illegal-imports/server-only-modules/static-import', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import src/routes/illegal-imports/server-only-modules/illegal.server.js into code that runs in the browser, as this could leak sensitive information.
+		expect(await page.textContent('.message-body')).toBe(`server_only_import
+Cannot import \`src/routes/illegal-imports/server-only-modules/illegal.server.js\` into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-modules/static-import/+page.svelte imports
   src/routes/illegal-imports/server-only-modules/static-import/foo.js imports
    src/routes/illegal-imports/server-only-modules/illegal.server.js
 
-If you're only using the import as a type, change it to \`import type\`.`);
+If you're only using the import as a type, change it to \`import type\`.
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only folder is not importable from the client (relative import, nested server dir)', async ({
@@ -55,13 +74,14 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/server-only-folder/relative-nested', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import #lib/nested/server/private.js into code that runs in the browser, as this could leak sensitive information.
+		expect(await page.textContent('.message-body')).toBe(`server_only_import
+Cannot import \`#lib/nested/server/private.js\` into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-folder/relative-nested/+page.svelte imports
   #lib/nested/server/private.js
 
-If you're only using the import as a type, change it to \`import type\`.`);
+If you're only using the import as a type, change it to \`import type\`.
+https://svelte.dev/e/kit/server_only_import`);
 	});
 
 	test('server-only folder is not importable from the client (path import, lib top level)', async ({
@@ -70,13 +90,14 @@ If you're only using the import as a type, change it to \`import type\`.`);
 		await page.goto('/illegal-imports/server-only-folder/path-top-level', {
 			wait_for_started: false
 		});
-		expect(await page.textContent('.message-body'))
-			.toBe(`Cannot import #lib/server/blah/private.js into code that runs in the browser, as this could leak sensitive information.
+		expect(await page.textContent('.message-body')).toBe(`server_only_import
+Cannot import \`#lib/server/blah/private.js\` into code that runs in the browser, as this could leak sensitive information.
 
  src/routes/illegal-imports/server-only-folder/path-top-level/+page.svelte imports
   #lib/server/blah/private.js
 
-If you're only using the import as a type, change it to \`import type\`.`);
+If you're only using the import as a type, change it to \`import type\`.
+https://svelte.dev/e/kit/server_only_import`);
 	});
 });
 
@@ -209,5 +230,15 @@ test.describe('request abort', () => {
 		// the abort + subsequent fetch can take longer than a fixed timeout on slow CI,
 		// so use an auto-retrying assertion instead of `waitForTimeout`
 		await expect(page.locator('pre')).toHaveText('{"aborted":true}');
+	});
+});
+
+test.describe('Remote functions', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('exports that are not remote functions report a helpful error', async ({ request }) => {
+		const response = await request.get('/remote/invalid-export');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
 });

@@ -1,4 +1,10 @@
 {
 	"extends": "$app/tsconfig",
-	"include": ["source", "test", "vite.custom.config.js", "playwright.config.js"]
+	"include": [
+		"source",
+		"test",
+		"vite.custom.config.js",
+		"playwright.config.js",
+		"../../vitest-matchers.d.ts"
+	]
 }

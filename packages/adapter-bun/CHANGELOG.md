@@ -1,5 +1,27 @@
 # @sveltejs/adapter-bun
 
+## 1.0.0
+
+### Major Changes
+
+- breaking: require Bun 1.4, which routes `HEAD` to `GET` handlers and settles `stop()` after a force close ([#16880](https://github.com/sveltejs/kit/pull/16880))
+
+- breaking: build the server with Vite instead of a second `Bun.build` pass, keeping production dependencies external; `buildOptions` now only applies to executables ([#17120](https://github.com/sveltejs/kit/pull/17120))
+
+### Minor Changes
+
+- feat: add a Bun-native adapter with static file serving and single-executable support ([#16695](https://github.com/sveltejs/kit/pull/16695))
+
+### Patch Changes
+
+- fix: build apps that use server instrumentation ([#16898](https://github.com/sveltejs/kit/pull/16898))
+
+- fix: always bundle dev dependencies ([#17210](https://github.com/sveltejs/kit/pull/17210))
+
+- fix: bundle Svelte libraries listed in `dependencies` instead of externalising them ([#17234](https://github.com/sveltejs/kit/pull/17234))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 1.0.0-next.5
 
 ### Patch Changes

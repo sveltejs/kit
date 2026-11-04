@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/kit",
-	"version": "3.0.0-next.30",
+	"version": "3.1.1",
 	"description": "SvelteKit is the fastest way to build Svelte apps",
 	"keywords": [
 		"framework",
@@ -18,6 +18,7 @@
 	"homepage": "https://svelte.dev",
 	"type": "module",
 	"dependencies": {
+		"@jridgewell/trace-mapping": "^0.3.31",
 		"@rolldown/pluginutils": "^1.0.1",
 		"@standard-schema/spec": "^1.1.0",
 		"cookie": "^2.0.1",
@@ -30,10 +31,11 @@
 	"devDependencies": {
 		"@opentelemetry/api": "catalog:",
 		"@playwright/test": "catalog:",
+		"@sveltejs/message-box": "^1.1.3",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
 		"@types/connect": "catalog:",
-		"@typescript/native": "catalog:",
 		"@types/node": "catalog:",
+		"@typescript/native": "catalog:",
 		"dts-buddy": "^0.8.3",
 		"jsdom": "catalog:",
 		"svelte": "catalog:",
@@ -90,7 +92,8 @@
 		"test:svelte-async:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:svelte-async:build",
 		"test:unit": "vitest run -c vitest.kit.config.js",
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc",
-		"prepublishOnly": "pnpm generate:types",
+		"prepublishOnly": "pnpm generate:messages && pnpm generate:types",
+		"generate:messages": "node scripts/process-messages/index.js",
 		"generate:version": "node scripts/generate-version.js",
 		"generate:types": "node scripts/generate-dts.js"
 	},

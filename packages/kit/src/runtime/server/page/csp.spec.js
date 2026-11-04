@@ -1,8 +1,7 @@
-import process from 'node:process';
-import { assert, test, describe, beforeAll } from 'vitest';
+import { assert, expect, test, describe, beforeAll } from 'vitest';
 import { Csp } from './csp.js';
 
-describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
+describe('CSPs in dev', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = true;
@@ -69,7 +68,7 @@ describe.skipIf(!process.env.DEV)('CSPs in dev', () => {
 	});
 });
 
-describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
+describe('CSPs in prod', () => {
 	beforeAll(() => {
 		// @ts-expect-error
 		globalThis.__SVELTEKIT_DEV__ = false;
@@ -397,7 +396,7 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 	});
 
 	test('throws when reportOnly contains directives but no report-uri or report-to', () => {
-		assert.throws(() => {
+		expect(() => {
 			new Csp(
 				{
 					mode: 'hash',
@@ -410,7 +409,7 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 					prerender: false
 				}
 			);
-		}, '`content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both');
+		}).toThrowKitError('csp_report_only_missing_report');
 	});
 
 	test('add_script_hashes adds hashes to script-src', () => {
@@ -583,5 +582,23 @@ describe.skipIf(!!process.env.DEV)('CSPs in prod', () => {
 		assert.ok(!header.includes("'nonce-"));
 		assert.ok(header.includes("'strict-dynamic'"));
 		assert.ok(header.includes("'unsafe-inline'"));
+	});
+
+	test('quotes report-sha* hash-reporting keywords', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['self', 'report-sha256', 'report-sha384', 'report-sha512']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		assert.equal(
+			csp.csp_provider.get_header(),
+			"script-src 'self' 'report-sha256' 'report-sha384' 'report-sha512'"
+		);
 	});
 });

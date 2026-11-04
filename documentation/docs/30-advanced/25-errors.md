@@ -1,5 +1,6 @@
 ---
 title: Errors
+tags: errors
 ---
 
 Errors are an inevitable fact of software development. SvelteKit handles errors differently depending on where they occur, what kind of errors they are, and the nature of the incoming request.

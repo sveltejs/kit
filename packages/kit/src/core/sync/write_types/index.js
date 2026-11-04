@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
@@ -28,6 +27,28 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  */
 
 /**
+ * Recursively remove empty directories under `root`, leaving `root` itself.
+ * @param {string} dir
+ * @param {string} root
+ */
+function remove_empty_directories(dir, root = dir) {
+	if (!fs.existsSync(dir)) return;
+
+	for (const name of fs.readdirSync(dir)) {
+		const child = path.join(dir, name);
+		if (fs.statSync(child).isDirectory()) {
+			remove_empty_directories(child, root);
+		}
+	}
+
+	if (path.resolve(dir) === path.resolve(root)) return;
+
+	if (fs.readdirSync(dir).length === 0) {
+		fs.rmdirSync(dir);
+	}
+}
+
+/**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
@@ -37,7 +58,6 @@ export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
 	const types_dir = `${config.outDir}/types`;
-	const meta_data_file = `${types_dir}/route_meta_data.json`;
 
 	// empty out files that no longer need to exist
 	const routes_dir = remove_relative_parent_traversals(
@@ -49,17 +69,18 @@ export function write_all_types(config, manifest_data, root) {
 
 	if (fs.existsSync(types_dir)) {
 		for (const file of walk(types_dir)) {
-			if (file === 'route_meta_data.json') continue;
-
 			const dir = path.posix.dirname(file);
 			if (!expected_directories.has(dir)) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
+		// Stale files are removed above; empty route directories are left behind.
+		remove_empty_directories(types_dir);
 	}
 
 	// Read/write meta data on each invocation, not once per node process,
 	// it could be invoked by another process in the meantime.
+	const meta_data_file = `${types_dir}/route_meta_data.json`;
 	const has_meta_data = fs.existsSync(meta_data_file);
 	const meta_data = has_meta_data
 		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
@@ -132,13 +153,14 @@ export function write_all_types(config, manifest_data, root) {
 		}
 	}
 
-	const meta_data_temp_file = path.join(config.outDir, `route_meta_data.${randomUUID()}.tmp`);
-	try {
-		fs.writeFileSync(meta_data_temp_file, JSON.stringify(meta_data, null, '\t'));
-		fs.renameSync(meta_data_temp_file, meta_data_file);
-	} finally {
-		fs.rmSync(meta_data_temp_file, { force: true });
+	// Remove entries for routes that no longer exist so the file does not
+	// accumulate stale keys after routes are deleted.
+	const current_route_ids = new Set(manifest_data.routes.map((route) => route.id));
+	for (const id of Object.keys(meta_data)) {
+		if (!current_route_ids.has(id)) delete meta_data[id];
 	}
+
+	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**

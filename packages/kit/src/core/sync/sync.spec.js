@@ -74,10 +74,38 @@ export const variables = defineEnvVars({ FOO: {} });
 	try {
 		const config = process_config(validate_config({}), root);
 
-		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toMatchObject({
-			message: `Module \`${posixify(path.relative(root, helper))}\` imports \`$app/env/private\`, which creates a circular dependency with \`src/env\``,
-			stack: ''
-		});
+		// the importer is found by the dependency scanner, and the stack would only point into Vite
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrowKitError(
+			'env_circular_import',
+			{
+				contains: [`\`${posixify(path.relative(root, helper))}\``, '$app/env/private'],
+				stackless: true
+			}
+		);
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
+});
+
+test('keeps the cause when src/env imports other $app modules', async () => {
+	const root = path.resolve(import.meta.dirname, '../../../test/apps/basics');
+	const dir = fs.mkdtempSync(path.join(root, 'node_modules/.svelte-kit-env-'));
+	const entry = path.join(dir, 'env.ts');
+
+	fs.writeFileSync(
+		entry,
+		`import '$app/navigation';
+export const variables = {};
+`
+	);
+
+	try {
+		const config = process_config(validate_config({}), root);
+
+		await expect(load_explicit_env(config, entry, root, 'development')).rejects.toThrowKitError(
+			'env_app_import',
+			{ stackless: false, cause: expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }) }
+		);
 	} finally {
 		fs.rmSync(dir, { recursive: true, force: true });
 	}

@@ -3,6 +3,8 @@
 /** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '#app/paths';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/client-errors.js';
+import * as w from '../../../messages/client-warnings.js';
 
 import {
 	query_responses,
@@ -171,7 +173,6 @@ export function form(id) {
 				}
 
 				if (unread_issues.length > 0) {
-					const message = `Form submission had invalid data, but the validation issues were ignored:`;
 					const summary = unread_issues
 						.map((issue) =>
 							issue.path.length === 0
@@ -179,9 +180,7 @@ export function form(id) {
 								: `  - ${issue.path.join('.')} (${issue.message})`
 						)
 						.join('\n');
-					const suggestion = `Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``;
-
-					console.warn(`${message}\n\n${summary}\n\n${suggestion}`);
+					w.remote_form_issues_ignored({ issues: summary }, { element: element ?? undefined });
 				}
 
 				unread_issues = null;
@@ -308,9 +307,7 @@ export function form(id) {
 			let updates_called = false;
 			promise.updates = (...args) => {
 				if (updates_called) {
-					console.warn(
-						'Updates can only be sent once per form submission. Ignoring additional updates.'
-					);
+					w.remote_updates_repeated({ invocation: 'form submission' });
 					return promise;
 				}
 				updates_called = true;
@@ -392,13 +389,7 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {
-				let message = `A form object can only be attached to a single \`<form>\` element`;
-				if (DEV && !key) {
-					const name = id.split('/').pop();
-					message += `. To create multiple instances, use \`${name}.for(key)\``;
-				}
-
-				throw new Error(message);
+				e.remote_form_multiple_elements();
 			}
 
 			element = form;
@@ -493,11 +484,11 @@ export function form(id) {
 				}
 			};
 
-			/** @param {Event} e */
-			const handle_input = (e) => {
+			/** @param {Event} event */
+			const handle_input = (event) => {
 				// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 				// but that makes the types unnecessarily awkward
-				const element = /** @type {HTMLInputElement} */ (e.target);
+				const element = /** @type {HTMLInputElement} */ (event.target);
 
 				const name = element.name;
 				if (!name) return;
@@ -520,11 +511,9 @@ export function form(id) {
 						);
 
 						if (DEV) {
-							for (const e of elements) {
-								if ((e.type === 'file') !== is_file) {
-									throw new Error(
-										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
-									);
+							for (const input of elements) {
+								if ((input.type === 'file') !== is_file) {
+									e.remote_form_mixed_inputs({ name: element.name });
 								}
 							}
 						}
@@ -540,9 +529,7 @@ export function form(id) {
 					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
 				} else if (is_file) {
 					if (DEV && element.multiple) {
-						throw new Error(
-							`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
-						);
+						e.remote_form_multiple_files({ name });
 					}
 
 					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
@@ -616,7 +603,7 @@ export function form(id) {
 			submit: {
 				value: () => {
 					if (!element) {
-						throw new Error('Cannot call submit() before the form is attached');
+						e.remote_form_not_attached();
 					}
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
@@ -829,18 +816,14 @@ function clone(element) {
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
 		if (/^\$[.[]?/.test(key)) {
-			throw new Error(
-				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'
-			);
+			e.remote_form_reserved_field();
 		}
 	}
 
 	if (enctype !== 'multipart/form-data') {
 		for (const value of form_data.values()) {
 			if (value instanceof File) {
-				throw new Error(
-					'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-				);
+				e.enhance_file_without_enctype();
 			}
 		}
 	}
