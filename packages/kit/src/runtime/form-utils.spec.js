@@ -59,6 +59,28 @@ describe('split_path', () => {
 });
 
 describe('convert_formdata', () => {
+	test.each([
+		['string', 'a/form', 'scalar'],
+		['empty string', 'a/form', ''],
+		['number', 'n:a/form', '42'],
+		['zero', 'n:a/form', '0'],
+		['boolean', 'b:a/form', 'on'],
+		['false', 'b:a/form', 'off'],
+		['file', 'a/form', new File(['contents'], 'a.txt')]
+	])('rejects a %s followed by a nested field', async (_, name, value) => {
+		const data = new FormData();
+		data.append(/** @type {string} */ (name), value);
+		data.append('a.b/form', 'nested');
+
+		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_array_conflict', {
+			contains: ['b']
+		});
+		await expect(
+			deserialize_binary_form(new Request('http://test', { method: 'POST', body: data }), 'form')
+		).rejects.toThrowKitError('form_field_array_conflict');
+		if (value instanceof File) expect(Object.hasOwn(value, 'b')).toBe(false);
+	});
+
 	test('duplicate single-value fields are diagnosed, while array fields still collect values', () => {
 		const data = new FormData();
 		data.append('name/form', 'first');
@@ -965,6 +987,45 @@ describe('binary form serializer', () => {
 });
 
 describe('deep_set', () => {
+	test.each([
+		['string', 'scalar'],
+		['empty string', ''],
+		['number', 42],
+		['zero', 0],
+		['NaN', NaN],
+		['boolean', true],
+		['false', false],
+		['bigint', 1n],
+		['symbol', Symbol('value')],
+		['function', () => {}],
+		['file', new File(['contents'], 'a.txt')],
+		['date', new Date(0)],
+		['class instance', new (class {})()]
+	])('rejects a %s intermediate without mutation', (_, value) => {
+		const target = { items: [value] };
+		const before = Object.getOwnPropertyDescriptors(value);
+		for (const next of ['b', '0']) {
+			for (const final of ['nested', DELETE_KEY]) {
+				expect(() => deep_set(target, ['items', '0', next], final)).toThrowKitError(
+					'form_field_array_conflict',
+					{ contains: [next] }
+				);
+			}
+		}
+		expect(target.items[0]).toBe(value);
+		expect(Object.getOwnPropertyDescriptors(value)).toEqual(before);
+	});
+
+	test.each([{}, Object.create(null), new Proxy({}, {})])(
+		'updates existing plain object containers in place',
+		(value) => {
+			const target = { a: value };
+			deep_set(target, ['a', 'b'], 'nested');
+			expect(target.a).toBe(value);
+			expect(value.b).toBe('nested');
+		}
+	);
+
 	test('conflicting array and object paths reject without changing the existing value', () => {
 		const target = { items: {} };
 		expect(() => deep_set(target, ['items', '0'], 'value')).toThrowKitError(
@@ -973,6 +1034,29 @@ describe('deep_set', () => {
 		);
 		expect(target).toEqual({ items: {} });
 	});
+	test('rejects named properties on arrays', () => {
+		const target = { items: [] };
+		expect(() => deep_set(target, ['items', 'title'], 'value')).toThrowKitError(
+			'form_field_array_conflict'
+		);
+		expect(target).toEqual({ items: [] });
+	});
+
+	test.each([null, undefined])('creates a nested array when intermediate value is %s', (value) => {
+		const target = { nested: value };
+		deep_set(target, ['nested', '0', 'name'], 'hello');
+		expect(target).toEqual({ nested: [{ name: 'hello' }] });
+	});
+
+	test.each([null, undefined])(
+		'does not create missing branches when deleting under %s',
+		(value) => {
+			const target = { nested: value };
+			deep_set(target, ['nested', 'name'], DELETE_KEY);
+			expect(target.nested).toBe(value);
+		}
+	);
+
 	test('always creates own property', () => {
 		const target = {};
 
