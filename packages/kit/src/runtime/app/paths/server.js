@@ -1,7 +1,6 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
 import { decode_pathname, has_scheme_or_authority } from '../../../utils/url.js';
-import { add_data_suffix } from '../../../pathname.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
@@ -53,12 +52,7 @@ function prefix_path(resolved) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = store.event.isDataRequest
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
-			const after_base = pathname.slice(base.length);
+			const after_base = store.event.url.pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 
