@@ -765,7 +765,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 				}
 				for (const [key, { resource }] of cache_entries(live_query_map)) {
 					if (live_query_keys?.has(key)) {
-						void resource.reconnect();
+						void resource.reconnect().catch(noop);
 					}
 				}
 			});
