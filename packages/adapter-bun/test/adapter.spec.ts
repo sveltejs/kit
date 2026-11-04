@@ -372,15 +372,26 @@ describe('generated routes', () => {
 		);
 	});
 
-	test('warns when precompress is combined with compile', async () => {
-		const builder = create_builder();
+	test('embeds precompressed variants in compiled executables', async () => {
+		const builder = create_builder({ client_files: ['app.js'] });
 
 		await adapter({ precompress: true, buildOptions: { compile: true } }).adapt(builder);
 
-		expect(builder.log.warn).toHaveBeenCalledWith(
-			expect.stringContaining('precompress is ignored')
+		expect(builder.compress).toHaveBeenCalledWith('.svelte-kit/adapter-bun/client');
+		expect(builder.compress).toHaveBeenCalledWith('.svelte-kit/adapter-bun/prerendered');
+		const source = handoff_source();
+		for (const [asset, file] of [
+			['asset_1', 'app.js.br'],
+			['asset_2', 'app.js.gz']
+		]) {
+			expect(source).toContain(
+				`import ${asset} from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/${file}`)} with { type: 'file' };`
+			);
+		}
+		expect(source).toContain(
+			'["client_asset", "app.js", asset_0, {"hash":"abc","mtime":0,"br":asset_1,"gz":asset_2}]'
 		);
-		expect(builder.compress).not.toHaveBeenCalled();
+		expect(builder.log.warn).not.toHaveBeenCalled();
 	});
 
 	test('rejects route segments starting with a colon', async () => {

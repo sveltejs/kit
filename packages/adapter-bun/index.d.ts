@@ -10,8 +10,8 @@ interface AdapterOptions {
 	/**
 	 * Generate `.br` and `.gz` variants of client and prerendered assets during the
 	 * build. The generated routes negotiate `Accept-Encoding` per request, preferring
-	 * brotli over gzip. Ignored when `buildOptions.compile` is set, because embedded
-	 * assets are imported by identity path.
+	 * brotli over gzip. With `buildOptions.compile`, the variants are embedded in the
+	 * executable next to the original assets.
 	 * @default false
 	 */
 	precompress?: boolean;

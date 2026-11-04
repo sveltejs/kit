@@ -108,12 +108,6 @@ export default function (opts = {}) {
 
 			fs.rmSync(out, { recursive: true, force: true });
 
-			if (precompress && embed) {
-				builder.log.warn(
-					'precompress is ignored with buildOptions.compile: embedded assets are imported by identity path'
-				);
-			}
-
 			builder.log.minor('Building server');
 
 			const server = builder.getServerDirectory();
@@ -134,7 +128,7 @@ export default function (opts = {}) {
 					`export const env_prefix = ${JSON.stringify(envPrefix)};`,
 					`export const origin = ${JSON.stringify(builder.config.paths.origin)};`,
 					`export const server_options = ${JSON.stringify(serverOptions)};`,
-					...(await create_routes({ builder, out, embed, precompress: precompress && !embed }))
+					...(await create_routes({ builder, out, embed, precompress }))
 				].join('\n')
 			);
 
@@ -284,7 +278,20 @@ async function create_routes({ builder, out, embed, precompress }) {
 	const entry = async (helper, url, dir, filename = url) => {
 		const file = `${dest}/${dir}/${filename}`;
 		if (embed) embedded.set(file, `asset_${embedded.size}`);
-		return `[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${JSON.stringify(await asset_meta(file, precompress))}]`;
+		const meta = await asset_meta(file, precompress);
+		let meta_code = JSON.stringify(meta);
+		if (embed && (meta.br || meta.gz)) {
+			// embedded variants are referenced by their identity path, like the file itself
+			const fields = [`"hash":${JSON.stringify(meta.hash)}`, `"mtime":${meta.mtime}`];
+			for (const encoding of /** @type {const} */ (['br', 'gz'])) {
+				if (!meta[encoding]) continue;
+				const variant = `${file}.${encoding}`;
+				embedded.set(variant, `asset_${embedded.size}`);
+				fields.push(`${JSON.stringify(encoding)}:${embedded.get(variant)}`);
+			}
+			meta_code = `{${fields.join(',')}}`;
+		}
+		return `[${JSON.stringify(helper)}, ${JSON.stringify(url)}, ${embedded.get(file) ?? JSON.stringify(filename)}, ${meta_code}]`;
 	};
 
 	const pages = [...builder.prerendered.pages];
