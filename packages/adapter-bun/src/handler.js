@@ -1,7 +1,15 @@
 /** @import { Server as BunServer } from 'bun' */
 import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
 import { server_assets } from './routes.js';
-import { env, number_env } from './env.js';
+import { env, number_env, origin_env } from './env.js';
+
+if (origin && env('ORIGIN') !== undefined) {
+	console.warn(
+		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
+	);
+}
+
+const public_origin = origin || origin_env('ORIGIN');
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
 const protocol_header = env('PROTOCOL_HEADER', '').toLowerCase();
@@ -46,7 +54,7 @@ function normalize_request(request) {
 	try {
 		// an empty Host header makes request.url relative, so parsing belongs in the try
 		const url = new URL(request.url);
-		const request_origin = origin || get_origin(request, url);
+		const request_origin = public_origin || get_origin(request, url);
 		return request_origin === url.origin
 			? request
 			: new Request(request_origin + url.pathname + url.search, request);

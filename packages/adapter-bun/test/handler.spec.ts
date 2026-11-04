@@ -46,6 +46,31 @@ test('uses paths.origin as the trusted request origin when configured', async ()
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
 });
 
+test('uses the ORIGIN environment variable as the request origin', async () => {
+	set_env('ORIGIN', 'http://192.168.1.10:3000/');
+	const loaded = await load_handler();
+
+	await loaded.handler(new Request('http://internal/path?query=yes'), loaded.bun_server);
+
+	expect(loaded.respond.mock.calls[0][0].url).toBe('http://192.168.1.10:3000/path?query=yes');
+});
+
+test.each(['https://env.example', '', 'not-a-url'])(
+	'ignores ORIGIN %j and warns when paths.origin is configured',
+	async (value) => {
+		const warn = spyOn(console, 'warn').mockImplementation(() => {});
+		set_env('ORIGIN', value);
+		const loaded = await load_handler({ origin: 'https://canonical.example' });
+
+		await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
+
+		expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
+		expect(warn).toHaveBeenCalledWith(
+			'ORIGIN is ignored because the SvelteKit configuration `paths.origin` setting was set to https://canonical.example'
+		);
+	}
+);
+
 test('derives the public origin from configured proxy headers', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');
