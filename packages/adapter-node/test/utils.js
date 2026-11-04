@@ -1,6 +1,9 @@
 import { devices } from '@playwright/test';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { number_from_env } from '../../../test-utils/index.js';
+
+const serve = fileURLToPath(new URL('../../../test-utils/serve.js', import.meta.url));
 
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
 export const config = {
@@ -8,12 +11,11 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: process.env.NODE_APP_RUNTIME_DIR ? 'node build' : 'pnpm build && pnpm preview',
-		cwd: process.env.NODE_APP_RUNTIME_DIR,
-		env: process.env.NODE_APP_RUNTIME_DIR
-			? { MY_CUSTOM_PORT: '5173', INSTRUMENTATION_ENV: 'available' }
-			: undefined,
-		port: 5173
+		// runs the server with production dependencies only to catch imports of dev dependencies
+		command: `node ${serve} --prod=build build preview`,
+		env: { MY_CUSTOM_PORT: '5173', INSTRUMENTATION_ENV: 'available' },
+		port: 5173,
+		gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 }
 	},
 	retries: process.env.CI ? 2 : number_from_env('KIT_E2E_RETRIES', 0),
 	projects: [

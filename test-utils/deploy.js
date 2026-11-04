@@ -10,12 +10,14 @@ import { parseAst } from 'vite';
  * Copies the test app in `dir` with `pnpm deploy`, so that kit and the adapter are installed
  * packages rather than workspace links and Vite resolves them the way it would in a user's project
  * @param {string} dir the app's directory in the workspace
+ * @param {{ prod?: boolean }} [options] `prod` installs only the app's `dependencies`
  * @returns {string} the copy, which the caller removes
  */
-export function deploy(dir) {
-	const app = location(dir);
+export function deploy(dir, { prod = false } = {}) {
+	const app = location(dir, prod);
 	fs.rmSync(app, { recursive: true, force: true });
-	execFileSync('pnpm', ['--filter', name(dir), 'deploy', app], {
+	const args = ['--filter', name(dir), 'deploy', ...(prod ? ['--prod'] : []), app];
+	execFileSync('pnpm', args, {
 		cwd: dir,
 		stdio: 'inherit',
 		shell: process.platform === 'win32'
@@ -27,10 +29,11 @@ export function deploy(dir) {
 /**
  * Where `deploy` puts the copy of the app in `dir`
  * @param {string} dir
+ * @param {boolean} [prod]
  */
-export function location(dir) {
+export function location(dir, prod = false) {
 	const hash = createHash('sha1').update(dir).digest('hex').slice(0, 8);
-	return path.join(os.tmpdir(), `${name(dir)}-${hash}`);
+	return path.join(os.tmpdir(), `${name(dir)}-${hash}${prod ? '-prod' : ''}`);
 }
 
 /** @param {string} dir */
