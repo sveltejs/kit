@@ -48,6 +48,55 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	for (const [route, color] of [
+		['/errors/render', 'rgb(255, 0, 0)'],
+		['/errors/nested-error-page/render', 'rgb(0, 0, 255)']
+	]) {
+		test(`includes error page CSS after an SSR render error at ${route}`, async ({ page }) => {
+			const response = await page.goto(route);
+			expect(response?.status()).toBe(500);
+			await expect(page.locator('h1')).toHaveCSS('color', color);
+		});
+	}
+
+	test('includes ancestor error page CSS when a nested error page fails to render', async ({
+		page
+	}) => {
+		const response = await page.goto('/errors/nested-error-page/render?fail_error');
+		expect(response?.status()).toBe(500);
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('h1')).toHaveCSS('color', 'rgb(255, 0, 0)');
+		await expect(page.locator('#message')).toContainText(
+			'nested error render failed: render failed (500 Internal Error)'
+		);
+		const error_class = await page.locator('h1').getAttribute('class');
+		expect(error_class).toBeTruthy();
+
+		// Dependencies collected during a render error must not leak into later responses.
+		await page.goto('/errors/nested-error-page');
+		const css = await page.evaluate(() =>
+			Array.from(document.styleSheets)
+				.flatMap((sheet) => Array.from(sheet.cssRules, (rule) => rule.cssText))
+				.join('\n')
+		);
+		expect(css).not.toContain(error_class);
+	});
+
+	test('only includes CSS for error pages that are rendered', async ({ page }) => {
+		await page.goto('/errors/nested-error-page/nope');
+		await expect(page.locator('h1')).toHaveCSS('color', 'rgb(0, 0, 255)');
+		const error_class = await page.locator('h1').getAttribute('class');
+		expect(error_class).toBeTruthy();
+
+		await page.goto('/errors/nested-error-page');
+		const css = await page.evaluate(() =>
+			Array.from(document.styleSheets)
+				.flatMap((sheet) => Array.from(sheet.cssRules, (rule) => rule.cssText))
+				.join('\n')
+		);
+		expect(css).not.toContain(error_class);
+	});
+
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {

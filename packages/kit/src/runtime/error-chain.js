@@ -1,18 +1,16 @@
-/** @import { Component } from 'svelte'; */
-
 /**
  * Resolves the `+error.svelte` component that guards each node of `branch`, aligned to the
  * branch with its empty slots removed. A node is guarded by the closest error page declared
  * at or above it, except the root layout, which wraps the root error component rather than
  * being wrapped by it.
- * @template T
+ * @template T, U
  * @param {Array<unknown>} branch
  * @param {Array<T | undefined | null>} errors the error page declared at each depth, if any
- * @param {(error: T) => Promise<Component | undefined> | undefined} load
- * @returns {Promise<Array<Component | undefined>>}
+ * @param {(error: T) => Promise<U | undefined> | undefined} load
+ * @returns {Promise<Array<U | undefined>>}
  */
 export function build_error_chain(branch, errors, load) {
-	/** @type {Array<Promise<Component | undefined> | undefined>} */
+	/** @type {Array<Promise<U | undefined> | undefined>} */
 	const chain = [undefined];
 	let last_idx = -1;
 
