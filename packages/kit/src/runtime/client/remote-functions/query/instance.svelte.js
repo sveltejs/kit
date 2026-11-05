@@ -93,6 +93,8 @@ export class Query {
 	}
 
 	start() {
+		if (untrack(() => this.#promise !== null)) return;
+
 		// there is a really weird bug with untrack and writes and initializations
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version

@@ -13,7 +13,7 @@ vi.mock(new URL('../../client.js', import.meta.url).pathname, () => ({
 }));
 
 const { QueryProxy } = await import('./proxy.js');
-const { query_map } = await import('../../client.js');
+const { query_map, query_responses } = await import('../../client.js');
 
 /**
  * Force GC several times and pump microtasks/macrotasks so the FinalizationRegistry
@@ -78,6 +78,49 @@ describe('QueryProxy', () => {
 		new QueryProxy('q', { x: 2 }, fn);
 
 		expect(query_map.get('q')?.size).toBe(2);
+	});
+
+	test('a failed SSR-seeded query stays failed until explicitly refreshed', async () => {
+		const error = { status: 418, message: 'teapot' };
+		query_responses['q/'] = { e: error };
+		const fn = vi.fn(() => Promise.resolve('recovered'));
+		const proxy = new QueryProxy('q', undefined, fn);
+
+		expect(proxy.ready).toBe(false);
+		expect(proxy.loading).toBe(false);
+		expect(proxy.current).toBeUndefined();
+		expect(proxy.error).toEqual(error);
+		await expect(proxy).rejects.toMatchObject({ body: error });
+		await tick();
+		expect(fn).not.toHaveBeenCalled();
+
+		await proxy.refresh();
+		await expect(proxy).resolves.toBe('recovered');
+		expect(proxy.ready).toBe(true);
+		expect(proxy.error).toBeUndefined();
+		expect(fn).toHaveBeenCalledTimes(1);
+	});
+
+	test('reading error does not subscribe to changes to the internal promise', async () => {
+		const proxy = new QueryProxy('q', undefined, () => Promise.resolve('value'));
+		proxy.set('value');
+		let runs = 0;
+		const destroy = $effect.root(() => {
+			$effect.pre(() => {
+				runs += 1;
+				void proxy.error;
+			});
+		});
+		try {
+			await tick();
+			expect(runs).toBe(1);
+			await proxy.refresh();
+			await tick();
+			// Refresh replaces the promise, but the error has not changed.
+			expect(runs).toBe(1);
+		} finally {
+			destroy();
+		}
 	});
 
 	test('a proxy that goes out of scope is garbage collected and the cache entry is evicted', async () => {
