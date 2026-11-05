@@ -1,5 +1,17 @@
 # @sveltejs/adapter-vercel
 
+## 6.3.5
+
+### Patch Changes
+
+- fix: accept every Node.js version from 26 (`nodejs27.x`, `nodejs28.x`, ...), not only even ones ([#17585](https://github.com/sveltejs/kit/pull/17585))
+
+- fix: escape prerendered paths used in Vercel route patterns ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
+- fix: support Node.js 26 (`nodejs26.x`) and future even Node.js versions ([#17580](https://github.com/sveltejs/kit/pull/17580))
+- Updated dependencies [[`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd)]:
+  - @sveltejs/kit@2.70.4
+
 ## 6.3.4
 ### Patch Changes
 

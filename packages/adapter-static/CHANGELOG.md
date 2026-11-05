@@ -1,5 +1,13 @@
 # @sveltejs/adapter-static
 
+## 3.0.11
+
+### Patch Changes
+
+- fix: escape prerendered paths used in Vercel route patterns ([#17620](https://github.com/sveltejs/kit/pull/17620))
+- Updated dependencies [[`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd)]:
+  - @sveltejs/kit@2.70.4
+
 ## 3.0.10
 ### Patch Changes
 

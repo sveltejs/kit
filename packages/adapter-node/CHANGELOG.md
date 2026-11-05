@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 5.5.8
+
+### Patch Changes
+
+- fix: avoid crashing the server when a `text/event-stream` response has immutable headers ([#17620](https://github.com/sveltejs/kit/pull/17620))
+- Updated dependencies [[`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd), [`0a2e58c`](https://github.com/sveltejs/kit/commit/0a2e58cbccdd46cac20aa5af4e2edf17e0da11dd)]:
+  - @sveltejs/kit@2.70.4
+
 ## 5.5.7
 ### Patch Changes
 

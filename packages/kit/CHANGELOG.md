@@ -1,5 +1,19 @@
 # @sveltejs/kit
 
+## 2.70.4
+
+### Patch Changes
+
+- fix: return a 400 response instead of throwing when `reroute` rewrites a malformed pathname ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
+- fix: escape cache-control headers in prerendered HTML ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
+- fix: prevent path traversal when previewing prerendered pages and data on Windows ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
+- fix: prevent server-side route resolution from loading code from another origin for pathnames starting with `//` ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
+- fix: prevent server-side self-fetch fallbacks from following redirects ([#17620](https://github.com/sveltejs/kit/pull/17620))
+
 ## 2.70.3
 
 ### Patch Changes
