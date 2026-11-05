@@ -16,14 +16,15 @@
 		"types": ["node"]
 	},
 	"include": [
+		"src",
 		"index.js",
 		"index.spec.js",
-		"src",
+		"config.js",
+		"config.spec.js",
+		"platform.js",
 		"utils.js",
 		"utils.spec.js",
 		"vitest.config.js",
-		"config.js",
-		"config.spec.js",
 		"globals.d.ts",
 		"test/utils.js"
 	]
