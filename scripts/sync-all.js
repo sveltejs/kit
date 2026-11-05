@@ -25,6 +25,11 @@ for (const directories of [
 		chdir(cwd);
 
 		const vite_config = await load_vite_config();
+		// The compile plugin has already synced these files while resolving the config.
+		if (vite_config.plugins.some((plugin) => plugin.name === 'vite-plugin-sveltekit-compile')) {
+			continue;
+		}
+
 		const sveltekit_config = extract_svelte_config(vite_config);
 
 		const manifest_data = create_manifest_data(sveltekit_config, cwd);
