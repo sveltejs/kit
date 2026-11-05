@@ -332,7 +332,9 @@ export function resolve_route(id, params) {
 							e.route_param_slash({ name, id });
 						}
 
-						return value;
+						return rest
+							? value.split('/').map(encodeURIComponent).join('/')
+							: encodeURIComponent(value);
 					}
 
 					if (
