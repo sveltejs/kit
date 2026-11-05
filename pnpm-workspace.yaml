@@ -13,6 +13,12 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
+  # TODO: remove once these are older than minimumReleaseAge
+  - '@cloudflare/vite-plugin@2.0.0-beta.v.12'
+  - '@cloudflare/build-output-utils@0.9.10'
+  - '@cloudflare/config@0.30.2'
+  - '@cloudflare/runtime-types@0.1.23'
+  - 'miniflare@5.20261104.0-beta'
 # TODO: re-enable once @cloudflare/platform-proxy is published to npm, since its pkg.pr.new build depends on pkg.pr.new builds of miniflare and @cloudflare/config
 blockExoticSubdeps: false
 linkWorkspacePackages: true

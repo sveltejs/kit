@@ -340,17 +340,17 @@ importers:
   packages/adapter-cloudflare:
     dependencies:
       '@cloudflare/build-output-utils':
-        specifier: 0.9.9
-        version: 0.9.9
+        specifier: 0.9.10
+        version: 0.9.10
       '@cloudflare/config':
-        specifier: 0.30.1
-        version: 0.30.1
+        specifier: 0.30.2
+        version: 0.30.2
       '@cloudflare/platform-proxy':
         specifier: https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@fedfc49
         version: https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@fedfc49(@types/node@22.20.4)
       '@cloudflare/vite-plugin':
-        specifier: 2.0.0-beta.v.11
-        version: 2.0.0-beta.v.11(@types/node@22.20.4)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))(workerd@1.20261103.1)
+        specifier: 2.0.0-beta.v.12
+        version: 2.0.0-beta.v.12(@types/node@22.20.4)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))(workerd@1.20261103.1)
       '@rolldown/pluginutils':
         specifier: ^1.0.1
         version: 1.0.1
@@ -380,8 +380,8 @@ importers:
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
       '@cloudflare/config':
-        specifier: 0.30.1
-        version: 0.30.1
+        specifier: 0.30.2
+        version: 0.30.2
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.10.0
@@ -2142,11 +2142,11 @@ packages:
     resolution: {integrity: sha512-dlT1m5e/0yUL0kRNcQn7yGLVThkgbB0Ga/1AmfDDC/8ik6AIiSf2QLQO2zPYvefsHP0aFgxO93cVLCCfDp7kzQ==}
     engines: {node: '>= 20.12.0'}
 
-  '@cloudflare/build-output-utils@0.9.9':
-    resolution: {integrity: sha512-8bsxwE0sBANpEXHD2SWCfMw82wdacUsr1b0p9a9WbGNeMASmXHUzUfMvRkq9k6aKnC9uPeeYJ/m4ErXsC+cy/Q==}
+  '@cloudflare/build-output-utils@0.9.10':
+    resolution: {integrity: sha512-9F6RSV0FJnF0zQLIoMVgxc0ub57FrZBGKZ8oUQHyVAbbjodlcIHk0BF5fd3B89N/Y4cE+FSqzWfpq3RzFy3tjA==}
 
-  '@cloudflare/config@0.30.1':
-    resolution: {integrity: sha512-16yO439yuhX1cM1l2IoNDVxJM4cZ9oE+eLtxFAe32EamS/7e4t42CzzyTE+dHQfFcKNvkmiZRxx9JinO4l7ynQ==}
+  '@cloudflare/config@0.30.2':
+    resolution: {integrity: sha512-YTasjo8Kvfn3SlVs5gHZ6fy73BNQafY2Y8aosasicO8CTRVj2h8K7h+IJnjHK+tzM00Qi96VcOCfefCNLuMauw==}
 
   '@cloudflare/config@https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/config@fedfc49':
     resolution: {integrity: sha512-TI8UxIbr291RqyNJHGXet+2DHXhY0qEdqEQsi8Ol8Cu5e7xsvtOhtzm4rv+u7kEgTbHBth+74pIWlVkWhTu2MQ==, tarball: https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/config@fedfc49}
@@ -2156,8 +2156,8 @@ packages:
     resolution: {integrity: sha512-hIsrbFiQ3V0XjHfbQutXQ3gMA7VtV5s4Ng46AFYqObBNhwssDmvqtitNF9AqcyH0m3SXfE2JhcK56qawcpNuQA==, tarball: https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@fedfc49}
     version: 0.0.0
 
-  '@cloudflare/runtime-types@0.1.22':
-    resolution: {integrity: sha512-9t9HWbHzSvJt4NQac6n4lS73p635++PyeN/zIuW9FZXV1Zt0+pnySnMr1lsrrh77dXd+soedhamYb9wbs1QGDQ==}
+  '@cloudflare/runtime-types@0.1.23':
+    resolution: {integrity: sha512-uQVuBfVlJqGFryfyiMG+62KKS6NNC/EKYqbHGnNE2ExhcPNUihfYp3hWtTKshikZe7STTmIaLpDqT+h7J8Fdrw==}
 
   '@cloudflare/unenv-preset@2.16.2':
     resolution: {integrity: sha512-JBP1+Z7ZSNG/d4mRP+y8VC5dka3tZVMLEZRvS+rzQ4DGV1EoxRFQckcJTTkXbHSQiTj0DtNI01Zwb/V2fX0mvQ==}
@@ -2168,8 +2168,8 @@ packages:
       workerd:
         optional: true
 
-  '@cloudflare/vite-plugin@2.0.0-beta.v.11':
-    resolution: {integrity: sha512-C4BEbt5Im85Q0Mx5kVfrWp4b1IBdIacXugkCnLu4hE/VucZKvL9vvrMsv/+3h3XLhBX2xr18BPNoXexgf14Ukg==}
+  '@cloudflare/vite-plugin@2.0.0-beta.v.12':
+    resolution: {integrity: sha512-DkRvsUbcZgcgqvz2mpZQfc6VuISDHM5wS5q/J1yjGQf4+6qeE9yYHF8gYrEPkUoqi/qwOcjCmaE2A1rWreNmaA==}
     hasBin: true
     peerDependencies:
       vite: ^7.0.0 || ^8.0.0
@@ -4085,8 +4085,8 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  miniflare@5.20261103.0-beta:
-    resolution: {integrity: sha512-wghSXG3KHzMbAYvcrHFxN6JNI1Or3LSxpBe1qHdnFXFOPIDIlXCNvsRVF2J97rXsfFSJr7EzxRSjoUCmgVDEUA==}
+  miniflare@5.20261104.0-beta:
+    resolution: {integrity: sha512-pYZ2n85+FYUb7s0oIVcQxO63/+wgaknm+A/kQjctJqshvHPJs3UtnzaIZ7xrrHMOk8atD7yAfauf6G9VAv7Upg==}
     engines: {node: '>=22.0.0'}
 
   miniflare@https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49:
@@ -4964,11 +4964,11 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
-  '@cloudflare/build-output-utils@0.9.9':
+  '@cloudflare/build-output-utils@0.9.10':
     dependencies:
-      '@cloudflare/config': 0.30.1
+      '@cloudflare/config': 0.30.2
 
-  '@cloudflare/config@0.30.1':
+  '@cloudflare/config@0.30.2':
     dependencies:
       zod: 4.6.6
 
@@ -4985,9 +4985,9 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@cloudflare/runtime-types@0.1.22(@types/node@22.20.4)':
+  '@cloudflare/runtime-types@0.1.23(@types/node@22.20.4)':
     dependencies:
-      miniflare: 5.20261103.0-beta(@types/node@22.20.4)
+      miniflare: 5.20261104.0-beta(@types/node@22.20.4)
       workerd: 1.20261103.1
     transitivePeerDependencies:
       - '@types/node'
@@ -5000,13 +5000,13 @@ snapshots:
     optionalDependencies:
       workerd: 1.20261103.1
 
-  '@cloudflare/vite-plugin@2.0.0-beta.v.11(@types/node@22.20.4)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))(workerd@1.20261103.1)':
+  '@cloudflare/vite-plugin@2.0.0-beta.v.12(@types/node@22.20.4)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))(workerd@1.20261103.1)':
     dependencies:
-      '@cloudflare/build-output-utils': 0.9.9
-      '@cloudflare/config': 0.30.1
-      '@cloudflare/runtime-types': 0.1.22(@types/node@22.20.4)
+      '@cloudflare/build-output-utils': 0.9.10
+      '@cloudflare/config': 0.30.2
+      '@cloudflare/runtime-types': 0.1.23(@types/node@22.20.4)
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261103.1)
-      miniflare: 5.20261103.0-beta(@types/node@22.20.4)
+      miniflare: 5.20261104.0-beta(@types/node@22.20.4)
       unenv: 2.0.0-rc.24
       vite: 8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1)
       ws: 8.21.0
@@ -6646,7 +6646,7 @@ snapshots:
 
   mdn-data@2.27.1: {}
 
-  miniflare@5.20261103.0-beta(@types/node@22.20.4):
+  miniflare@5.20261104.0-beta(@types/node@22.20.4):
     dependencies:
       '@cspotcode/source-map-support': 0.8.1
       sharp: 0.35.5(@types/node@22.20.4)
