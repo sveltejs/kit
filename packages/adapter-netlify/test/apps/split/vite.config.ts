@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import type { UserConfig } from 'vite';
-import adapter from '../../../index.js';
+import adapter from '@sveltejs/adapter-netlify';
 
 const config: UserConfig = {
 	build: {
@@ -8,7 +8,7 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter({ split: true }),
+			adapter: adapter({ split: true, edge: process.env.EDGE === 'true' }),
 			compilerOptions: { experimental: { async: true } },
 			experimental: {
 				remoteFunctions: true

@@ -1,8 +1,8 @@
 /** @import { Serve } from 'bun' */
 import fs from 'node:fs';
 import process from 'node:process';
-import server_options from 'SERVER_OPTIONS';
-import { routes } from 'ROUTES';
+import { server_options } from '#@sveltejs/adapter-bun';
+import { routes } from './routes.js';
 import { handler } from './handler.js';
 import { boolean_env, bytes_env, env, number_env } from './env.js';
 

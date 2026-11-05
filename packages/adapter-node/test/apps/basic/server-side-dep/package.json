@@ -1,0 +1,11 @@
+{
+	"name": "server-side-dep",
+	"version": "0.0.1",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./index.js",
+			"types": "./index.d.ts"
+		}
+	}
+}

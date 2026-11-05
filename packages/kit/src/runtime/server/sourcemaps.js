@@ -1,5 +1,7 @@
 /* eslint-disable n/prefer-global/process */
 
+import { set_error_stack } from '../../utils/error.js';
+
 // using `getBuiltinModule` rather than `import` makes this safe to run in non-Node-compatible environments
 const fs = globalThis.process?.getBuiltinModule?.('node:fs');
 const url = globalThis.process?.getBuiltinModule?.('node:url');
@@ -22,7 +24,7 @@ export let fix_stack_trace = (error) => {
 
 	let end = 0;
 
-	error.stack = error.stack
+	const stack = error.stack
 		.split('\n')
 		.map((line, i) => {
 			const match = line.match(/^ {4}at.+(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
@@ -58,6 +60,8 @@ export let fix_stack_trace = (error) => {
 		})
 		.slice(0, end)
 		.join('\n');
+
+	set_error_stack(error, stack);
 };
 
 /**

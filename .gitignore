@@ -20,6 +20,7 @@ vite.config.js.timestamp-*
 .turbo
 .vercel
 .test-tmp
+.vitest
 symlink-from
 .idea/
 _tmp_flaky_test_output.txt

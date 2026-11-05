@@ -13,10 +13,6 @@ const body_data_listeners = new WeakMap();
 function get_raw_body(req, body_size_limit) {
 	const h = req.headers;
 
-	if (!h['content-type']) {
-		return null;
-	}
-
 	const content_length = Number(h['content-length']);
 	const has_content_length = Number.isFinite(content_length);
 

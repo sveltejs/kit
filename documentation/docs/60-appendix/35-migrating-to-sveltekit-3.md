@@ -16,7 +16,7 @@ SvelteKit 3 requires the following minimum versions:
 
 - Node v22.17
 - TypeScript v6
-- Svelte v5.56.4
+- Svelte v5.57.1
 - Vite v8.0.12 (the first Vite 8 release bundling stable `rolldown` v1)
 - `@sveltejs/vite-plugin-svelte` v7
 
@@ -45,7 +45,7 @@ export default defineConfig({
 });
 ```
 
-See the [configuration docs](configuration) for further examples.
+See the [configuration docs](@sveltejs-kit-vite) for further examples.
 
 ### Removed options
 
@@ -64,7 +64,7 @@ The following options are obsolete and should be removed from your `vite.config.
 
 - `output.linkHeaderPreload` determines whether to use `Link` HTTP headers to preload resources like `.js` and `.css` files rather than injecting `<link>` elements in the rendered HTML. This can cause issues when the headers grow too large, so SvelteKit 3 uses `<link>` elements by default instead.
 - `csrf.trustedOrigins` allows you to specify external origins that are allowed to make form submissions.
-- `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls. If using `adapter-node`, this replaces the `ORIGIN` environment variable.
+- `paths.origin` replaces `prerender.origin`, and should reflect your app's public-facing origin if it can't reliably be derived from request headers (for example because it's behind a reverse proxy). It will be used for CSRF checks on form submissions and remote function calls. If using `adapter-node`, this takes precedence over the `ORIGIN` environment variable.
 
 ### Changed options
 
@@ -498,13 +498,16 @@ await myCache.match(request);
 ### `adapter-node`
 
 - bundling now happens with `rolldown`
-- the `ORIGIN` environment variable is removed (set `paths.origin` in your Vite config instead)
+- static assets are served from a list recorded at build time; files added to the output directory afterwards are not served, and replaced ones keep their old size and `ETag` (use environment variables for runtime configuration)
+- `ETag`s for static assets are content hashes, and `Last-Modified` is no longer sent
+- only `GET` and `HEAD` requests are served static assets; other methods result in a 405 response
 
 ### `adapter-netlify`
 
 - output now conforms to the stable [Netlify Frameworks API](https://docs.netlify.com/build/frameworks/frameworks-api/)
 - deploying/previewing with the Netlify CLI requires `v17.31.0` or later (`npm i -g netlify-cli@latest`)
 - edge function build target is `es2022`
+- the publish directory is now an adapter option rather than being read from the `netlify.toml` file
 
 ### `adapter-vercel`
 
@@ -520,6 +523,7 @@ For adapter authors, there are some additional changes:
 - `builder.compress` returns a list of compressed files
 - `builder.mkdirp` and `builder.rimraf` are deprecated in favour of `node:fs` methods
 - `builder.generateManifest` has been removed — use `builder.generateServerInstance` to replace it, and `builder.manifest` to access the manifest
+- the `Server` class exported from the server output is deprecated — use the `server` object written by `builder.generateServerInstance`
 
 #### Server instrumentation
 

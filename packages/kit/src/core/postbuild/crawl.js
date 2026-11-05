@@ -178,7 +178,7 @@ export function crawl(html, base) {
 								value = html.slice(start, i);
 							} else {
 								const start = i;
-								while (html[i] !== '>' && !WHITESPACE.test(html[i])) i += 1;
+								while (i < html.length && html[i] !== '>' && !WHITESPACE.test(html[i])) i += 1;
 								value = html.slice(start, i);
 
 								i -= 1;

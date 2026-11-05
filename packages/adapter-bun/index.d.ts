@@ -47,10 +47,10 @@ interface AdapterOptions {
 		| 'ipv6Only'
 	>;
 	/**
-	 * Pass Bun build options directly for advanced configuration. The generated entrypoint,
-	 * output directory, top-level target, and module format are reserved. Set `compile` to
-	 * create an executable; if it does not specify an outfile, the executable is written to
-	 * `<out>/server`.
+	 * Options for the `Bun.build` call that turns the server into an executable. Set `compile`
+	 * to create one; if it does not specify an outfile, the executable is written to
+	 * `<out>/server`. The entrypoint, output directory, top-level target, and module format
+	 * are reserved. Without `compile`, the server is built by Vite and these options are ignored.
 	 * @default {}
 	 */
 	buildOptions?: Pick<
@@ -63,7 +63,7 @@ interface AdapterOptions {
 		| 'drop'
 		| 'features'
 		| 'optimizeImports'
-		| 'splitting'
+		| 'external'
 		| 'compile'
 	>;
 }

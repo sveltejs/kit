@@ -11,6 +11,9 @@ import {
 } from '../../client/client.js';
 import { notify_version } from '#app/state/client';
 import { deserialize } from './shared.js';
+import { resolve_url } from '../../client/utils.js';
+import * as e from '../../../messages/client-errors.js';
+import * as w from '../../../messages/client-warnings.js';
 
 export { applyAction, deserialize };
 
@@ -53,7 +56,7 @@ function clone(element) {
  */
 export function enhance(form_element, submit = noop) {
 	if (DEV && clone(form_element).method !== 'post') {
-		throw new Error('use:enhance can only be used on <form> fields with method="POST"');
+		e.enhance_invalid_method();
 	}
 
 	/**
@@ -73,9 +76,7 @@ export function enhance(form_element, submit = noop) {
 		navigate = true
 	}) => {
 		if (DEV && deprecated_invalidate_all !== undefined) {
-			console.warn(
-				'The `update({ invalidateAll })` option has been deprecated in favour of `update({ refreshAll })`'
-			);
+			w.enhance_invalidate_all_deprecated();
 		}
 
 		should_refresh_all ??= deprecated_invalidate_all ?? result.type === 'success';
@@ -86,11 +87,15 @@ export function enhance(form_element, submit = noop) {
 		}
 
 		const destination =
-			navigate && result.type !== 'redirect' && !is_current_location(result.location)
-				? result.location
+			navigate && result.type !== 'redirect' && result.location !== undefined
+				? resolve_url(result.location)
 				: undefined;
 
-		if (destination === undefined) {
+		if (
+			destination === undefined ||
+			destination.origin !== location.origin ||
+			is_current_location(destination.href)
+		) {
 			if (should_refresh_all && result.type !== 'redirect') {
 				await refreshAll();
 			}
@@ -101,7 +106,7 @@ export function enhance(form_element, submit = noop) {
 
 		// emulate the browser: navigate to where the submission lands, rendering that
 		// page with this result
-		await apply_action_navigation(destination, result, should_refresh_all);
+		await apply_action_navigation(destination.href, result, should_refresh_all);
 	};
 
 	/** @param {SubmitEvent} event */
@@ -129,9 +134,7 @@ export function enhance(form_element, submit = noop) {
 		if (DEV && enctype !== 'multipart/form-data') {
 			for (const value of form_data.values()) {
 				if (value instanceof File) {
-					throw new Error(
-						'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-					);
+					e.enhance_file_without_enctype();
 				}
 			}
 		}
@@ -195,8 +198,8 @@ export function enhance(form_element, submit = noop) {
 				// an empty body carries no result for an error response
 				parsed = text === '' && !response.ok ? undefined : deserialize(text);
 			} catch (error) {
-				// only an error response may have a non-ActionResult body, e.g. an HTML error page
-				if (response.ok) throw error;
+				// A proxy may redirect to a login page or return a non-JSON error response.
+				if (response.ok && !response.redirected) throw error;
 			}
 
 			if (
@@ -209,6 +212,9 @@ export function enhance(form_element, submit = noop) {
 				if (result.type === 'error' || result.type === 'failure') {
 					result.status = response.status;
 				}
+			} else if (response.redirected) {
+				// fetch has followed the HTTP redirect, so its original status is no longer available.
+				result = { type: 'redirect', status: 303, location: response.url };
 			} else if (!response.ok) {
 				// the action never ran, e.g. the CSRF check or a proxy rejected the request.
 				// an `App.Error`-shaped body is an expected error, anything else goes through `handleError`

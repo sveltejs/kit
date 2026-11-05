@@ -19,7 +19,8 @@ adapter({
 		minify: true,
 		bytecode: true,
 		sourcemap: 'linked',
-		drop: ['debugger']
+		drop: ['debugger'],
+		external: ['sharp']
 	}
 });
 

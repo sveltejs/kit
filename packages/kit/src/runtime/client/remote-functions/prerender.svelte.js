@@ -115,7 +115,7 @@ export function prerender(id) {
 			});
 
 			prerender_resources.set(cache_key, new WeakRef(resource));
-			prerender_resource_cleanup?.register(resource, cache_key);
+			prerender_resource_cleanup.register(resource, cache_key);
 		}
 
 		return resource;
@@ -125,16 +125,12 @@ export function prerender(id) {
 /** @type {Map<string, WeakRef<Prerender<any>>>} */
 const prerender_resources = new Map();
 
-/** @type {FinalizationRegistry<string> | null} */
-const prerender_resource_cleanup =
-	typeof FinalizationRegistry === 'undefined'
-		? null
-		: new FinalizationRegistry((cache_key) => {
-				const ref = prerender_resources.get(cache_key);
-				if (ref && ref.deref() === undefined) {
-					prerender_resources.delete(cache_key);
-				}
-			});
+const prerender_resource_cleanup = new FinalizationRegistry((/** @type {string} */ cache_key) => {
+	const ref = prerender_resources.get(cache_key);
+	if (ref && ref.deref() === undefined) {
+		prerender_resources.delete(cache_key);
+	}
+});
 
 /**
  * @template T

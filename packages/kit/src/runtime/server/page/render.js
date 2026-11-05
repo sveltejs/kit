@@ -6,21 +6,22 @@ import { isRedirect, text } from '@sveltejs/kit';
 import * as paths from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { hash } from '../../../utils/hash.js';
+import { escape_html } from '../../../utils/escape.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
-import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { SCHEME } from '../../../utils/url.js';
-import { create_server_routing_response, generate_route_object } from './server_routing.js';
 import {
-	add_data_suffix,
-	add_resolution_suffix,
-	route_id_resolution_pathname
-} from '../../pathname.js';
+	client_path,
+	create_server_routing_response,
+	generate_route_object,
+	resolve_paths
+} from './server_routing.js';
+import { add_resolution_suffix, route_id_resolution_pathname } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
 import { stream_text } from '../../utils.js';
-import { count_non_ssi_comments } from '../utils.js';
+import { count_non_ssi_comments, is_prerendering } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
@@ -28,7 +29,10 @@ import Root from '../../components/root.svelte';
 import { render } from 'svelte/server';
 import { Props, RenderNode } from '../../props.svelte.js';
 import { has_custom_transporters, uneval } from '#app/internal/transport';
-import { manifest, options } from '../internal.js';
+import { manifest } from '../internal.js';
+import { options } from '<sveltekit:generated>/server.js';
+import * as e from '../../../messages/server-errors.js';
+import * as w from '../../../messages/server-warnings.js';
 
 // TODO rename this function/module
 
@@ -61,13 +65,13 @@ export async function render_response({
 	data_serializer,
 	error_components
 }) {
-	if (state.prerendering || state.prerender_default === true) {
+	if (is_prerendering(state)) {
 		if (options.csp.mode === 'nonce') {
-			throw new Error('Cannot use prerendering if config.csp.mode === "nonce"');
+			e.prerender_nonce();
 		}
 
 		if (options.app_template_contains_nonce) {
-			throw new Error('Cannot use prerendering if page template contains %sveltekit.nonce%');
+			e.prerender_template_nonce({ tag: '%sveltekit.nonce%' });
 		}
 	}
 
@@ -110,27 +114,16 @@ export async function render_response({
 	let base_expression = s(paths.base);
 
 	const csp = new Csp(options.csp, {
-		prerender: !!(state.prerendering || state.prerender_default === true)
+		prerender: is_prerendering(state)
 	});
 
 	// if appropriate, use relative paths for greater portability
 	if (relative) {
 		if (!state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = event.isDataRequest
-				? add_data_suffix(event.url.pathname)
-				: event.url.pathname;
-			const segments = pathname.slice(paths.base.length).split('/').slice(2);
-
-			base = segments.map(() => '..').join('/') || '.';
+			({ base, assets } = resolve_paths(event.url.pathname));
 
 			// resolve e.g. '../..' against current location, then remove trailing slash
 			base_expression = `new URL(${s(base)}, location).pathname.slice(0, -1)`;
-
-			if (!paths.assets || (paths.assets[0] === '/' && paths.assets !== SVELTE_KIT_ASSETS)) {
-				assets = base;
-			}
 		} else if (__SVELTEKIT_HASH_ROUTING__) {
 			// we have to assume that we're in the right place
 			base_expression = "new URL('.', location).pathname.slice(0, -1)";
@@ -228,13 +221,9 @@ export async function render_response({
 				let warned = false;
 				globalThis.fetch = (info, init) => {
 					if (typeof info === 'string' && !SCHEME.test(info)) {
-						throw new Error(
-							`Cannot call \`fetch\` eagerly during server-side rendering with relative URL (${info}) — put your \`fetch\` calls inside \`onMount\` or a \`load\` function instead`
-						);
+						e.ssr_fetch_relative_url({ url: info });
 					} else if (!warned && !try_get_request_store()?.state.is_in_remote_function) {
-						console.warn(
-							'Avoid calling `fetch` eagerly during server-side rendering — put your `fetch` calls inside `onMount` or a `load` function instead'
-						);
+						w.ssr_fetch_eager();
 						warned = true;
 					}
 
@@ -279,15 +268,7 @@ export async function render_response({
 	let body = rendered.body;
 
 	/** @param {string} path */
-	const prefixed = (path) => {
-		if (path.startsWith('/')) {
-			// Vite makes the start script available through the base path and without it.
-			// We load it via the base path in order to support remote IDE environments which proxy
-			// all URLs under the base path during development.
-			return paths.base + path;
-		}
-		return `${assets}/${path}`;
-	};
+	const prefixed = (path) => client_path(path, { base, assets });
 
 	const style = client?.inline
 		? client.inline?.style
@@ -299,7 +280,7 @@ export async function render_response({
 		// `data-sveltekit` attribute once CSR kicks in
 		const attributes = __SVELTEKIT_DEV__ ? ['data-sveltekit'] : [];
 		if (csp.style_needs_nonce) attributes.push(`nonce="${csp.nonce}"`);
-		csp.add_style(style);
+		await csp.add_style(style);
 		head.add_style(style, attributes);
 	}
 
@@ -309,10 +290,7 @@ export async function render_response({
 	 * @param {string[]} attributes
 	 */
 	const add_preload = (path, attributes) => {
-		if (
-			__SVELTEKIT_LINK_HEADER_PRELOAD__ &&
-			!(state.prerendering || state.prerender_default === true)
-		) {
+		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && !is_prerendering(state)) {
 			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
 		} else {
 			head.add_link_tag(path, attributes);
@@ -353,11 +331,7 @@ export async function render_response({
 	if (page_config.ssr && page_config.csr) {
 		body += `\n\t\t\t${fetched
 			.map((item) =>
-				serialize_data(
-					item,
-					resolve_opts.filterSerializedResponseHeaders,
-					!!(state.prerendering || state.prerender_default === true)
-				)
+				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, is_prerendering(state))
 			)
 			.join('\n\t\t\t')}`;
 	}
@@ -369,8 +343,7 @@ export async function render_response({
 		// import the env.js module so that it evaluates before any user code can evaluate.
 		// TODO revert to using top-level await once https://bugs.webkit.org/show_bug.cgi?id=242740 is fixed
 		// https://github.com/sveltejs/kit/pull/11601
-		const load_env_eagerly =
-			client.uses_env_dynamic_public && (state.prerendering || state.prerender_default === true);
+		const load_env_eagerly = client.uses_env_dynamic_public && is_prerendering(state);
 
 		if (load_env_eagerly) {
 			modulepreloads.add(`${paths.app_dir}/env.js`);
@@ -576,7 +549,7 @@ export async function render_response({
 					${blocks.join('\n\n\t\t\t\t\t')}
 				}
 			`;
-		csp.add_script(init_app);
+		await csp.add_script(init_app);
 
 		body += `\n\t\t\t<script${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
@@ -588,7 +561,7 @@ export async function render_response({
 		'content-type': 'text/html'
 	});
 
-	if (state.prerendering || state.prerender_default === true) {
+	if (is_prerendering(state)) {
 		// TODO read headers set with setHeaders and convert into http-equiv where possible
 		const csp_headers = csp.csp_provider.get_meta();
 		if (csp_headers) {
@@ -597,7 +570,7 @@ export async function render_response({
 
 		if (state.prerendering?.cache) {
 			head.add_http_equiv(
-				`<meta http-equiv="cache-control" content="${state.prerendering.cache}">`
+				`<meta http-equiv="cache-control" content="${escape_html(state.prerendering.cache, true)}">`
 			);
 		}
 	} else {
@@ -637,17 +610,11 @@ export async function render_response({
 	if (DEV) {
 		if (page_config.csr) {
 			if (count_non_ssi_comments(transformed) < count_non_ssi_comments(html)) {
-				// the \u001B stuff is ANSI codes, so that we don't need to add a library to the runtime
-				// https://svelte.dev/playground/1b3f49696f0c44c881c34587f2537aa2?version=4.2.19
-				console.warn(
-					"\u001B[1m\u001B[31mRemoving comments in transformPageChunk can break Svelte's hydration\u001B[39m\u001B[22m"
-				);
+				w.transform_page_chunk_comments();
 			}
 		} else {
 			if (chunks) {
-				console.warn(
-					'\u001B[1m\u001B[31mReturning promises from server `load` functions will only work if `csr === true`\u001B[39m\u001B[22m'
-				);
+				w.streaming_without_csr();
 			}
 		}
 	}

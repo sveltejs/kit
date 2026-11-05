@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { afterEach, expect, mock, spyOn, test } from 'bun:test';
-import { mock_manifest, mock_routes } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 const environment = new Set<string>();
 let instance = 0;
@@ -45,6 +45,31 @@ test('uses paths.origin as the trusted request origin when configured', async ()
 
 	expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
 });
+
+test('uses the ORIGIN environment variable as the request origin', async () => {
+	set_env('ORIGIN', 'http://192.168.1.10:3000/');
+	const loaded = await load_handler();
+
+	await loaded.handler(new Request('http://internal/path?query=yes'), loaded.bun_server);
+
+	expect(loaded.respond.mock.calls[0][0].url).toBe('http://192.168.1.10:3000/path?query=yes');
+});
+
+test.each(['https://env.example', '', 'not-a-url'])(
+	'ignores ORIGIN %j and warns when paths.origin is configured',
+	async (value) => {
+		const warn = spyOn(console, 'warn').mockImplementation(() => {});
+		set_env('ORIGIN', value);
+		const loaded = await load_handler({ origin: 'https://canonical.example' });
+
+		await loaded.handler(new Request('http://internal/path'), loaded.bun_server);
+
+		expect(loaded.respond.mock.calls[0][0].url).toBe('https://canonical.example/path');
+		expect(warn).toHaveBeenCalledWith(
+			'ORIGIN is ignored because the SvelteKit configuration `paths.origin` setting was set to https://canonical.example'
+		);
+	}
+);
 
 test('derives the public origin from configured proxy headers', async () => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
@@ -205,9 +230,11 @@ async function load_handler({
 		respond = respond;
 	}
 
-	mock.module('SERVER', () => ({ server: new Server() }));
-	mock_manifest({ app_dir: '_app', origin, env_prefix: envPrefix });
-	mock_routes({ server_assets: new Map([['asset.txt', asset]]) });
+	mock_handoff({ server: new Server(), origin, env_prefix: envPrefix });
+	mock.module('../src/routes.js', () => ({
+		routes: {},
+		server_assets: new Map([['asset.txt', asset]])
+	}));
 
 	const request_ip = mock((_request: Request): any => ({
 		address: '127.0.0.1',

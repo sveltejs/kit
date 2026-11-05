@@ -1,6 +1,6 @@
 import process from 'node:process';
 import { afterEach, describe, expect, test } from 'bun:test';
-import { mock_manifest } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 const changed = new Set<string>();
 let instance = 0;
@@ -147,8 +147,31 @@ describe('bytes_env', () => {
 	);
 });
 
+describe('origin_env', () => {
+	test('returns undefined for an absent variable', async () => {
+		const { origin_env } = await load_env();
+		expect(origin_env('OPTION')).toBeUndefined();
+	});
+
+	test.each([
+		['http://localhost:3000', 'http://localhost:3000'],
+		[' https://example.com:443 ', 'https://example.com'],
+		['https://example.com/path?query=1#hash', 'https://example.com']
+	])('normalizes %j to %s', async (value, expected) => {
+		set_env('OPTION', value);
+		const { origin_env } = await load_env();
+		expect(origin_env('OPTION')).toBe(expected);
+	});
+
+	test.each(['', 'example.com', 'ftp://example.com'])('rejects %j', async (value) => {
+		set_env('OPTION', value);
+		const { origin_env } = await load_env();
+		expect(() => origin_env('OPTION')).toThrow('expected an http:// or https:// URL');
+	});
+});
+
 async function load_env(prefix = '') {
-	mock_manifest({ env_prefix: prefix });
+	mock_handoff({ env_prefix: prefix });
 	// a fresh query string re-runs the module-level prefix check
 	const specifier = `../src/env.js?instance=${++instance}`;
 	return (await import(specifier)) as typeof import('../src/env.js');

@@ -52,7 +52,15 @@ const config = {
 			router: {
 				resolution: /** @type {'client' | 'server'} */ (process.env.ROUTER_RESOLUTION) || 'client'
 			}
-		})
+		}),
+		...(process.env.TEST_HTML_TRANSFORM_PLUGIN
+			? [
+					{
+						name: process.env.TEST_HTML_TRANSFORM_PLUGIN,
+						transformIndexHtml: () => undefined
+					}
+				]
+			: [])
 	],
 	server: {
 		fs: {
@@ -61,7 +69,8 @@ const config = {
 	},
 	test: {
 		name: 'kit-vitest',
-		include: ['./unit-test/*.spec.js']
+		include: ['./unit-test/*.spec.js'],
+		setupFiles: [path.join(import.meta.dirname, '../../matchers.js')]
 	}
 };
 

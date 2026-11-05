@@ -117,7 +117,7 @@ function generate_app_types(manifest_data, config, dir) {
 		if (!type) {
 			const path_to_params = () => {
 				const params_file =
-					resolve_entry(config.files.params) ??
+					resolve_entry(config.files.params, config.moduleExtensions) ??
 					config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 				return posixify(path.relative(dir, params_file));
@@ -286,7 +286,7 @@ function generate_app_types(manifest_data, config, dir) {
 		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
-		`\t\tPath(): ${Array.from(pathnames).join(' | ')};`,
+		`\t\tPath(): ${Array.from(pathnames).join(' | ') || 'never'};`,
 		'\t\tResolvedPathname(): `${"/" | `/${string}/`}${ReturnType<AppTypes[\'Path\']>}`;',
 		`\t\tAssetPath(): ${assets.join(' | ') || 'never'};`,
 		'\t}',
@@ -307,7 +307,7 @@ export function write_app_types(config, manifest_data, root) {
 
 	const content = [
 		GENERATED_COMMENT,
-		`import '@sveltejs/kit';\nimport './env';`,
+		`import '@sveltejs/kit';\nimport './env.js';`, // .js file ending needed for nodenext module resolution
 		generate_app_types(manifest_data, config, dir),
 		template.trim()
 	].join('\n\n');

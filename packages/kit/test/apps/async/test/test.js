@@ -1,6 +1,6 @@
 import process from 'node:process';
 import http from 'node:http';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.describe('remote functions', () => {
@@ -19,6 +19,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('query can read a file imported by the remote module', async ({ page }) => {
+		await page.goto('/remote/read-file');
+		await expect(page.locator('#text')).toHaveText('Imported by a remote function 😎');
 	});
 
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
@@ -109,25 +114,36 @@ test.describe('remote functions', () => {
 		expect(body).not.toContain('private-data');
 	});
 
+	test('private (non-exported) query.batch functions do not share a batch', async ({ page }) => {
+		await page.goto('/remote/batch-private');
+
+		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
+	});
+
 	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
 	}) => {
-		const expected = ['url', 'params', 'route']
-			.map(
-				(property) =>
-					`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-			)
-			.join(' | ');
+		const check = async () => {
+			await expect(page.locator('[data-id="results"]')).toContainText('remote_request_property');
+			const output = await page.locator('[data-id="results"]').textContent();
+			const diagnostics = output?.split(' | ') ?? [];
+			expect(diagnostics).toHaveLength(3);
+			for (const [i, property] of ['url', 'params', 'route'].entries()) {
+				expect(diagnostics[i]).toContainKitDiagnostic('remote_request_property', {
+					contains: [property]
+				});
+			}
+		};
 
 		// direct navigation renders the errors during SSR
 		await page.goto('/remote/event');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 
 		// client-side navigation calls the query over HTTP
 		await page.goto('/remote');
 		await clicknav('[href="/remote/event"]');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 	});
 
 	test('forged url headers do not expose event.url to a query', async ({
@@ -149,7 +165,7 @@ test.describe('remote functions', () => {
 
 		const body = await response.text();
 		for (const property of ['url', 'params', 'route']) {
-			expect(body).toContain(`Cannot access event.${property} in a query`);
+			expect(body).toContain(`Cannot access \`event.${property}\` in a query`);
 		}
 	});
 
@@ -801,16 +817,21 @@ test.describe('remote functions', () => {
 
 		await page.fill('input[name^="username"]', 'abcdefg');
 		await page.fill('input[name^="_password"]', 'pqrstuv');
+		await page.fill('input[name^="n:_pin"]', '1234');
+		await page.fill('input[name^="user._password"]', 'nested-secret');
 		await page.locator('button').click();
 
 		await expect(page.locator('input[name^="username"]')).toHaveValue('abcdefg');
 		await expect(page.locator('input[name^="_password"]')).toHaveValue('');
+		await expect(page.locator('input[name^="n:_pin"]')).toHaveValue('');
+		await expect(page.locator('input[name^="user._password"]')).toHaveValue('');
 	});
 
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');
 		await expect(page.locator('#prerendered-data')).toHaveText('a c 中文 yes');
+		await expect(page.locator('[data-prerendered]')).toHaveAttribute('action', /^\?\/remote=/);
 
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/functions-only"]');
@@ -1058,9 +1079,10 @@ test.describe('remote functions', () => {
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 
-		await expect(page.locator('#result')).toHaveText(
-			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
-		);
+		await expect(page.locator('#result')).toContainText('remote_cookie_forbidden');
+		const output = await page.locator('#result').textContent();
+		expect(output).toContainKitDiagnostic('remote_cookie_forbidden', { contains: ['set'] });
+		expect(output).toContainKitDiagnostic('remote_headers_forbidden');
 	});
 
 	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {

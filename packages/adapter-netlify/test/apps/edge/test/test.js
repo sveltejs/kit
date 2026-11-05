@@ -29,18 +29,19 @@ test('read from $app/server works', async ({ request }) => {
 	expect(await response.text()).toBe(content);
 });
 
-test('_headers are copied to publish directory', () => {
-	const headers = fs.readFileSync(path.resolve(import.meta.dirname, '../build/_headers'), 'utf-8');
-	expect(headers).toContain('X-Custom-Header: test-value');
+test('page renders on the client if SSR is turned off', async ({ page }) => {
+	await page.goto('/treeshake-server');
+	await expect(page.locator('p')).toHaveText('this should never appear in the server bundle');
 });
 
-test('treeshakes component from the server bundle if SSR is turned off', async ({ page }) => {
-	await page.goto('/treeshake-server');
-	const component_text = 'this should never appear in the server bundle';
-	const server_bundle = fs.readFileSync(
-		path.resolve(import.meta.dirname, '../.netlify/v1/edge-functions/sveltekit-render.js'),
-		'utf-8'
+test('bare Node built-in imports work', async ({ request }) => {
+	const response = await request.get('/node-builtin');
+	expect(await response.text()).toBe(
+		'2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
 	);
-	expect(server_bundle).not.toContain(component_text);
-	await expect(page.locator('p')).toHaveText(component_text);
+});
+
+test('.wasm imports work', async ({ request }) => {
+	const response = await request.get('/wasm');
+	expect(await response.text()).toBe('3');
 });

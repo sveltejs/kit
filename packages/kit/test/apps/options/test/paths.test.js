@@ -103,6 +103,43 @@ test.describe('base path', () => {
 	});
 });
 
+test.describe('relative paths', () => {
+	test.skip(
+		({ javaScriptEnabled }) =>
+			!javaScriptEnabled || !!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false'
+	);
+
+	test('works when proxied', async ({ page }) => {
+		const proxy_path = '/proxy';
+
+		// simulate a reverse proxy that mounts the app at `/proxy`: strip the prefix and
+		// forward to the server, and abort requests that escape the prefix. In dev, only the
+		// initial client module requests; imported module URLs are rewritten by Vite and
+		// are outside this regression.
+		await page.route('**/*', async (route) => {
+			const url = new URL(route.request().url());
+
+			if (url.pathname.startsWith(`${proxy_path}/`)) {
+				url.pathname = url.pathname.slice(proxy_path.length);
+				await route.fulfill({ response: await route.fetch({ url: url.href }) });
+			} else if (
+				!process.env.DEV ||
+				((url.pathname.includes('/node_modules/') || url.pathname.includes('/@fs/')) &&
+					route.request().headers().referer?.endsWith(`${proxy_path}/path-base/base/`))
+			) {
+				await route.abort();
+			} else {
+				await route.continue();
+			}
+		});
+
+		await page.goto(`${proxy_path}/path-base/base/`);
+
+		await page.locator('button').click();
+		await expect(page.locator('h2')).toHaveText('button has been clicked 1 time');
+	});
+});
+
 test.describe('assets path', () => {
 	test.skip(!process.env.PATHS_ASSETS);
 

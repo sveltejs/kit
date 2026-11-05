@@ -8,5 +8,5 @@
 		"moduleResolution": "node16",
 		"types": ["node"]
 	},
-	"include": ["./*"]
+	"include": ["./*", "../vitest-matchers.d.ts"]
 }

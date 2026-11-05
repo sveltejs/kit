@@ -113,7 +113,8 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 						});
 					}
 
-					return await fetch(request);
+					// A spoofed request origin must not be able to redirect us to an internal resource.
+					return await fetch(request, { redirect: 'manual' });
 				}
 
 				if (has_prerendered_path(decoded)) {
@@ -122,7 +123,7 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 					// We therefore bail early here. The prerendered logic is different for
 					// each adapter, (except maybe for prerendered redirects)
 					// so we need to make an actual HTTP request.
-					return await fetch(request);
+					return await fetch(request, { redirect: 'manual' });
 				}
 
 				if (credentials !== 'omit') {

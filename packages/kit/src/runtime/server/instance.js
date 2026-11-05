@@ -1,0 +1,147 @@
+import { noop } from '../../utils/functions.js';
+import { IN_WEBCONTAINER, REROUTED_URL_HEADER } from '../../constants.js';
+import { respond as handle } from './respond.js';
+import { create_request_state } from './state.js';
+import { get_hooks } from '<sveltekit:generated>/server.js';
+import { set_hooks, fix_stack_trace } from './internal.js';
+import { restore, save } from './dev.js';
+import { init_tracing } from '@sveltejs/kit/internal/server';
+import { DEV } from 'esm-env';
+import { init_transport } from '#app/internal/transport';
+import { capture_error } from '../../messages/internal/server.js';
+import * as e from '../../messages/server-errors.js';
+import { default_handle_error } from './errors.js';
+
+/** @type {Promise<any>} */
+let init_promise;
+
+/**
+ * Responses that were created with our monkey-patched `fetch`, which may need
+ * to have their `content-encoding` and `content-length` headers removed
+ * if returned directly (i.e. `fetch` is being used to proxy a request)
+ * @type {WeakMap<Response, Error>}
+ */
+const decoded_responses = new WeakMap();
+
+const unwrapped_fetch_key = Symbol.for('sveltekit.unwrapped_fetch');
+
+if (DEV) {
+	// `instance.js` is re-evaluated on every server reload in dev. Reuse the
+	// `fetch` from before the first wrapper, otherwise each reload stacks
+	// another wrapper and retains the previous reload's module scope
+	const fetch = restore(unwrapped_fetch_key) ?? globalThis.fetch;
+
+	/**
+	 * @param {RequestInfo | URL} info
+	 * @param {RequestInit} [init]
+	 */
+	const wrapped_fetch = async (info, init) => {
+		const response = await fetch(info, init);
+		const encoding = response.headers.get('content-encoding');
+
+		if (encoding) {
+			decoded_responses.set(
+				response,
+				capture_error(() => e.fetch_response_decoded({ encoding }))
+			);
+		}
+
+		return response;
+	};
+
+	save(unwrapped_fetch_key, fetch);
+	globalThis.fetch = wrapped_fetch;
+}
+
+/**
+ * Loads the user's hooks, once, however many times an adapter calls it
+ */
+export async function init() {
+	if (__SVELTEKIT_SERVER_TRACING_ENABLED__) init_tracing(import('@opentelemetry/api'));
+
+	await (init_promise ??= (async () => {
+		try {
+			const module = await get_hooks();
+
+			set_hooks({
+				handle: module.handle || (({ event, resolve }) => resolve(event)),
+				handleError: module.handleError || default_handle_error,
+				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
+				reroute: module.reroute || noop
+			});
+
+			init_transport(module.transport ?? {});
+
+			if (module.init) {
+				await module.init();
+			}
+		} catch (e) {
+			if (__SVELTEKIT_DEV__) {
+				set_hooks({
+					handle: () => {
+						throw e;
+					},
+					handleError: ({ error }) => console.error(error),
+					handleFetch: ({ request, fetch }) => fetch(request),
+					reroute: noop
+				});
+			} else {
+				throw e;
+			}
+		}
+	})());
+}
+
+/**
+ * @param {Request} request
+ * @param {import('types').InternalRequestOptions} options
+ */
+async function respond_to(request, options) {
+	const request_state = create_request_state(options);
+
+	const response = await handle(request, request_state);
+
+	if (DEV) {
+		const error = decoded_responses.get(response);
+		if (error) console.error(fix_stack_trace(error));
+	}
+
+	if (request_state.rerouted_url) {
+		response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
+	}
+
+	// the HTTP layer discards HEAD response bodies, but nothing does when the server is called directly
+	if (request.method === 'HEAD' && response.body !== null) {
+		response.body.cancel().catch(noop);
+		return new Response(null, response);
+	}
+
+	return response;
+}
+
+/**
+ * AsyncLocalStorage does not work in webcontainers, so there `sync_store` is never reset
+ * (see `src/exports/internal/server/event.js`) and requests are handled one at a time
+ * @param {typeof respond_to} fn
+ */
+function serialise(fn) {
+	/** @type {Promise<void> | null} */
+	let current = null;
+
+	/** @type {typeof respond_to} */
+	return async (...args) => {
+		const { promise, resolve } = /** @type {PromiseWithResolvers<void>} */ (
+			Promise.withResolvers()
+		);
+
+		const previous = current;
+		current = promise;
+
+		await previous;
+		return fn(...args).finally(resolve);
+	};
+}
+
+export const respond = IN_WEBCONTAINER ? serialise(respond_to) : respond_to;
+
+export { set_env } from '<sveltekit:generated>/env/config.js';

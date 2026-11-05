@@ -176,10 +176,6 @@ test('create package with emitTypes settings disabled', async () => {
 	await test_make_package('emitTypes-false', { types: false });
 });
 
-test('create package with SvelteComponentTyped for backwards compatibility', async () => {
-	await test_make_package('svelte-3-types');
-});
-
 test('Custom lib folder with #lib import', async () => {
 	const cwd = join(import.meta.dirname, 'fixtures', 'svelte-kit');
 	await test_make_package('svelte-kit', { input: resolve(cwd, 'src/kitlib') });

@@ -1,10 +1,11 @@
 import process from 'node:process';
-import { env_prefix } from 'MANIFEST';
+import { env_prefix } from '#@sveltejs/adapter-bun';
 
 const expected = new Set([
 	'SOCKET_PATH',
 	'HOST',
 	'PORT',
+	'ORIGIN',
 	'REUSE_PORT',
 	'IPV6_ONLY',
 	'CONNECTION_IDLE_TIMEOUT',
@@ -140,4 +141,28 @@ export function bytes_env(name, fallback) {
 	}
 
 	return number;
+}
+
+/**
+ * Parses an origin, ignoring any path, query or hash (e.g. `https://my.site/app` becomes `https://my.site`)
+ * @param {string} name
+ * @returns {string | undefined}
+ */
+export function origin_env(name) {
+	const value = env(name);
+	if (value === undefined) return;
+
+	/** @type {URL} */
+	let url;
+	try {
+		url = new URL(value.trim());
+	} catch {
+		parsing_error(name, value, "an http:// or https:// URL, e.g. 'https://my.site'");
+	}
+
+	if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+		parsing_error(name, value, "an http:// or https:// URL, e.g. 'https://my.site'");
+	}
+
+	return url.origin;
 }

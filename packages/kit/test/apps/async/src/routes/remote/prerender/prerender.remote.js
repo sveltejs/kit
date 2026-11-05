@@ -1,5 +1,5 @@
 import { building, dev } from '$app/env';
-import { prerender, read } from '$app/server';
+import { form, prerender, read } from '$app/server';
 import text from './test.txt?url';
 
 // test that using `read()` at the top-level of a remote function file doesn't
@@ -33,3 +33,5 @@ export const prerendered_entries = prerender(
 export const with_read = prerender(() => {
 	return content;
 });
+
+export const prerendered_form = form(() => {});

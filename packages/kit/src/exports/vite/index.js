@@ -6,13 +6,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { styleText } from 'node:util';
 import * as vite from 'vite';
 
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
-import { runtime_directory, logger, get_global_name } from '../../core/utils.js';
+import { runtime_directory, get_global_name } from '../../core/utils.js';
 import { dev } from './dev/index.js';
 import { preview } from './preview/index.js';
 import {
@@ -20,11 +19,12 @@ import {
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,
+	uses_unsupported_html_hook,
 	warn_overridden_config
 } from './utils.js';
-import { stackless } from '../../utils/error.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
 import { s } from '../../utils/misc.js';
-import { dedent } from '../../core/sync/utils.js';
 import create_manifest_data from '../../core/sync/create_manifest_data/index.js';
 import { get_import_aliases, get_hash_import_keys } from '../../utils/imports.js';
 import { import_peer } from '../../utils/import.js';
@@ -36,6 +36,7 @@ import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
 import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
+import { bullet_list } from '../../utils/format.js';
 
 const options_regex = /(export\s+const\s+(prerender|csr|ssr|trailingSlash))\s*=/s;
 
@@ -66,12 +67,7 @@ function resolve_cors(user_cors, key, warn) {
 	}
 
 	if (warn) {
-		console.warn(
-			styleText(
-				['yellow', 'bold'],
-				`OPTIONS request handlers will not work unless \`${key}.preflightContinue\` is set to \`true\``
-			)
-		);
+		w.cors_preflight_continue({ key });
 	}
 
 	return undefined;
@@ -81,14 +77,12 @@ const removed_modules = [
 	{
 		name: '$lib',
 		pattern: /^\$lib(?:\/.*|\?.*)?$/,
-		message:
-			"`$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config."
+		error: e.module_removed_lib
 	},
 	{
 		name: '$service-worker',
 		pattern: /^\$service-worker(?:\?.*)?$/,
-		message:
-			'`$service-worker` has been removed. Use `immutable`, `assets` and `prerendered` from `$app/manifest`, `version` from `$app/env`, and `resolve(...)` from `$app/paths` instead: https://svelte.dev/docs/kit/$service-worker'
+		error: e.module_removed_service_worker
 	}
 ];
 
@@ -106,14 +100,12 @@ const warning_preprocessor = {
 			const match = content.match(options_regex);
 			if (match && match.index !== undefined && !should_ignore(content, match.index)) {
 				const fixed = basename.replace('.svelte', '(.server).js/ts');
+				const file = path.relative(process.cwd(), filename);
+				const key = `page_option_in_component:${file}:${match[1]}`;
 
-				const message =
-					`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
-					`\`${match[1]}\` will be ignored — move it to ${fixed} instead. See https://svelte.dev/docs/kit/page-options for more information.`;
-
-				if (!warned.has(message)) {
-					console.log(message);
-					warned.add(message);
+				if (!warned.has(key)) {
+					w.page_option_in_component({ file, option: match[1], fixed });
+					warned.add(key);
 				}
 			}
 		}
@@ -124,14 +116,12 @@ const warning_preprocessor = {
 		const basename = path.basename(filename);
 
 		if (basename.startsWith('+layout.') && !has_children(content, true)) {
-			const message =
-				`\n${styleText(['bold', 'red'], path.relative(process.cwd(), filename))}\n` +
-				'`<slot />` or `{@render ...}` tag' +
-				' missing — inner content will not be rendered';
+			const file = path.relative(process.cwd(), filename);
+			const key = `layout_children_missing:${file}`;
 
-			if (!warned.has(message)) {
-				console.log(message);
-				warned.add(message);
+			if (!warned.has(key)) {
+				w.layout_children_missing({ file });
+				warned.add(key);
 			}
 		}
 	}
@@ -286,9 +276,7 @@ function kit({ svelte_config }) {
 
 				for (const file of ['svelte.config.js', 'svelte.config.ts']) {
 					if (fs.existsSync(path.join(root, file))) {
-						throw new Error(
-							`${file} is no longer used. Please pass configuration via the \`sveltekit(...)\` plugin in your Vite config.`
-						);
+						e.config_file_unsupported({ file });
 					}
 				}
 			}
@@ -308,7 +296,7 @@ function kit({ svelte_config }) {
 				if (resolved) return resolved;
 
 				const aliases = svelte_config.alias;
-				for (const { name, pattern, message } of removed_modules) {
+				for (const { name, pattern, error } of removed_modules) {
 					if (!pattern.test(id)) continue;
 
 					// If the user re-added an alias for this module (as the migration message
@@ -317,7 +305,7 @@ function kit({ svelte_config }) {
 					// instead of the misleading migration message.
 					if (name in aliases || `${name}/*` in aliases) return;
 
-					throw stackless(message);
+					error(undefined, { stackless: true });
 				}
 			}
 		},
@@ -339,7 +327,7 @@ function kit({ svelte_config }) {
 				global_name = get_global_name(kit.version.name, !is_build);
 				kit_global = `globalThis.${global_name}`;
 
-				service_worker_entry_file = resolve_entry(kit.files.serviceWorker);
+				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
@@ -376,7 +364,7 @@ function kit({ svelte_config }) {
 
 				// We can only add directories to the allow list, so we find out
 				// if there's a client hooks file and pass its directory
-				const client_hooks = resolve_entry(kit.files.hooks.client);
+				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
 				// dev and preview config can be shared
@@ -385,6 +373,16 @@ function kit({ svelte_config }) {
 					appType: 'custom',
 					environments: {
 						ssr: {
+							dev: {
+								createEnvironment:
+									config.environments?.ssr?.dev?.createEnvironment ??
+									((name, config) =>
+										vite.createRunnableDevEnvironment(name, config, {
+											// Kit imports server modules per request, which already picks up
+											// invalidations. HMR would reload the entire program instead.
+											hot: false
+										}))
+							},
 							build: {
 								sourcemap:
 									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
@@ -410,8 +408,9 @@ function kit({ svelte_config }) {
 						sourcemapIgnoreList,
 						watch: {
 							ignored: [
-								// Ignore all siblings of config.outDir/generated
-								`${out_dir}/!(generated)`
+								// Ignore all siblings of config.outDir/generated, at any depth
+								`${out_dir}/!(generated)`,
+								`${out_dir}/!(generated)/**`
 							]
 						}
 					},
@@ -445,10 +444,20 @@ function kit({ svelte_config }) {
 							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
 							// generated modules like `<sveltekit:generated>/env/config.js` (this isn't a valid bare
-							// import, but it works with vite-node's externalization logic, which
-							// uses basic concatenation)
+							// import, but Vitest's externalization logic matches it against the module path)
 							'@sveltejs/kit/src/runtime'
-						]
+						],
+						// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
+						// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
+
+						// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
+						// SvelteKit runtime share a single instance of the module (the global tracer/propagation
+						// is set on that instance — two bundled copies would mean instrumentation hooks are
+						// invisible to the runtime). Externalizing also prevents the bundler from colocating
+						// `@opentelemetry/api` into a shared chunk that also contains application modules, which
+						// would cause those modules to be evaluated before `Server.init()` sets env vars — see
+						// https://github.com/sveltejs/kit/issues/16288
+						external: ['@opentelemetry/api']
 					},
 					publicDir: kit.files.assets
 				};
@@ -516,29 +525,9 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
 					};
 
-					// Any CommonJS dependencies of Kit (of which there are currently none) must always be externalized.
-					// Without this, the tests will still pass but `pnpm dev` will fail in projects that link `@sveltejs/kit`.
-					//
-					// `@opentelemetry/api` must be externalized so that `instrumentation.server.js` and the
-					// SvelteKit runtime share a single instance of the module (the global tracer/propagation
-					// is set on that instance — two bundled copies would mean instrumentation hooks are
-					// invisible to the runtime). Externalizing also prevents the bundler from colocating
-					// `@opentelemetry/api` into a shared chunk that also contains application modules, which
-					// would cause those modules to be evaluated before `Server.init()` sets env vars — see
-					// https://github.com/sveltejs/kit/issues/16288
-					/** @type {NonNullable<UserConfig['ssr']>} */ (new_config.ssr).external = [
-						'@opentelemetry/api'
-					];
-
 					// we avoid setting base to paths.assets in dev so that we get the
 					// trailing slash redirect to paths.base if it is set
 					new_config.base = kit.paths.base || '/';
-
-					// Vite dependency crawler needs an explicit JS entry point
-					// even though server otherwise works without it
-					new_config.build ??= {};
-					new_config.build.rolldownOptions ??= {};
-					new_config.build.rolldownOptions.input = `${runtime_directory}/client/entry.js`;
 				}
 
 				// Vite's `define` is a compile-time text replacement, but Vitest strips
@@ -573,22 +562,13 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter((plugin) => plugin.transformIndexHtml);
+			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
 			if (unsupported_plugins.length) {
-				const verbose = config.logLevel === 'info' || config.logLevel === undefined;
-				const log = logger({ verbose });
-
-				const list = unsupported_plugins
-					.map((plugin) => `  - ${plugin.name || '(missing plugin name)'}`)
-					.join('\n');
-
-				log.warn(
-					dedent`
-						The following plugins may not work correctly because they use the \`transformIndexHtml\` hook which is not supported:
-
-						${list}
-					`
+				const plugins = bullet_list(
+					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')
 				);
+
+				w.transform_index_html_unsupported({ plugins });
 			}
 		},
 

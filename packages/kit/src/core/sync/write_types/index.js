@@ -27,6 +27,28 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  */
 
 /**
+ * Recursively remove empty directories under `root`, leaving `root` itself.
+ * @param {string} dir
+ * @param {string} root
+ */
+function remove_empty_directories(dir, root = dir) {
+	if (!fs.existsSync(dir)) return;
+
+	for (const name of fs.readdirSync(dir)) {
+		const child = path.join(dir, name);
+		if (fs.statSync(child).isDirectory()) {
+			remove_empty_directories(child, root);
+		}
+	}
+
+	if (path.resolve(dir) === path.resolve(root)) return;
+
+	if (fs.readdirSync(dir).length === 0) {
+		fs.rmdirSync(dir);
+	}
+}
+
+/**
  * Creates types for the whole manifest
  * @param {import('types').ValidatedConfig} config
  * @param {import('types').ManifestData} manifest_data
@@ -52,6 +74,8 @@ export function write_all_types(config, manifest_data, root) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
+		// Stale files are removed above; empty route directories are left behind.
+		remove_empty_directories(types_dir);
 	}
 
 	// Read/write meta data on each invocation, not once per node process,
@@ -127,6 +151,13 @@ export function write_all_types(config, manifest_data, root) {
 			update_types(config, routes_map, route, root, to_delete);
 			meta_data[route.id] = input_files;
 		}
+	}
+
+	// Remove entries for routes that no longer exist so the file does not
+	// accumulate stale keys after routes are deleted.
+	const current_route_ids = new Set(manifest_data.routes.map((route) => route.id));
+	for (const id of Object.keys(meta_data)) {
+		if (!current_route_ids.has(id)) delete meta_data[id];
 	}
 
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
@@ -603,7 +634,8 @@ function replace_ext_with_js(file_path) {
 function generate_params_type(params, outdir, config) {
 	const path_to_params = () => {
 		const params_file =
-			resolve_entry(config.files.params) ?? config.files.params.replace(/\.(js|ts)$/, '') + '.js';
+			resolve_entry(config.files.params, config.moduleExtensions) ??
+			config.files.params.replace(/\.(js|ts)$/, '') + '.js';
 
 		return posixify(path.relative(outdir, params_file));
 	};

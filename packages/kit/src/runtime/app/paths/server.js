@@ -1,11 +1,12 @@
 import { base, assets, relative } from './internal/server.js';
 import { resolve_route, find_route } from '../../../utils/routing.js';
-import { decode_pathname } from '../../../utils/url.js';
-import { add_data_suffix } from '../../../pathname.js';
+import { decode_pathname, has_scheme_or_authority } from '../../../utils/url.js';
 import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { manifest } from '../../server/internal.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/shared-errors.js';
+import * as w from '../../../messages/shared-warnings.js';
 
 export { base, assets, app_dir } from './internal/server.js';
 
@@ -14,23 +15,27 @@ export function asset(file) {
 	// TODO 4.0 remove this
 	if (file[0] === '/') {
 		if (DEV) {
-			console.warn(`\`asset('${file}')\` should now be \`asset('${file.slice(1)}')\``);
+			w.asset_leading_slash({ path: file, fixed: file.slice(1) });
 		}
 
 		file = file.slice(1);
 	}
 
-	return assets !== base ? `${assets}/${file}` : resolve(file);
+	return assets !== base ? `${assets}/${file}` : prefix_path('/' + file);
 }
 
 /** @type {typeof import('./client.js').resolve} */
 export function resolve(id, params) {
+	if (has_scheme_or_authority(id)) {
+		e.resolve_url_input({ id });
+	}
+
 	let resolved;
 
 	if (id[0] === '/') {
 		// route ID
 		if (id.includes('[') && !params) {
-			throw new Error(`Missing params for dynamic route ID ${id}`);
+			e.resolve_params_missing({ id });
 		}
 
 		resolved = resolve_route(id, params ?? {});
@@ -38,16 +43,16 @@ export function resolve(id, params) {
 		resolved = '/' + id;
 	}
 
+	return prefix_path(resolved);
+}
+
+/** @param {string} resolved */
+function prefix_path(resolved) {
 	if (relative) {
 		const store = try_get_request_store();
 
 		if (store && !store.state.prerendering?.fallback) {
-			// the relative path depth must reflect the URL the browser is actually at, which
-			// for a data request includes the `__data.json` suffix that was stripped during routing
-			const pathname = store.event.isDataRequest
-				? add_data_suffix(store.event.url.pathname)
-				: store.event.url.pathname;
-			const after_base = pathname.slice(base.length);
+			const after_base = store.event.url.pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
 

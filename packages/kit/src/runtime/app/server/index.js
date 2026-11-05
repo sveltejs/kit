@@ -1,6 +1,7 @@
 import { read_implementation, manifest } from '../../server/internal.js';
 import { assets } from '#app/paths';
-import { base64_decode } from '../../utils.js';
+import { base64_decode, text_encoder } from '../../utils.js';
+import * as e from '../../../messages/server-errors.js';
 
 /**
  * Read the contents of an imported asset from the filesystem
@@ -20,9 +21,7 @@ export function read(asset) {
 	__SVELTEKIT_TRACK__('$app/server:read');
 
 	if (!read_implementation) {
-		throw new Error(
-			'No `read` implementation was provided. Please ensure that your adapter is up to date and supports this feature'
-		);
+		e.read_implementation_missing();
 	}
 
 	// handle inline assets internally
@@ -43,20 +42,25 @@ export function read(asset) {
 			});
 		}
 
-		const decoded = decodeURIComponent(data);
+		const decoded = text_encoder.encode(decodeURIComponent(data));
 
 		return new Response(decoded, {
 			headers: {
-				'Content-Length': decoded.length.toString(),
+				'Content-Length': decoded.byteLength.toString(),
 				'Content-Type': type
 			}
 		});
 	}
 
+	// Vite keeps some of the import's query or hash on the asset URL (e.g. `?v=1`, or `?no-inline`
+	// during dev), so strip it the same way as Vite's `cleanUrl`, which treats the first `?` or `#`
+	// as the end of the file path
+	const pathname = asset.replace(/[?#].*$/, '');
+
 	const file = decodeURIComponent(
-		__SVELTEKIT_DEV__ && asset.startsWith(assets + '/@fs')
-			? asset.slice(assets.length)
-			: asset.slice(assets.length + 1)
+		__SVELTEKIT_DEV__ && pathname.startsWith(assets + '/@fs')
+			? pathname.slice(assets.length)
+			: pathname.slice(assets.length + 1)
 	);
 
 	if (file in manifest.server_assets) {
@@ -71,7 +75,7 @@ export function read(asset) {
 		});
 	}
 
-	throw new Error(`Asset does not exist: ${file}`);
+	e.read_asset_missing({ file });
 }
 
 export { getRequestEvent } from '@sveltejs/kit/internal/server';

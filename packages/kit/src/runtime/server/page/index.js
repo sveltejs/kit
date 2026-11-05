@@ -7,9 +7,9 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
 import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
-import { redirect_response } from '../utils.js';
+import { is_prerendering, redirect_response } from '../utils.js';
 import { manifest } from '../internal.js';
-import { static_error_page, handle_error_and_jsonify } from '../errors.js';
+import { handle_error_and_jsonify } from '../errors.js';
 import {
 	handle_action_json_request,
 	handle_action_request,
@@ -19,10 +19,12 @@ import {
 import { server_data_serializer, server_data_serializer_json } from './data_serializer.js';
 import { load_data, load_server_data } from './load_data.js';
 import { render_response } from './render.js';
-import { respond_with_error } from './respond_with_error.js';
 import { DEV } from 'esm-env';
 import { get_remote_action, handle_remote_form_post } from '../remote-functions.js';
 import { PageNodes } from '../../../utils/page_nodes.js';
+import { static_error_page, respond_with_error } from './respond_with_error.js';
+import * as e from '../../../messages/server-errors.js';
+import * as w from '../../../messages/server-warnings.js';
 
 /**
  * The maximum request depth permitted before assuming we're stuck in an infinite loop
@@ -86,7 +88,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 		if (should_prerender) {
 			const mod = leaf_node.server;
 			if (mod?.actions) {
-				throw new Error('Cannot prerender pages with actions');
+				e.prerender_actions();
 			}
 		} else if (state.prerendering) {
 			// if the page isn't marked as prerenderable, then bail out at this point
@@ -111,22 +113,15 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (
-			ssr === false &&
-			!((state.prerendering || state.prerender_default === true) && should_prerender_data)
-		) {
+		if (ssr === false && !(is_prerendering(state) && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
 				if (action_result.type === 'error') {
-					console.warn(
-						"The form action returned an error, but +error.svelte wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
-					);
+					w.form_action_error_without_ssr();
 				} else if (action_result.data) {
 					/// case: lost data
-					console.warn(
-						"The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance"
-					);
+					w.form_action_data_without_ssr();
 				}
 			}
 
@@ -162,7 +157,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 		const data_serializer = server_data_serializer(event, state);
 		const data_serializer_json =
-			(state.prerendering || state.prerender_default === true) && should_prerender_data
+			is_prerendering(state) && should_prerender_data
 				? server_data_serializer_json(event, state)
 				: null;
 

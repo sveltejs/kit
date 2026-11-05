@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import process from 'node:process';
 import { afterAll, afterEach, expect, jest, mock, spyOn, test } from 'bun:test';
-import { mock_manifest, mock_routes } from './mocks.js';
+import { mock_handoff } from './mocks.js';
 
 // the const captures the real module object before any test swaps the live binding
 const real_process = process;
@@ -207,12 +207,11 @@ async function load_start({
 		exit
 	};
 	mock.module('node:process', () => ({ default: fake_process }));
-	mock_manifest({ env_prefix: envPrefix });
+	mock_handoff({ env_prefix: envPrefix, server_options: serverOptions });
 
 	const routes = { '/asset': { GET: new Response('asset') } };
 	const handler = mock(() => {});
-	mock_routes({ routes });
-	mock.module('SERVER_OPTIONS', () => ({ default: serverOptions }));
+	mock.module('../src/routes.js', () => ({ routes, server_assets: new Map() }));
 	mock.module('../src/handler.js', () => ({ handler }));
 
 	const stop = mock(stop_implementation ?? (async () => {}));

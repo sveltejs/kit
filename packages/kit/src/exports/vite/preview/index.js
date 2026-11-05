@@ -1,6 +1,6 @@
 /** @import { NextHandleFunction } from 'connect' */
 /** @import { PreviewServer } from 'vite' */
-/** @import { ValidatedConfig, ServerInternalModule, ServerModule } from 'types' */
+/** @import { ValidatedConfig, ServerModule } from 'types' */
 import fs from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -11,7 +11,8 @@ import { createReadableStream, getRequest, setResponse } from '../../../exports/
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
 import { relative_pathname } from '../../../utils/url.js';
 import { is_chrome_devtools_request, not_found } from '../utils.js';
-import { stackless } from '../../../utils/error.js';
+import { set_error_stack } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
 
 /**
  * @param {PreviewServer} vite
@@ -29,7 +30,7 @@ export async function preview(vite, svelte_config) {
 	const dir = join(svelte_config.outDir, 'output/server');
 
 	if (!fs.existsSync(`${dir}/manifest.js`)) {
-		throw stackless(`Server files not found at ${dir}, did you run \`build\` first?`);
+		e.preview_build_missing({ dir }, { stackless: true });
 	}
 
 	const instrumentation = join(dir, 'instrumentation.server.js');
@@ -37,29 +38,29 @@ export async function preview(vite, svelte_config) {
 		await import(pathToFileURL(instrumentation).href);
 	}
 
-	/** @type {ServerInternalModule} */
-	const { set_assets } = await import(pathToFileURL(join(dir, 'internal.js')).href);
-
 	/** @type {ServerModule} */
-	const { Server } = await import(pathToFileURL(join(dir, 'index.js')).href);
+	const { configure } = await import(pathToFileURL(join(dir, 'index.js')).href);
 
 	/** @type {{ manifest: import('types').SSRManifest }} */
 	const { manifest } = await import(pathToFileURL(join(dir, 'manifest.js')).href);
 
-	set_assets(assets);
-
-	const server = new Server(manifest);
+	/** @type {import('types').ServerInstance} */
+	let server;
 
 	try {
-		await server.init({
+		server = await configure({
+			manifest,
 			env: loadEnv(vite.config.mode, svelte_config.env.dir, ''),
-			read: (file) => createReadableStream(`${dir}/${file}`)
+			read: (file) => createReadableStream(`${dir}/${file}`),
+			assets
 		});
+
+		await server.init();
 	} catch (error) {
 		// Vite erases the error message when starting the preview server so we store
 		// it in the stack instead. This ensures errors thrown using `stackless`
 		// are still readable
-		if (error instanceof Error) error.stack = error.message;
+		if (error instanceof Error) set_error_stack(error, error.message);
 		throw error;
 	}
 
@@ -145,18 +146,17 @@ export async function preview(vite, svelte_config) {
 				const { pathname, search } = new URL(/** @type {string} */ (req.url), 'http://dummy');
 
 				const dir = pathname.startsWith(`/${svelte_config.appDir}/remote/`) ? 'data' : 'pages';
-
-				let filename = normalizePath(
-					join(svelte_config.outDir, `output/prerendered/${dir}` + pathname)
-				);
+				const root = join(svelte_config.outDir, `output/prerendered/${dir}`);
+				let decoded = pathname;
 
 				try {
-					filename = decodeURI(filename);
+					decoded = decodeURI(pathname);
 				} catch {
 					// malformed URI
 				}
 
-				let prerendered = is_file(filename);
+				let filename = normalizePath(join(root, decoded));
+				let prerendered = is_file(filename, root);
 
 				if (!prerendered) {
 					const has_trailing_slash = pathname.endsWith('/');
@@ -165,14 +165,14 @@ export async function preview(vite, svelte_config) {
 					/** @type {string | undefined} */
 					let redirect;
 
-					if (is_file(html_filename)) {
+					if (is_file(html_filename, root)) {
 						filename = html_filename;
 						prerendered = true;
 					} else if (has_trailing_slash) {
-						if (is_file(filename.slice(0, -1) + '.html')) {
+						if (is_file(filename.slice(0, -1) + '.html', root)) {
 							redirect = pathname.slice(0, -1);
 						}
-					} else if (is_file(filename + '/index.html')) {
+					} else if (is_file(filename + '/index.html', root)) {
 						redirect = pathname + '/';
 					}
 
@@ -267,7 +267,17 @@ function scoped(scope, handler) {
 	};
 }
 
-/** @param {string} path */
-function is_file(path) {
-	return fs.existsSync(path) && !fs.statSync(path).isDirectory();
+/**
+ * @param {string} path
+ * @param {string} root
+ * @returns {boolean}
+ */
+function is_file(path, root) {
+	return (
+		fs.existsSync(root) &&
+		fs.existsSync(path) &&
+		!fs.statSync(path).isDirectory() &&
+		// Decoding can introduce path separators on Windows. Check containment after resolving them.
+		normalizePath(fs.realpathSync(path)).startsWith(`${normalizePath(fs.realpathSync(root))}/`)
+	);
 }

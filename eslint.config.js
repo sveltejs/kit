@@ -56,6 +56,11 @@ export default [
 							group: ['vite', '**/vite/**', '**/core/**', '**/cli.js', '**/runner.js'],
 							message:
 								'This code is bundled into user apps and must not import Vite or the build pipeline (src/core, src/exports/vite).'
+						},
+						{
+							group: ['**/messages/build-*.js', '**/messages/internal/build.js'],
+							message:
+								'Build diagnostics always include their full text. Use src/messages/shared-errors.js in code that is bundled into user apps.'
 						}
 					]
 				}
@@ -93,10 +98,10 @@ export default [
 			'**/test-results',
 			'**/dist',
 			'**/.custom-out-dir',
-			'packages/adapter-node/files',
 			'packages/kit/src/core/config/fixtures/multiple', // dir contains svelte config with multiple extensions tripping eslint
 			'packages/kit/src/core/sync/create_manifest_data/test/samples/**/*',
 			'packages/kit/src/core/sync/write_types/test/*/**/*',
+			'packages/kit/scripts/process-messages/templates/**/*', // contains generator placeholders
 			'packages/kit/types/index.d.ts', // generated file
 			'packages/*/test/apps/**/*',
 			'packages/*/test/**/build/**',
@@ -106,8 +111,7 @@ export default [
 			'packages/package/test/errors/**/*',
 			'packages/package/test/fixtures/**/*',
 			'packages/package/test/watch/expected/**/*',
-			'packages/package/test/watch/package/**/*',
-			'packages/adapter-node/smoke.spec_disabled.js'
+			'packages/package/test/watch/package/**/*'
 		]
 	},
 	{

@@ -1,5 +1,90 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.2
+
+### Patch Changes
+
+- fix: prevent prerendered paths from creating unintended rules in `_redirects` and `_routes.json` ([`4a62bee`](https://github.com/sveltejs/kit/commit/4a62beeca491147c78849cd696907561a4c91692))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.1
+
+## 8.0.1
+
+### Patch Changes
+
+- fix: start the dev server on runtimes such as Deno that define `caches` as a getter-only global ([#17401](https://github.com/sveltejs/kit/pull/17401))
+
+- fix: start one platform proxy for concurrent Vite servers and keep it alive until the last one closes ([#17368](https://github.com/sveltejs/kit/pull/17368))
+
+- fix: support `Span#setStatus` and `Span#updateName` on local emulation of Cloudflare `tracing` ([#17400](https://github.com/sveltejs/kit/pull/17400))
+
+## 8.0.0
+
+### Major Changes
+
+- breaking: minimum Wrangler version required is `4.118.0` ([#16668](https://github.com/sveltejs/kit/pull/16668))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: upgrade `@cloudflare/workers-types` to 4.20260219.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: upgrade minimum `wrangler` version to ^4.67.0 ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: remove `platform.context` in favour of `platform.ctx` ([#15347](https://github.com/sveltejs/kit/pull/15347))
+
+- breaking: remove cloudflare `platform`, emulate the `cloudflare:workers` module instead ([#16754](https://github.com/sveltejs/kit/pull/16754))
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+- breaking: remove use of the Cloudflare Workers Cache API in favour of Workers Caching ([#16640](https://github.com/sveltejs/kit/pull/16640))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- chore: bump `@cloudflare/workers-types` to `4.20260621.1` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: dispose the platform proxy when the Vite dev or preview server closes ([#17238](https://github.com/sveltejs/kit/pull/17238))
+
+- fix: avoid overriding user's existing `_headers` rules ([#16183](https://github.com/sveltejs/kit/pull/16183))
+
+- chore: check the `WORKERS_CI` environment variable to determine if we're building for Cloudflare Workers ([#13733](https://github.com/sveltejs/kit/pull/13733))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: avoid caching immutable asset 404s ([#16627](https://github.com/sveltejs/kit/pull/16627))
+
+- chore: use `builder.config` to access SvelteKit config settings ([#16895](https://github.com/sveltejs/kit/pull/16895))
+
+- chore: bump `@cloudflare/worker-types` to 5.20260809.1 ([#16745](https://github.com/sveltejs/kit/pull/16745))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
+## 8.0.0-next.8
+
+### Patch Changes
+
+- fix: dispose the platform proxy when the Vite dev or preview server closes ([#17238](https://github.com/sveltejs/kit/pull/17238))
+- Updated dependencies [[`12ae0b9`](https://github.com/sveltejs/kit/commit/12ae0b9f7b1b92a0356dadcd87d47f8a1707bf3e), [`ee3332f`](https://github.com/sveltejs/kit/commit/ee3332fe58292be9fcfabaef65dc39e61ab6d1f8), [`72832f9`](https://github.com/sveltejs/kit/commit/72832f9f85d94e569b4b4f27799dc6a01564fd01), [`846f3d4`](https://github.com/sveltejs/kit/commit/846f3d42a2cfe60f0501fc80a7ceeaa604324c30)]:
+  - @sveltejs/kit@3.0.0-next.31
+
+## 8.0.0-next.7
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: remove cloudflare `platform`, emulate the `cloudflare:workers` module instead ([#16754](https://github.com/sveltejs/kit/pull/16754))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- Updated dependencies [[`9a4b343`](https://github.com/sveltejs/kit/commit/9a4b343bd8ab0060dc624fbdd139155fc4a0a1dc), [`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`c9f54b5`](https://github.com/sveltejs/kit/commit/c9f54b5d66acd9443d36b0ae9aa0a656809bd7f9), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
 ## 8.0.0-next.6
 
 ### Patch Changes

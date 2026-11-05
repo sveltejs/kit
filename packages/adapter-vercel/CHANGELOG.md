@@ -1,5 +1,79 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.2
+
+### Patch Changes
+
+- fix: escape prerendered paths used in Vercel route patterns ([`8a81718`](https://github.com/sveltejs/kit/commit/8a81718cd8b306dbe830210ada7249d8e2ae9e7b))
+
+- fix: support Node.js 26 (`nodejs26.x`) and future even Node.js versions ([#17570](https://github.com/sveltejs/kit/pull/17570))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.1
+
+## 7.0.1
+
+### Patch Changes
+
+- fix: keep the detected Bun minor in the resolved runtime ([#17331](https://github.com/sveltejs/kit/pull/17331))
+
+## 7.0.0
+
+### Major Changes
+
+- chore: use `rolldown` for edge function bundling ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: edge function build target is now `es2022` ([#15432](https://github.com/sveltejs/kit/pull/15432))
+
+- breaking: require `vite@^8.0.12`, the first Vite 8 release bundling stable `rolldown` 1.0.0 ([#16134](https://github.com/sveltejs/kit/pull/16134))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+- breaking: remove support for edge and Node 20 runtimes ([#16520](https://github.com/sveltejs/kit/pull/16520))
+
+### Patch Changes
+
+- chore: bump `@vercel/nft` dependency ([#16522](https://github.com/sveltejs/kit/pull/16522))
+
+- chore: use `node:fs` instead of deprecated `builder.rimraf` and `builder.mkdirp` ([#16610](https://github.com/sveltejs/kit/pull/16610))
+
+- fix: omit ISR data endpoints for server-only routes ([#16731](https://github.com/sveltejs/kit/pull/16731))
+
+- fix: correctly apply `reroute` results for apps configured with split serverless functions ([#16665](https://github.com/sveltejs/kit/pull/16665))
+
+- fix: pass the requested pathname, including any trailing slash, to ISR functions ([#16903](https://github.com/sveltejs/kit/pull/16903))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+
+- fix: await `init` on every request to prevent race condition ([#16467](https://github.com/sveltejs/kit/pull/16467))
+
+- fix: match sibling `.html__route.js` route resolution requests ([#16674](https://github.com/sveltejs/kit/pull/16674))
+
+- chore: bump Rolldown to `1.2.0` ([#16455](https://github.com/sveltejs/kit/pull/16455))
+
+- fix: ignore `EEXIST` errors when symlinking traced files that resolve to the same destination ([#16809](https://github.com/sveltejs/kit/pull/16809))
+
+- fix: trace `process.cwd()`-relative files from the project directory and never glob from the filesystem root ([#16972](https://github.com/sveltejs/kit/pull/16972))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
+## 7.0.0-next.9
+
+### Major Changes
+
+- breaking: populate env vars before `instrumentation.server.js` is evaluated and update the adapter instrumentation API ([#16303](https://github.com/sveltejs/kit/pull/16303))
+
+- breaking: replace the `builder.generateManifest` with `builder.generateServerInstance` and `builder.manifest` ([#16875](https://github.com/sveltejs/kit/pull/16875))
+
+### Patch Changes
+
+- fix: pass the requested pathname, including any trailing slash, to ISR functions ([#16903](https://github.com/sveltejs/kit/pull/16903))
+
+- fix: trace `process.cwd()`-relative files from the project directory and never glob from the filesystem root ([#16972](https://github.com/sveltejs/kit/pull/16972))
+- Updated dependencies [[`9a4b343`](https://github.com/sveltejs/kit/commit/9a4b343bd8ab0060dc624fbdd139155fc4a0a1dc), [`ee2f55b`](https://github.com/sveltejs/kit/commit/ee2f55b1e3338d2fa92a25fe53d095129edf1002), [`65673a4`](https://github.com/sveltejs/kit/commit/65673a4dd35054c16f8555eb896dfb773d86a556), [`1b79845`](https://github.com/sveltejs/kit/commit/1b79845e117f417b63fa399149816d73882c27ea), [`b12bb78`](https://github.com/sveltejs/kit/commit/b12bb789c17c30e7ff835de4af004d2f3eb36159), [`03f1687`](https://github.com/sveltejs/kit/commit/03f1687fe612ce3d2d9131139b5b188d9cf90c64), [`49f0808`](https://github.com/sveltejs/kit/commit/49f0808f3e983d0cb5a4d586cf0d1678467431ed), [`e7c74bf`](https://github.com/sveltejs/kit/commit/e7c74bf8227dc228cb36e822eaff5992569b830a), [`0876d63`](https://github.com/sveltejs/kit/commit/0876d633145088c7a5213e9f530cf2fed96ce35d), [`9a2b9ba`](https://github.com/sveltejs/kit/commit/9a2b9bacbb2de0533966bb029ef526b357aac086), [`c9f54b5`](https://github.com/sveltejs/kit/commit/c9f54b5d66acd9443d36b0ae9aa0a656809bd7f9), [`22b8152`](https://github.com/sveltejs/kit/commit/22b8152f74882775ac63e1cf96d3016b92ac8256), [`f6d44cf`](https://github.com/sveltejs/kit/commit/f6d44cf007d6c6b54de57f6ae4ef8e2e7fea2f44), [`3c3a27b`](https://github.com/sveltejs/kit/commit/3c3a27bf67a26164266e132dbb7f9266643cf724), [`7f376b1`](https://github.com/sveltejs/kit/commit/7f376b109cd770638806184cf5d8bf4cf88c5bf2), [`8a587c7`](https://github.com/sveltejs/kit/commit/8a587c7b3919408ec66a362eb249fe5cf43f5316), [`aa4f960`](https://github.com/sveltejs/kit/commit/aa4f9605761e686f6aaf414b9186c68ddd2468dc)]:
+  - @sveltejs/kit@3.0.0-next.27
+
 ## 7.0.0-next.8
 
 ### Patch Changes
