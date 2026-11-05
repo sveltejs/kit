@@ -204,7 +204,7 @@ if (!process.env.CI) {
 			output: 'package',
 			preserve_output: false,
 			types: true,
-			config
+			config: { ...config, extensions: ['.svelte', '.svx'] }
 		});
 
 		/** @param {string} file */
@@ -249,11 +249,41 @@ if (!process.env.CI) {
 			compare('b.js');
 			compare('b.d.ts');
 
+			// removes the compiled module and its declaration
+			remove('src/lib/b.ts');
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/b.d.ts'))).toBe(false);
+			expect(fs.existsSync(join(cwd, 'package/b.js'))).toBe(false);
+
 			// processes a Svelte file
 			write('src/lib/Test.svelte', '<script lang="ts">export let answer: number</script>');
 			await settled();
 			compare('Test.svelte');
 			compare('Test.svelte.d.ts');
+
+			// removes files whose output names are unchanged, too
+			remove('src/lib/a.js');
+			remove('src/lib/Test.svelte');
+			await settled();
+			for (const file of ['a.js', 'a.d.ts', 'Test.svelte', 'Test.svelte.d.ts']) {
+				expect(fs.existsSync(join(cwd, 'package', file))).toBe(false);
+			}
+
+			// processes custom extensions, including nested directory renames
+			fs.mkdirSync(join(cwd, 'src/lib/nested'));
+			write('src/lib/nested/Custom.svx', '<p>custom extension</p>');
+			await settled();
+			expect(read('package/nested/Custom.svelte')).toBe('<p>custom extension</p>');
+
+			fs.renameSync(join(cwd, 'src/lib/nested'), join(cwd, 'src/lib/renamed'));
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/nested'))).toBe(false);
+			expect(read('package/renamed/Custom.svelte')).toBe('<p>custom extension</p>');
+
+			remove('src/lib/renamed/Custom.svx');
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/renamed'))).toBe(false);
+			compare('index.js');
 
 			// doesn't crash on an error
 			write('src/lib/post-error.svelte', '<button on:={foo}>click me</button>');
@@ -270,6 +300,8 @@ if (!process.env.CI) {
 			remove('src/lib/a.js');
 			remove('src/lib/b.ts');
 			remove('src/lib/post-error.svelte');
+			fs.rmSync(join(cwd, 'src/lib/nested'), { recursive: true, force: true });
+			fs.rmSync(join(cwd, 'src/lib/renamed'), { recursive: true, force: true });
 		}
 	}, 30_000);
 }
