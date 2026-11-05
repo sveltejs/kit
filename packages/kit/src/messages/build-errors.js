@@ -870,6 +870,16 @@ export function route_server_file_hash_router(_values, options) {
 }
 
 /**
+ * Route `%id%` conflicts with static asset `%file%`
+ * @param {{ "id": string; "file": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function route_static_asset_conflict(_values, options) {
+	throw_error('route_static_asset_conflict', `Route \`${_values.id}\` conflicts with static asset \`${_values.file}\``, options, route_static_asset_conflict);
+}
+
+/**
  * Invalid route `%id%` — brackets are unbalanced
  * @param {{ "id": string }} _values
  * @param {ThrowOptions} [options]
