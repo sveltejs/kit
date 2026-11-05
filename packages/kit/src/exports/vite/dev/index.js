@@ -274,7 +274,14 @@ export async function dev(
 			req.headers[':authority'] || req.headers.host
 		}`;
 
-		const decoded = decodeURI(new URL(base + req.url).pathname);
+		let decoded = new URL(base + req.url).pathname;
+		try {
+			decoded = decodeURI(decoded);
+		} catch {
+			res.statusCode = 400;
+			res.end('Malformed URI');
+			return;
+		}
 
 		if (decoded.startsWith(assets)) {
 			const pathname = decoded.slice(assets.length);
