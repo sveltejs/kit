@@ -41,6 +41,13 @@ export class LiveQuery {
 	 */
 	#interrupt = null;
 	#attempt = 0;
+	/**
+	 * Has `beforeunload` fired since we last connected? The page may be about to go away,
+	 * but it may also stay where it is (links to other apps like `mailto:`, downloads,
+	 * a cancelled `beforeNavigate`), so this doesn't interrupt the connection. It only
+	 * means a dropped connection is retried rather than surfaced as an error.
+	 */
+	#leaving = false;
 
 	/**
 	 * Fan-out for `for await` consumers attached to this LiveQuery's shared
@@ -136,6 +143,7 @@ export class LiveQuery {
 			const generator = create_live_iterator(this.#id, this.#payload, controller, () => {
 				this.#connected = true;
 				this.#attempt = 0;
+				this.#leaving = false;
 				connected = true;
 				on_connect();
 			});
@@ -174,7 +182,10 @@ export class LiveQuery {
 					continue;
 				}
 
-				if (!this.#ready) {
+				// the page may be unloading, which drops connections
+				const dropped_while_leaving = this.#leaving && !(error instanceof HttpError);
+
+				if (!this.#ready && !dropped_while_leaving) {
 					// If we haven't successfully connected and received a value yet, surface the error
 					await this.#fail(error);
 					on_connect_failed(error);
@@ -191,6 +202,9 @@ export class LiveQuery {
 				// Preserve last good value (or keep initial promise pending).
 
 				if (typeof navigator !== 'undefined' && !navigator.onLine) break;
+
+				// only give a dropped connection the benefit of the doubt once
+				this.#leaving = false;
 
 				const delay = LiveQuery.#calculate_retry_delay(this.#attempt++);
 				/** @type {boolean} */
@@ -228,7 +242,12 @@ export class LiveQuery {
 	};
 
 	#on_pagehide = () => {
+		this.#leaving = false;
 		void this.#interrupt?.();
+	};
+
+	#on_beforeunload = () => {
+		this.#leaving = true;
 	};
 
 	#on_pageshow = (/** @type {PageTransitionEvent} */ e) => {
@@ -242,7 +261,7 @@ export class LiveQuery {
 			window.addEventListener('online', this.#on_online);
 			window.addEventListener('offline', this.#on_offline);
 			window.addEventListener('pagehide', this.#on_pagehide);
-			window.addEventListener('beforeunload', this.#on_pagehide);
+			window.addEventListener('beforeunload', this.#on_beforeunload);
 			window.addEventListener('pageshow', this.#on_pageshow);
 		}
 
@@ -254,7 +273,7 @@ export class LiveQuery {
 			window.removeEventListener('online', this.#on_online);
 			window.removeEventListener('offline', this.#on_offline);
 			window.removeEventListener('pagehide', this.#on_pagehide);
-			window.removeEventListener('beforeunload', this.#on_pagehide);
+			window.removeEventListener('beforeunload', this.#on_beforeunload);
 			window.removeEventListener('pageshow', this.#on_pageshow);
 		}
 
