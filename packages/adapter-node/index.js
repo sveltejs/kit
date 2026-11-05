@@ -126,6 +126,14 @@ export default function (opts = {}) {
 				}
 			});
 
+			// Files the server build emitted for server code to read at runtime (e.g. with
+			// `fs.readFile(new URL('./data.bin', import.meta.url))`). The Vite server output keeps
+			// its layout under `server/chunks` (see `manualChunks` above), so copy them to the same
+			// place relative to it, which keeps such relative URLs resolving
+			for (const file of builder.findServerOnlyAssets?.() ?? []) {
+				builder.copy(`${server}/${file}`, `${out}/server/chunks/${file}`);
+			}
+
 			if (builder.hasServerInstrumentationFile?.()) {
 				builder.instrument?.({
 					entrypoint: `${out}/index.js`,
