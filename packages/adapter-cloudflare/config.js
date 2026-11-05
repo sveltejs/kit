@@ -1,4 +1,5 @@
 /** @import { Plugin } from 'vite' */
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
@@ -13,7 +14,7 @@ const useful_cloudflare_plugins = new Set([
 ]);
 
 /** @type {Plugin['apply']} */
-const is_dev_or_build = (_config, env) => !env.isPreview;
+export const is_dev_or_build = (_config, env) => !env.isPreview;
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -21,9 +22,10 @@ const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url)
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that dev emulates workerd and the server output suits it
  * @param {string | undefined} config_path
+ * @param {(config: WorkerConfig) => void} set_worker_config
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path) {
+export function plugin_config(config_path, set_worker_config) {
 	const plugins = cloudflare({
 		// the plugin resolves a relative path against Vite's root but Wrangler resolves
 		// it against the working directory, which is what the rest of the adapter uses.
@@ -46,6 +48,8 @@ export function plugin_config(config_path) {
 					...new Set([...config.compatibility_flags, 'nodejs_compat_v2'])
 				];
 			}
+
+			set_worker_config(config);
 		}
 	});
 
