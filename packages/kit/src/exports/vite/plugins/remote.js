@@ -24,7 +24,7 @@ import { get_locator } from '../../../utils/vite.js';
  * @param {ValidatedConfig} svelte_config
  * @param {() => { root: string; vite: typeof import('vite'); }} get_config
  * @param {() => ServerMetadata | null} get_build_metadata
- * @param {(remote_metadata: {remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string>}) => void} set_remote_metadata
+ * @param {(remote_metadata: {remotes: Map<string, RemoteChunk>; remote_original_by_hash: Map<string, string>}) => void} set_remote_metadata
  * @returns {Plugin}
  */
 export function plugin_remote(svelte_config, get_config, get_build_metadata, set_remote_metadata) {
@@ -39,8 +39,8 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	/** @type {ServerMetadata | null} */
 	let build_metadata;
 
-	/** @type {RemoteChunk[]} */
-	let remotes = [];
+	/** @type {Map<string, RemoteChunk>} */
+	const remotes = new Map();
 
 	/** @type {Map<string, string>} Maps remote hash -> original module id */
 	const remote_original_by_hash = new Map();
@@ -67,7 +67,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 		buildStart() {
 			// avoid stale data when building with watch mode
 			if (this.meta.watchMode && this.environment.config.consumer === 'server') {
-				remotes = [];
+				remotes.clear();
 				remote_original_by_hash.clear();
 				emitted_remote_hashes.clear();
 			}
@@ -117,7 +117,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 				};
 
 				if (this.environment.config.consumer === 'server') {
-					remotes.push(remote);
+					remotes.set(remote.hash, remote);
 
 					// we need to add an `await Promise.resolve()` because if the user imports this function
 					// on the client AND in a load function when loading the client module we will trigger
