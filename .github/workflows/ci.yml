@@ -150,7 +150,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           retention-days: 3
-          name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}
+          name: test-failure-${{ github.run_id }}-${{ github.job }}-${{ strategy.job-index }}
           path: test-results.tar.gz
   e2e-push:
     # the legs a pull request rarely changes the outcome of
