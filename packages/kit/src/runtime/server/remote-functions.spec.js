@@ -1,6 +1,7 @@
 import { beforeAll, expect, test, vi } from 'vitest';
 import { init_transport, parse } from '#app/internal/transport';
 import { get_request_store } from '@sveltejs/kit/internal/server';
+import { SvelteKitError } from '@sveltejs/kit/internal';
 
 const decoder = new TextDecoder();
 
@@ -130,6 +131,48 @@ test('serializes explicitly ignored requested updates', async () => {
 	const result = await response.json();
 	expect(parse(result.data)).toEqual({ _: null, i: ['hash/query/[-1]'] });
 });
+
+test.each(['command', 'query_batch'])(
+	'remote %s preserves framework errors from the request body stream',
+	async (type) => {
+		const handleError = vi.fn();
+		set_hooks(/** @type {any} */ ({ handleError }));
+		const fn = Object.assign(vi.fn(), { __: { type, name: 'fn' } });
+		set_manifest(
+			/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { fn } }) } })
+		);
+		const response = await handle_remote_call(
+			/** @type {any} */ ({
+				request: new Request('http://localhost/_app/remote/hash/fn', {
+					method: 'POST',
+					// @ts-expect-error Node requires duplex for streaming request bodies
+					duplex: 'half',
+					body: new ReadableStream({
+						start(controller) {
+							// The Node adapter rejects oversized bodies with this error.
+							controller.error(new SvelteKitError(413, 'Payload Too Large', 'Body size exceeded'));
+						}
+					})
+				}),
+				tracing: { current: { setAttributes: vi.fn() } }
+			}),
+			/** @type {any} */ ({ remote: {} }),
+			'hash/fn'
+		);
+
+		expect(await response.json()).toEqual({
+			type: 'error',
+			error: { status: 413, message: 'Payload Too Large' }
+		});
+		expect(handleError).toHaveBeenCalledWith(
+			expect.objectContaining({
+				kind: 'framework',
+				error: { status: 413, message: 'Payload Too Large' }
+			})
+		);
+		expect(fn).not.toHaveBeenCalled();
+	}
+);
 
 test.each([
 	{ type: 'query_live', method: 'POST', status: 405, body: 'Method Not Allowed' },

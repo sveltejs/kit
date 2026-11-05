@@ -44,6 +44,10 @@ export const handleError = (input) => {
 		throw new Error("Redirects shouldn't trigger the handleError hook");
 	}
 
+	if (input.event.request.headers.has('x-test-error-kind')) {
+		return { message: input.kind };
+	}
+
 	if (input.kind === 'validation') {
 		// must not throw, even when validation failed inside a query
 		void input.event.url.pathname;
