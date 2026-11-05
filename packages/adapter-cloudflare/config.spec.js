@@ -58,3 +58,36 @@ test('resolves a relative wrangler config path against the Vite root', async () 
 		)
 	).resolves.toBeDefined();
 });
+
+test.each([
+	['.svelte-kit/cloudflare/_worker.js', 'throws'],
+	['src/worker.js', 'warns']
+])('validates `main` %s in the Wrangler config', async (main, outcome) => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-main-'));
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	try {
+		fs.writeFileSync(
+			path.join(root, 'wrangler.jsonc'),
+			JSON.stringify({ compatibility_date: '2026-09-01', main })
+		);
+		const resolving = resolveConfig(
+			{
+				root,
+				configFile: false,
+				logLevel: 'silent',
+				plugins: plugin_config(undefined, () => {})
+			},
+			'build'
+		);
+
+		if (outcome === 'throws') {
+			await expect(resolving).rejects.toThrow('Remove `main`');
+		} else {
+			await resolving;
+			expect(warn).toHaveBeenCalledWith(expect.stringContaining('Ignoring `main`'));
+		}
+	} finally {
+		warn.mockRestore();
+		fs.rmSync(root, { recursive: true, force: true });
+	}
+});

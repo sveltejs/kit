@@ -29,6 +29,28 @@ export function validate_worker_settings(wrangler_config) {
 }
 
 /**
+ * The adapter generates the Worker entry, so a `main` set in the Wrangler config
+ * is ignored. The old generated entry is an error because it no longer exists.
+ * @param {string | undefined} main
+ * @param {string | undefined} config_path
+ */
+export function validate_main(main, config_path) {
+	if (!main) return;
+
+	const file = config_path || 'your wrangler.jsonc file';
+
+	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
+		throw new Error(
+			`Remove \`main\` from ${file}. The adapter now generates the Worker entry, so it no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
+		);
+	}
+
+	console.warn(
+		`Ignoring \`main\` in ${file}. The adapter generates the Worker entry, so remove \`main\` to silence this warning`
+	);
+}
+
+/**
  * Generates the rules for prerendered redirects to be appended to a
  * [_redirects](https://developers.cloudflare.com/workers/static-assets/redirects/) file
  * @param {Map<string, { status: number; location: string }>} redirects

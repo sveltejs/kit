@@ -2,7 +2,7 @@
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { is_dev_or_build } from './utils.js';
+import { is_dev_or_build, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -31,6 +31,8 @@ export function plugin_config(config_path, set_worker_config) {
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
+			validate_main(config.main, config.configPath);
+
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve the build-generated entry in the user's wrangler config
 			config.main = worker_entry;
