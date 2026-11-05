@@ -531,8 +531,16 @@ export function deep_set(object, keys, value) {
 		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
 		const exists = inner != null;
 
-		if (exists && is_array !== Array.isArray(inner)) {
-			e.form_field_array_conflict({ key: keys[i + 1] });
+		if (exists) {
+			const valid = is_array
+				? Array.isArray(inner)
+				: typeof inner === 'object' &&
+					(Object.getPrototypeOf(inner) === Object.prototype ||
+						Object.getPrototypeOf(inner) === null);
+
+			if (!valid) {
+				e.form_field_array_conflict({ key: keys[i + 1] });
+			}
 		}
 
 		if (!exists) {
