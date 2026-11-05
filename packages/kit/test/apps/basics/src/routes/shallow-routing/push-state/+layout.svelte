@@ -18,12 +18,16 @@
 			type: navigation.type
 		});
 
-		if (navigation.to?.url.searchParams.has('cancel')) {
+		if (
+			navigation.to?.url.searchParams.has('cancel') ||
+			(navigation.type === 'popstate' && navigation.to?.url.searchParams.has('cancel-popstate'))
+		) {
 			navigation.cancel();
 		} else {
-			void navigation.complete.then(() => {
-				window.shallow_navigation_log.push({ hook: 'complete' });
-			});
+			void navigation.complete.then(
+				() => window.shallow_navigation_log.push({ hook: 'complete' }),
+				() => window.shallow_navigation_log.push({ hook: 'aborted' })
+			);
 		}
 	});
 
@@ -33,6 +37,19 @@
 				hook: 'on',
 				shallow: navigation.shallow,
 				type: navigation.type
+			});
+		}
+
+		if (navigation.type === 'popstate' && navigation.to?.url.searchParams.has('defer')) {
+			return new Promise((resolve) => {
+				document.addEventListener(
+					'continue-navigation',
+					() =>
+						resolve(() => {
+							window.shallow_navigation_log.push({ hook: 'cleanup' });
+						}),
+					{ once: true }
+				);
 			});
 		}
 	});
