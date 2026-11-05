@@ -66,12 +66,12 @@ export interface Adapter {
 
 export interface AdapterViteConfig {
 	/**
-	 * Whether SvelteKit should use its Node-based preview server. Set to `false`
-	 * when the adapter provides its own preview implementation through a Vite plugin.
-	 * @default true
+	 * Set to `true` when the adapter provides its own `vite preview` implementation
+	 * through a Vite plugin, so that SvelteKit doesn't start its Node-based preview server.
+	 * @default false
 	 * @since 3.2.0
 	 */
-	preview?: boolean;
+	customPreview?: boolean;
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.

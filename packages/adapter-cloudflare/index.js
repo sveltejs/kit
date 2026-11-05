@@ -169,7 +169,7 @@ export default function (options = {}) {
 			}
 
 			return {
-				preview: false,
+				customPreview: true,
 				getRequest(options) {
 					const request = getRequest(options);
 					/** @type {import('@cloudflare/workers-types').Request} */ (
