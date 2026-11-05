@@ -11,15 +11,15 @@ test('worker', async ({ page }) => {
 
 test('cloudflare:workers', async ({ request }) => {
 	const res = await request.get(`${base}/env`);
-	expect(await res.text()).toBe('from wrangler.jsonc');
+	expect(await res.text()).toBe('from cloudflare.config.ts');
 	if (!process.env.DEV) {
-		expect(res.headers()['x-instrumented']).toBe('from wrangler.jsonc');
+		expect(res.headers()['x-instrumented']).toBe('from cloudflare.config.ts');
 	}
 });
 
-test('$app/env/private reads Wrangler vars', async ({ request }) => {
+test('$app/env/private reads text bindings from cloudflare.config.ts', async ({ request }) => {
 	const res = await request.get('/env/private');
-	expect(await res.text()).toBe('from wrangler.jsonc');
+	expect(await res.text()).toBe('from cloudflare.config.ts');
 });
 
 test('Request.cf', async ({ request }) => {

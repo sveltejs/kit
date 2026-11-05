@@ -1,8 +1,8 @@
-/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
+/** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { is_dev_or_build, validate_main } from './utils.js';
+import { is_dev_or_build, validate_entrypoint } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -16,35 +16,44 @@ const useful_cloudflare_plugins = new Set([
 ]);
 
 const useful_cloudflare_build_plugins = new Set([
-	'vite-plugin-cloudflare:output-config',
 	'vite-plugin-cloudflare:wasm-helper',
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
 /**
- * @param {string | undefined} config_path
- * @param {(config: WorkerConfig) => void} set_worker_config
+ * @param {(config: CloudflareConfig) => void} set_cloudflare_config
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config) {
+export function plugin_config(set_cloudflare_config) {
 	const cloudflare_plugins = cloudflare({
-		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			validate_main(config.main, config.configPath);
+			validate_entrypoint(config.worker.entrypoint);
 
-			// the plugin requires `main` to be populated, so we set it to avoid it
-			// trying to resolve the build-generated entry in the user's wrangler config
-			config.main = worker_entry;
-			config.assets ??= {};
-			config.assets.binding ??= 'ASSETS';
-
-			// Svelte and SvelteKit use `node:async_hooks`
-			if (!config.compatibility_flags.includes('nodejs_als')) {
-				config.compatibility_flags.push('nodejs_als');
+			const env = { ...config.worker.env };
+			if (!Object.values(env).some((binding) => binding.type === 'assets')) {
+				env.ASSETS = { type: 'assets' };
 			}
 
-			set_worker_config(config);
+			/** @type {CloudflareConfig} */
+			const customized = {
+				...config,
+				worker: {
+					...config.worker,
+					// the plugin needs an entrypoint for the Worker environment. Ours stands in
+					// for the build-generated entry that the adapter writes after the build
+					entrypoint: worker_entry,
+					// Svelte and SvelteKit use `node:async_hooks`
+					compatibilityFlags: [
+						...new Set([...(config.worker.compatibilityFlags ?? []), 'nodejs_als'])
+					],
+					env
+				}
+			};
+
+			set_cloudflare_config(customized);
+
+			return customized;
 		}
 	});
 
@@ -52,6 +61,7 @@ export function plugin_config(config_path, set_worker_config) {
 		(plugin) => plugin.name === 'vite-plugin-cloudflare:config'
 	);
 	const cloudflare_config_hook = cloudflare_config_plugin?.config;
+	const cloudflare_config_resolved_hook = cloudflare_config_plugin?.configResolved;
 
 	if (typeof cloudflare_config_hook !== 'function') {
 		throw new Error(
@@ -101,7 +111,7 @@ export function plugin_config(config_path, set_worker_config) {
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// points to our stand-in `main`
+								// points to our stand-in entrypoint
 								entries: undefined
 							},
 							build: {
@@ -129,8 +139,22 @@ export function plugin_config(config_path, set_worker_config) {
 					config.resolve.external = [];
 				}
 			},
-			// lets the Cloudflare output-config Vite plugin read the resolved Vite config
-			configResolved: cloudflare_config_plugin?.configResolved
+			configResolved(config) {
+				if (typeof cloudflare_config_resolved_hook !== 'function') return;
+
+				// the other Cloudflare plugins read the resolved Vite config from this hook, but it also
+				// points the environments' `build.outDir` at the build output, which the adapter writes
+				// itself, so we give it copies of the environments to leave SvelteKit's output alone
+				return cloudflare_config_resolved_hook.call(this, {
+					...config,
+					environments: Object.fromEntries(
+						Object.entries(config.environments).map(([name, environment]) => [
+							name,
+							{ ...environment, build: { ...environment.build } }
+						])
+					)
+				});
+			}
 		}
 	];
 }

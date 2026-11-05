@@ -1,4 +1,4 @@
-import type { PlatformProxy } from 'wrangler';
+import type { PlatformProxy } from '@cloudflare/platform-proxy';
 
 declare global {
 	var __sveltekit_cloudflare_platform: PlatformProxy | undefined;

@@ -1,22 +1,18 @@
 import { Adapter } from '@sveltejs/kit';
-import { GetPlatformProxyOptions } from 'wrangler';
+import { GetPlatformProxyOptions } from '@cloudflare/platform-proxy';
 
 export default function plugin(options?: AdapterOptions): Adapter;
 
 export interface AdapterOptions {
-	/**
-	 * Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/).
-	 */
-	config?: string;
 	/**
 	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
 	 * for non-matching asset requests.
 	 *
 	 * For Cloudflare Workers, the default behaviour is to return a null-body
 	 * 404-status response for non-matching assets requests. However, if the
-	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
-	 * Wrangler configuration setting is set to `"404-page"`, this page will be
-	 * served if a request fails to match an asset. If `assets.not_found_handling`
+	 * [`assets.notFoundHandling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
+	 * setting in `cloudflare.config.ts` is set to `"404-page"`, this page will be
+	 * served if a request fails to match an asset. If `assets.notFoundHandling`
 	 * is set to `"single-page-application"`, the adapter will render a SPA fallback
 	 * `index.html` page regardless of the `fallback` option specified.
 	 *
@@ -25,8 +21,13 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Config object passed to [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
-	 * during development.
+	 * Options passed to `getPlatformProxy` from `@cloudflare/platform-proxy`, which emulates
+	 * the bindings in `cloudflare.config.ts` during development.
 	 */
-	platformProxy?: GetPlatformProxyOptions;
+	platformProxy?: PlatformProxyOptions;
 }
+
+export type PlatformProxyOptions = Omit<
+	Extract<GetPlatformProxyOptions, { url?: undefined }>,
+	'configPath' | 'url' | 'secret'
+>;

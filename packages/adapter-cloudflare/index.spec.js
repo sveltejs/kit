@@ -2,21 +2,32 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { beforeEach, expect, test, vi } from 'vitest';
+import { afterAll, beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
-import { getPlatformProxy } from 'wrangler';
+import { getPlatformProxy } from '@cloudflare/platform-proxy';
 import adapter from './index.js';
 
 const dispose = vi.fn(() => Promise.resolve());
 
-vi.mock('wrangler', () => ({
-	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
-	unstable_getVarsForDev: vi.fn(() => ({})),
-	unstable_readConfig: vi.fn()
+vi.mock('@cloudflare/platform-proxy', () => ({
+	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose }))
 }));
+
+/**
+ * A Vite root with a `cloudflare.config.ts` so that the adapter starts a platform proxy
+ */
+const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-')));
+fs.writeFileSync(
+	path.join(root, 'cloudflare.config.ts'),
+	"export default { worker: { name: 'app', compatibilityDate: '2026-08-06' } };"
+);
 
 beforeEach(() => {
 	vi.clearAllMocks();
+});
+
+afterAll(() => {
+	fs.rmSync(root, { recursive: true, force: true });
 });
 
 /**
@@ -44,6 +55,7 @@ test.each(['https://cdn.example.com', '/assets'])(
 function create_server() {
 	const { plugins } = get_vite_config();
 	return createServer({
+		root,
 		configFile: false,
 		logLevel: 'silent',
 		plugins,
@@ -169,31 +181,42 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
 });
 
-test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
-	fs.writeFileSync(
-		path.join(root, 'wrangler.jsonc'),
-		JSON.stringify({ name: 'app', compatibility_date: '2025-01-01', env: { staging: {} } })
-	);
-	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
+test('starts the platform proxy with the Vite mode and the root `cloudflare.config.ts`', async () => {
+	const { plugins } = get_vite_config();
+	const server = await createServer({
+		root,
+		mode: 'staging',
+		configFile: false,
+		logLevel: 'silent',
+		plugins,
+		server: { middlewareMode: true }
+	});
 
+	expect(getPlatformProxy).toHaveBeenCalledWith({
+		configPath: path.join(root, 'cloudflare.config.ts'),
+		mode: 'staging'
+	});
+
+	await server.close();
+});
+
+test('starts an empty platform proxy without a `cloudflare.config.ts`', async () => {
+	const empty_root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
 	try {
 		const { plugins } = get_vite_config();
 		const server = await createServer({
-			root,
-			mode: 'staging',
+			root: empty_root,
 			configFile: false,
 			logLevel: 'silent',
 			plugins,
 			server: { middlewareMode: true }
 		});
 
-		expect(getPlatformProxy).toHaveBeenCalledWith(
-			expect.objectContaining({ environment: 'staging' })
-		);
+		expect(getPlatformProxy).not.toHaveBeenCalled();
+		expect(globalThis.__sveltekit_cloudflare_platform?.env).toEqual({});
 
 		await server.close();
 	} finally {
-		fs.rmSync(root, { recursive: true, force: true });
+		fs.rmSync(empty_root, { recursive: true, force: true });
 	}
 });
