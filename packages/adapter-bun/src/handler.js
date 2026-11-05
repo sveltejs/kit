@@ -1,6 +1,6 @@
 /** @import { Server as BunServer } from 'bun' */
 import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
-import { serve_static, server_assets } from './routes.js';
+import { serve_static, server_assets } from './assets.js';
 import { env, number_env, origin_env } from './env.js';
 
 if (origin && env('ORIGIN') !== undefined) {
@@ -59,8 +59,7 @@ export async function handler(request, bun_server) {
  */
 function normalize_request(request, url) {
 	try {
-		// an empty Host header makes request.url relative, so parsing belongs in the try
-		const url = new URL(request.url);
+		if (url === null) throw new TypeError(`Invalid URL: ${request.url}`);
 		const request_origin = public_origin || get_origin(request, url);
 		return request_origin === url.origin
 			? request
