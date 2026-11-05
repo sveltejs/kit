@@ -11,6 +11,7 @@ Sometimes, you may need to observe how your application is behaving in order to 
 - The [`handle`](hooks#handle) hook and `handle` functions running in a [`sequence`](@sveltejs-kit-hooks#sequence) (these will show up as children of each other and the root `handle` hook)
 - Server [`load`](load) functions and universal `load` functions when they're run on the server
 - [Form actions](form-actions)
+- [`+server`](routing#server) handlers
 - [Remote functions](remote-functions)
 
 Just telling SvelteKit to emit spans won't get you far, though — you need to actually collect them somewhere to be able to view them. SvelteKit provides `src/instrumentation.server.ts` as a place to write your tracing setup and instrumentation code. If this file exists, it is loaded before your application code (provided your deployment platform supports it and your adapter is aware of it).
@@ -37,7 +38,7 @@ export default defineConfig({
 
 ## Augmenting the built-in tracing
 
-SvelteKit provides access to the `root` span and the `current` span on the request event. The root span is the one associated with your root `handle` function, and the current span could be associated with `handle`, `load`, a form action, or a remote function, depending on the context. You can annotate these spans with any attributes you wish to record:
+SvelteKit provides access to the `root` span and the `current` span on the request event. The root span is the one associated with your root `handle` function, and the current span could be associated with `handle`, `load`, a form action, a `+server` handler, or a remote function, depending on the context. You can annotate these spans with any attributes you wish to record:
 
 ```js
 /// file: #lib/authenticate.ts

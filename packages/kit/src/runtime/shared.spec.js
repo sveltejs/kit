@@ -1,5 +1,11 @@
-import { beforeEach, describe, expect, test } from 'vitest';
-import { parse_remote_arg, stringify_command_arg, stringify_remote_arg } from './shared.js';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import {
+	parse_remote_arg,
+	stringify_command_arg,
+	stringify_remote_arg,
+	validate_depends,
+	validate_load_response
+} from './shared.js';
 import { init_transport } from '#app/internal/transport';
 
 class Thing {
@@ -18,6 +24,36 @@ const transport = {
 		decode: (value) => new Thing(value.a, value.z)
 	}
 };
+
+test('invalid load results include the computed location and type', () => {
+	for (const [value, type] of [
+		[[], 'an array'],
+		[1, 'a number'],
+		[new Response(), 'a Response object']
+	]) {
+		expect(() => validate_load_response(value, 'in test.js')).toThrowKitError(
+			'load_invalid_response',
+			{ contains: ['in test.js', /** @type {string} */ (type)] }
+		);
+	}
+	for (const value of [null, undefined, {}])
+		expect(() => validate_load_response(value)).not.toThrow();
+});
+
+test('depends warns for Firefox-specific schemes without adding deduplication', () => {
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	try {
+		validate_depends('/page', 'app:posts');
+		expect(warn).not.toHaveBeenCalled();
+		for (let i = 0; i < 2; i++) validate_depends('/page', 'jar:posts');
+		expect(warn).toHaveBeenCalledTimes(2);
+		expect(warn).toContainKitDiagnostic('depends_special_scheme', {
+			contains: ['/page', 'jar:posts']
+		});
+	} finally {
+		warn.mockRestore();
+	}
+});
 
 /** @param {Array<[any, any]>} entries */
 function map(entries) {
@@ -203,9 +239,9 @@ describe('stringify_remote_arg', () => {
 	});
 
 	test('rejects RegExp arguments', () => {
-		expect(() => stringify_remote_arg(/a/)).toThrow(
-			'Regular expressions are not valid remote function arguments'
-		);
+		expect(() => stringify_remote_arg(/a/)).toThrowKitError('remote_argument_unsupported', {
+			contains: ['Regular expressions']
+		});
 	});
 
 	test('rejects class instances via devalue', () => {
@@ -227,6 +263,12 @@ describe('stringify_remote_arg', () => {
 });
 
 describe('stringify_command_arg', () => {
+	test('rejects promises without changing file serialization', async () => {
+		await expect(stringify_command_arg({ value: Promise.resolve(1) })).rejects.toThrowKitError(
+			'remote_argument_unsupported',
+			{ contains: ['Promises'] }
+		);
+	});
 	test('preserves input ordering', async () => {
 		const a = await stringify_command_arg({ limit: 10, offset: 20 });
 		const b = await stringify_command_arg({ offset: 20, limit: 10 });
@@ -250,6 +292,15 @@ describe('stringify_command_arg', () => {
 });
 
 describe('parse_remote_arg', () => {
+	test.each([
+		['[["__skram",1],null]', 'Invalid data for Map reviver'],
+		['[["__skram",1],[2],null]', 'Invalid data for Map reviver'],
+		['[["__skras",1],null]', 'Invalid data for Set reviver'],
+		['[["__skras",1],[2],null]', 'Invalid data for Set reviver'],
+		['[["__skraf",1],null]', 'Invalid data for File reviver']
+	])('malformed wire payload %s retains its opaque reviver failure', (payload, message) => {
+		expect(() => parse_remote_arg(Buffer.from(payload).toString('base64url'))).toThrow(message);
+	});
 	test('returns undefined for an empty payload', () => {
 		expect(parse_remote_arg('')).toBeUndefined();
 	});

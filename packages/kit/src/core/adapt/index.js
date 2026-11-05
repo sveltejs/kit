@@ -1,5 +1,6 @@
 import { styleText } from 'node:util';
 import { create_builder } from './builder.js';
+import * as w from '../../messages/build-warnings.js';
 
 /**
  * @param {import('types').ValidatedConfig} config
@@ -37,9 +38,7 @@ export async function adapt(
 			get kit() {
 				if (!warned) {
 					warned = true;
-					log.warn(
-						`Reading \`config.kit\` inside adapters is deprecated — it should access configuration on the \`config\` object directly. You may need to update your adapter`
-					);
+					w.adapter_config_kit_deprecated();
 				}
 
 				return config;

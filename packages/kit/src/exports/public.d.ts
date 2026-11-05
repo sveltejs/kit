@@ -133,6 +133,11 @@ export interface ActionFailure<T = undefined> {
 export interface ValidationError {
 	/** The validation issues */
 	issues: StandardSchemaV1.Issue[];
+	/** Information about the remote function that failed validation */
+	remote?: {
+		name?: string;
+		file?: string;
+	};
 }
 
 type UnpackValidationError<T> =
@@ -699,7 +704,7 @@ export interface RequestEvent<
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
 		root: Span;
-		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 		current: Span;
 	};
 

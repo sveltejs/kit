@@ -6,7 +6,7 @@ const als = new AsyncLocalStorage();
 const proxy = globalThis.__sveltekit_cloudflare_platform;
 
 function get_current_env() {
-	return als.getStore() ?? proxy.env;
+	return als.getStore() ?? proxy?.env;
 }
 
 /** @typedef {typeof CloudflareWorkersModule} Module */
@@ -136,6 +136,12 @@ class Span {
 		return this;
 	}
 	setAttributes() {
+		return this;
+	}
+	setStatus() {
+		return this;
+	}
+	updateName() {
 		return this;
 	}
 	end() {}

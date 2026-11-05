@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
@@ -51,6 +51,16 @@ test.describe('remote functions', () => {
 		await expect(page.locator('h1')).toHaveText('lib says hello');
 		await page.getByRole('button', { name: 'call remote function' }).click();
 		await expect(page.locator('p')).toHaveText('lib says client');
+	});
+
+	test('hydrated data from package remote functions is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(0);
 	});
 
 	test('packages can contain ordinary remote.js files', async ({ page }) => {
@@ -458,14 +468,16 @@ test.describe('remote function mutations', () => {
 	test('command is blocked inside load functions', async ({ page }) => {
 		const response = await page.goto('/remote/server-load-command');
 		expect(response?.status()).toBe(500);
-		await expect(page.locator('#message')).toContainText('Cannot call a command');
+		await expect(page.locator('#message')).toContainText('remote_command_method');
 	});
 
 	test('command is blocked inside handle hook with GET', async ({ request }) => {
 		const response = await request.get('/remote/hook-command');
 		expect(response.status()).toBe(500);
 		const data = await response.json();
-		expect(data.error).toContain('Cannot call a command');
+		expect(String(data.error)).toContainKitDiagnostic('remote_command_method', {
+			contains: ['GET']
+		});
 	});
 
 	test('prerendered entries use prerender cache while live entries refetch', async ({ page }) => {

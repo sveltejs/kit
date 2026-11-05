@@ -17,6 +17,7 @@
 	},
 	"include": [
 		"index.js",
+		"index.spec.js",
 		"src",
 		"utils.js",
 		"utils.spec.js",
