@@ -169,6 +169,11 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(gzip.headers.get('etag')).toBe('"abc-gz"');
 	expect(file).toHaveBeenLastCalledWith(`${dir}/client/app.js.gz`);
 
+	const weighted = route.GET(
+		new Request('http://localhost/app.js', { headers: { 'accept-encoding': 'br;q=0.5, gzip' } })
+	);
+	expect(weighted.headers.get('content-encoding')).toBe('gzip');
+
 	const any = route.GET(
 		new Request('http://localhost/app.js', { headers: { 'accept-encoding': '*' } })
 	);
