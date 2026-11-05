@@ -645,7 +645,7 @@ function generate_params_type(params, outdir, config) {
 	return `{ ${params
 		.map(
 			(param) =>
-				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
+				`${/^[a-zA-Z_$][\w$]*$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
 					param.matcher
 						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'
