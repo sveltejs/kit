@@ -53,11 +53,12 @@ export function forked(module, callback) {
 	 */
 	return function (opts) {
 		return new Promise((fulfil, reject) => {
+			const { FORCE_COLOR, ...env } = process.env;
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
-					...process.env,
+					...env,
 					SVELTEKIT_FORK: 'true',
-					FORCE_COLOR: '1'
+					...(env.NO_COLOR === undefined ? { FORCE_COLOR: FORCE_COLOR ?? '1' } : {})
 				}
 			});
 
