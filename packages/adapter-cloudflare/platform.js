@@ -5,22 +5,27 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getPlatformProxy } from '@cloudflare/platform-proxy';
+import { custom_worker_environment } from './config.js';
 import { is_dev_or_build } from './utils.js';
 
 /**
  * @param {PlatformProxyOptions} user_options
  * @param {string} stub_import
- * @returns {Plugin}
+ * @param {() => boolean} has_custom_worker whether a custom Worker runs in workerd during development
+ * @returns {{ plugin: Plugin; attach: (url: string) => Promise<void> }}
  */
-export function plugin_platform(user_options, stub_import) {
+export function plugin_platform(user_options, stub_import, has_custom_worker) {
 	/** @type {PlatformProxyOptions & { configPath?: string }} */
 	let options = {};
 
-	// shared so that concurrent servers start one proxy and only the last close disposes it
-	const setup = async () => {
+	/**
+	 * Shared so that concurrent servers start one proxy and only the last close disposes it
+	 * @param {() => Promise<PlatformProxy>} start
+	 */
+	const setup = async (start) => {
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
-			proxy: start_platform_proxy(options)
+			proxy: start()
 		});
 		shared.servers += 1;
 		try {
@@ -52,7 +57,12 @@ export function plugin_platform(user_options, stub_import) {
 		globalThis.__sveltekit_cloudflare_platform = undefined;
 		await (await shared.proxy).dispose();
 	};
-	return {
+
+	/** @type {Promise<void> | undefined} */
+	let attached;
+
+	/** @type {Plugin} */
+	const plugin = {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		apply: is_dev_or_build,
 		configResolved(config) {
@@ -63,9 +73,24 @@ export function plugin_platform(user_options, stub_import) {
 				...user_options
 			};
 		},
-		configureServer: setup,
+		configureServer() {
+			// a custom Worker's runtime only starts with the dev server, so we attach to it
+			// once the first request reaches SvelteKit
+			if (has_custom_worker()) return;
+			return setup(() => start_platform_proxy(options));
+		},
 		// a restarting server is set up before the old one closes, so the proxy survives
-		closeServer: dispose,
+		async closeServer() {
+			if (has_custom_worker()) {
+				if (!attached) return;
+				attached = undefined;
+			}
+			await dispose();
+		},
+		applyToEnvironment(environment) {
+			// a custom Worker imports the real `cloudflare:workers` module in workerd
+			return environment.name !== custom_worker_environment;
+		},
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {
@@ -75,6 +100,16 @@ export function plugin_platform(user_options, stub_import) {
 				};
 			}
 		}
+	};
+
+	return {
+		plugin,
+		attach: (url) =>
+			(attached ??= setup(() => getPlatformProxy({ url })).catch((error) => {
+				// let the next request retry
+				attached = undefined;
+				throw error;
+			}))
 	};
 }
 

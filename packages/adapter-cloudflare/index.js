@@ -1,5 +1,5 @@
 /** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
-/** @import { ResolvedConfig } from 'vite' */
+/** @import { EnvironmentOptions, ResolvedConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -11,6 +11,7 @@ import {
 	writeRootConfig,
 	writeWorkerConfig
 } from '@cloudflare/build-output-utils';
+import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
@@ -19,7 +20,8 @@ import {
 	generate_redirects,
 	append_headers,
 	is_dev_or_build,
-	sync_process_env
+	sync_process_env,
+	forwarded_cf
 } from './utils.js';
 
 const files = fileURLToPath(new URL('./files', import.meta.url));
@@ -34,6 +36,10 @@ export default function (options = {}) {
 	let vite_config;
 	/** @type {CloudflareConfig} */
 	let cloudflare_config;
+	/** @type {string | undefined} */
+	let custom_entrypoint;
+	/** @type {EnvironmentOptions} */
+	let ssr_environment = {};
 
 	if (/** @type {Record<string, unknown>} */ (options).config !== undefined) {
 		throw new Error(
@@ -92,15 +98,16 @@ export default function (options = {}) {
 			}
 
 			// worker
-			const worker_dest_dir = path.dirname(worker_dest);
+			// with a custom Worker, the generated one becomes a module that it imports
+			const generated_dest = custom_entrypoint ? `${worker_dir}/sveltekit.js` : worker_dest;
 			builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
-			builder.copy(`${files}/worker.js`, worker_dest, {
+			builder.copy(`${files}/worker.js`, generated_dest, {
 				replace: {
 					// the paths might be Windows paths, so we need to convert them to POSIX paths
 					// or else the backslashes will be interpreted as escape characters and create
 					// an incorrect import path. We also need to ensure the relative imports start
 					// with ./ so that they aren't resolved as package imports
-					SERVER: `./${posixify(path.relative(worker_dest_dir, worker_dir))}/server.js`,
+					SERVER: `./${posixify(path.relative(path.dirname(generated_dest), worker_dir))}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
 					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
@@ -108,9 +115,18 @@ export default function (options = {}) {
 					ASSETS_BINDING: get_assets_binding(worker)
 				}
 			});
+			if (custom_entrypoint) {
+				await bundle_custom_worker({
+					config: vite_config,
+					entrypoint: path.resolve(root, custom_entrypoint),
+					environment: ssr_environment,
+					out_dir: worker_dir,
+					generated: `./${path.basename(generated_dest)}`
+				});
+			}
 			if (builder.hasServerInstrumentationFile()) {
 				const initializer = builder.createInstrumentationInitializer({
-					outputDirectory: worker_dest_dir,
+					outputDirectory: worker_dir,
 					serverDirectory: server_dir,
 					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
 				});
@@ -119,8 +135,9 @@ export default function (options = {}) {
 					instrumentation: `${server_dir}/instrumentation.server.js`,
 					initializer,
 					module: {
+						// a custom Worker can have named exports, such as Durable Objects
 						generateText: ({ instrumentation, start, initializer }) =>
-							`import './${initializer}';\nimport './${instrumentation}';\nexport { default } from './${start}';\n`
+							`import './${initializer}';\nimport './${instrumentation}';\nexport * from './${start}';\nexport { default } from './${start}';\n`
 					}
 				});
 			}
@@ -175,13 +192,20 @@ export default function (options = {}) {
 				);
 			}
 
+			const platform = plugin_platform(
+				options.platformProxy ?? {},
+				stub_import,
+				() => custom_entrypoint !== undefined
+			);
+
 			return {
 				customPreview: true,
 				getRequest(options) {
 					const request = getRequest(options);
 					/** @type {import('@cloudflare/workers-types').Request} */ (
 						/** @type {unknown} */ (request)
-					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
+					).cf =
+						forwarded_cf.get(options.request) ?? globalThis.__sveltekit_cloudflare_platform?.cf;
 					return request;
 				},
 				plugins: [
@@ -191,7 +215,12 @@ export default function (options = {}) {
 							vite_config = config;
 						}
 					},
-					...plugin_config((config) => (cloudflare_config = config)),
+					...plugin_config({
+						set_config: (config) => (cloudflare_config = config),
+						set_custom_entrypoint: (entrypoint) => (custom_entrypoint = entrypoint),
+						set_ssr_environment: (environment) => (ssr_environment = environment),
+						attach_platform: platform.attach
+					}),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
 						apply: is_dev_or_build,
@@ -209,11 +238,90 @@ export default function (options = {}) {
 							}
 						}
 					},
-					plugin_platform(options.platformProxy ?? {}, stub_import)
+					platform.plugin
 				]
 			};
 		}
 	};
+}
+
+/**
+ * Bundles the custom Worker that `entrypoint` in `cloudflare.config.ts` points to, and
+ * points its `@sveltejs/adapter-cloudflare/worker` import at the generated Worker
+ * @param {{
+ *   config: ResolvedConfig;
+ *   entrypoint: string;
+ *   environment: EnvironmentOptions;
+ *   out_dir: string;
+ *   generated: string;
+ * }} options
+ */
+async function bundle_custom_worker({ config, entrypoint, environment, out_dir, generated }) {
+	const { build } = await import('vite');
+
+	const virtual_id = '\0virtual:@sveltejs/adapter-cloudflare/worker';
+	// a bare import that we leave external and then point at the generated Worker
+	const placeholder = `__sveltekit_cloudflare_worker_${crypto.randomUUID()}__`;
+
+	await build({
+		configFile: false,
+		root: config.root,
+		mode: config.mode,
+		logLevel: 'warn',
+		publicDir: false,
+		resolve: { alias: config.resolve.alias },
+		plugins: [
+			{
+				name: 'vite-plugin-sveltekit-adapter-cloudflare-worker',
+				// runs before Vite resolves the import to the module that the Worker uses in development
+				enforce: 'pre',
+				resolveId: {
+					filter: { id: exactRegex('@sveltejs/adapter-cloudflare/worker') },
+					handler: () => virtual_id
+				},
+				load: {
+					filter: { id: exactRegex(virtual_id) },
+					handler: () =>
+						`import worker from '${placeholder}';\n` +
+						'export const fetch = (request, env, ctx) => worker.fetch(request, env, ctx);\n'
+				}
+			}
+		],
+		environments: {
+			ssr: {
+				define: environment.define,
+				resolve: {
+					conditions: environment.resolve?.conditions,
+					builtins: environment.resolve?.builtins,
+					noExternal: true,
+					external: []
+				},
+				build: {
+					target: environment.build?.target,
+					rolldownOptions: {
+						platform: environment.build?.rolldownOptions?.platform,
+						external: [placeholder]
+					}
+				}
+			}
+		},
+		build: {
+			ssr: entrypoint,
+			outDir: out_dir,
+			emptyOutDir: false,
+			copyPublicDir: false,
+			minify: false,
+			rolldownOptions: {
+				output: {
+					entryFileNames: 'index.js',
+					codeSplitting: false
+				}
+			}
+		}
+	});
+
+	const index = `${out_dir}/index.js`;
+	fs.writeFileSync(index, fs.readFileSync(index, 'utf-8').replaceAll(placeholder, generated));
 }
 
 /**

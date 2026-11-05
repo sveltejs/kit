@@ -99,5 +99,8 @@ catalogs:
 overrides:
   # TODO: remove once @cloudflare/platform-proxy is on npm; its pkg.pr.new miniflare pins a workerd newer than minimumReleaseAge allows
   workerd: 1.20261103.1
+  # TODO: remove once @cloudflare/platform-proxy is on npm; the Cloudflare Vite plugin's runtime must use the
+  # same Miniflare as @cloudflare/platform-proxy so the proxy can attach to it during development
+  miniflare: https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49
   # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
   # if you want to introduce an override, make sure to add it to all of them too
