@@ -1,5 +1,9 @@
 # SvelteKit Contributing Guide
 
+## Security policy
+
+See https://github.com/sveltejs/kit/security/policy.
+
 ## Preparing
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:

@@ -270,7 +270,7 @@ const options = {
 
 	typescript: deprecate(
 		object({
-			config: fun((config) => config)
+			config: fun()
 		}),
 		w.config_option_deprecated_typescript
 	),
@@ -448,11 +448,10 @@ function list(options, fallback = options[0]) {
 }
 
 /**
- * @param {(...args: any) => any} fallback
  * @returns {Validator}
  */
-function fun(fallback) {
-	return validate(fallback, (input, keypath) => {
+function fun() {
+	return validate(undefined, (input, keypath) => {
 		if (typeof input !== 'function') {
 			e.config_expected_function({ keypath });
 		}

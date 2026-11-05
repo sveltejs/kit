@@ -507,6 +507,11 @@ test.describe('SPA mode / no SSR', () => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
 	});
+
+	test('afterNavigate has no origin on start', async ({ page }) => {
+		await page.goto('/no-ssr/after-navigate');
+		await expect(page.locator('h2')).toHaveText('from: null');
+	});
 });
 
 test.describe('$app/state', () => {
@@ -1408,6 +1413,30 @@ test.describe('env', () => {
 });
 
 test.describe('Snapshots', () => {
+	test('restores function snapshots when hydration falls back to mounting an error page', async ({
+		page
+	}) => {
+		await page.goto('/errors/load-client?snapshot');
+		await expect(page.locator('h1')).toHaveText('500');
+		await page.locator('[data-testid="stale-input"]').fill('error value');
+
+		await page.reload();
+		await expect(page.locator('h1')).toHaveText('500');
+		await expect(page.locator('[data-testid="stale-input"]')).toHaveValue('error value');
+	});
+
+	test('restores function snapshots on reload once after afterNavigate when ssr is disabled', async ({
+		page
+	}) => {
+		await page.goto('/no-ssr/snapshot/helper');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate');
+		await page.locator('input').fill('reload value');
+
+		await page.reload();
+		await expect(page.locator('input')).toHaveValue('reload value');
+		await expect(page.locator('[data-testid="order"]')).toHaveText('afterNavigate,restore');
+	});
+
 	test('recovers snapshotted data', async ({ page, clicknav }) => {
 		await page.goto('/snapshot/a');
 
@@ -2792,5 +2821,27 @@ test.describe('routing', () => {
 		await page.click('a[href="/routing"]');
 		await expect(page.locator('h1')).toHaveText('Great success!');
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
+	});
+
+	test('does not load code from another origin for a pathname starting with //', async ({
+		page,
+		app
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		await page.route('**://attacker.example/**', (route) => {
+			requests.push(route.request().url());
+			return route.fulfill({
+				contentType: 'text/javascript',
+				headers: { 'access-control-allow-origin': '*' },
+				body: 'window.pwned = true; export const route = undefined; export const params = {};'
+			});
+		});
+
+		await page.goto('/routing/a');
+		await app.goto('/routing/..//attacker.example/x').catch(() => {});
+
+		expect(requests).toEqual([]);
+		expect(await page.evaluate(() => /** @type {any} */ (window).pwned)).toBeUndefined();
 	});
 });

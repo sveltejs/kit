@@ -84,9 +84,9 @@ export +++async+++ function load({ fetch }) {
 
 ## paths are now relative by default
 
-In SvelteKit 1, `%sveltekit.assets%` in your `app.html` was replaced with a relative path by default (i.e. `.` or `..` or `../..` etc, depending on the path being rendered) during server-side rendering unless the [`paths.relative`](configuration#paths) config option was explicitly set to `false`. The same was true for `base` and `assets` imported from `$app/paths`, but only if the `paths.relative` option was explicitly set to `true`.
+In SvelteKit 1, `%sveltekit.assets%` in your `app.html` was replaced with a relative path by default (i.e. `.` or `..` or `../..` etc, depending on the path being rendered) during server-side rendering unless the [`paths.relative`](@sveltejs-kit-vite#paths) config option was explicitly set to `false`. The same was true for `base` and `assets` imported from `$app/paths`, but only if the `paths.relative` option was explicitly set to `true`.
 
-This inconsistency is fixed in version 2. Paths are either always relative or always absolute, depending on the value of [`paths.relative`](configuration#paths). It defaults to `true` as this results in more portable apps: if the `base` is something other than the app expected (as is the case when viewed on the [Internet Archive](https://archive.org/), for example) or unknown at build time (as is the case when deploying to [IPFS](https://ipfs.tech/) and so on), fewer things are likely to break.
+This inconsistency is fixed in version 2. Paths are either always relative or always absolute, depending on the value of [`paths.relative`](@sveltejs-kit-vite#paths). It defaults to `true` as this results in more portable apps: if the `base` is something other than the app expected (as is the case when viewed on the [Internet Archive](https://archive.org/), for example) or unknown at build time (as is the case when deploying to [IPFS](https://ipfs.tech/) and so on), fewer things are likely to break.
 
 ## Server fetches are not trackable anymore
 
@@ -143,7 +143,7 @@ If a form contains an `<input type="file">` but does not have an `enctype="multi
 
 ## Generated `tsconfig.json` is more strict
 
-Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](configuration#alias) option of the SvelteKit plugin in your `vite.config.js` instead, to also create a corresponding alias for the bundler.
+Previously, the generated `tsconfig.json` was trying its best to still produce a somewhat valid config when your `tsconfig.json` included `paths` or `baseUrl`. In SvelteKit 2, the validation is more strict and will warn when you use either `paths` or `baseUrl` in your `tsconfig.json`. These settings are used to generate path aliases and you should use [the `alias` config](@sveltejs-kit-vite#alias) option of the SvelteKit plugin in your `vite.config.js` instead, to also create a corresponding alias for the bundler.
 
 ## `getRequest` no longer throws errors
 

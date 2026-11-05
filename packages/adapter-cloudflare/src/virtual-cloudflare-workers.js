@@ -138,6 +138,12 @@ class Span {
 	setAttributes() {
 		return this;
 	}
+	setStatus() {
+		return this;
+	}
+	updateName() {
+		return this;
+	}
 	end() {}
 	recordException() {}
 }

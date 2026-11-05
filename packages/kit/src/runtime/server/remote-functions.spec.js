@@ -167,3 +167,39 @@ test.each([
 		);
 	}
 );
+
+test('validation error passes remote info to handleError', async () => {
+	const { ValidationError } = await import('@sveltejs/kit/internal');
+	const handleError = vi.fn();
+	set_hooks(/** @type {any} */ ({ handleError }));
+	const issues = [{ message: 'Expected string' }];
+	const fn = Object.assign(
+		() => {
+			throw new ValidationError(issues, { name: 'myFn', file: 'src/routes/foo.remote.js' });
+		},
+		{ __: { type: 'command', name: 'myFn', file: 'src/routes/foo.remote.js' } }
+	);
+	set_manifest(
+		/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { myFn: fn } }) } })
+	);
+	const response = await handle_remote_call(
+		/** @type {any} */ ({
+			request: new Request('http://localhost/_app/remote/hash/myFn', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ payload: '' })
+			}),
+			tracing: { current: { setAttributes: vi.fn() } }
+		}),
+		/** @type {any} */ ({ remote: {} }),
+		'hash/myFn'
+	);
+	expect(response.status).toBe(200);
+	expect(handleError).toHaveBeenCalledWith(
+		expect.objectContaining({
+			kind: 'validation',
+			issues,
+			remote: { name: 'myFn', file: 'src/routes/foo.remote.js' }
+		})
+	);
+});

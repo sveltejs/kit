@@ -1,5 +1,53 @@
 # @sveltejs/kit
 
+## 3.1.1
+
+### Patch Changes
+
+- fix: return a 400 response instead of throwing when `reroute` rewrites a malformed pathname ([`1d21a3b`](https://github.com/sveltejs/kit/commit/1d21a3b0beca23f044f02789926e011a904f8959))
+
+- fix: restore function snapshots on reload when SSR is disabled ([#17477](https://github.com/sveltejs/kit/pull/17477))
+
+- fix: prevent separate non-exported `query.batch` functions from sharing a batch ([`3529813`](https://github.com/sveltejs/kit/commit/352981356b22f775b0fbe6475fd19c7680ab5c9a))
+
+- fix: reuse the original `fetch` across dev server reloads ([#17548](https://github.com/sveltejs/kit/pull/17548))
+
+- fix: avoid adding a file watcher while loading `src/env` ([#17502](https://github.com/sveltejs/kit/pull/17502))
+
+- fix: parse remote form submissions in linear time ([`d593e7e`](https://github.com/sveltejs/kit/commit/d593e7e8960cd7e97e81cb834d7fa5c56d821944))
+
+- fix: prevent server-side route resolution from loading code from another origin for pathnames starting with `//` ([`dd63fd1`](https://github.com/sveltejs/kit/commit/dd63fd1a2e52221e2024e3c59d6d15f7f0afca64))
+
+- fix: preserve service worker sourcemaps when injecting env ([#17566](https://github.com/sveltejs/kit/pull/17566))
+
+- fix: prevent server-only modules from being imported into browser code via `src/params.js` ([`ae07803`](https://github.com/sveltejs/kit/commit/ae07803806f75b8b5662ae4ab92934ca1356fd84))
+
+- fix: avoid injecting a non-serializable TypeScript config callback by default ([#17512](https://github.com/sveltejs/kit/pull/17512))
+
+- fix: report actionable errors for remote modules in server-only locations ([#17567](https://github.com/sveltejs/kit/pull/17567))
+
+## 3.1.0
+
+### Minor Changes
+
+- feat: support `report-sha256`/`report-sha384`/`report-sha512` CSP hash-reporting keywords ([#17398](https://github.com/sveltejs/kit/pull/17398))
+
+- feat: emit a `sveltekit.endpoint` span for `+server` handlers when server tracing is enabled ([#17325](https://github.com/sveltejs/kit/pull/17325))
+
+### Patch Changes
+
+- fix: don't treat every module as server-only when the project is inside a `server` directory ([#17376](https://github.com/sveltejs/kit/pull/17376))
+
+- fix: continue deployment recovery when service worker updates fail ([#17440](https://github.com/sveltejs/kit/pull/17440))
+
+- fix: infer prerendered MIME types from generated files ([#17381](https://github.com/sveltejs/kit/pull/17381))
+
+- fix: leave generated files alone when their contents are unchanged ([#17310](https://github.com/sveltejs/kit/pull/17310))
+
+- fix: leave focus in the parent page when an app in an unfocused iframe starts or navigates ([#17297](https://github.com/sveltejs/kit/pull/17297))
+
+- fix: don't warn about Storybook's Vite plugins that use `transformIndexHtml` ([#17373](https://github.com/sveltejs/kit/pull/17373))
+
 ## 3.0.1
 
 ### Patch Changes

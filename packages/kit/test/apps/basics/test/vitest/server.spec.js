@@ -678,9 +678,10 @@ describe('Errors', () => {
 		expect(data.nodes[0].type).toBe('data');
 		expect(data.nodes[0].data).toContain('rootlayout');
 
+		// a data request without the invalidation parameter still gets a data response
 		const page_response = await get('/this-route-does-not-exist/__data.json');
 		expect(page_response.status).toBe(404);
-		expect(page_response.headers.get('content-type')).toContain('text/html');
+		expect(page_response.headers.get('content-type')).toContain('application/json');
 
 		// a single-node request that invalidates nothing is not an error-page data request
 		const crafted_response = await get(
@@ -937,6 +938,16 @@ describe('reroute', () => {
 	test('Returns a 500 response if reroute throws an error on the server', async () => {
 		const response = await get('/reroute/error-handling/server-error');
 		expect(response.status).toBe(500);
+	});
+
+	test('Returns a 400 response if reroute rewrites a malformed pathname', async () => {
+		const response = await get('/%c0%ae/reroute/malformed');
+		if (dev) {
+			// Vite rejects malformed URIs before they reach SvelteKit
+			expect(response.status).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(response.status).toBe(400);
+		}
 	});
 });
 

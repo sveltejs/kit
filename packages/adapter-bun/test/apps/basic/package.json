@@ -6,7 +6,6 @@
 		"dev": "vite dev",
 		"build": "MY_CUSTOM_PORT=4174 vite build",
 		"preview": "MY_CUSTOM_PORT=4174 bun ./build",
-		"prepare": "svelte-kit sync || echo ''",
 		"test:platform": "playwright test"
 	},
 	"dependencies": {

@@ -123,7 +123,7 @@ const get_defaults = (prefix = '') => ({
 		register: true
 	},
 	tracing: { server: false },
-	typescript: {},
+	typescript: { config: undefined },
 	paths: {
 		base: '',
 		assets: '',
@@ -151,6 +151,29 @@ test('fills in defaults', () => {
 	defaults.version.name = validated.version.name;
 
 	expect(validated).toEqual(defaults);
+});
+
+test('validates explicit typescript.config callbacks', () => {
+	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		const transform = () => {};
+		expect(validate_config({ typescript: { config: transform } }).typescript.config).toBe(
+			transform
+		);
+		expect(warn).toContainKitDiagnostic('config_option_deprecated_typescript');
+
+		assert_logs_error_and_throws(
+			() => {
+				// @ts-expect-error - given value expected to throw
+				validate_config({ typescript: { config: {} } });
+			},
+			'config_expected_function',
+			['config.typescript.config']
+		);
+	} finally {
+		warn.mockRestore();
+	}
 });
 
 test('errors on invalid values', () => {

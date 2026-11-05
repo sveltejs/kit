@@ -120,6 +120,11 @@ declare module '@sveltejs/kit' {
 	export interface ValidationError {
 		/** The validation issues */
 		issues: StandardSchemaV1.Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	}
 
 	type UnpackValidationError<T> =
@@ -970,9 +975,12 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	type ValidatedConfig = RecursiveRequired<
+		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+	> & {
 		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
+		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
@@ -1257,6 +1265,11 @@ declare module '@sveltejs/kit/hooks' {
 		kind: 'validation';
 		error: { status: number; message: string };
 		issues: Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	};
 
 	/**
@@ -1275,6 +1288,8 @@ declare module '@sveltejs/kit/hooks' {
 					error: CaughtErrorMap[Kind];
 					/** Only present for validation errors */
 					issues?: undefined;
+					/** Only present for validation errors */
+					remote?: undefined;
 				};
 		  }[keyof CaughtErrorMap]
 		| ValidationCaughtError<Issue>;
@@ -2115,7 +2130,6 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
-			 * @default (config) => config
 			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
@@ -2233,7 +2247,12 @@ declare module '@sveltejs/kit/vite' {
 	// SOFTWARE.
 
 	namespace Csp {
-		type ActionSource = 'strict-dynamic' | 'report-sample';
+		type ActionSource =
+			| 'strict-dynamic'
+			| 'report-sample'
+			| 'report-sha256'
+			| 'report-sha384'
+			| 'report-sha512';
 		type BaseSource =
 			| 'self'
 			| 'unsafe-eval'
@@ -2641,6 +2660,11 @@ declare module '$app/navigation' {
 	 */
 	export interface NavigationEnter extends NavigationBase {
 		type: 'enter';
+
+		/**
+		 * The app has just started, so there is no page it navigated from
+		 */
+		from: null;
 
 		/**
 		 * In case of a history back/forward navigation, the number of steps to go back/forward
