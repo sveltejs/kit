@@ -1,5 +1,6 @@
 ---
 title: $app/state
+tags: app-state
 ---
 
 SvelteKit makes three read-only state objects available via the `$app/state` module — `page`, `navigating` and `updated`.
