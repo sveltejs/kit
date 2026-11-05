@@ -739,6 +739,131 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	for (const { status, contentType, body } of [
+		{ status: 502, contentType: 'text/plain', body: 'Bad Gateway' },
+		{ status: 503, contentType: 'text/html', body: '<h1>Service Unavailable</h1>' },
+		{ status: 504, contentType: 'application/json', body: '{"message":"Gateway Timeout"}' }
+	]) {
+		test(`query.live retries proxy HTTP ${status} responses without losing its value`, async ({
+			page,
+			context
+		}) => {
+			await page.goto('/remote/live');
+			await page.click('#reset');
+			await page.click('#increment');
+			await expect(page.locator('#count')).toHaveText('1');
+			await expect(page.locator('#connected')).toHaveText('true');
+			await page.click('#start-stream-log');
+			await expect(page.locator('#stream-log')).toHaveText('1');
+
+			// Drop the stream, then let a proxy answer reconnect requests while the
+			// upstream is unavailable. Keep navigator.onLine true during retries.
+			await context.setOffline(true);
+			await expect(page.locator('#connected')).toHaveText('false');
+			let attempts = 0;
+			let recovered = false;
+			await page.route('**/_app/remote/**/get_count', async (route) => {
+				if (recovered) return route.continue();
+				attempts += 1;
+				await route.fulfill({ status, contentType, body });
+			});
+			await context.setOffline(false);
+
+			await expect.poll(() => attempts).toBeGreaterThanOrEqual(2);
+			await expect(page.locator('#connected')).toHaveText('false');
+			await expect(page.locator('#count')).toHaveText('1');
+			await expect(page.locator('#first-value')).toHaveText('1');
+			await expect(page.locator('#live-error')).toHaveText('');
+			await expect(page.locator('#live-done')).toHaveText('false');
+			await expect(page.locator('#stream-log')).toHaveText('1');
+
+			recovered = true;
+			await expect(page.locator('#connected')).toHaveText('true');
+			await page.click('#increment');
+			await expect(page.locator('#count')).toHaveText('2');
+			await expect(page.locator('#first-value')).toHaveText('2');
+			await expect(page.locator('#stream-log')).toHaveText(/,2$/);
+		});
+	}
+
+	for (const { status, application_error } of [
+		{ status: 502, application_error: true },
+		{ status: 503, application_error: true },
+		{ status: 504, application_error: true },
+		{ status: 403, application_error: false },
+		{ status: 500, application_error: false }
+	]) {
+		test(`query.live stops on ${application_error ? 'application' : 'raw'} HTTP ${status} errors`, async ({
+			page,
+			context
+		}) => {
+			await page.goto('/remote/live-terminal');
+			await expect(page.locator('#connected')).toHaveText('true');
+			await context.setOffline(true);
+			await expect(page.locator('#connected')).toHaveText('false');
+
+			let attempts = 0;
+			await page.route('**/_app/remote/**/get_value', async (route) => {
+				attempts += 1;
+				await route.fulfill({
+					status,
+					contentType: application_error ? 'application/json' : 'text/plain',
+					body: application_error
+						? JSON.stringify({ type: 'error', error: { status, message: 'intentional error' } })
+						: 'HTTP error'
+				});
+			});
+			await context.setOffline(false);
+
+			await expect(page.locator('#error')).toHaveText(new RegExp(`^${status} `));
+			if (application_error) {
+				await expect(page.locator('#error')).toHaveText(`${status} intentional error`);
+			}
+			await expect(page.locator('#connected')).toHaveText('false');
+			await expect(page.locator('#done')).toHaveText('true');
+			await page.waitForTimeout(500);
+			expect(attempts).toBe(1);
+		});
+	}
+
+	test('query.live surfaces an initial proxy HTTP error without a last value', async ({
+		page,
+		app
+	}) => {
+		let attempts = 0;
+		await page.route('**/_app/remote/**/get_value', async (route) => {
+			attempts += 1;
+			await route.fulfill({ status: 503, contentType: 'text/plain', body: 'Service Unavailable' });
+		});
+		// Navigate on the client so there is no value seeded by SSR.
+		await page.goto('/');
+		await app.goto('/remote/live-terminal');
+		await expect(page.locator('#error')).toHaveText('503 Service Unavailable');
+		await expect(page.locator('#done')).toHaveText('true');
+		await expect(page.locator('#value')).toHaveText('');
+		await page.waitForTimeout(500);
+		expect(attempts).toBe(1);
+	});
+
+	test('query.live stops on mid-stream application gateway errors', async ({ page }) => {
+		let attempts = 0;
+		await page.route('**/_app/remote/**/get_value', async (route) => {
+			attempts += 1;
+			await route.fulfill({
+				contentType: 'text/event-stream',
+				body:
+					'data: {"type":"result","result":"[0]"}\n\n' +
+					'data: {"type":"error","error":{"status":503,"message":"intentional error"}}\n\n'
+			});
+		});
+		await page.goto('/remote/live-terminal');
+		await expect(page.locator('#value')).toHaveText('0');
+		await expect(page.locator('#error')).toHaveText('503 intentional error');
+		await expect(page.locator('#done')).toHaveText('true');
+		await page.waitForTimeout(500);
+		expect(attempts).toBe(1);
+	});
+
 	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {

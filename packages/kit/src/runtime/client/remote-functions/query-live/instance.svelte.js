@@ -181,14 +181,19 @@ export class LiveQuery {
 					break;
 				}
 
-				if (error instanceof HttpError) {
-					// Server or client intentionally produced an error. Surface it and stop.
+				if (
+					error instanceof HttpError &&
+					(error instanceof HandledHttpError || ![502, 503, 504].includes(error.status))
+				) {
+					// Surface application errors (including gateway statuses) and stop.
+					// Raw gateway errors can come from a proxy while the server restarts,
+					// so treat them like transient network errors instead.
 					await this.#fail(error);
 					break;
 				}
 
 				// Network/transport error — transient.
-				// Preserve last good value (or keep initial promise pending).
+				// Preserve last good value.
 
 				if (typeof navigator !== 'undefined' && !navigator.onLine) break;
 
