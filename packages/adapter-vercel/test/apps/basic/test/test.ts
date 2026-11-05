@@ -5,6 +5,12 @@ test('basic page renders', async ({ page }) => {
 	await expect(page.locator('h1')).toContainText('Hello from SvelteKit on Vercel');
 });
 
+test('reads a prerendered remote function during SSR', async ({ request }) => {
+	const response = await request.get('/');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toContain('from prerendered asset');
+});
+
 test('server-side data loading works', async ({ page }) => {
 	await page.goto('/server-data');
 	await expect(page.locator('h1')).toContainText('loaded on server');
