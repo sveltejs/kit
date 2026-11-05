@@ -1,5 +1,6 @@
 import { EventEmitter, once } from 'node:events';
-import { validateHeaderValue } from 'node:http';
+import { IncomingMessage, validateHeaderValue } from 'node:http';
+import { Socket } from 'node:net';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -31,6 +32,84 @@ function create_request(options = {}) {
 		req
 	};
 }
+
+// https://github.com/sveltejs/kit/issues/17633
+test.each([false, true])(
+	'adapts already-destroyed request bodies (close emitted: %s)',
+	async (wait_for_close) => {
+		for (const { headers, httpVersionMajor } of [
+			{
+				headers: { 'content-type': 'application/json', 'content-length': '2' },
+				httpVersionMajor: 1
+			},
+			{ headers: { 'transfer-encoding': 'chunked' }, httpVersionMajor: 1 },
+			{ headers: {}, httpVersionMajor: 2 }
+		]) {
+			const incoming = new IncomingMessage(new Socket());
+			incoming.method = 'POST';
+			incoming.url = '/example';
+			incoming.httpVersionMajor = httpVersionMajor;
+			incoming.headers = headers;
+
+			const closed = once(incoming, 'close');
+			incoming.destroy();
+			if (wait_for_close) await closed;
+
+			const request = getRequest({ request: incoming, base: 'http://localhost' });
+
+			expect(request.url).toBe('http://localhost/example');
+			expect(request.method).toBe('POST');
+			expect(request.signal.aborted).toBe(true);
+			expect(request.body).not.toBeNull();
+			expect(request.bodyUsed).toBe(false);
+			expect(incoming.listenerCount('data')).toBe(0);
+			await expect(request.text()).resolves.toBe('');
+			await closed;
+		}
+	}
+);
+
+test.each(['GET', 'HEAD', 'POST'])(
+	'aborts the signal of an already-closed bodyless %s request',
+	async (method) => {
+		const incoming = new IncomingMessage(new Socket());
+		incoming.method = method;
+		incoming.url = '/';
+		incoming.httpVersionMajor = 1;
+		incoming.headers = {};
+
+		const closed = once(incoming, 'close');
+		incoming.destroy();
+		await closed;
+
+		const request = getRequest({ request: incoming, base: 'http://localhost' });
+
+		expect(request.signal.aborted).toBe(true);
+		expect(request.body).toBeNull();
+	}
+);
+
+test('does not abort an already-destroyed request that ended normally', async () => {
+	const incoming = new IncomingMessage(new Socket());
+	incoming.method = 'POST';
+	incoming.url = '/';
+	incoming.httpVersionMajor = 1;
+	incoming.headers = { 'content-length': '2' };
+
+	const closed = once(incoming, 'close');
+	incoming.push('{}');
+	incoming.push(null);
+	incoming.resume();
+	await closed;
+
+	expect(incoming.destroyed).toBe(true);
+	expect(incoming.readableEnded).toBe(true);
+
+	const request = getRequest({ request: incoming, base: 'http://localhost' });
+
+	expect(request.signal.aborted).toBe(false);
+	await expect(request.text()).resolves.toBe('');
+});
 
 test('rejects chunked request bodies that exceed body size limit', async () => {
 	const { request, req } = create_request({
@@ -255,6 +334,19 @@ test('does not remove unrelated data listeners when draining', async () => {
 	await expect_request_drained(req);
 	expect(unrelated).toHaveBeenCalled();
 });
+
+test.each([false, true])(
+	'checks an already-destroyed response when adapting a request (ended: %s)',
+	(writableEnded) => {
+		const res = /** @type {any} */ (new EventEmitter());
+		res.destroyed = true;
+		res.writableEnded = writableEnded;
+
+		const { request } = setup_post_request({ 'content-length': '0' }, undefined, res);
+
+		expect(request.signal.aborted).toBe(!writableEnded);
+	}
+);
 
 // https://github.com/sveltejs/kit/issues/16778
 test('aborts the request signal when the response closes before finishing', async () => {
