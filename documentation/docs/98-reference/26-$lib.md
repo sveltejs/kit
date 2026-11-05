@@ -1,5 +1,6 @@
 ---
 title: '#lib'
+tags: lib
 ---
 
 When scaffolding a new SvelteKit project through the [`sv` CLI](/docs/cli/overview), it automatically creates a `#lib` import alias for your `src/lib` directory, by adding the following to your `package.json`:

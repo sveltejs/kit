@@ -127,6 +127,11 @@ declare module '@sveltejs/kit' {
 	export interface ValidationError {
 		/** The validation issues */
 		issues: StandardSchemaV1.Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	}
 
 	type UnpackValidationError<T> =
@@ -1267,6 +1272,11 @@ declare module '@sveltejs/kit/hooks' {
 		kind: 'validation';
 		error: { status: number; message: string };
 		issues: Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	};
 
 	/**
@@ -1285,6 +1295,8 @@ declare module '@sveltejs/kit/hooks' {
 					error: CaughtErrorMap[Kind];
 					/** Only present for validation errors */
 					issues?: undefined;
+					/** Only present for validation errors */
+					remote?: undefined;
 				};
 		  }[keyof CaughtErrorMap]
 		| ValidationCaughtError<Issue>;
@@ -2655,6 +2667,11 @@ declare module '$app/navigation' {
 	 */
 	export interface NavigationEnter extends NavigationBase {
 		type: 'enter';
+
+		/**
+		 * The app has just started, so there is no page it navigated from
+		 */
+		from: null;
 
 		/**
 		 * In case of a history back/forward navigation, the number of steps to go back/forward
