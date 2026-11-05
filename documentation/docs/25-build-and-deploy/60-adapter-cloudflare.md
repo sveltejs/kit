@@ -110,7 +110,7 @@ Once you have built your site, run `vite preview` to test the built Worker in Cl
 
 ## Migrating from Wrangler configuration files
 
-The adapter no longer reads `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` files. Run `npx cf migrate --bundler vite` to generate a `cloudflare.config.ts` file from your Wrangler configuration, then:
+The adapter no longer reads `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` files. Follow Cloudflare's [Wrangler migration guide](https://developers.cloudflare.com/cf/wrangler/migrate/), passing `--bundler vite` to `npx cf migrate` so that it generates a `cloudflare.config.ts` file for the Cloudflare Vite plugin, then:
 
 - remove the adapter's `config` option
 - remove the Worker's `entrypoint` from `cloudflare.config.ts` if it points to `.svelte-kit/cloudflare/_worker.js`, since the adapter generates it
