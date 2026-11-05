@@ -153,7 +153,7 @@ jobs:
           name: test-failure-${{ github.run_id }}-${{ strategy.job-index }}
           path: test-results.tar.gz
   e2e-push:
-    # the legs a pull request rarely changes the outcome of, on pushes to version-3 only
+    # the legs a pull request rarely changes the outcome of
     if: github.event_name == 'push'
     runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     timeout-minutes: 30
