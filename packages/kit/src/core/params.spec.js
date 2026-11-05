@@ -37,7 +37,8 @@ test('load_and_validate_params requires a params file for matchers', async () =>
 				})
 			],
 			params_path: null,
-			root: import.meta.dirname
+			root: import.meta.dirname,
+			load: () => Promise.resolve({})
 		})
 	).rejects.toThrowKitError('param_matcher_missing', { contains: ['`number`'] });
 });
@@ -70,4 +71,17 @@ test('load_and_validate_params loads and validates params', async () => {
 	});
 
 	expect(params).toEqual({ number: expect.any(Function) });
+});
+
+test('load_and_validate_params does not load unused matchers', async () => {
+	const params = await load_and_validate_params({
+		routes: [],
+		params_path: 'params.ts',
+		root: import.meta.dirname,
+		load: () => {
+			throw new Error('Unused matchers should not be loaded');
+		}
+	});
+
+	expect(params).toBeNull();
 });

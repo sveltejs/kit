@@ -1,4 +1,5 @@
 import { defineParams } from '@sveltejs/kit/params';
+import { fruits } from '#lib/fruits.js';
 
 export const params = defineParams({
 	lowercase: (param) => {
@@ -14,5 +15,8 @@ export const params = defineParams({
 		if (isNaN(value)) return;
 		return value;
 	},
-	bigint: (param) => BigInt(param)
+	bigint: (param) => BigInt(param),
+	fruit: (param) => {
+		if (fruits.includes(param)) return param;
+	}
 });
