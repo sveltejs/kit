@@ -23,6 +23,7 @@ export function init_remote_functions(module, file, hash, dev_decoration) {
 
 		fn.__.id = `${hash}/${name}`;
 		fn.__.name = name;
+		fn.__.file = file;
 		if (DEV && dev_decoration) {
 			fn.__.dev_loc = {
 				...dev_decoration,

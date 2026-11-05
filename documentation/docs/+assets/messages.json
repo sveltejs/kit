@@ -2599,6 +2599,17 @@
 		],
 		"details": "When you pass a route ID containing parameters to [`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve), the second argument must provide their values, for example `resolve('/blog/[slug]', { slug: 'hello-world' })`. To resolve a pathname rather than a route ID, omit the leading slash: `resolve('blog/hello-world')`."
 	},
+	"resolve_url_input": {
+		"variants": [
+			{
+				"text": "Cannot use `resolve(...)` with an absolute or protocol-relative URL (got \"%id%\")",
+				"variables": [
+					"id"
+				]
+			}
+		],
+		"details": "[`resolve`](https://svelte.dev/docs/kit/$app-paths#resolve) prepends a base path to its argument, so an absolute or protocol-relative URL would produce a broken link such as `/base/https://example.com`. Use it without `resolve` or pass only its pathname."
+	},
 	"url_hash_unavailable": {
 		"variants": [
 			{

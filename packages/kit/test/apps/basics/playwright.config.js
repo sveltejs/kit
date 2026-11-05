@@ -1,17 +1,6 @@
-import process from 'node:process';
-import { config, port } from '../../utils.js';
-import { defineConfig } from '@playwright/test';
+import { configure } from '../../utils.js';
 
-export default defineConfig({
-	...config,
-	webServer: {
-		command: process.env.DEV
-			? `pnpm dev --port ${port} --strictPort`
-			: `pnpm build && pnpm preview --port ${port} --strictPort`,
-		port,
-		env: {
-			PUBLIC_PRERENDERING: 'false',
-			ROUTER_RESOLUTION: process.env.ROUTER_RESOLUTION ?? 'client'
-		}
-	}
+export default configure({
+	async: { SVELTE_ASYNC: 'true' },
+	resolution: { ROUTER_RESOLUTION: 'server' }
 });

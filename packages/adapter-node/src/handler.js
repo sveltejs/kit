@@ -13,10 +13,20 @@ import {
 	prerendered_assets
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
-import { parse_as_bytes } from './utils.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 import { create_file_map, serve_static } from './static.js';
 
 /** @import { Middleware } from './static.js' */
+
+const env_origin = env('ORIGIN', undefined);
+
+if (origin && env_origin !== undefined) {
+	console.warn(
+		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
+	);
+}
+
+const public_origin = origin || parse_origin(env_origin);
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -43,7 +53,7 @@ await server.init({
 const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
-	let request_origin = origin;
+	let request_origin = public_origin;
 
 	if (!request_origin) {
 		try {
