@@ -45,7 +45,8 @@ export class LiveQuery {
 	 * Has `beforeunload` fired since we last connected? The page may be about to go away,
 	 * but it may also stay where it is (links to other apps like `mailto:`, downloads,
 	 * a cancelled `beforeNavigate`), so this doesn't interrupt the connection. It only
-	 * means a dropped connection is retried rather than surfaced as an error.
+	 * means the next dropped connection is retried rather than surfaced as an error,
+	 * even before the first value has arrived. An `HttpError` is never excused.
 	 */
 	#leaving = false;
 
@@ -238,6 +239,7 @@ export class LiveQuery {
 	};
 
 	#on_offline = () => {
+		this.#leaving = false;
 		void this.#interrupt?.();
 	};
 
@@ -376,6 +378,7 @@ export class LiveQuery {
 		promise.catch(noop);
 		this.#done = false;
 		this.#attempt = 0;
+		this.#leaving = false;
 		// Keep the existing fan-out open so active `for await` consumers
 		// continue receiving values from the new connection without interruption.
 		// Only replace it if it was already closed by a prior `done()`/`fail()`
