@@ -42,7 +42,7 @@ export function generate_manifest({
 	 */
 	const used_nodes = new Set([0, 1]);
 
-	const server_assets = find_server_assets(build_data, routes, root);
+	const server_assets = find_server_assets(build_data, routes, remotes, root);
 
 	for (const route of routes) {
 		if (route.page) {

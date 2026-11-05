@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { test } from '../../../../utils.js';
+import { test, variant } from '../../../../utils.js';
 import { expect } from '../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
@@ -506,6 +506,11 @@ test.describe('SPA mode / no SSR', () => {
 	test('afterNavigate is only called once during start', async ({ page }) => {
 		await page.goto('/no-ssr/after-navigate');
 		await expect(page.locator('p')).toHaveText('enter 1');
+	});
+
+	test('afterNavigate has no origin on start', async ({ page }) => {
+		await page.goto('/no-ssr/after-navigate');
+		await expect(page.locator('h2')).toHaveText('from: null');
 	});
 });
 
@@ -2685,7 +2690,7 @@ test.describe('reroute', () => {
 	});
 
 	test('Apply reroute to preload data', async ({ page }) => {
-		if (process.env.SVELTE_ASYNC === 'true') return; // TODO investigate
+		if (variant === 'async') return; // TODO investigate
 		await page.goto('/reroute/preload-data');
 		await page.click('button');
 		await page.waitForSelector('pre');
@@ -2816,5 +2821,27 @@ test.describe('routing', () => {
 		await page.click('a[href="/routing"]');
 		await expect(page.locator('h1')).toHaveText('Great success!');
 		await expect(page).toHaveURL((url) => url.pathname === '/routing');
+	});
+
+	test('does not load code from another origin for a pathname starting with //', async ({
+		page,
+		app
+	}) => {
+		/** @type {string[]} */
+		const requests = [];
+		await page.route('**://attacker.example/**', (route) => {
+			requests.push(route.request().url());
+			return route.fulfill({
+				contentType: 'text/javascript',
+				headers: { 'access-control-allow-origin': '*' },
+				body: 'window.pwned = true; export const route = undefined; export const params = {};'
+			});
+		});
+
+		await page.goto('/routing/a');
+		await app.goto('/routing/..//attacker.example/x').catch(() => {});
+
+		expect(requests).toEqual([]);
+		expect(await page.evaluate(() => /** @type {any} */ (window).pwned)).toBeUndefined();
 	});
 });
