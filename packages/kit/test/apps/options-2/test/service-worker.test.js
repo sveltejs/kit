@@ -2,9 +2,9 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 
-test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || !process.env.REGISTER_SERVICE_WORKER);
+test.skip(({ javaScriptEnabled }) => !javaScriptEnabled || variant !== 'service-worker');
 
 test('import proxy /basepath/service-worker.js', async ({ request }) => {
 	test.skip(!process.env.DEV);

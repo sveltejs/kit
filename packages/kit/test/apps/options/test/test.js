@@ -1,10 +1,10 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test.skip(!!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false');
+test.skip(variant === 'paths-assets' || variant === 'paths-absolute');
 
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page, start_server }) => {
