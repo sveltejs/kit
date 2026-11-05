@@ -3093,6 +3093,13 @@ export async function set_nearest_error_page(error) {
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
+	// Let the browser restore scroll on reload, before the server-rendered page paints;
+	// otherwise it paints at the top until hydration scrolls it back. `pageshow` below
+	// switches back to `manual` for documents restored from the bfcache.
+	addEventListener('pagehide', () => {
+		history.scrollRestoration = 'auto';
+	});
+
 	addEventListener('beforeunload', (e) => {
 		let should_block = false;
 
@@ -3463,6 +3470,7 @@ function _start_router() {
 		// Info about bfcache here: https://web.dev/bfcache
 		if (event.persisted) {
 			set_navigation(null);
+			history.scrollRestoration = 'manual';
 
 			// pages restored from bfcache don't re-run the `start` script
 			// so we need to restore the scroll position manually here
