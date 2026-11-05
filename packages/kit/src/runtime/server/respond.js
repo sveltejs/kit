@@ -264,8 +264,13 @@ export async function internal_respond(request, options, manifest, state) {
 	/** @type {PageNodes | undefined} */
 	let page_nodes;
 
+	/** @type {string} */
+	let decoded_pathname;
+
 	try {
 		resolved_path = decode_pathname(resolved_path);
+		// `reroute` can turn a malformed pathname into a valid one, so this must be decoded separately
+		decoded_pathname = decode_pathname(url.pathname);
 	} catch {
 		resolved_path = null;
 		return await handle();
@@ -273,8 +278,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 	// try to serve the rerouted prerendered resource if it exists
 	if (
-		// the resolved path has been decoded so it should be compared to the decoded url pathname
-		resolved_path !== decode_pathname(url.pathname) &&
+		resolved_path !== decoded_pathname &&
 		!state.prerendering?.fallback &&
 		has_prerendered_path(manifest, resolved_path)
 	) {
@@ -286,9 +290,11 @@ export async function internal_respond(request, options, manifest, state) {
 				: resolved_path;
 
 		try {
+			// A spoofed request origin must not be able to redirect us to an internal resource.
+			const response = await fetch(new Request(url, request), { redirect: 'manual' });
+
 			// `fetch` automatically decodes the body, so we need to delete the related headers to not break the response
 			// Also see https://github.com/sveltejs/kit/issues/12197 for more info (we should fix this more generally at some point)
-			const response = await fetch(url, request);
 			const headers = new Headers(response.headers);
 			if (headers.has('content-encoding')) {
 				headers.delete('content-encoding');
@@ -694,7 +700,7 @@ export async function internal_respond(request, options, manifest, state) {
 				// to an external service from the root layout while rendering an error page
 				const headers = new Headers(request.headers);
 				headers.set('x-sveltekit-error', 'true');
-				return await fetch(request, { headers });
+				return await fetch(request, { headers, redirect: 'manual' });
 			}
 
 			if (state.error) {
@@ -724,7 +730,7 @@ export async function internal_respond(request, options, manifest, state) {
 
 			// we can't load the endpoint from our own manifest,
 			// so we need to make an actual HTTP request
-			const response = await fetch(request);
+			const response = await fetch(request, { redirect: 'manual' });
 
 			// clone the response so that headers are mutable (https://github.com/sveltejs/kit/issues/13857)
 			return new Response(response.body, response);
