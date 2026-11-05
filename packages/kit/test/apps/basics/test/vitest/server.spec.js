@@ -790,6 +790,22 @@ describe('Load', () => {
 
 		expect(document.querySelector('p')?.textContent).toBe('hello world');
 	});
+
+	test('etag does not depend on the order fetch responses are read in', async () => {
+		const { response, document } = await load('/load/fetch-read-order');
+		const etag = /** @type {string} */ (response.headers.get('etag'));
+
+		expect(etag).toBeTruthy();
+		expect(document.querySelectorAll('script[data-sveltekit-fetched]').length).toBe(4);
+
+		const reversed = await get('/load/fetch-read-order?reverse');
+		expect(reversed.headers.get('etag')).toBe(etag);
+
+		const revalidated = await get('/load/fetch-read-order?reverse', {
+			headers: { 'if-none-match': etag }
+		});
+		expect(revalidated.status).toBe(304);
+	});
 });
 
 describe('Routing', () => {
