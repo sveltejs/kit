@@ -17,7 +17,10 @@ export async function fetch(request) {
 	}
 
 	const url = new URL(request.url);
-	const target = new URL(url.pathname + url.search, request.headers.get(ORIGIN) ?? url.origin);
+	// assign the path rather than resolving it, so a path like `//example.com` can't replace the origin
+	const target = new URL(request.headers.get(ORIGIN) ?? url.origin);
+	target.pathname = url.pathname;
+	target.search = url.search;
 
 	const headers = new Headers(request.headers);
 	headers.delete(ORIGIN);
