@@ -3,6 +3,7 @@
 import path from 'node:path';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getPlatformProxy } from 'wrangler';
+import { is_dev_or_build } from './utils.js';
 
 /**
  * @param {GetPlatformProxyOptions} options
@@ -51,6 +52,7 @@ export function plugin_platform(options, stub_import, get_environment) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		apply: is_dev_or_build,
 		configResolved(config) {
 			// resolve the config path relative to the Vite `root` setting rather than
 			// the current working directory
@@ -62,10 +64,8 @@ export function plugin_platform(options, stub_import, get_environment) {
 			options.environment = explicit_environment ?? get_environment();
 		},
 		configureServer: setup,
-		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
 		closeServer: dispose,
-		closePreviewServer: dispose,
 		resolveId: {
 			filter: { id: exactRegex('cloudflare:workers') },
 			handler() {
