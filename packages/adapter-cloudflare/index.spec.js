@@ -18,8 +18,21 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
+function get_plugins() {
+	const vite = /** @type {(ctx: unknown) => { plugins: import('vite').Plugin[] }} */ (
+		adapter().vite
+	);
+	const files = {
+		src: 'src',
+		routes: 'src/routes',
+		params: 'src/params',
+		hooks: { server: 'src/hooks.server', universal: 'src/hooks' }
+	};
+	return vite({ config: { files } }).plugins;
+}
+
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const plugins = get_plugins();
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -52,7 +65,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const plugins = get_plugins();
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -155,7 +168,7 @@ test('starts the platform proxy with the Wrangler environment from a `.env` file
 	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const plugins = get_plugins();
 		const server = await createServer({
 			root,
 			mode: 'staging',

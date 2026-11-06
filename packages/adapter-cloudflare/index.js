@@ -160,7 +160,7 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite: {
+		vite: ({ config }) => ({
 			getRequest(options) {
 				const request = getRequest(options);
 				/** @type {import('@cloudflare/workers-types').Request} */ (
@@ -175,7 +175,11 @@ export default function (options = {}) {
 						vite_config = config;
 					}
 				},
-				...plugin_config(options.config, (config) => (wrangler_config = config)),
+				...plugin_config(
+					options.config,
+					(config) => (wrangler_config = config),
+					get_scan_entries(config.files)
+				),
 				{
 					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
 					apply: is_dev_or_build,
@@ -197,8 +201,22 @@ export default function (options = {}) {
 					() => wrangler_config?.targetEnvironment
 				)
 			]
-		}
+		})
 	};
+}
+
+/**
+ * The files that import the app's server dependencies, so that Vite can find them before the first request
+ * @param {{ src: string; routes: string; params: string; hooks: { server: string; universal: string } }} files
+ * @returns {string[]}
+ */
+function get_scan_entries(files) {
+	const directories = new Set([files.src, files.routes, files.params].map(posixify));
+	return [
+		...Array.from(directories, (directory) => `${directory}/**/*.{js,ts,svelte}`),
+		`${posixify(files.hooks.server)}.{js,ts}`,
+		`${posixify(files.hooks.universal)}.{js,ts}`
+	];
 }
 
 /**
