@@ -24,9 +24,10 @@ const useful_cloudflare_build_plugins = new Set([
 /**
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
+ * @param {string[]} [scan_entries] the files Vite scans for the SSR environment's dependencies
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config) {
+export function plugin_config(config_path, set_worker_config, scan_entries) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
@@ -104,7 +105,7 @@ export function plugin_config(config_path, set_worker_config) {
 								// the plugin's entry is our stand-in `main`, so we scan the app instead.
 								// Otherwise, dependencies found during the first request reload the module
 								// graph and fail that request
-								entries: ['src/**/*.{js,ts,svelte}'],
+								entries: scan_entries,
 								include: [
 									...(cloudflare_ssr.optimizeDeps?.include ?? []),
 									'@sveltejs/kit > cookie',

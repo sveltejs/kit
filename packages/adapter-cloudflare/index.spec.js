@@ -27,7 +27,15 @@ function get_vite_config(instance = adapter(), assets = '') {
 	if (typeof instance.vite !== 'function') throw new Error('Expected an adapter config function');
 	return /** @type {{ plugins: Plugin[] }} */ (
 		instance.vite({
-			config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({ paths: { assets } })
+			config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({
+				paths: { assets },
+				files: {
+					src: 'src',
+					routes: 'src/routes',
+					params: 'src/params',
+					hooks: { server: 'src/hooks.server', universal: 'src/hooks' }
+				}
+			})
 		})
 	);
 }
