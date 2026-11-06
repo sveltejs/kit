@@ -536,9 +536,11 @@ async function _start(_app, _target, data) {
 		);
 	}
 
+	// Safari in a third-party iframe does not reflect replaceState writes
+	// through history.state (#17457). Fall back to the values we just set.
 	set_history_options(
 		current_history_index,
-		/** @type {HistoryMetadata} */ (get_history_metadata())
+		get_history_metadata() ?? { resetIndex: current_reset_index }
 	);
 
 	// if we reload the page, or Cmd-Shift-T back to it,
