@@ -32,3 +32,13 @@ test('prerendering throws', async ({ request }) => {
 	const res = await request.get('/prerender');
 	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
 });
+
+test('CommonJS dependencies can require Node builtins', async ({ request }) => {
+	const res = await request.get('/cjs-node-builtin');
+	expect(await res.text()).toMatch(/^[0-9a-f]{16}$/);
+});
+
+test('dependencies resolve the workerd export condition', async ({ request }) => {
+	const res = await request.get('/conditions');
+	expect(await res.text()).toBe('workerd');
+});
