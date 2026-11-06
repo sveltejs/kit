@@ -1,8 +1,8 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 
-test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
+test.skip(() => variant === 'service-worker');
 
 test.describe.configure({ mode: 'parallel' });
 
