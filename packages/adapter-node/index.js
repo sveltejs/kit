@@ -54,7 +54,8 @@ export default function (opts = {}) {
 				});
 			}
 
-			builder.copy(server, `${out}/server`);
+			const client_only = client_only_assets(builder, server);
+			builder.copy(server, `${out}/server`, { filter: (file) => !client_only.has(file) });
 
 			// values only known after the build. `dir` needs the output root
 			fs.writeFileSync(
@@ -140,6 +141,29 @@ export default function (opts = {}) {
 			}
 		}
 	};
+}
+
+/**
+ * The assets Vite emitted into the server output that only the client needs.
+ * Kit already copies them to the client output, which is also where `read` gets files from
+ * @param {import('@sveltejs/kit').Builder} builder
+ * @param {string} server
+ * @returns {Set<string>}
+ */
+function client_only_assets(builder, server) {
+	const dir = `${builder.config.appDir}/immutable/assets`;
+	if (!fs.existsSync(`${server}/${dir}`)) return new Set();
+
+	const server_assets = new Set(
+		builder.findServerAssets(builder.routes.filter((route) => route.prerender !== true))
+	);
+
+	return new Set(
+		fs
+			.readdirSync(`${server}/${dir}`)
+			// Vite's wasm helper reads `.wasm` files relative to the server chunk, even when only a component imports them
+			.filter((file) => !file.endsWith('.wasm') && !server_assets.has(`${dir}/${file}`))
+	);
 }
 
 /**

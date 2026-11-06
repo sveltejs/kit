@@ -35,6 +35,7 @@ beforeEach(() => {
 	} as never);
 
 	spyOn(fs, 'existsSync').mockReturnValue(true);
+	spyOn(fs, 'readdirSync').mockReturnValue([]);
 	spyOn(fs, 'rmSync').mockImplementation(() => {});
 	read_file = spyOn(fs, 'readFileSync').mockImplementation((() => undefined) as any) as any;
 	write_file = spyOn(fs, 'writeFileSync').mockImplementation(() => {});
@@ -119,7 +120,9 @@ describe('build output', () => {
 		expect(fs.rmSync).toHaveBeenCalledWith('build', { recursive: true, force: true });
 		expect(builder.log.minor).toHaveBeenCalledWith('Building server');
 		expect(builder.generateServerInstance).toHaveBeenCalledWith(`${server_dir}/server.js`);
-		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server');
+		expect(builder.copy).toHaveBeenCalledWith(server_dir, 'build/server', {
+			filter: expect.any(Function)
+		});
 		expect(builder.copy).toHaveBeenCalledWith(handoff_file, 'build/adapter-bun.js');
 		expect(write_file).toHaveBeenCalledWith(
 			'build/index.js',
@@ -128,6 +131,24 @@ describe('build output', () => {
 		expect(bun_build).not.toHaveBeenCalled();
 		expect(builder.instrument).not.toHaveBeenCalled();
 		expect(builder.compress).not.toHaveBeenCalled();
+	});
+
+	test('leaves assets that only the client imports out of the server output', async () => {
+		spyOn(fs, 'readdirSync').mockReturnValue([
+			'image.abc.svg',
+			'file.abc.txt',
+			'module.abc.wasm'
+		] as any);
+		const builder = create_builder({ server_assets: ['_app/immutable/assets/file.abc.txt'] });
+		await adapter().adapt(builder);
+
+		const [, , { filter }] = builder.copy.mock.calls.find(
+			([from]: [string]) => from === server_dir
+		);
+		expect(filter('image.abc.svg')).toBe(false);
+		expect(filter('file.abc.txt')).toBe(true);
+		expect(filter('module.abc.wasm')).toBe(true);
+		expect(filter('chunks')).toBe(true);
 	});
 
 	test('hands the configured values to the server', async () => {

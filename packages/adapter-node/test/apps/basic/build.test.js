@@ -30,3 +30,13 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('only copies the assets server code imports into the server output', () => {
+	const assets = '_app/immutable/assets';
+	const client = fs.readdirSync(path.join(app, 'build/client', assets));
+	const server = fs.readdirSync(path.join(app, 'build/server', assets));
+
+	expect(client.some((file) => file.startsWith('image.'))).toBe(true);
+	expect(server.some((file) => file.startsWith('image.'))).toBe(false);
+	expect(server.some((file) => file.startsWith('file.'))).toBe(true);
+});
