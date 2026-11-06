@@ -8,6 +8,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { deploy } from './deploy.js';
 
+// pnpm's bin shims export a NODE_PATH that reaches the workspace's node_modules, and Bun
+// resolves imports from it
+delete process.env.NODE_PATH;
+
 const dir = process.cwd();
 const { scripts } = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
 
