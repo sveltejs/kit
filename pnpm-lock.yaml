@@ -248,6 +248,7 @@ catalogs:
 
 overrides:
   workerd: 1.20261103.1
+  miniflare: https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49
 
 importers:
 
@@ -376,6 +377,27 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/browser-playwright@5.0.1)(@vitest/ui@5.0.1)(jsdom@30.1.0)(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))
+
+  packages/adapter-cloudflare/test/apps/custom-worker:
+    devDependencies:
+      '@cloudflare/config':
+        specifier: 0.30.2
+        version: 0.30.2
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../..
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.1(@typescript-eslint/types@8.70.1)
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1)
 
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
@@ -4085,10 +4107,6 @@ packages:
   mdn-data@2.27.1:
     resolution: {integrity: sha512-9Yubnt3e8A0OKwxYSXyhLymGW4sCufcLG6VdiDdUGVkPhpqLxlvP5vl1983gQjJl3tqbrM731mjaZaP68AgosQ==}
 
-  miniflare@5.20261104.0-beta:
-    resolution: {integrity: sha512-pYZ2n85+FYUb7s0oIVcQxO63/+wgaknm+A/kQjctJqshvHPJs3UtnzaIZ7xrrHMOk8atD7yAfauf6G9VAv7Upg==}
-    engines: {node: '>=22.0.0'}
-
   miniflare@https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49:
     resolution: {integrity: sha512-wD5amuV11K52Cnqy7kHIm9XJ97DSnoPqAV2rNTzoCIm8NgqU81+0nSjvw52S5tVkyFIaaf8YXoh+MgNovkeXAA==, tarball: https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49}
     version: 5.20261103.0-beta
@@ -4987,7 +5005,7 @@ snapshots:
 
   '@cloudflare/runtime-types@0.1.23(@types/node@22.20.4)':
     dependencies:
-      miniflare: 5.20261104.0-beta(@types/node@22.20.4)
+      miniflare: https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49(@types/node@22.20.4)
       workerd: 1.20261103.1
     transitivePeerDependencies:
       - '@types/node'
@@ -5006,7 +5024,7 @@ snapshots:
       '@cloudflare/config': 0.30.2
       '@cloudflare/runtime-types': 0.1.23(@types/node@22.20.4)
       '@cloudflare/unenv-preset': 2.16.2(unenv@2.0.0-rc.24)(workerd@1.20261103.1)
-      miniflare: 5.20261104.0-beta(@types/node@22.20.4)
+      miniflare: https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49(@types/node@22.20.4)
       unenv: 2.0.0-rc.24
       vite: 8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1)
       ws: 8.21.0
@@ -6645,19 +6663,6 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   mdn-data@2.27.1: {}
-
-  miniflare@5.20261104.0-beta(@types/node@22.20.4):
-    dependencies:
-      '@cspotcode/source-map-support': 0.8.1
-      sharp: 0.35.5(@types/node@22.20.4)
-      undici: 7.30.1
-      workerd: 1.20261103.1
-      ws: 8.21.0
-      youch: 4.1.0-beta.10
-    transitivePeerDependencies:
-      - '@types/node'
-      - bufferutil
-      - utf-8-validate
 
   miniflare@https://pkg.pr.new/cloudflare/workers-sdk/miniflare@fedfc49(@types/node@22.20.4):
     dependencies:

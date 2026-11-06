@@ -23,14 +23,20 @@
 			"types": "./index.d.ts",
 			"import": "./index.js"
 		},
+		"./worker": {
+			"types": "./worker.d.ts",
+			"default": "./src/worker-dev.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "index.d.ts",
 	"files": [
 		"src/virtual-cloudflare-workers.js",
+		"src/worker-dev.js",
 		"files/worker.js",
 		"index.js",
 		"index.d.ts",
+		"worker.d.ts",
 		"config.js",
 		"platform.js",
 		"utils.js"
@@ -61,6 +67,7 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.2.0"
+		"@sveltejs/kit": "^3.2.0",
+		"vite": "^8.0.12"
 	}
 }

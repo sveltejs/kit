@@ -20,9 +20,10 @@ export function validate_worker_settings() {
 }
 
 /**
- * The adapter generates the Worker entrypoint, so an `entrypoint` set in `cloudflare.config.ts`
- * is ignored. The old generated entry is an error because it no longer exists.
+ * Returns the custom Worker that `entrypoint` in `cloudflare.config.ts` points to, if any.
+ * The old generated entry is an error because it no longer exists.
  * @param {string | undefined} entrypoint
+ * @returns {string | undefined}
  */
 export function validate_entrypoint(entrypoint) {
 	if (!entrypoint) return;
@@ -33,10 +34,14 @@ export function validate_entrypoint(entrypoint) {
 		);
 	}
 
-	console.warn(
-		'Ignoring the Worker `entrypoint` in cloudflare.config.ts. The adapter generates the Worker entrypoint, so remove `entrypoint` to silence this warning'
-	);
+	return entrypoint;
 }
+
+/**
+ * The `cf` properties of requests that a custom Worker forwarded to SvelteKit during development
+ * @type {WeakMap<import('node:http').IncomingMessage, Record<string, unknown>>}
+ */
+export const forwarded_cf = new WeakMap();
 
 /**
  * Generates the rules for prerendered redirects to be appended to a

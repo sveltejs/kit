@@ -24,6 +24,7 @@
 		"platform.js",
 		"utils.js",
 		"utils.spec.js",
+		"worker.d.ts",
 		"vitest.config.js",
 		"globals.d.ts",
 		"test/utils.js"

@@ -39,7 +39,7 @@ export default defineConfig({
 });
 ```
 
-Your Worker is configured with a `cloudflare.config.ts` file in the root of your project. The adapter generates the Worker's `entrypoint` and adds an `assets` binding named `ASSETS` if you haven't declared one, so you only need to declare its name, compatibility date and any bindings:
+Your Worker is configured with a `cloudflare.config.ts` file in the root of your project. The adapter generates the Worker's `entrypoint`, unless you [write your own](#Custom-Worker), and adds an `assets` binding named `ASSETS` if you haven't declared one, so you only need to declare its name, compatibility date and any bindings:
 
 ```ts
 /// file: cloudflare.config.ts
@@ -104,9 +104,49 @@ Types for your bindings are generated in `.cloudflare/types/index.d.ts` whenever
 
 Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Values for secrets are read from a `.dev.vars` or `.env` file. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
-> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
-
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
+
+## Custom Worker
+
+To export [Durable Objects](https://developers.cloudflare.com/durable-objects/), [Workflows](https://developers.cloudflare.com/workflows/) or other handlers such as `scheduled` and `queue` from your Worker, point `entrypoint` in `cloudflare.config.ts` to your own Worker and call SvelteKit's request handler from its `fetch` handler:
+
+```ts
+/// file: cloudflare.config.ts
+// @errors: 2307
+import { bindings, defineConfig, exports } from '@cloudflare/config';
+
+export default defineConfig({
+	worker: {
+		name: 'my-app',
+		compatibilityDate: '2026-11-01',
+		entrypoint: './src/worker.ts',
+		exports: {
+			Counter: exports.durableObject({ storage: 'sqlite' })
+		},
+		env: {
+			COUNTER: bindings.durableObject({ worker: 'my-app', exportName: 'Counter' })
+		}
+	}
+});
+```
+
+```ts
+/// file: src/worker.ts
+// @errors: 2307
+import { DurableObject } from 'cloudflare:workers';
+import { fetch } from '@sveltejs/adapter-cloudflare/worker';
+
+export class Counter extends DurableObject {}
+
+export default {
+	fetch,
+	async scheduled() {
+		// ...
+	}
+};
+```
+
+During development, your Worker runs in Cloudflare's local `workerd` runtime and receives requests first. Its call to SvelteKit's `fetch` handler sends the request back to SvelteKit, which runs in Node so that it can use Vite's hot module replacement. Both share the same bindings, but not module-level state, since that isn't shared between Worker isolates in production either.
 
 ## Migrating from Wrangler configuration files
 
