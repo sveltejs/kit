@@ -739,6 +739,34 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	test('query.live connects in multiple tabs with identical stream URLs', async ({
+		page,
+		context
+	}) => {
+		const first_response = page.waitForResponse((r) => r.url().endsWith('/get_count'));
+		await page.goto('/remote/live');
+		const url = (await first_response).url();
+		await expect(page.locator('#connected')).toHaveText('true');
+		await page.click('#reset');
+
+		// Use the same context: Firefox serializes cacheable requests for identical
+		// URLs across tabs, even when the response says Cache-Control: no-store.
+		const second = await context.newPage();
+		await second.goto(page.url());
+		await expect(second.locator('#connected')).toHaveText('true');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(second.locator('#count')).toHaveText('1');
+
+		// A reconnect must also bypass the cache while the other tab is streaming.
+		await Promise.all([page.waitForResponse(url), page.click('#reconnect')]);
+		await expect(page.locator('#connected')).toHaveText('true');
+		await second.click('#increment');
+		await expect(page.locator('#count')).toHaveText('2');
+		await expect(second.locator('#count')).toHaveText('2');
+	});
+
 	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {
