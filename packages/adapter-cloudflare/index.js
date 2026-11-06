@@ -219,7 +219,8 @@ export default function (options = {}) {
 						set_config: (config) => (cloudflare_config = config),
 						set_custom_entrypoint: (entrypoint) => (custom_entrypoint = entrypoint),
 						set_ssr_environment: (environment) => (ssr_environment = environment),
-						attach_platform: platform.attach
+						attach_platform: platform.attach,
+						scan_entries: get_scan_entries(config.files)
 					}),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
@@ -322,6 +323,20 @@ async function bundle_custom_worker({ config, entrypoint, environment, out_dir, 
 
 	const index = `${out_dir}/index.js`;
 	fs.writeFileSync(index, fs.readFileSync(index, 'utf-8').replaceAll(placeholder, generated));
+}
+
+/**
+ * The files that import the app's server dependencies, so that Vite can find them before the first request
+ * @param {{ src: string; routes: string; params: string; hooks: { server: string; universal: string } }} files
+ * @returns {string[]}
+ */
+function get_scan_entries(files) {
+	const directories = new Set([files.src, files.routes, files.params].map(posixify));
+	return [
+		...Array.from(directories, (directory) => `${directory}/**/*.{js,ts,svelte}`),
+		`${posixify(files.hooks.server)}.{js,ts}`,
+		`${posixify(files.hooks.universal)}.{js,ts}`
+	];
 }
 
 /**

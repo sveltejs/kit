@@ -38,6 +38,7 @@ const useful_cloudflare_build_plugins = new Set([
  *   set_custom_entrypoint: (entrypoint: string | undefined) => void;
  *   set_ssr_environment: (environment: EnvironmentOptions) => void;
  *   attach_platform: (url: string) => Promise<void>;
+ *   scan_entries?: string[];
  * }} ConfigHooks
  */
 
@@ -123,7 +124,7 @@ export function plugin_config(hooks) {
 								// the plugin's entry is our stand-in entrypoint, so we scan the app instead.
 								// Otherwise, dependencies found during the first request reload the module
 								// graph and fail that request
-								entries: ['src/**/*.{js,ts,svelte}'],
+								entries: hooks.scan_entries,
 								include: [
 									...(cloudflare_ssr.optimizeDeps?.include ?? []),
 									'@sveltejs/kit > cookie',
