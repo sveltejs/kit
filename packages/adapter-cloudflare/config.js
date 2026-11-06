@@ -111,8 +111,16 @@ export function plugin_config(set_cloudflare_config) {
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// points to our stand-in entrypoint
-								entries: undefined
+								// the plugin's entry is our stand-in entrypoint, so we scan the app instead.
+								// Otherwise, dependencies found during the first request reload the module
+								// graph and fail that request
+								entries: ['src/**/*.{js,ts,svelte}'],
+								include: [
+									...(cloudflare_ssr.optimizeDeps?.include ?? []),
+									'@sveltejs/kit > cookie',
+									'@sveltejs/kit > devalue',
+									'@sveltejs/kit > esm-env'
+								]
 							},
 							build: {
 								target: cloudflare_ssr.build?.target,
