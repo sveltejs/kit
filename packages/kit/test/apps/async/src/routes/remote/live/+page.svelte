@@ -69,6 +69,9 @@
 
 	let refresh_state = $state('idle');
 
+	// links to other apps (mailto:, tel:) and downloads fire beforeunload but leave the page in place
+	let beforeunload_count = $state(0);
+
 	async function run_refresh_all() {
 		refresh_state = 'pending';
 		try {
@@ -113,3 +116,7 @@
 <p id="stream-log">{stream_log}</p>
 <button id="run-refresh-all" onclick={run_refresh_all}>refresh all</button>
 <p id="refresh-state">{refresh_state}</p>
+
+<svelte:window onbeforeunload={() => (beforeunload_count += 1)} />
+<a id="mailto" href="mailto:someone@example.com">email someone</a>
+<p id="beforeunload-count">{beforeunload_count}</p>
