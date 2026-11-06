@@ -110,6 +110,60 @@ test('prerendered page trailing slash redirects', async ({ request }) => {
 	expect(response.headers()['location']).toBe('/prerendered');
 });
 
+test('prerendered dynamic pages are served without a trailing slash', async ({ request }) => {
+	for (const [pathname, slug] of [
+		['/prerendered/a', 'a'],
+		['/prerendered/b', 'b'],
+		['/prerendered/caf%C3%A9', 'café'],
+		['/prerendered/v1.2', 'v1.2']
+	]) {
+		const response = await request.get(pathname, { maxRedirects: 0 });
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toContain(`prerendered: ${slug}`);
+	}
+});
+
+test('prerendered dynamic pages redirect to remove the trailing slash', async ({ request }) => {
+	for (const pathname of [
+		'/prerendered/a',
+		'/prerendered/b',
+		'/prerendered/caf%C3%A9',
+		'/prerendered/v1.2'
+	]) {
+		const response = await request.get(`${pathname}/`, { maxRedirects: 0 });
+		expect(response.status()).toBe(308);
+		expect(response.headers()['location']).toBe(pathname);
+	}
+});
+
+test('prerendered dynamic pages with trailingSlash always are served', async ({ request }) => {
+	for (const slug of ['a', 'b']) {
+		const response = await request.get(`/prerendered-trailing-slash/${slug}/`, {
+			maxRedirects: 0
+		});
+		expect(response.status()).toBe(200);
+		expect(await response.text()).toContain(`prerendered with trailing slash: ${slug}`);
+	}
+});
+
+test('prerendered dynamic pages with trailingSlash always redirect to add the trailing slash', async ({
+	request
+}) => {
+	for (const slug of ['a', 'b']) {
+		const response = await request.get(`/prerendered-trailing-slash/${slug}`, {
+			maxRedirects: 0
+		});
+		expect(response.status()).toBe(308);
+		expect(response.headers()['location']).toBe(`/prerendered-trailing-slash/${slug}/`);
+	}
+});
+
+test('prerendered trailing slash redirects preserve the query string', async ({ request }) => {
+	const response = await request.get('/prerendered/a/?foo=bar', { maxRedirects: 0 });
+	expect(response.status()).toBe(308);
+	expect(response.headers()['location']).toBe('/prerendered/a?foo=bar');
+});
+
 test('deeply nested route works', async ({ page }) => {
 	await page.goto('/deep/nested/route');
 	await expect(page.locator('h1')).toContainText('Deep nested route');

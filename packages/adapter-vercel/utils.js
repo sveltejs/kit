@@ -37,6 +37,72 @@ export function escape_regex(str) {
 	return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// `decodeURI` leaves the escapes of these characters intact: ; / ? : @ & = + $ , #
+const RESERVED_ESCAPE = /(%(?:2[346BCF]|3[ABDF]|40))/i;
+
+/**
+ * Encodes a pathname decoded by `decodeURI` back into the form a browser requests it in,
+ * without encoding the escapes that `decodeURI` left intact a second time.
+ * This function is duplicated in adapter-static
+ * @param {string} pathname
+ */
+export function encode_pathname(pathname) {
+	return pathname
+		.split(RESERVED_ESCAPE)
+		.map((part, i) => (i % 2 === 1 ? part : encodeURI(part)))
+		.join('');
+}
+
+// Vercel rejects routes whose `src` is longer than 4096 characters
+const MAX_SRC_LENGTH = 4000;
+
+/**
+ * Creates routes that redirect prerendered pages to their canonical trailing slash form.
+ * Since Vercel limits the number of routes in a deployment, pathnames are combined into
+ * as few routes as possible rather than creating one route per page.
+ * This function is duplicated in adapter-static
+ * @param {string[]} pathnames decoded pathnames without leading or trailing slashes
+ * @param {boolean} trailing_slash `true` if the redirect should add a trailing slash, `false` if it should remove it
+ */
+export function trailing_slash_redirects(pathnames, trailing_slash) {
+	/** @type {Array<{ src: string, headers: { Location: string }, status: number, caseSensitive: boolean }>} */
+	const routes = [];
+
+	/** @type {string[]} */
+	let alternatives = [];
+	let length = 0;
+
+	const flush = () => {
+		if (alternatives.length === 0) return;
+
+		const group = alternatives.join('|');
+
+		routes.push({
+			src: trailing_slash ? `^/(${group})$` : `^/(${group})/$`,
+			headers: { Location: trailing_slash ? '/$1/' : '/$1' },
+			status: 308,
+			caseSensitive: true
+		});
+
+		alternatives = [];
+		length = 0;
+	};
+
+	for (const pathname of pathnames) {
+		// Vercel matches against the encoded pathname, so we encode it the way a browser requests it
+		const alternative = escape_regex(encode_pathname(pathname));
+
+		if (length + alternative.length + 1 > MAX_SRC_LENGTH) flush();
+
+		alternatives.push(alternative);
+		length += alternative.length + 1;
+	}
+
+	flush();
+
+	return routes;
+}
+
 /**
  * Returns the `trailingSlash` option if every route uses the same one, allowing
  * trailing slashes to be normalized with a single route rather than one per page.
