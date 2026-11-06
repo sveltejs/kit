@@ -210,7 +210,20 @@ export async function sveltekit(config) {
 
 /** @param {UserConfig | ResolvedConfig} vite_config */
 function resolve_root(vite_config) {
-	return posixify(vite_config.root ? path.resolve(vite_config.root) : process.cwd());
+	let root = vite_config.root ? path.resolve(vite_config.root) : process.cwd();
+
+	// Vite resolves its root and module ids to real paths unless `resolve.preserveSymlinks` is set
+	if (!vite_config.resolve?.preserveSymlinks) {
+		try {
+			const real = fs.realpathSync.native(root);
+			// a mapped network drive resolves to a UNC path, which Vite maps back to the drive letter
+			if (!real.startsWith('\\\\')) root = real;
+		} catch {
+			// some Windows RAM disks can't be resolved natively
+		}
+	}
+
+	return posixify(root);
 }
 
 /**
@@ -279,6 +292,9 @@ function kit({ svelte_config }) {
 						e.config_file_unsupported({ file });
 					}
 				}
+
+				// Vite before 8.2 doesn't resolve its root
+				return { root };
 			}
 		}
 	};
