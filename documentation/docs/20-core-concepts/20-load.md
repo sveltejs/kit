@@ -707,7 +707,7 @@ A couple features of loading data have important implications for auth checks:
 There are a few possible strategies to ensure an auth check occurs before protected code.
 
 To prevent data waterfalls and preserve layout `load` caches:
-- Use [hooks](hooks) to protect multiple routes before any `load` functions run
+- Use [hooks](hooks) to protect multiple routes before any `load` functions run (see [protecting routes](auth#Protecting-routes))
 - Use auth guards directly in `+page.server.js` `load` functions for route specific protection
 
 Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.
