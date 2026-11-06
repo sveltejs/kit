@@ -242,7 +242,7 @@ function generate_app_types(manifest_data, config, dir) {
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
 				const type = get_matcher_type(p.matcher);
-				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
+				return `${/^[a-zA-Z_$][\w$]*$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
 
 			if (is_app_route(route)) {
@@ -265,7 +265,7 @@ function generate_app_types(manifest_data, config, dir) {
 			const params = Array.from(layout_params)
 				.map(([name, { optional, matchers }]) => {
 					const type = get_matchers_type(matchers);
-					return `${/^\w+$/.test(name) ? name : `'${name}'`}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
+					return `${/^[a-zA-Z_$][\w$]*$/.test(name) ? name : `'${name}'`}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
 				})
 				.join('; ');
 
