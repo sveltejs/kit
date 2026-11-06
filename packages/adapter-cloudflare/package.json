@@ -45,7 +45,10 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.65.0",
+		"@cloudflare/build-output-utils": "0.9.10",
+		"@cloudflare/config": "0.30.2",
+		"@cloudflare/platform-proxy": "https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@fedfc49",
+		"@cloudflare/vite-plugin": "2.0.0-beta.v.12",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
@@ -58,7 +61,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.2.0",
-		"wrangler": "^4.153.0"
+		"@sveltejs/kit": "^3.2.0"
 	}
 }

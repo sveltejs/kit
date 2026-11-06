@@ -28,11 +28,9 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter({
 				// See below for an explanation of these options
-				config: undefined,
 				platformProxy: {
-					configPath: undefined,
-					environment: undefined,
-					persist: undefined
+					persist: undefined,
+					remoteBindings: undefined
 				},
 				fallback: 'plaintext'
 			})
@@ -41,25 +39,39 @@ export default defineConfig({
 });
 ```
 
+Your Worker is configured with a `cloudflare.config.ts` file in the root of your project. The adapter generates the Worker's `entrypoint` and adds an `assets` binding named `ASSETS` if you haven't declared one, so you only need to declare its name, compatibility date and any bindings:
+
+```ts
+/// file: cloudflare.config.ts
+// @errors: 2307
+import { bindings, defineConfig } from '@cloudflare/config';
+
+export default defineConfig({
+	worker: {
+		name: 'my-app',
+		compatibilityDate: '2026-11-01',
+		env: {
+			MY_KV: bindings.kv()
+		}
+	}
+});
+```
+
 ## Options
-
-### config
-
-Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
 
 ### platformProxy
 
-Preferences for the emulated `env` local bindings during development. See the [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
+Preferences for the emulated `env` local bindings during development, which are passed to `getPlatformProxy` from `@cloudflare/platform-proxy`. The bindings are read from `cloudflare.config.ts` using the current [Vite mode](https://vite.dev/guide/env-and-mode#modes).
 
 ### fallback
 
 Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
 
-For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
+For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.notFoundHandling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) setting in `cloudflare.config.ts` is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.notFoundHandling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
 
 ## Deployment
 
-You can use the Wrangler CLI to deploy your application by running `npx wrangler deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
+The adapter writes your Worker and its static assets to `.cloudflare/output`. You can deploy it with the Cloudflare CLI by running `npx cf deploy` or use the [Cloudflare Git integration](https://developers.cloudflare.com/workers/ci-cd/builds/) to enable automatic builds and deployments on push.
 
 ## Runtime APIs
 
@@ -86,15 +98,23 @@ export async function POST() {
 
 > [!NOTE] SvelteKit's built-in [`$app/env/*` modules](environment-variables) should be preferred for environment variables.
 
-To make these types available to your app, install [`wrangler`](https://www.npmjs.com/package/wrangler) and run [`wrangler types`](https://developers.cloudflare.com/workers/languages/typescript/).
+Types for your bindings are generated in `.cloudflare/types/index.d.ts` whenever you run `vite dev` or `vite build`.
 
 ### Testing locally
 
-Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/wrangler/configuration/#bindings) are created based on your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/) and are used to populate `env` during development and preview. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Values for secrets are read from a `.dev.vars` or `.env` file. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
 
 > [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
 
-Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime. If you were previously using `wrangler dev`, you may want to take a look at the [migration guide](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/).
+Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
+
+## Migrating from Wrangler configuration files
+
+The adapter no longer reads `wrangler.jsonc`, `wrangler.json` or `wrangler.toml` files. Follow Cloudflare's [Wrangler migration guide](https://developers.cloudflare.com/cf/wrangler/migrate/), passing `--bundler vite` to `npx cf migrate` so that it generates a `cloudflare.config.ts` file for the Cloudflare Vite plugin, then:
+
+- remove the adapter's `config` option
+- remove the Worker's `entrypoint` from `cloudflare.config.ts` if it points to `.svelte-kit/cloudflare/_worker.js`, since the adapter generates it
+- replace `wrangler deploy` with `cf deploy`
 
 ## Headers and redirects
 
@@ -118,7 +138,7 @@ Alternatively, you can [prerender](page-options#prerender) the routes in questio
 
 ## Migrating from Workers Sites
 
-Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove `main` and all `site` configuration settings from your Wrangler configuration file.
+Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and [migrate your Wrangler configuration file](#Migrating-from-Wrangler-configuration-files) without its `site` settings.
 
 ```js
 // @errors: 2307
@@ -136,30 +156,12 @@ export default defineConfig({
 });
 ```
 
-### wrangler.toml
-
-```toml
-/// file: wrangler.toml
----site.bucket = ".cloudflare/public"---
-```
-
-### wrangler.jsonc
-
-```jsonc
-/// file: wrangler.jsonc
-{
----	"site": {
-		"bucket": ".cloudflare/public"
-	}---
-}
-```
-
 ## Migrating from Cloudflare Pages
 
 To migrate to Cloudflare Workers:
 
-1. Remove `pages_build_output_dir` from your Wrangler configuration.
+1. Remove `pages_build_output_dir` from your Wrangler configuration and [migrate it to `cloudflare.config.ts`](#Migrating-from-Wrangler-configuration-files).
 2. Remove the adapter's `routes` option and any `_routes.json` files.
-3. Replace `wrangler pages dev` with `vite preview`, and replace `wrangler pages deploy` with `wrangler deploy`. For automatic deployments, use [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) instead of the Pages Git integration.
+3. Replace `wrangler pages dev` with `vite preview`, and replace `wrangler pages deploy` with `cf deploy`. For automatic deployments, use [Workers Builds](https://developers.cloudflare.com/workers/ci-cd/builds/) instead of the Pages Git integration.
 
 See Cloudflare's [Workers and Pages compatibility matrix](https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/#compatibility-matrix) for a comparison of supported features.

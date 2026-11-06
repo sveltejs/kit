@@ -10,53 +10,23 @@ import {
 	sync_process_env
 } from './utils.js';
 
-describe('validates Wrangler config', () => {
-	test('rejects Cloudflare Pages configuration', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					pages_build_output_dir: 'dist'
-				})
-			)
-		).toThrow('Cloudflare Pages is no longer supported');
-	});
-
-	test('Worker and static assets', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					main: 'dist/index.js',
-					assets: {
-						directory: 'dist/assets',
-						binding: 'ASSETS'
-					}
-				})
-			)
-		).not.toThrow();
-	});
-
-	test.each([{}, { assets: { binding: 'CUSTOM_ASSETS', not_found_handling: '404-page' } }])(
-		'accepts managed Worker settings %j',
-		(config) => {
-			expect(() =>
-				validate_worker_settings(/** @type {import('wrangler').Unstable_Config} */ (config))
-			).not.toThrow();
+describe('validate_worker_settings', () => {
+	test('rejects Cloudflare Pages builds', () => {
+		vi.stubEnv('CF_PAGES', '1');
+		try {
+			expect(() => validate_worker_settings()).toThrow('Cloudflare Pages is no longer supported');
+		} finally {
+			vi.unstubAllEnvs();
 		}
-	);
+	});
 
-	test('allows an explicit assets binding without a directory', () => {
-		expect(() =>
-			validate_worker_settings(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					assets: {
-						binding: 'ASSETS'
-					}
-				})
-			)
-		).not.toThrow();
+	test('accepts Workers builds', () => {
+		vi.stubEnv('CF_PAGES', undefined);
+		try {
+			expect(() => validate_worker_settings()).not.toThrow();
+		} finally {
+			vi.unstubAllEnvs();
+		}
 	});
 });
 
@@ -168,37 +138,63 @@ describe('_redirects', () => {
 });
 
 describe('sync_process_env', () => {
-	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
+	// an empty directory so that no `.dev.vars` files are picked up
 	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
 
 	/**
-	 * @param {Record<string, unknown>} vars
+	 * @param {Record<string, string | import('@cloudflare/config').Json>} vars
 	 */
-	const config = (vars) =>
-		/** @type {import('@cloudflare/vite-plugin').WorkerConfig} */ (
-			/** @type {unknown} */ ({ configPath: path.join(dir, 'wrangler.jsonc'), vars })
-		);
+	const worker = (vars) =>
+		/** @type {import('@cloudflare/vite-plugin').CloudflareConfig['worker']} */ ({
+			name: 'app',
+			compatibilityDate: '2026-09-01',
+			env: Object.fromEntries(
+				Object.entries(vars).map(([key, value]) => [
+					key,
+					typeof value === 'string' ? { type: 'text', value } : { type: 'json', value }
+				])
+			)
+		});
 
 	test('adds variables and removes the ones that are gone', () => {
-		sync_process_env(config({ SYNC_A: 'a', SYNC_B: { json: true } }));
+		sync_process_env(worker({ SYNC_A: 'a', SYNC_B: { json: true } }), dir, 'development');
 		expect(process.env.SYNC_A).toBe('a');
 		expect(process.env.SYNC_B).toBe('{"json":true}');
 
-		sync_process_env(config({ SYNC_A: 'changed' }));
+		sync_process_env(worker({ SYNC_A: 'changed' }), dir, 'development');
 		expect(process.env.SYNC_A).toBe('changed');
 		expect('SYNC_B' in process.env).toBe(false);
 
-		sync_process_env(config({}));
+		sync_process_env(worker({}), dir, 'development');
 		expect('SYNC_A' in process.env).toBe(false);
 	});
 
 	test('does not overwrite variables set elsewhere', () => {
 		process.env.SYNC_A = 'shell';
-		sync_process_env(config({ SYNC_A: 'wrangler' }));
+		sync_process_env(worker({ SYNC_A: 'config' }), dir, 'development');
 		expect(process.env.SYNC_A).toBe('shell');
 
-		sync_process_env(config({}));
+		sync_process_env(worker({}), dir, 'development');
 		expect(process.env.SYNC_A).toBe('shell');
 		delete process.env.SYNC_A;
+	});
+
+	test('reads the `.dev.vars` file for the mode before the default one', () => {
+		const env_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+		try {
+			fs.writeFileSync(path.join(env_dir, '.dev.vars'), 'SYNC_SECRET=default');
+			fs.writeFileSync(path.join(env_dir, '.dev.vars.staging'), 'SYNC_SECRET=staging');
+
+			sync_process_env(worker({}), env_dir, 'staging');
+			expect(process.env.SYNC_SECRET).toBe('staging');
+
+			sync_process_env(worker({}), env_dir, 'production');
+			expect(process.env.SYNC_SECRET).toBe('default');
+
+			sync_process_env(worker({}), false, 'production');
+			expect('SYNC_SECRET' in process.env).toBe(false);
+		} finally {
+			fs.rmSync(env_dir, { recursive: true, force: true });
+		}
 	});
 });
