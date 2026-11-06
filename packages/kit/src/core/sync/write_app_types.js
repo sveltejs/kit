@@ -94,6 +94,7 @@ declare module "svelte/elements" {
 		'data-sveltekit-reload'?: true | false | '' | undefined | null;
 		'data-sveltekit-replacestate'?: true | false | '' | undefined | null;
 		'data-sveltekit-reset'?: true | false | '' | undefined | null;
+		'data-sveltekit-scroll-container'?: true | false | '' | undefined | null;
 	}
 }
 `;

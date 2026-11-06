@@ -1,5 +1,5 @@
 import { hash_routing } from '$app/paths/internal/client';
-import { get_hash_element } from './utils.js';
+import { get_hash_element, scroll_to } from './utils.js';
 
 let autoscroll = true;
 
@@ -18,13 +18,13 @@ export function disable_scroll_handling() {
 export function restore_scroll(url, reset, popped_scroll) {
 	if (reset && autoscroll) {
 		if (popped_scroll) {
-			scrollTo(popped_scroll.x, popped_scroll.y);
+			scroll_to(popped_scroll.x, popped_scroll.y);
 		} else {
 			const element = get_hash_element(url, hash_routing);
 			if (element) {
 				element.scrollIntoView();
 			} else {
-				scrollTo(0, 0);
+				scroll_to(0, 0);
 			}
 		}
 	}

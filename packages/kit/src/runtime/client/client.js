@@ -22,6 +22,7 @@ import {
 	get_router_options,
 	is_external_url,
 	origin,
+	scroll_to,
 	scroll_state,
 	load_css
 } from './utils.js';
@@ -547,7 +548,7 @@ async function _start(_app, _target, data) {
 	function restore_reload_scroll() {
 		if (scroll) {
 			history.scrollRestoration = 'manual';
-			scrollTo(scroll.x, scroll.y);
+			scroll_to(scroll.x, scroll.y);
 		}
 	}
 
@@ -3210,7 +3211,7 @@ function _start_router() {
 				// /#top and click on a link that goes to /#top. In those cases just go to
 				// the top of the page, and avoid a history change.
 				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
-					scrollTo({ top: 0 });
+					scroll_to({ top: 0 });
 				} else {
 					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
 					if (element) {
@@ -3380,7 +3381,7 @@ function _start_router() {
 
 				update_url(url);
 
-				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				if (reset && scroll) scroll_to(scroll.x, scroll.y);
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				// the token above aborted any in-flight navigation, and nothing else will clear it
 				is_navigating = false;
@@ -3468,7 +3469,7 @@ function _start_router() {
 			// so we need to restore the scroll position manually here
 			const scroll = history_info[current_history_index]?.scroll;
 			if (scroll) {
-				scrollTo(scroll.x, scroll.y);
+				scroll_to(scroll.x, scroll.y);
 			}
 		}
 	});
