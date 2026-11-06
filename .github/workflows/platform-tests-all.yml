@@ -46,7 +46,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [basic, split]
+        variant: [basic, split, trailing-slash]
     uses: ./.github/workflows/platform-test.yml
     with:
       sha: ${{ inputs.sha || github.sha }}

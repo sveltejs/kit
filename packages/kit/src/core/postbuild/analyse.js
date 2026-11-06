@@ -116,6 +116,8 @@ async function analyse({
 
 		const route_config = page?.config ?? endpoint?.config ?? {};
 		const prerender = page?.prerender ?? endpoint?.prerender;
+		// a page's option takes precedence over its endpoint's, as it does at runtime
+		const trailing_slash = page?.trailing_slash ?? endpoint?.trailing_slash ?? 'never';
 
 		if (prerender !== true) {
 			for (const feature of list_features(
@@ -142,6 +144,7 @@ async function analyse({
 				methods: api_methods
 			},
 			prerender,
+			trailing_slash,
 			entries:
 				entries && (await entries()).map((entry_object) => resolve_route(route.id, entry_object))
 		});
@@ -205,7 +208,8 @@ function analyse_endpoint(route, mod) {
 		config: mod.config,
 		entries: mod.entries,
 		methods,
-		prerender: mod.prerender ?? false
+		prerender: mod.prerender ?? false,
+		trailing_slash: mod.trailingSlash ?? 'never'
 	};
 }
 
@@ -225,7 +229,8 @@ function analyse_page(layouts, leaf) {
 		config: nodes.get_config(),
 		entries: leaf.universal?.entries ?? leaf.server?.entries,
 		methods,
-		prerender: nodes.prerender()
+		prerender: nodes.prerender(),
+		trailing_slash: nodes.trailing_slash()
 	};
 }
 
