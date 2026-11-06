@@ -531,8 +531,21 @@ export function deep_set(object, keys, value) {
 		const inner = Object.hasOwn(current, key) ? current[key] : undefined;
 		const exists = inner != null;
 
-		if (exists && is_array !== Array.isArray(inner)) {
-			e.form_field_array_conflict({ key: keys[i + 1] });
+		if (exists) {
+			// an existing intermediate value must be a container of the expected type:
+			// an array for a numeric key, or a plain object otherwise. Scalars (and
+			// non-plain objects such as files) cannot contain nested values, and
+			// writing into one would throw a raw TypeError instead of a diagnostic
+			const prototype = typeof inner === 'object' ? Object.getPrototypeOf(inner) : null;
+			const is_container = is_array
+				? Array.isArray(inner)
+				: typeof inner === 'object' &&
+					!Array.isArray(inner) &&
+					(prototype === Object.prototype || prototype === null);
+
+			if (!is_container) {
+				e.form_field_array_conflict({ key: keys[i + 1] });
+			}
 		}
 
 		if (!exists) {
