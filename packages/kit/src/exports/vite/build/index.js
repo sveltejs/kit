@@ -9,7 +9,7 @@ import { styleText } from 'node:util';
 import { code, include } from '@rolldown/pluginutils';
 import { build_server_nodes } from './build_server.js';
 import { treeshake_prerendered_remotes } from './remote.js';
-import { find_deps, resolve_symlinks } from './utils.js';
+import { find_deps, find_server_only_assets, resolve_symlinks } from './utils.js';
 import { warn_overridden_config } from '../utils.js';
 import { adapt } from '../../../core/adapt/index.js';
 import { generate_manifest } from '../../../core/generate_manifest/index.js';
@@ -475,7 +475,8 @@ export function plugin_compile(
 					out_dir: out,
 					service_worker: service_worker_entry_file ? 'service-worker.js' : null, // TODO make file configurable?
 					client: null,
-					server_manifest: vite_server_manifest
+					server_manifest: vite_server_manifest,
+					server_only_assets: find_server_only_assets(server_chunks, kit.appDir)
 				};
 
 				const { remotes, remote_original_by_hash } = get_remote_metadata();

@@ -24,7 +24,8 @@ function create_test_builder(outDir, assets = []) {
 				routes: [],
 				params: ''
 			},
-			server_manifest: {}
+			server_manifest: {},
+			server_only_assets: []
 		},
 		server_metadata: { nodes: [], routes: new Map(), remotes: new Map() },
 		route_data: [],
