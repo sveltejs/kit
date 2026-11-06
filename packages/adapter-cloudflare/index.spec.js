@@ -16,7 +16,7 @@ vi.mock('@cloudflare/platform-proxy', () => ({
 /**
  * A Vite root with a `cloudflare.config.ts` so that the adapter starts a platform proxy
  */
-const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-')));
+const root = fs.realpathSync.native(fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-')));
 fs.writeFileSync(
 	path.join(root, 'cloudflare.config.ts'),
 	"export default { worker: { name: 'app', compatibilityDate: '2026-08-06' } };"
