@@ -1,3 +1,7 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import process from 'node:process';
 import { expect, test } from 'vitest';
 import { build, timeout } from './utils.js';
 
@@ -51,5 +55,18 @@ test('#lib/**/server/* is not importable from param matchers', { timeout }, () =
 test('#lib/*.server.* is not importable from the client with a query containing a slash', { timeout }, () => {
 	expect(build('server-only-module-query', env)).toContainKitDiagnostic('server_only_import', {
 		contains: ['#lib/test.server.js']
+	});
+});
+
+test('server-only modules are detected when the root is a symlink', { timeout }, ({
+	onTestFinished
+}) => {
+	const link = path.join(os.tmpdir(), `kit-root-${process.pid}`);
+	fs.rmSync(link, { force: true });
+	fs.symlinkSync(path.join(import.meta.dirname, 'apps/server-only-module'), link, 'junction');
+	onTestFinished(() => fs.rmSync(link));
+
+	expect(build('server-only-module', env, link)).toContainKitDiagnostic('server_only_import', {
+		contains: ['#lib/test.server.js', ' src/routes/+page.svelte imports\n  #lib/test.server.js']
 	});
 });
