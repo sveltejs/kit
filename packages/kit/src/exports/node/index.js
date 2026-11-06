@@ -25,9 +25,11 @@ function get_raw_body(req, body_size_limit) {
 	}
 
 	if (req.destroyed) {
-		const readable = new ReadableStream();
-		void readable.cancel();
-		return readable;
+		return new ReadableStream({
+			start(controller) {
+				controller.error(req.errored ?? new Error('Request was destroyed'));
+			}
+		});
 	}
 
 	let size = 0;
@@ -134,6 +136,10 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 	}
 
 	const controller = new AbortController();
+
+	if (request.destroyed || request.readableAborted) {
+		controller.abort();
+	}
 
 	request.once('close', () => {
 		if (request.readableAborted) {

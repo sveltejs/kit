@@ -384,3 +384,26 @@ test('requests with no content-length and no transfer-encoding return null body'
 
 	await expect(text).resolves.toBe(''); // Should return an empty string if bug is actually fixed
 });
+
+test('handles already-destroyed IncomingMessage with body without throwing', async () => {
+	const req = new PassThrough();
+	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+	incoming.headers = {
+		'content-type': 'application/json',
+		'content-length': '2'
+	};
+	incoming.method = 'POST';
+	incoming.url = '/example';
+	incoming.httpVersionMajor = 1;
+
+	req.destroy();
+
+	const request = getRequest({
+		request: incoming,
+		base: 'http://localhost'
+	});
+
+	expect(request.method).toBe('POST');
+	expect(request.signal.aborted).toBe(true);
+	await expect(request.text()).rejects.toThrow();
+});
