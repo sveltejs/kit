@@ -38,6 +38,22 @@ describe('split_path', () => {
 		{
 			input: 'foo[0][1][2]',
 			output: ['foo', '0', '1', '2']
+		},
+		{
+			input: 'prénom',
+			output: ['prénom']
+		},
+		{
+			input: 'a$b',
+			output: ['a$b']
+		},
+		{
+			input: '日本',
+			output: ['日本']
+		},
+		{
+			input: 'naïve.$value',
+			output: ['naïve', '$value']
 		}
 	];
 
