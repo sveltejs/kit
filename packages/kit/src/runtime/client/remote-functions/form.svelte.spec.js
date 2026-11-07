@@ -1,3 +1,4 @@
+import { stringify } from 'devalue';
 import { flushSync, tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
 
@@ -13,9 +14,11 @@ beforeEach(() => {
 });
 
 // Mock `client.js` because the real one pulls in the SvelteKit
-// router/hydration machinery. Creating form instances needs none of it.
+// router/hydration machinery. These tests need none of it.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
+	app: { decoders: {} },
 	query_responses: {},
+	notify_version: () => {},
 	_goto: () => {},
 	set_nearest_error_page: () => {},
 	handle_error: () => {},
@@ -63,6 +66,61 @@ test('distinct keyed form instances can attach independently', () => {
 	detach_first();
 	detach_second();
 });
+
+test.each(['hook', 'schema'])(
+	'%s validation redirects isolate keyed issues and allow subsequent preflight-only validation',
+	async (source) => {
+		const remote = form('hash/myForm');
+		const first = remote.for('first');
+		const second = remote.for('second');
+		const detach_first = attach(first).attach();
+		const detach_second = attach(second).attach();
+		const issues = [{ message: 'answer is too short', path: ['answer'] }];
+		const schema = {
+			'~standard': {
+				version: /** @type {const} */ (1),
+				vendor: 'test',
+				validate: () => ({ issues })
+			}
+		};
+		const response =
+			source === 'hook'
+				? { type: 'redirect', status: 303, location: '/remote' }
+				: { type: 'result', data: stringify({ redirect: '/remote' }) };
+		const fetch = vi
+			.spyOn(globalThis, 'fetch')
+			.mockResolvedValue(new Response(JSON.stringify(response)));
+
+		try {
+			first.preflight(schema);
+			second.preflight(schema);
+			await first.validate({ all: true, preflightOnly: true });
+			await second.validate({ all: true, preflightOnly: true });
+			expect(first.fields.allIssues()).toEqual(issues);
+			expect(second.fields.allIssues()).toEqual(issues);
+			expect(fetch).not.toHaveBeenCalled();
+
+			first.preflight({
+				'~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) }
+			});
+			await first.validate({ all: true });
+			expect(first.fields.allIssues()).toBeUndefined();
+			expect(second.fields.allIssues()).toEqual(issues);
+			expect(fetch).toHaveBeenCalledOnce();
+
+			// Preflight-only validation merges into the raw issue array left by the redirect.
+			first.preflight(schema);
+			await first.validate({ all: true, preflightOnly: true });
+			expect(first.fields.allIssues()).toEqual(issues);
+			expect(second.fields.allIssues()).toEqual(issues);
+			expect(fetch).toHaveBeenCalledOnce();
+		} finally {
+			detach_first();
+			detach_second();
+			fetch.mockRestore();
+		}
+	}
+);
 
 test('submit throws synchronously before attachment', () => {
 	const remote = form('hash/myForm');
