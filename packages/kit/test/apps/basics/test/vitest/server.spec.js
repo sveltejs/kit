@@ -134,6 +134,44 @@ describe('Caching', () => {
 		const response = await get('/caching');
 		expect(response.headers.get('cache-control')).toBe('public, max-age=30');
 	});
+
+	test('pages get an etag of their HTML and answer 304 when it matches', async () => {
+		const response = await get('/caching');
+		const bytes = new Uint8Array(await response.arrayBuffer());
+		expect(response.headers.get('content-length')).toBe(String(bytes.length));
+
+		let hash = 5381;
+		let i = 0;
+		for (; i + 4 <= bytes.length; i += 4) {
+			const word = bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24);
+			hash = Math.imul(hash, 33) ^ word;
+		}
+		for (; i < bytes.length; i += 1) hash = Math.imul(hash, 33) ^ bytes[i];
+
+		const etag = /** @type {string} */ (response.headers.get('etag'));
+		expect(etag).toBe(`"${(hash >>> 0).toString(36)}"`);
+
+		const revalidated = await get('/caching', { headers: { 'if-none-match': etag } });
+		expect(revalidated.status).toBe(304);
+		expect(revalidated.headers.get('etag')).toBe(etag);
+	});
+
+	test('keeps an etag set with setHeaders and answers 304 when it matches', async () => {
+		const response = await get('/caching/etag');
+		expect(response.status).toBe(200);
+		expect(response.headers.get('etag')).toBe('"custom"');
+
+		const revalidated = await get('/caching/etag', { headers: { 'if-none-match': '"custom"' } });
+		expect(revalidated.status).toBe(304);
+		expect(revalidated.headers.get('etag')).toBe('"custom"');
+	});
+
+	test('does not add an etag to no-store pages', async () => {
+		const response = await get('/caching/no-store');
+		expect(response.status).toBe(200);
+		expect(response.headers.get('cache-control')).toBe('private, no-store');
+		expect(response.headers.get('etag')).toBeNull();
+	});
 });
 
 describe('Content-Type', () => {
