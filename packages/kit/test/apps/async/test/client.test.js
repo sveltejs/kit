@@ -739,6 +739,31 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	for (const action of ['reconnect', 'finite-reconnect', 'refresh']) {
+		test(`overlapping live query ${action} calls settle`, async ({ page }) => {
+			await page.goto('/remote/live');
+			await page.click('#reset');
+			await expect(page.locator('#connected')).toHaveText('true');
+			await expect(page.locator('#finite-done')).toHaveText('true');
+
+			await page.click('#start-stream-log');
+			await expect(page.locator('#stream-log')).toHaveText('0');
+
+			await page.click(`#overlapping-${action}`);
+			await expect(page.locator('.overlapping-result')).toHaveText([
+				/fulfilled|rejected/,
+				/fulfilled|rejected/,
+				'fulfilled'
+			]);
+			await expect(page.locator('#connected')).toHaveText('true');
+
+			// Reconnecting must not orphan existing async-iterator consumers.
+			await page.click('#increment');
+			await expect(page.locator('#count')).toHaveText('1');
+			await expect(page.locator('#stream-log')).toContainText('1');
+		});
+	}
+
 	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {
