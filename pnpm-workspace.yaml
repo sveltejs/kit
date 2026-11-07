@@ -13,6 +13,8 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
+  # Renovate security update: sharp@0.35.5
+  - sharp@0.35.5
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
