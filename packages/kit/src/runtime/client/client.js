@@ -3351,6 +3351,9 @@ function _start_router() {
 			current_history_index = history_index;
 			current_navigation_index = navigation_index;
 			current_reset_index = reset_index;
+			// the entry may have been created by an earlier document that went away without
+			// persisting `history_info` (e.g. iOS Safari, which doesn't fire `beforeunload`)
+			set_history_options(current_history_index, history_metadata);
 
 			const token = navigation_token;
 			const shallow_intent = shallow_url
