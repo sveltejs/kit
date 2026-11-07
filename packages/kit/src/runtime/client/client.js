@@ -536,10 +536,8 @@ async function _start(_app, _target, data) {
 		);
 	}
 
-	set_history_options(
-		current_history_index,
-		/** @type {HistoryMetadata} */ (get_history_metadata())
-	);
+	// Safari can hide history.state in third-party iframes, even after replaceState.
+	set_history_options(current_history_index, { resetIndex: current_reset_index });
 
 	// if we reload the page, or Cmd-Shift-T back to it,
 	// recover scroll position
