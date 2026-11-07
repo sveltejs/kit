@@ -273,6 +273,7 @@ export interface RouteParam {
 	matcher: string;
 	optional: boolean;
 	rest: boolean;
+	/** Whether a value can shift from this parameter into the next one without crossing static text. */
 	chained: boolean;
 }
 
