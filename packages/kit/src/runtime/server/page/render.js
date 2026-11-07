@@ -603,7 +603,12 @@ export async function render_response({
 			done: true
 		})) || '';
 
-	if (!chunks) {
+	// an `etag` from `setHeaders` replaces ours, and a `no-store` response is never revalidated
+	if (
+		!chunks &&
+		!('etag' in state.headers) &&
+		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '')
+	) {
 		headers.set('etag', `"${hash(transformed)}"`);
 	}
 

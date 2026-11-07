@@ -8,6 +8,12 @@ export function hash(...values) {
 	for (const value of values) {
 		if (typeof value === 'string') {
 			let i = value.length;
+			while (i >= 4) {
+				hash = (hash * 33) ^ value.charCodeAt(--i);
+				hash = (hash * 33) ^ value.charCodeAt(--i);
+				hash = (hash * 33) ^ value.charCodeAt(--i);
+				hash = (hash * 33) ^ value.charCodeAt(--i);
+			}
 			while (i) hash = (hash * 33) ^ value.charCodeAt(--i);
 		} else if (ArrayBuffer.isView(value)) {
 			const buffer = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
