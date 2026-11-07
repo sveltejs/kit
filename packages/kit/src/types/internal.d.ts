@@ -745,6 +745,10 @@ export interface RequestState {
 	 */
 	rerouted_url: string | null;
 	/**
+	 * Headers set with `setHeaders`, keyed by their lowercase name. They are applied to the response once `resolve` returns.
+	 */
+	readonly headers: Record<string, string>;
+	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
