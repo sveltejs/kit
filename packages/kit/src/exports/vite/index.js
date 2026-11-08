@@ -419,8 +419,8 @@ function kit({ svelte_config }) {
 					},
 					optimizeDeps: {
 						entries: [
-							`${kit.files.routes}/**/+*.{svelte,js,ts}`,
-							`!${kit.files.routes}/**/+*server.*`
+							`${posixify(kit.files.routes)}/**/+*.{svelte,js,ts}`,
+							`!${posixify(kit.files.routes)}/**/+*server.*`
 						],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
