@@ -219,7 +219,8 @@ function measure_files(root, files, compressed) {
  */
 function create_asset_table(base, measured) {
 	const entries = measured.map(
-		(entry) => /** @type {[string, AssetEntry]} */ ([`${base}/${entry.file}`, entry])
+		(entry) =>
+			/** @type {[string, AssetEntry]} */ ([`${base}/${entry.file.replaceAll('%', '%25')}`, entry])
 	);
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
@@ -275,7 +276,7 @@ function create_prerendered_table(base, measured, paths) {
 		const file = path.slice(base.length + 1) || 'index.html';
 		const entry =
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
-		if (entry) entries.push([path, entry]);
+		if (entry) entries.push([base + path.slice(base.length).replaceAll('%', '%25'), entry]);
 	}
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));

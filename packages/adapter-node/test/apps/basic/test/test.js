@@ -81,6 +81,43 @@ test('records aliases for html files', async ({ request }) => {
 	}
 });
 
+test('serves static files with percent signs in their names', async ({ request }) => {
+	for (const [path, body] of [
+		['/100%25.txt', 'percent'],
+		['/100%25.txt?download=1', 'percent'],
+		['/literal%252F.txt', 'literal percent'],
+		['/percent%25/', '<h1>percent directory</h1>\n']
+	]) {
+		const response = await request.get(path);
+		expect(response.status(), path).toBe(200);
+		expect(await response.text(), path).toBe(body);
+	}
+});
+
+test('serves prerendered paths with percent signs', async ({ request }) => {
+	for (const [path, body] of [
+		['/prerendered-%25.txt', 'prerendered percent'],
+		['/prerendered-%252F.txt', 'literal percent2F'],
+		['/prerendered-%2525.txt', 'literal percent25']
+	]) {
+		const response = await request.get(path);
+		expect(response.status(), path).toBe(200);
+		expect(await response.text(), path).toBe(body);
+	}
+});
+
+test('serves prerendered directories with percent signs and their redirects', async ({
+	request
+}) => {
+	const page = await request.get('/prerendered-%25/');
+	expect(page.status()).toBe(200);
+	expect(await page.text()).toContain('<h1>prerendered percent directory</h1>');
+
+	const redirect = await request.get('/prerendered-%25', { maxRedirects: 0 });
+	expect(redirect.status()).toBe(308);
+	expect(redirect.headers()['location']).toBe('./prerendered-%25/');
+});
+
 test('uses the content types from the manifest', async ({ request }) => {
 	// https://github.com/sveltejs/kit/issues/13753
 	expect((await request.get('/test.ico')).headers()['content-type']).toBe('image/x-icon');
