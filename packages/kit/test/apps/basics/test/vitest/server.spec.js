@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { createReadableStream, getRequest, setResponse } from '@sveltejs/kit/node';
 import { createServer, loadEnv } from 'vite';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { hash_bytes } from '../../../../../src/runtime/server/page/hash_bytes.js';
 import * as records from '../../../../records.js';
 
 // the server half of the old no-js Playwright project, against the built server directly or,
@@ -140,16 +141,8 @@ describe('Caching', () => {
 		const bytes = new Uint8Array(await response.arrayBuffer());
 		expect(response.headers.get('content-length')).toBe(String(bytes.length));
 
-		let hash = 5381;
-		let i = 0;
-		for (; i + 4 <= bytes.length; i += 4) {
-			const word = bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24);
-			hash = Math.imul(hash, 33) ^ word;
-		}
-		for (; i < bytes.length; i += 1) hash = Math.imul(hash, 33) ^ bytes[i];
-
 		const etag = /** @type {string} */ (response.headers.get('etag'));
-		expect(etag).toBe(`"${(hash >>> 0).toString(36)}"`);
+		expect(etag).toBe(`"${hash_bytes(bytes)}"`);
 
 		const revalidated = await get('/caching', { headers: { 'if-none-match': etag } });
 		expect(revalidated.status).toBe(304);

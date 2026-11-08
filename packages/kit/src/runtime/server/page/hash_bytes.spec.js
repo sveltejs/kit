@@ -2,18 +2,30 @@ import { assert, test } from 'vitest';
 import { hash_bytes } from './hash_bytes.js';
 
 /**
- * djb2 over little-endian 32-bit words, then the remaining bytes, assembled by hand
+ * @param {number} x
+ * @param {number} r
+ */
+const rotl = (x, r) => (x << r) | (x >>> (32 - r));
+
+/**
+ * MurmurHash3 x86_32 with seed 0, assembled byte by byte
  * @param {Uint8Array} bytes
  */
 function reference(bytes) {
-	let hash = 5381;
+	let hash = 0;
 	let i = 0;
 	for (; i + 4 <= bytes.length; i += 4) {
-		const word = bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24);
-		hash = Math.imul(hash, 33) ^ word;
+		let k = bytes[i] | (bytes[i + 1] << 8) | (bytes[i + 2] << 16) | (bytes[i + 3] << 24);
+		k = Math.imul(rotl(Math.imul(k, 0xcc9e2d51), 15), 0x1b873593);
+		hash = (Math.imul(rotl(hash ^ k, 13), 5) + 0xe6546b64) | 0;
 	}
-	for (; i < bytes.length; i += 1) hash = Math.imul(hash, 33) ^ bytes[i];
-	return (hash >>> 0).toString(36);
+	let k = 0;
+	for (let j = bytes.length - 1; j >= i; j -= 1) k = (k << 8) | bytes[j];
+	if (i < bytes.length) hash ^= Math.imul(rotl(Math.imul(k, 0xcc9e2d51), 15), 0x1b873593);
+	hash ^= bytes.length;
+	hash = Math.imul(hash ^ (hash >>> 16), 0x85ebca6b);
+	hash = Math.imul(hash ^ (hash >>> 13), 0xc2b2ae35);
+	return ((hash ^ (hash >>> 16)) >>> 0).toString(36);
 }
 
 /** @param {number} seed */
@@ -38,7 +50,12 @@ function random_bytes(next, length) {
 
 test('hash_bytes produces known values', () => {
 	const encoder = new TextEncoder();
-	assert.equal(hash_bytes(new Uint8Array()), '45h');
+	assert.equal(hash_bytes(new Uint8Array()), '0');
+	assert.equal(hash_bytes(encoder.encode('hello')), (0x248bfa47).toString(36));
+	assert.equal(
+		hash_bytes(encoder.encode('The quick brown fox jumps over the lazy dog')),
+		(0x2e4ff723).toString(36)
+	);
 	assert.equal(hash_bytes(encoder.encode('a')), reference(encoder.encode('a')));
 	assert.equal(
 		hash_bytes(encoder.encode('<!doctype html>')),
@@ -73,6 +90,24 @@ test('hash_bytes does not depend on where the bytes sit in their buffer', () => 
 			assert.equal(hash_bytes(view), hash_bytes(view.slice()));
 			assert.equal(hash_bytes(view), reference(view));
 		}
+	}
+});
+
+test('hash_bytes changes when two digits a few words apart change', () => {
+	let html = '';
+	for (let i = 0; i < 200; i += 1)
+		html += `<tr><td>${1000 + i}</td><td>${(i * 37) % 10000}</td></tr>`;
+	const bytes = new TextEncoder().encode(html);
+	const original = hash_bytes(bytes);
+	const next = random(4);
+
+	for (let i = 0; i < 20_000; i += 1) {
+		const a = Math.floor(next() * (bytes.length - 12));
+		const b = a + 4 * (1 + Math.floor(next() * 3));
+		const changed = bytes.slice();
+		changed[a] ^= 1 + Math.floor(next() * 15);
+		changed[b] ^= 1 + Math.floor(next() * 15);
+		assert.notEqual(hash_bytes(changed), original);
 	}
 });
 
