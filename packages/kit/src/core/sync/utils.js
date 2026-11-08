@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { resolve_entry } from '../../utils/filesystem.js';
@@ -13,6 +14,28 @@ export function write_if_changed(file, code) {
 	// otherwise rewrite every generated file with identical bytes, and the dev server
 	// reloads on each of them
 	if (code !== read(file)) {
+		write(file, code);
+	}
+}
+
+/**
+ * Like `write_if_changed`, but writes to a temporary file and renames it over `file`, so that
+ * processes writing the same file at once can't leave it torn. Vite watches `outDir/generated`,
+ * so only use this for files outside of it
+ * @param {string} file
+ * @param {string} code
+ */
+export function replace_if_changed(file, code) {
+	if (code === read(file)) return;
+
+	const tmp = `${file}.${crypto.randomUUID()}.tmp`;
+	write(tmp, code);
+
+	try {
+		fs.renameSync(tmp, file);
+	} catch {
+		// replacing a file that is open elsewhere can fail on Windows
+		fs.rmSync(tmp, { force: true });
 		write(file, code);
 	}
 }
