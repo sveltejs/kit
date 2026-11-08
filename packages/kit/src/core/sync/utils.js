@@ -20,8 +20,8 @@ export function write_if_changed(file, code) {
 
 /**
  * Like `write_if_changed`, but writes to a temporary file and renames it over `file`, so that
- * processes writing the same file at once can't leave it torn. Vite watches `outDir/generated`,
- * so only use this for files outside of it
+ * processes writing the same file at once can't mix their contents. Only use this for files
+ * outside `outDir/generated`, which Vite watches.
  * @param {string} file
  * @param {string} code
  */
@@ -35,8 +35,11 @@ export function replace_if_changed(file, code) {
 		fs.renameSync(tmp, file);
 	} catch {
 		// replacing a file that is open elsewhere can fail on Windows
-		fs.rmSync(tmp, { force: true });
 		write(file, code);
+
+		try {
+			fs.rmSync(tmp, { force: true });
+		} catch {}
 	}
 }
 

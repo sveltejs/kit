@@ -96,7 +96,7 @@ function write_parent_tsconfig(root, id, config, transform) {
 
 	const normalized = normalize_config(out_file, config, transform);
 
-	// shared by every process syncing the project, even ones with a different `outDir`
+	// processes with a different `outDir` write different contents here
 	replace_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
 }
 

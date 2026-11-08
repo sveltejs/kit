@@ -87,7 +87,7 @@ test.describe('write', () => {
 	});
 
 	test.skipIf(process.platform === 'win32')(
-		'replace_if_changed is not torn by another process writing the same file',
+		'replace_if_changed keeps its contents when another process writes the same file',
 		() => {
 			const file = path.join(dir, 'tsconfig.json');
 			fs.writeFileSync(file, '{"rootDirs":[".svelte-kit-a"]}');
