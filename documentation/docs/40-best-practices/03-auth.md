@@ -43,8 +43,7 @@ export async function handle({ event, resolve }) {
 
 You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check if the user is authenticated. This check can live in a shared helper, then reused in each load function, as shown in [the example](load#Using-getRequestEvent).
 
-
-Always prefer checks in `+page.server.js` over `+layout.server.js` — see [implications for authentication](load#Implications-for-authentication).
+> [!NOTE] Always prefer checks in `+page.server.js` over `+layout.server.js` — see [implications for authentication](load#Implications-for-authentication)
 
 ### Protecting multiple routes
 
