@@ -27,7 +27,6 @@ import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
-import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
 import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
 
 /**
@@ -70,8 +69,6 @@ export async function dev(
 
 		return fetch(info, init);
 	};
-
-	write_tsconfig(svelte_config, root);
 
 	/** @type {ManifestData} */
 	let manifest_data;

@@ -34,6 +34,7 @@ import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-v
 import { plugin_guard } from './plugins/guard.js';
 import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
 import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
+import { write_tsconfig } from '../../core/sync/write_tsconfig/index.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
 import { bullet_list } from '../../utils/format.js';
@@ -558,8 +559,10 @@ function kit({ svelte_config }) {
 		 */
 		configResolved(config) {
 			if (!is_build) {
-				// Dependency scanning starts before configureServer creates the full manifest
+				// Dependency scanning (e.g. an adapter's SSR environment scan) can start before
+				// configureServer runs, so write what it needs to resolve and compile files now
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
+				write_tsconfig(svelte_config, root);
 			}
 
 			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
