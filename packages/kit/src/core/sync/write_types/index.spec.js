@@ -3,9 +3,9 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
-import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, assert, beforeEach, describe, expect, test, vi } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { tweak_types, write_all_types } from './index.js';
+import { tweak_types, write_all_types, write_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
 import { validate_config } from '../../config/index.js';
 import { write_env } from '../write_env.js';
@@ -401,4 +401,147 @@ test('prunes stale entries from route_meta_data.json when routes are deleted', (
 	} finally {
 		fs.rmSync(tmp, { force: true, recursive: true });
 	}
+});
+
+describe('Publishes generated types', () => {
+	/** @type {string} */
+	let root;
+	/** @type {import('types').ValidatedConfig} */
+	let config;
+	/** @type {import('types').ManifestData} */
+	let manifest;
+	/** @type {string} */
+	let route_dir;
+	/** @type {string} */
+	let outdir;
+
+	const modules = ['+page.ts', '+page.server.ts', '+layout.ts', '+layout.server.ts'];
+	const files = ['$types.d.ts', ...modules.map((module) => `proxy${module}`)];
+
+	beforeEach(() => {
+		root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-atomic-types-'));
+		config = validate_config({});
+		config.files.assets = path.join(root, 'static');
+		config.files.params = path.join(root, 'src/params');
+		config.files.routes = path.join(root, 'src/routes');
+		config.outDir = path.join(root, '.svelte-kit');
+		route_dir = path.join(config.files.routes, 'about');
+		outdir = path.join(config.outDir, 'types/src/routes/about');
+
+		fs.mkdirSync(route_dir, { recursive: true });
+		fs.writeFileSync(path.join(route_dir, '+page.svelte'), '');
+		for (const module of modules) {
+			fs.writeFileSync(path.join(route_dir, module), 'export const load: any = () => ({ a: 1 });');
+		}
+
+		manifest = create_manifest_data(config, root);
+		sync();
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+		fs.rmSync(root, { force: true, recursive: true });
+	});
+
+	function sync() {
+		write_all_types(config, manifest, root);
+	}
+
+	function update() {
+		write_types(config, manifest, path.join(route_dir, '+page.ts'), root);
+	}
+
+	test.each(['sync', 'update'])('%s does not expose truncated files', (method) => {
+		const meta_data_file = path.join(config.outDir, 'types/route_meta_data.json');
+		const outputs = [...files.map((file) => path.join(outdir, file)), meta_data_file];
+		const contents = outputs.map((file) => fs.readFileSync(file, 'utf-8'));
+		const truncated = new Set();
+		let reads = 0;
+		const write = fs.writeFileSync;
+		vi.spyOn(fs, 'writeFileSync').mockImplementation((file, data, options) => {
+			if (typeof file === 'number') return write(file, data, options);
+			// Split open(O_TRUNC) from write so a competing reader deterministically
+			// observes the window that is otherwise only hit intermittently.
+			const fd = fs.openSync(file, 'w');
+			try {
+				for (let i = 0; i < outputs.length; i++) {
+					// Full sync currently deletes metadata during cleanup (#17465).
+					if (outputs[i] === meta_data_file && !fs.existsSync(meta_data_file)) continue;
+					reads++;
+					if (fs.readFileSync(outputs[i], 'utf-8') !== contents[i]) {
+						truncated.add(path.basename(outputs[i]));
+					}
+				}
+				write(fd, data, options);
+			} finally {
+				fs.closeSync(fd);
+			}
+		});
+
+		if (method === 'sync') sync();
+		else update();
+
+		expect(reads).toBeGreaterThan(0);
+		expect([...truncated]).toEqual([]);
+		for (let i = 0; i < outputs.length; i++) {
+			expect(fs.readFileSync(outputs[i], 'utf-8')).toBe(contents[i]);
+		}
+	});
+
+	test('keeps in-progress writes safe from another sync cleanup', () => {
+		const rename = fs.renameSync;
+		let nested = false;
+		vi.spyOn(fs, 'renameSync').mockImplementation((from, to) => {
+			if (!nested) {
+				nested = true;
+				sync();
+				// A temporary inside the types tree would be deleted as a stale output.
+				expect(fs.existsSync(from)).toBe(true);
+			}
+			rename(from, to);
+		});
+
+		update();
+
+		expect(nested).toBe(true);
+		expect(fs.readdirSync(config.outDir)).toEqual(['types']);
+		for (const file of files) {
+			expect(fs.readFileSync(path.join(outdir, file), 'utf-8').length).toBeGreaterThan(0);
+		}
+	});
+
+	test.each(['write', 'rename'])('preserves existing files and cleans up on %s failure', (step) => {
+		const contents = files.map((file) => fs.readFileSync(path.join(outdir, file), 'utf-8'));
+		const error = new Error('publication failed');
+		if (step === 'write') {
+			const write = fs.writeFileSync;
+			vi.spyOn(fs, 'writeFileSync').mockImplementation((file) => {
+				write(file, 'partial');
+				throw error;
+			});
+		} else {
+			vi.spyOn(fs, 'renameSync').mockImplementation(() => {
+				throw error;
+			});
+		}
+
+		expect(update).toThrow(error);
+		for (let i = 0; i < files.length; i++) {
+			expect(fs.readFileSync(path.join(outdir, files[i]), 'utf-8')).toBe(contents[i]);
+		}
+		expect(fs.readdirSync(config.outDir)).toEqual(['types']);
+	});
+
+	test('refreshes generation timestamps even when the generated text is unchanged', () => {
+		const long_ago = new Date('2020-01-01T00:00:00Z');
+		for (const file of files) {
+			fs.utimesSync(path.join(outdir, file), long_ago, long_ago);
+		}
+
+		update();
+
+		for (const file of files) {
+			expect(fs.statSync(path.join(outdir, file)).mtime).not.toEqual(long_ago);
+		}
+	});
 });

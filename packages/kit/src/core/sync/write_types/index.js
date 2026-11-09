@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
@@ -25,6 +26,23 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
+
+/**
+ * @param {string} outdir The configured output directory, outside the types cleanup tree
+ * @param {string} file
+ * @param {string} code
+ */
+function write_atomic(outdir, file, code) {
+	// Another sync can remove unexpected files anywhere inside `types`, including
+	// temporary files beside a route's outputs. Stage outside that tree instead.
+	const temporary = path.join(outdir, `types.${randomUUID()}.tmp`);
+	try {
+		fs.writeFileSync(temporary, code);
+		fs.renameSync(temporary, file);
+	} finally {
+		fs.rmSync(temporary, { force: true });
+	}
+}
 
 /**
  * Recursively remove empty directories under `root`, leaving `root` itself.
@@ -160,7 +178,7 @@ export function write_all_types(config, manifest_data, root) {
 		if (!current_route_ids.has(id)) delete meta_data[id];
 	}
 
-	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
+	write_atomic(config.outDir, meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
@@ -292,11 +310,11 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 
 		if (proxies.server) {
 			route_info.proxies.server = proxies.server;
-			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
+			write_proxy(proxies.server);
 		}
 		if (proxies.universal) {
 			route_info.proxies.universal = proxies.universal;
-			if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+			write_proxy(proxies.universal);
 		}
 
 		if (route.leaf.server) {
@@ -372,8 +390,8 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		exports.push(...e);
 		declarations.push(...d);
 
-		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
+		write_proxy(proxies.server);
+		write_proxy(proxies.universal);
 
 		exports.push(
 			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
@@ -392,11 +410,19 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
+	write_atomic(config.outDir, `${outdir}/$types.d.ts`, output);
 	to_delete.delete('$types.d.ts');
 
 	for (const file of to_delete) {
 		fs.unlinkSync(path.join(outdir, file));
+	}
+
+	/** @param {Proxy} proxy */
+	function write_proxy(proxy) {
+		if (proxy?.modified) {
+			write_atomic(config.outDir, path.join(outdir, proxy.file_name), proxy.code);
+			to_delete.delete(proxy.file_name);
+		}
 	}
 }
 
@@ -429,9 +455,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	if (node.server) {
 		const basename = path.basename(node.server);
 		const proxy = proxies.server;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
-		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
 
@@ -482,9 +505,6 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	if (node.universal) {
 		const proxy = proxies.universal;
-		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
-		}
 
 		const type = get_data_type(
 			node.universal,
