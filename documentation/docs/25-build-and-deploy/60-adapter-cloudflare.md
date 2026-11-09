@@ -28,11 +28,9 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter({
 				// See below for an explanation of these options
-				platformProxy: {
-					persist: undefined,
-					remoteBindings: undefined
-				},
-				fallback: 'plaintext'
+				fallback: 'plaintext',
+				persistState: true,
+				remoteBindings: true
 			})
 		})
 	]
@@ -41,15 +39,19 @@ export default defineConfig({
 
 ## Options
 
-### platformProxy
-
-Preferences for the emulated `env` local bindings during development. See the [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) API documentation for a full list of options.
-
 ### fallback
 
 Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
 
 For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.notFoundHandling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) setting in `cloudflare.config.ts` is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.notFoundHandling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
+
+### persistState
+
+Whether and where to persist the data of local bindings, such as KV and D1, during `vite dev` and `vite preview`. Pass `false` to start with empty bindings each time, or `{ path }` to change where the data is stored. Defaults to `true`, which stores it in `.cloudflare/state`. This is passed to the Cloudflare Vite plugin's [`persistState`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
+
+### remoteBindings
+
+Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources on your Cloudflare account during `vite dev` and `vite preview`. Defaults to `true`. Setting the `CLOUDFLARE_VITE_FORCE_LOCAL=true` environment variable also turns them off. This is passed to the Cloudflare Vite plugin's [`remoteBindings`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
 
 ## Deployment
 
@@ -84,7 +86,7 @@ To make these types available to your app, see Cloudflare's [generated types](ht
 
 ### Testing locally
 
-Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Use the adapter config [`platformProxy` option](#Options-platformProxy) to change your preferences for the bindings.
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Use the [`persistState`](#Options-persistState) and [`remoteBindings`](#Options-remoteBindings) options to change how they are emulated.
 
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
 

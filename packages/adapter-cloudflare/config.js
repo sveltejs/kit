@@ -1,6 +1,7 @@
 /** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
 /** @import { IncomingMessage } from 'node:http' */
 /** @import { Connect, EnvironmentOptions, Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
+/** @import { PluginOptions } from './index.js' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { forwarded_cf, is_dev_or_build, validate_entrypoint } from './utils.js';
@@ -39,6 +40,7 @@ const useful_cloudflare_build_plugins = new Set([
  *   set_ssr_environment: (environment: EnvironmentOptions) => void;
  *   attach_platform: (url: string) => Promise<void>;
  *   scan_entries?: string[];
+ *   plugin_options?: PluginOptions;
  * }} ConfigHooks
  */
 
@@ -51,6 +53,7 @@ export function plugin_config(hooks) {
 	let custom_entrypoint;
 
 	const cloudflare_plugins = cloudflare({
+		...hooks.plugin_options,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			custom_entrypoint = validate_entrypoint(config.worker.entrypoint);
@@ -87,7 +90,7 @@ export function plugin_config(hooks) {
 						(env.command === 'build' && useful_cloudflare_build_plugins.has(plugin.name))
 				})
 		),
-		...plugin_custom_worker(() => custom_entrypoint, hooks.attach_platform),
+		...plugin_custom_worker(() => custom_entrypoint, hooks.attach_platform, hooks.plugin_options),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
@@ -198,12 +201,14 @@ function customize(config, entrypoint) {
  * server, which hands them to SvelteKit in Node
  * @param {() => string | undefined} get_custom_entrypoint
  * @param {(url: string) => Promise<void>} attach_platform
+ * @param {PluginOptions} [plugin_options]
  * @returns {Plugin[]}
  */
-function plugin_custom_worker(get_custom_entrypoint, attach_platform) {
+function plugin_custom_worker(get_custom_entrypoint, attach_platform, plugin_options = {}) {
 	const enabled = () => get_custom_entrypoint() !== undefined;
 
 	const plugins = cloudflare({
+		...plugin_options,
 		viteEnvironment: { name: custom_worker_environment },
 		config: (config) => customize(config, config.worker.entrypoint)
 	});

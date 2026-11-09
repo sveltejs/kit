@@ -208,6 +208,36 @@ test('starts the platform proxy with the Vite mode and the root `cloudflare.conf
 	await server.close();
 });
 
+test('starts the platform proxy with the same persistence and remote bindings as the Cloudflare Vite plugin', async () => {
+	vi.stubEnv('CLOUDFLARE_VITE_FORCE_LOCAL', 'true');
+	try {
+		const { plugins } = get_vite_config(
+			adapter({ persistState: { path: '.state' }, remoteBindings: true })
+		);
+		const server = await createServer({
+			root,
+			configFile: false,
+			logLevel: 'silent',
+			plugins,
+			server: { middlewareMode: true }
+		});
+
+		expect(getPlatformProxy).toHaveBeenCalledWith(
+			expect.objectContaining({ persist: { path: '.state' }, remoteBindings: false })
+		);
+
+		await server.close();
+	} finally {
+		vi.unstubAllEnvs();
+	}
+});
+
+test('rejects the removed `platformProxy` option', () => {
+	expect(() => adapter(/** @type {any} */ ({ platformProxy: {} }))).toThrow(
+		'The adapter `platformProxy` option has been removed'
+	);
+});
+
 test('starts an empty platform proxy without a `cloudflare.config.ts`', async () => {
 	const empty_root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
 	try {

@@ -1,21 +1,23 @@
 /** @import { Plugin } from 'vite' */
 /** @import { PlatformProxy } from '@cloudflare/platform-proxy' */
-/** @import { PlatformProxyOptions } from './index.js' */
+/** @import { GetPlatformProxyOptions } from '@cloudflare/platform-proxy' */
+/** @import { PluginOptions } from './index.js' */
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getPlatformProxy } from '@cloudflare/platform-proxy';
 import { custom_worker_environment } from './config.js';
 import { is_dev_or_build } from './utils.js';
 
 /**
- * @param {PlatformProxyOptions} user_options
+ * @param {PluginOptions} plugin_options the options also passed to the Cloudflare Vite plugin
  * @param {string} stub_import
  * @param {() => boolean} has_custom_worker whether a custom Worker runs in workerd during development
  * @returns {{ plugin: Plugin; attach: (url: string) => Promise<void> }}
  */
-export function plugin_platform(user_options, stub_import, has_custom_worker) {
-	/** @type {PlatformProxyOptions & { configPath?: string; mode?: string }} */
+export function plugin_platform(plugin_options, stub_import, has_custom_worker) {
+	/** @type {Extract<GetPlatformProxyOptions, { url?: undefined }>} */
 	let options = {};
 
 	/**
@@ -67,11 +69,14 @@ export function plugin_platform(user_options, stub_import, has_custom_worker) {
 		apply: is_dev_or_build,
 		configResolved(config) {
 			options = {
-				...user_options,
-				// the Cloudflare Vite plugin reads `cloudflare.config.ts` from Vite's root
-				// and evaluates it with Vite's mode
+				// match the Cloudflare Vite plugin, which reads `cloudflare.config.ts` from Vite's root,
+				// evaluates it with Vite's mode and stores the bindings' data in the same place
 				configPath: path.join(config.root, 'cloudflare.config.ts'),
-				mode: config.mode
+				mode: config.mode,
+				persist: plugin_options.persistState,
+				// the plugin copies `CLOUDFLARE_` variables from `.env` files into `process.env`
+				remoteBindings:
+					process.env.CLOUDFLARE_VITE_FORCE_LOCAL === 'true' ? false : plugin_options.remoteBindings
 			};
 		},
 		configureServer() {
@@ -117,7 +122,7 @@ export function plugin_platform(user_options, stub_import, has_custom_worker) {
 /**
  * Starts a platform proxy for the bindings in `cloudflare.config.ts`, or an empty one
  * when there is no config file, since the Cloudflare Vite plugin doesn't require one
- * @param {PlatformProxyOptions & { configPath?: string; mode?: string }} options
+ * @param {Extract<GetPlatformProxyOptions, { url?: undefined }>} options
  * @returns {Promise<PlatformProxy>}
  */
 async function start_platform_proxy(options) {
