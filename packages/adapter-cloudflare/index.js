@@ -217,8 +217,10 @@ export default function (options = {}) {
 							order: 'post',
 							handler(user_config, env) {
 								const root = path.resolve(user_config.root ?? process.cwd());
+								// like the Cloudflare Vite plugin, only read `.dev.vars` files when the Worker runs
+								// locally, so that a build doesn't use local secrets
 								const env_dir =
-									user_config.envDir === false
+									env.command === 'build' || user_config.envDir === false
 										? false
 										: path.resolve(root, user_config.envDir ?? '.');
 								sync_process_env(cloudflare_config.worker, env_dir, env.mode);
