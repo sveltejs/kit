@@ -21,18 +21,17 @@ export interface AdapterOptions {
 
 	/**
 	 * Whether and where to persist the data of local bindings, such as KV and D1, during
-	 * `vite dev` and `vite preview`. Passed to the Cloudflare Vite plugin's `persistState` option.
-	 *
+	 * `vite dev` and `vite preview`.
 	 * @default true
+	 * @see https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig
 	 */
 	persistState?: boolean | { path: string };
 
 	/**
 	 * Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources
-	 * on your Cloudflare account during `vite dev` and `vite preview`. Passed to the Cloudflare
-	 * Vite plugin's `remoteBindings` option.
-	 *
+	 * on your Cloudflare account during `vite dev` and `vite preview`.
 	 * @default true
+	 * @see https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig
 	 */
 	remoteBindings?: boolean;
 }
