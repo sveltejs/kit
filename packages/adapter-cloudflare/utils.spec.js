@@ -179,20 +179,38 @@ describe('sync_process_env', () => {
 		delete process.env.SYNC_A;
 	});
 
-	test('reads the `.dev.vars` file for the mode before the default one', () => {
+	test('reads secrets from the `.dev.vars` file for the mode before the default one', () => {
 		const env_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+		const with_secret = /** @type {ReturnType<typeof worker>} */ ({
+			...worker({}),
+			env: { SYNC_SECRET: { type: 'secret' } }
+		});
 		try {
 			fs.writeFileSync(path.join(env_dir, '.dev.vars'), 'SYNC_SECRET=default');
 			fs.writeFileSync(path.join(env_dir, '.dev.vars.staging'), 'SYNC_SECRET=staging');
 
-			sync_process_env(worker({}), env_dir, 'staging');
+			sync_process_env(with_secret, env_dir, 'staging');
 			expect(process.env.SYNC_SECRET).toBe('staging');
 
-			sync_process_env(worker({}), env_dir, 'production');
+			sync_process_env(with_secret, env_dir, 'production');
 			expect(process.env.SYNC_SECRET).toBe('default');
 
-			sync_process_env(worker({}), false, 'production');
+			sync_process_env(with_secret, false, 'production');
 			expect('SYNC_SECRET' in process.env).toBe(false);
+		} finally {
+			fs.rmSync(env_dir, { recursive: true, force: true });
+		}
+	});
+	test('leaves out `.dev.vars` keys that are not secret bindings, like the Worker', () => {
+		const env_dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+		try {
+			fs.writeFileSync(path.join(env_dir, '.dev.vars'), 'SYNC_TEXT=dev-vars\nSYNC_OTHER=dev-vars');
+
+			sync_process_env(worker({ SYNC_TEXT: 'config' }), env_dir, 'development');
+			expect(process.env.SYNC_TEXT).toBe('config');
+			expect('SYNC_OTHER' in process.env).toBe(false);
+
+			sync_process_env(worker({}), env_dir, 'development');
 		} finally {
 			fs.rmSync(env_dir, { recursive: true, force: true });
 		}

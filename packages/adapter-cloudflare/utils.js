@@ -119,12 +119,13 @@ ${formatted_headers}
 const synced_vars = new Map();
 
 /**
- * Copies the Worker's text and JSON bindings and the `.dev.vars` values into `process.env`
- * so that SvelteKit can read them while it runs in Node, without overwriting variables
- * set elsewhere and removing the ones we set previously. Values in `.env` files are
- * already loaded by Vite.
+ * Copies the values of the Worker's text, JSON and secret bindings into `process.env` so that
+ * SvelteKit can read them while it runs in Node, without overwriting variables set elsewhere
+ * and removing the ones we set previously. Like the Worker during development, secrets are read
+ * from `.dev.vars.<mode>` or `.dev.vars`, and otherwise from `.env` files, which Vite already loads.
+ * Other keys in `.dev.vars` files don't reach the Worker, so they're left out too
  * @param {CloudflareConfig['worker']} worker
- * @param {string | false} env_dir
+ * @param {string | false} env_dir where to find `.dev.vars` files, or `false` to not read them
  * @param {string} mode
  */
 export function sync_process_env(worker, env_dir, mode) {
@@ -132,6 +133,8 @@ export function sync_process_env(worker, env_dir, mode) {
 		if (process.env[key] === value) delete process.env[key];
 	}
 	synced_vars.clear();
+
+	const dev_vars = env_dir === false ? undefined : read_dev_vars(env_dir, mode);
 
 	/** @type {Record<string, string>} */
 	const vars = {};
@@ -142,16 +145,8 @@ export function sync_process_env(worker, env_dir, mode) {
 		} else if (binding.type === 'json') {
 			// matches how workerd exposes JSON vars on `process.env`
 			vars[key] = JSON.stringify(binding.value);
-		}
-	}
-
-	if (env_dir !== false) {
-		// the same files that the Cloudflare Vite plugin reads, where the first one found wins
-		for (const file of [`.dev.vars.${mode}`, '.dev.vars']) {
-			const file_path = path.join(env_dir, file);
-			if (!fs.existsSync(file_path)) continue;
-			Object.assign(vars, parseEnv(fs.readFileSync(file_path, 'utf8')));
-			break;
+		} else if (binding.type === 'secret' && dev_vars?.[key] !== undefined) {
+			vars[key] = dev_vars[key];
 		}
 	}
 
@@ -159,5 +154,18 @@ export function sync_process_env(worker, env_dir, mode) {
 		if (key in process.env) continue;
 		process.env[key] = value;
 		synced_vars.set(key, value);
+	}
+}
+
+/**
+ * Reads the same `.dev.vars` files as the Cloudflare Vite plugin, where the first one found wins
+ * @param {string} env_dir
+ * @param {string} mode
+ * @returns {Record<string, string | undefined> | undefined}
+ */
+function read_dev_vars(env_dir, mode) {
+	for (const file of [`.dev.vars.${mode}`, '.dev.vars']) {
+		const file_path = path.join(env_dir, file);
+		if (fs.existsSync(file_path)) return parseEnv(fs.readFileSync(file_path, 'utf8'));
 	}
 }
