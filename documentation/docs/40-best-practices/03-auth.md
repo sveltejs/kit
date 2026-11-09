@@ -41,37 +41,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check if the user is authenticated. This check can live in a shared helper:
-
-```js
-/// file: src/lib/server/auth.js
-// @filename: ambient.d.ts
-interface User {
-	name: string;
-}
-
-declare namespace App {
-	interface Locals {
-		user?: User;
-	}
-}
-
-// @filename: index.ts
-// ---cut---
-import { redirect } from '@sveltejs/kit';
-import { getRequestEvent } from '$app/server';
-
-export function requireLogin() {
-	const { locals } = getRequestEvent();
-
-	// assume `locals.user` is populated in `handle`
-	if (!locals.user) redirect(303, '/login');
-
-	return locals.user;
-}
-```
-
-Finally, call `requireLogin` in any page [`load` function](load) (or [form action](form-actions), for example) to guarantee that the user is logged in:
+You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check if the user is authenticated. This check can live in a shared helper, then reused in each load function, as shown in [the example](load#Using-getRequestEvent).
 
 ```js
 /// file: +page.server.js
