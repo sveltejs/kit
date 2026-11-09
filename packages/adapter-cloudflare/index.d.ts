@@ -1,4 +1,5 @@
 import { Adapter } from '@sveltejs/kit';
+import { PluginConfig } from '@cloudflare/vite-plugin';
 
 export default function plugin(options?: AdapterOptions): Adapter;
 
@@ -25,7 +26,7 @@ export interface AdapterOptions {
 	 * @default true
 	 * @see https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig
 	 */
-	persistState?: boolean | { path: string };
+	persistState?: PluginConfig['persistState'];
 
 	/**
 	 * Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources
@@ -33,10 +34,7 @@ export interface AdapterOptions {
 	 * @default true
 	 * @see https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig
 	 */
-	remoteBindings?: boolean;
+	remoteBindings?: PluginConfig['remoteBindings'];
 }
 
-export interface PluginOptions {
-	persistState?: AdapterOptions['persistState'];
-	remoteBindings?: AdapterOptions['remoteBindings'];
-}
+export type PluginOptions = Pick<PluginConfig, 'persistState' | 'remoteBindings'>;
