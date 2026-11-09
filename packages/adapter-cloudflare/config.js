@@ -1,4 +1,5 @@
 /** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
+/** @import { PluginOptions } from './index.js' */
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
@@ -23,10 +24,12 @@ const useful_cloudflare_build_plugins = new Set([
 /**
  * @param {(config: CloudflareConfig) => void} set_cloudflare_config
  * @param {string[]} [scan_entries] the files Vite scans for the SSR environment's dependencies
+ * @param {PluginOptions} [plugin_options]
  * @returns {Plugin[]}
  */
-export function plugin_config(set_cloudflare_config, scan_entries) {
+export function plugin_config(set_cloudflare_config, scan_entries, plugin_options = {}) {
 	const cloudflare_plugins = cloudflare({
+		...plugin_options,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			validate_entrypoint(config.worker.entrypoint);

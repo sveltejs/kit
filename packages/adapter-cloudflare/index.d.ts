@@ -1,5 +1,4 @@
 import { Adapter } from '@sveltejs/kit';
-import { GetPlatformProxyOptions } from '@cloudflare/platform-proxy';
 
 export default function plugin(options?: AdapterOptions): Adapter;
 
@@ -21,13 +20,24 @@ export interface AdapterOptions {
 	fallback?: 'plaintext' | 'spa';
 
 	/**
-	 * Options passed to `getPlatformProxy` from `@cloudflare/platform-proxy`, which emulates
-	 * the bindings in `cloudflare.config.ts` during development.
+	 * Whether and where to persist the data of local bindings, such as KV and D1, during
+	 * `vite dev` and `vite preview`. Passed to the Cloudflare Vite plugin's `persistState` option.
+	 *
+	 * @default true
 	 */
-	platformProxy?: PlatformProxyOptions;
+	persistState?: boolean | { path: string };
+
+	/**
+	 * Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources
+	 * on your Cloudflare account during `vite dev` and `vite preview`. Passed to the Cloudflare
+	 * Vite plugin's `remoteBindings` option.
+	 *
+	 * @default true
+	 */
+	remoteBindings?: boolean;
 }
 
-export type PlatformProxyOptions = Omit<
-	Extract<GetPlatformProxyOptions, { url?: undefined }>,
-	'configPath' | 'mode' | 'url' | 'secret'
->;
+export interface PluginOptions {
+	persistState?: AdapterOptions['persistState'];
+	remoteBindings?: AdapterOptions['remoteBindings'];
+}

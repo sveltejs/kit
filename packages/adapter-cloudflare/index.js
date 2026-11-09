@@ -41,6 +41,18 @@ export default function (options = {}) {
 		);
 	}
 
+	if (/** @type {Record<string, unknown>} */ (options).platformProxy !== undefined) {
+		throw new Error(
+			'The adapter `platformProxy` option has been removed. Use the `persistState` and `remoteBindings` options instead'
+		);
+	}
+
+	/** @type {import('./index.js').PluginOptions} */
+	const plugin_options = {
+		persistState: options.persistState,
+		remoteBindings: options.remoteBindings
+	};
+
 	return {
 		name: '@sveltejs/adapter-cloudflare',
 		async adapt(builder) {
@@ -193,7 +205,8 @@ export default function (options = {}) {
 					},
 					...plugin_config(
 						(config) => (cloudflare_config = config),
-						get_scan_entries(config.files)
+						get_scan_entries(config.files),
+						plugin_options
 					),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
@@ -212,7 +225,7 @@ export default function (options = {}) {
 							}
 						}
 					},
-					plugin_platform(options.platformProxy ?? {}, stub_import)
+					plugin_platform(plugin_options, stub_import)
 				]
 			};
 		}
