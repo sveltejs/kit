@@ -47,11 +47,11 @@ For Cloudflare Workers, the default behaviour is to return a null-body 404-statu
 
 ### persistState
 
-Whether and where to persist the data of local bindings, such as KV and D1, during `vite dev` and `vite preview`. Pass `false` to start with empty bindings each time, or `{ path }` to change where the data is stored. Defaults to `true`, which stores it in `.cloudflare/state`. This is passed to the Cloudflare Vite plugin's [`persistState`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
+See `persistState` in Cloudflare's [Vite plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig).
 
 ### remoteBindings
 
-Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources on your Cloudflare account during `vite dev` and `vite preview`. Defaults to `true`. Setting the `CLOUDFLARE_VITE_FORCE_LOCAL=true` environment variable also turns them off. This is passed to the Cloudflare Vite plugin's [`remoteBindings`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
+See `remoteBindings` in Cloudflare's [Vite plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig).
 
 ## Deployment
 
@@ -86,9 +86,11 @@ To make these types available to your app, see Cloudflare's [generated types](ht
 
 ### Testing locally
 
-Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Use the [`persistState`](#Options-persistState) and [`remoteBindings`](#Options-remoteBindings) options to change how they are emulated.
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development.
 
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
+
+> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
 
 > [!LEGACY] If you were previously using `wrangler dev`, you may want to take a look at the [migration guide](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/).
 
