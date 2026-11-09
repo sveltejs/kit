@@ -45,10 +45,10 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@cloudflare/build-output-utils": "0.9.10",
-		"@cloudflare/config": "0.30.2",
-		"@cloudflare/platform-proxy": "https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@fedfc49",
-		"@cloudflare/vite-plugin": "2.0.0-beta.v.12",
+		"@cloudflare/build-output-utils": "0.9.11",
+		"@cloudflare/config": "0.31.0",
+		"@cloudflare/platform-proxy": "https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@0d803c5",
+		"@cloudflare/vite-plugin": "2.0.0-beta.v.13",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
