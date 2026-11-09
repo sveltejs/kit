@@ -81,7 +81,7 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 <h1>Recent posts</h1>
 
 <ul>
-	{#each await getPosts() as { title, slug }}
+	{#each await getPosts() as { title, slug } (slug)}
 		<li><a href="/blog/{slug}">{title}</a></li>
 	{/each}
 </ul>
@@ -107,7 +107,7 @@ While using `await` is recommended, as an alternative the query also has `loadin
 	<p>loading...</p>
 {:else}
 	<ul>
-		{#each query.current as { title, slug }}
+		{#each query.current as { title, slug } (slug)}
 			<li><a href="/blog/{slug}">{title}</a></li>
 		{/each}
 	</ul>
@@ -243,7 +243,7 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 
 <h2>Weather</h2>
 
-{#each cities.slice(0, limit) as city}
+{#each cities.slice(0, limit) as city (city.id)}
 	<h3>{city.name}</h3>
 	<CityWeather weather={await getWeather(city.id)} />
 {/each}
@@ -846,7 +846,7 @@ When each instance should render different values, pass them as the second argum
 
 <h1>Todos</h1>
 
-{#each await getTodos() as todo}
+{#each await getTodos() as todo (todo.id)}
 	{const modify = modifyTodo.for(todo.id)}
 	<form {...modify}>
 		<input {...modify.fields.description.as('text', todo.description)} />
@@ -1420,7 +1420,7 @@ Now, any component that calls `getMyProjects` will only be rendered if the user 
 </script>
 
 <ul>
-	{#each await getMyProjects() as project}
+	{#each await getMyProjects() as project (project.id)}
 		<li><a href="/projects/{project.id}">{project.name}</a></li>
 	{/each}
 </ul>
