@@ -47,7 +47,7 @@ You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `local
 
 ### Protecting multiple routes
 
-Inside your `handle` hook, add an authentication guard that only succeeds if the request matches a public route ID. This way, a route that you forget to list stays protected:
+To protect your private routes, add an authentication guard that checks against a whitelist of public routes in your `handle` hook:
 
 ```js
 /// file: src/hooks.server.js
@@ -66,7 +66,7 @@ const getUserInformation: (cookie: string | void) => Promise<User | null>;
 
 // @filename: index.js
 // ---cut---
-import { error, redirect } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 
 const PUBLIC_ROUTES = new Set(['/', '/login', '/signup']);
 
@@ -82,56 +82,13 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You should always match on `event.route.id` rather than `event.url.pathname` because the pathname is [encoded](advanced-routing#Encoding). Avoid a check such as `event.url.pathname.startsWith('/admin')` as it can be bypassed with `/%61dmin`.
+You should always match on `event.route.id` rather than `event.url.pathname` because the pathname is [encoded](advanced-routing#Encoding). Avoid a check such as `event.url.pathname.startsWith('/admin')` as it can be bypassed with the encoded equivalent `/%61dmin`.
 
-> [!NOTE] Prerendered pages and static assets are served without invoking the server's `handle` hook.
+> [!NOTE] Prerendered pages and static assets are served without invoking `handle`, so they can't be protected this way.
 
 ### Remote functions
 
-If you're using [remote functions](remote-functions), place the authentication check inside the function to protect it wherever it is used:
-
-```js
-/// file: src/lib/projects.remote.js
-// @filename: ambient.d.ts
-declare module '#lib/server/auth.js' {
-	export function requireLogin(): { id: string; name: string };
-}
-
-declare module '#lib/server/database.js' {
-	export function getProjects(
-		userId: string
-	): Promise<Array<{ id: string; name: string; updatedAt: Date }>>;
-}
-
-// @filename: index.js
-// ---cut---
-import { query } from '$app/server';
-import { requireLogin } from '#lib/server/auth.js';
-import { getProjects } from '#lib/server/database.js';
-
-export const getMyProjects = query(async () => {
-	const user = requireLogin();
-
-	return await getProjects(user.id);
-});
-```
-
-Now, any component that calls your remote function will only succeed if the user is logged in, regardless of which page renders it:
-
-```svelte
-<!--- file: src/lib/ProjectList.svelte --->
-<script>
-	import { getMyProjects } from '$lib/projects.remote';
-</script>
-
-<ul>
-	{#each await getMyProjects() as project}
-		<li><a href="/projects/{project.id}">{project.name}</a></li>
-	{/each}
-</ul>
-```
-
-> [!NOTE] Don't use `event.url`, `event.route` or `event.params` to decide access inside remote functions. They describe the page the function was called from, which the client controls (and could therefore be manipulated).
+If you're using [remote functions](remote-functions), you _must_ run the authentication check directly inside the function — see [implications for authentication](remote-functions#Implications-for-authentication).
 
 ## Libraries
 

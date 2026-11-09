@@ -21,10 +21,19 @@ This function runs every time the SvelteKit server receives a [request](web-stan
 
 ```js
 /// file: src/hooks.server.js
+// @filename: ambient.d.ts
+declare module '#lib/server/config.js' {
+	export const maintenance: boolean;
+}
+
+// @filename: index.js
+// ---cut---
+import { maintenance } from '#lib/server/config.js';
+
 /** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
-	if (event.url.pathname.startsWith('/custom')) {
-		return new Response('custom response');
+	if (maintenance) {
+		return new Response('Down for maintenance', { status: 503 });
 	}
 
 	const response = await resolve(event);
