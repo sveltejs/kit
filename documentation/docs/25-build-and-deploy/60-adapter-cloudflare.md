@@ -86,11 +86,11 @@ To make these types available to your app, see Cloudflare's [generated types](ht
 
 ### Testing locally
 
-Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development. Use the [`persistState`](#Options-persistState) and [`remoteBindings`](#Options-remoteBindings) options to change how they are emulated.
-
-> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
+Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development.
 
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
+
+> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
 
 > [!LEGACY] If you were previously using `wrangler dev`, you may want to take a look at the [migration guide](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/).
 
