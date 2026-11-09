@@ -59,6 +59,14 @@ export function plugin_config(hooks) {
 			custom_entrypoint = validate_entrypoint(config.worker.entrypoint);
 			hooks.set_custom_entrypoint(custom_entrypoint);
 
+			if (config.worker.assets?.basePath !== undefined) {
+				// the adapter already writes assets under `paths.base`, so Cloudflare stripping
+				// `basePath` before looking them up would make every asset request miss
+				throw new Error(
+					'Remove `assets.basePath` from cloudflare.config.ts and set `paths.base` in your SvelteKit config instead'
+				);
+			}
+
 			// the plugin needs an entrypoint for the Worker environment. Ours stands in
 			// for the build-generated entry that the adapter writes after the build
 			const customized = customize(config, worker_entry);

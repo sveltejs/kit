@@ -1,0 +1,4 @@
+{
+  "configPath": "../../.svelte-kit/cloudflare/worker/wrangler.json",
+  "auxiliaryWorkers": []
+}
