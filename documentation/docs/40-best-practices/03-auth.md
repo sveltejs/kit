@@ -41,7 +41,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check whether the current user may access the data they load or change. This check can live in a shared helper:
+You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check if the user is authenticated. This check can live in a shared helper:
 
 ```js
 /// file: src/lib/server/auth.js
