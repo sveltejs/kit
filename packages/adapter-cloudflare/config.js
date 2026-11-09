@@ -124,7 +124,22 @@ export function plugin_config(set_cloudflare_config, scan_entries, plugin_option
 									'@sveltejs/kit > cookie',
 									'@sveltejs/kit > devalue',
 									'@sveltejs/kit > esm-env'
-								]
+								],
+								rolldownOptions: {
+									...cloudflare_ssr.optimizeDeps?.rolldownOptions,
+									plugins: [
+										cloudflare_ssr.optimizeDeps?.rolldownOptions?.plugins,
+										{
+											// the scan would otherwise follow these into SvelteKit's generated modules,
+											// which only exist in the dev server's module graph
+											name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
+											resolveId: {
+												filter: { id: /^\$(app|env)\// },
+												handler: (id) => ({ id, external: true })
+											}
+										}
+									]
+								}
 							},
 							build: {
 								target: cloudflare_ssr.build?.target,
