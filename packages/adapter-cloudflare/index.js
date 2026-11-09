@@ -37,7 +37,7 @@ export default function (options = {}) {
 
 	if (/** @type {Record<string, unknown>} */ (options).config !== undefined) {
 		throw new Error(
-			'The `config` option has been removed. The adapter reads `cloudflare.config.ts` from the root of your Vite project'
+			'The adapter `config` option has been removed. Please remove it from your adapter configuration'
 		);
 	}
 
