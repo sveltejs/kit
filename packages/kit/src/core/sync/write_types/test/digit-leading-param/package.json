@@ -1,5 +1,5 @@
 {
-	"name": "test-write-types-actions",
+	"name": "test-write-types-digit-leading-param",
 	"private": true,
 	"type": "module",
 	"devDependencies": {
