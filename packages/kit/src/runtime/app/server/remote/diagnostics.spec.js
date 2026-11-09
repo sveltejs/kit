@@ -241,7 +241,7 @@ test('a live query returning a non-iterable value throws the kit diagnostic', as
 				store.state,
 				false,
 				() => undefined,
-				/** @type {any} */ (async () => 42),
+				/** @type {any} */ (() => 42),
 				'test'
 			).next()
 		)
