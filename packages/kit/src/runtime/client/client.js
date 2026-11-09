@@ -369,6 +369,9 @@ function get_history_metadata(state = history.state) {
 /** @type {{}} Token for the latest navigation. Updated on new navigations */
 let navigation_token;
 
+/** @type {WeakSet<{}>} Tokens of navigations that stopped because a newer navigation took over */
+const aborted_navigation_tokens = new WeakSet();
+
 /**
  * @type {{}}
  * The latest invalidate(All) token. Superseeded by both later invalidate(All)s and navigations.
@@ -1878,9 +1881,20 @@ function get_page_key(url) {
  *   scroll?: { x: number, y: number };
  *   shallow?: boolean;
  *   target?: { params: Record<string, string> | null; route: { id: string } | null; url: URL };
+ *   redirect?: boolean;
  * }} opts
  */
-function _before_navigate({ url, type, intent, delta, event, scroll, shallow = false, target }) {
+function _before_navigate({
+	url,
+	type,
+	intent,
+	delta,
+	event,
+	scroll,
+	shallow = false,
+	target,
+	redirect = false
+}) {
 	let should_block = false;
 
 	const nav = create_navigation(current, intent, url, type, scroll ?? null, shallow, target);
@@ -1902,11 +1916,9 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
 		}
 	};
 
-	if (!is_navigating) {
-		// Don't run the event during redirects
-		// TODO this isn't fully right: if you do a goto(...) while another goto(...) is in progress,
-		// or you click a link while a navigation is in progress, the beforNavigate calls are not triggered,
-		// and maybe they should be?
+	// A redirect hop continues a navigation the callbacks already saw. Back and forward
+	// have already aborted any pending navigation by now, so cancelling them couldn't keep it
+	if (!redirect && !(type === 'popstate' && is_navigating)) {
 		before_navigate_callbacks.forEach((fn) => fn(cancellable));
 	}
 
@@ -1928,6 +1940,7 @@ function _before_navigate({ url, type, intent, delta, event, scroll, shallow = f
  *   state?: Record<string, any>;
  *   persist_state?: boolean;
  *   redirect_count?: number;
+ *   redirect?: boolean;
  *   nav_token?: {};
  *   accept?: () => void;
  *   block?: () => void;
@@ -1946,6 +1959,7 @@ async function navigate({
 	state = {},
 	persist_state = false,
 	redirect_count = 0,
+	redirect = false,
 	nav_token = {},
 	accept = noop,
 	block = noop,
@@ -1969,13 +1983,22 @@ async function navigate({
 					scroll: popped?.scroll,
 					shallow: !!popped?.shallow,
 					target: popped?.shallow ?? undefined,
+					redirect,
 					// @ts-ignore
 					event
 				});
 
 	if (!nav) {
 		block();
-		if (navigation_token === nav_token) navigation_token = prev_token;
+		if (navigation_token === nav_token) {
+			navigation_token = prev_token;
+			// the navigation this one interrupted may have aborted while `beforeNavigate` waited for the route
+			if (aborted_navigation_tokens.has(prev_token)) {
+				is_navigating = false;
+				updating = false;
+				set_navigation(null);
+			}
+		}
 		if (invalidation_token === nav_token) invalidation_token = prev_invalidation_token;
 		return;
 	}
@@ -2026,6 +2049,7 @@ async function navigate({
 
 	// abort if user navigated during update
 	if (navigation_token !== nav_token) {
+		aborted_navigation_tokens.add(nav_token);
 		nav.reject(new Error('navigation aborted'));
 		return;
 	}
@@ -2047,6 +2071,7 @@ async function navigate({
 				state,
 				persist_state,
 				redirect_count: redirect_count + 1,
+				redirect: true,
 				nav_token
 			});
 
@@ -2268,6 +2293,7 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 	await updated;
 
 	if (navigation_token !== nav_token) {
+		aborted_navigation_tokens.add(nav_token);
 		nav.reject(new Error('navigation aborted'));
 		return false;
 	}
@@ -3356,7 +3382,10 @@ function _start_router() {
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
 				: undefined;
-			if (navigation_token !== token) return;
+			if (navigation_token !== token) {
+				aborted_navigation_tokens.add(token);
+				return;
+			}
 			const shallow_target = shallow_url
 				? {
 						params: shallow_intent?.params ?? null,

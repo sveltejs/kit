@@ -36,6 +36,12 @@ export const reroute = ({ url, fetch }) => {
 		return fetch('/reroute/api/prerendered').then((r) => r.text());
 	}
 
+	if (url.pathname === '/navigation-lifecycle/before-navigate/during-navigation/slow-route') {
+		return fetch('/navigation-lifecycle/before-navigate/during-navigation/route').then((r) =>
+			r.text()
+		);
+	}
+
 	if (url.pathname === '/reroute/prerendered/to-destination') {
 		return '/reroute/prerendered/destination';
 	}
