@@ -36,7 +36,7 @@ async function resolve(cloudflare_config, set_config, mode, set_custom_entrypoin
 	}
 }
 
-test('evaluates cloudflare.config.ts with the Vite mode and adds what the adapter needs', async () => {
+test('evaluates cloudflare.config.ts with the Vite mode and adds the `ASSETS` binding and the `nodejs_als` flag', async () => {
 	const set_config = vi.fn();
 	await resolve(
 		`export default ({ mode }) => ({
