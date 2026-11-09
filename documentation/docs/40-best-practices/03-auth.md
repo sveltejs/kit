@@ -43,32 +43,6 @@ export async function handle({ event, resolve }) {
 
 You can then use [`getRequestEvent`]($app-server#getRequestEvent) to read `locals.user` and check if the user is authenticated. This check can live in a shared helper, then reused in each load function, as shown in [the example](load#Using-getRequestEvent).
 
-```js
-/// file: +page.server.js
-// @filename: ambient.d.ts
-
-declare module '#lib/server/auth.js' {
-	interface User {
-		name: string;
-	}
-
-	export function requireLogin(): User;
-}
-
-// @filename: index.ts
-// ---cut---
-import { requireLogin } from '#lib/server/auth.js';
-
-export function load() {
-	const user = requireLogin();
-
-	// `user` is guaranteed to be a user object here, because otherwise
-	// `requireLogin` would throw a redirect and we wouldn't get here
-	return {
-		message: `hello ${user.name}!`
-	};
-}
-```
 
 Always prefer checks in `+page.server.js` over `+layout.server.js` — see [implications for authentication](load#Implications-for-authentication).
 
