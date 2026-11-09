@@ -13,7 +13,14 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
-blockExoticSubdeps: true
+  # TODO: remove once these are older than minimumReleaseAge
+  - '@cloudflare/vite-plugin@2.0.0-beta.v.13'
+  - '@cloudflare/build-output-utils@0.9.11'
+  - '@cloudflare/config@0.31.0'
+  - '@cloudflare/runtime-types@0.1.24'
+  - 'miniflare@5.20261109.0-beta'
+# TODO: re-enable once @cloudflare/platform-proxy is published to npm, since its pkg.pr.new build depends on pkg.pr.new builds of miniflare and @cloudflare/config
+blockExoticSubdeps: false
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
@@ -75,7 +82,6 @@ catalog:
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
   vite: ^8.2.1
-  wrangler: ^4.153.0
 
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^5.0.1
@@ -90,6 +96,8 @@ catalogs:
   # vite-beta:
   #   vite: ^9.0.0-beta.0
   #   '@sveltejs/vite-plugin-svelte': ^7.0.0
-overrides: {}
+overrides:
+  # TODO: remove once @cloudflare/platform-proxy is on npm; its pkg.pr.new miniflare pins a different workerd than the Cloudflare Vite plugin's miniflare
+  workerd: 1.20261106.1
   # ci script replaces all overrides with the vite-xxx or node-xx catalogs above.
   # if you want to introduce an override, make sure to add it to all of them too

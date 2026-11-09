@@ -5,89 +5,116 @@ import { expect, test, vi } from 'vitest';
 import { resolveConfig } from 'vite';
 import { plugin_config } from './config.js';
 
-test('selects Wrangler configuration and named environments from Vite env files', async () => {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-env-'));
+/**
+ * Resolves the Vite config of a project with the given `cloudflare.config.ts` contents
+ * @param {string} cloudflare_config
+ * @param {(config: import('@cloudflare/vite-plugin').CloudflareConfig) => void} set_config
+ * @param {string} [mode]
+ */
+async function resolve(cloudflare_config, set_config, mode) {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-config-'));
 	try {
-		vi.stubEnv('CLOUDFLARE_ENV', undefined);
-		vi.stubEnv('CLOUDFLARE_VITE_WRANGLER_CONFIG_PATH', undefined);
-		fs.writeFileSync(
-			path.join(root, '.env.production'),
-			'CLOUDFLARE_ENV=staging\nCLOUDFLARE_VITE_WRANGLER_CONFIG_PATH=config/wrangler.jsonc\n'
-		);
-		fs.mkdirSync(path.join(root, 'config'));
-		fs.writeFileSync(
-			path.join(root, 'config/wrangler.jsonc'),
-			JSON.stringify({
-				compatibility_date: '2026-09-01',
-				vars: { FOO: 'default' },
-				env: { staging: { vars: { FOO: 'staging' } } }
-			})
-		);
-		const set_worker_config = vi.fn();
-		await resolveConfig(
+		fs.writeFileSync(path.join(root, 'cloudflare.config.ts'), cloudflare_config);
+		return await resolveConfig(
 			{
 				root,
-				mode: 'production',
+				mode,
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config(undefined, set_worker_config)
+				plugins: plugin_config(set_config)
 			},
 			'build'
-		);
-		expect(set_worker_config).toHaveBeenCalledWith(
-			expect.objectContaining({ vars: { FOO: 'staging' } })
 		);
 	} finally {
-		vi.unstubAllEnvs();
 		fs.rmSync(root, { recursive: true, force: true });
 	}
+}
+
+test('evaluates cloudflare.config.ts with the Vite mode and adds the `ASSETS` binding and the `nodejs_als` flag', async () => {
+	const set_config = vi.fn();
+	await resolve(
+		`export default ({ mode }) => ({
+			worker: {
+				name: 'app',
+				compatibilityDate: '2026-09-01',
+				env: { FOO: { type: 'text', value: mode } }
+			}
+		});`,
+		set_config,
+		'staging'
+	);
+
+	expect(set_config).toHaveBeenCalledWith(
+		expect.objectContaining({
+			worker: expect.objectContaining({
+				compatibilityFlags: ['nodejs_als'],
+				env: { FOO: { type: 'text', value: 'staging' }, ASSETS: { type: 'assets' } }
+			})
+		})
+	);
 });
 
-test('resolves a relative wrangler config path against the Vite root', async () => {
-	// `@cloudflare/vite-plugin` throws if it can't find the config file, which happens
-	// if the relative path is resolved against the working directory instead of the Vite root
-	await expect(
-		resolveConfig(
-			{
-				root: path.resolve('test/apps/workers'),
-				configFile: false,
-				logLevel: 'silent',
-				plugins: plugin_config('config/wrangler.jsonc', () => {})
-			},
-			'build'
-		)
-	).resolves.toBeDefined();
+test('keeps an assets binding with a custom name', async () => {
+	const set_config = vi.fn();
+	await resolve(
+		`export default {
+			worker: {
+				name: 'app',
+				compatibilityDate: '2026-09-01',
+				env: { STATIC: { type: 'assets' } }
+			}
+		};`,
+		set_config
+	);
+
+	expect(set_config).toHaveBeenCalledWith(
+		expect.objectContaining({
+			worker: expect.objectContaining({ env: { STATIC: { type: 'assets' } } })
+		})
+	);
 });
 
 test.each([
 	['.svelte-kit/cloudflare/_worker.js', 'throws'],
 	['src/worker.js', 'warns']
-])('validates `main` %s in the Wrangler config', async (main, outcome) => {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-main-'));
+])('validates the Worker entrypoint %s', async (entrypoint, outcome) => {
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	try {
-		fs.writeFileSync(
-			path.join(root, 'wrangler.jsonc'),
-			JSON.stringify({ compatibility_date: '2026-09-01', main })
-		);
-		const resolving = resolveConfig(
-			{
-				root,
-				configFile: false,
-				logLevel: 'silent',
-				plugins: plugin_config(undefined, () => {})
-			},
-			'build'
+		const resolving = resolve(
+			`export default {
+				worker: {
+					name: 'app',
+					compatibilityDate: '2026-09-01',
+					entrypoint: ${JSON.stringify(entrypoint)}
+				}
+			};`,
+			() => {}
 		);
 
 		if (outcome === 'throws') {
-			await expect(resolving).rejects.toThrow('Remove `main`');
+			await expect(resolving).rejects.toThrow('Remove the Worker `entrypoint`');
 		} else {
 			await resolving;
-			expect(warn).toHaveBeenCalledWith(expect.stringContaining('Ignoring `main`'));
+			expect(warn).toHaveBeenCalledWith(
+				expect.stringContaining('Ignoring the Worker `entrypoint`')
+			);
 		}
 	} finally {
 		warn.mockRestore();
-		fs.rmSync(root, { recursive: true, force: true });
 	}
+});
+
+test('rejects `assets.basePath`, which conflicts with `paths.base`', async () => {
+	await expect(
+		resolve(
+			`export default {
+				worker: {
+					name: 'app',
+					compatibilityDate: '2026-09-01',
+					assets: { basePath: '/base' }
+				}
+			};`,
+			() => {}
+		)
+	).rejects.toThrow('Remove `assets.basePath` from cloudflare.config.ts');
 });

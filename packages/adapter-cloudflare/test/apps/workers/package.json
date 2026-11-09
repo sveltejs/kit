@@ -6,12 +6,12 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview --port 8787",
-		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"
 	},
 	"devDependencies": {
+		"@cloudflare/config": "0.31.0",
 		"@opentelemetry/api": "catalog:",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/kit": "workspace:^",
@@ -20,8 +20,7 @@
 		"conditions-dep": "file:conditions-dep",
 		"server-side-dep": "file:server-side-dep",
 		"svelte": "catalog:",
-		"vite": "catalog:",
-		"wrangler": "catalog:"
+		"vite": "catalog:"
 	},
 	"type": "module"
 }

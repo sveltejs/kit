@@ -1,24 +1,28 @@
 /** @import { Plugin } from 'vite' */
-/** @import { GetPlatformProxyOptions } from 'wrangler' */
+/** @import { PlatformProxy } from '@cloudflare/platform-proxy' */
+/** @import { GetPlatformProxyOptions } from '@cloudflare/platform-proxy' */
+/** @import { PluginOptions } from './index.js' */
+import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { exactRegex } from '@rolldown/pluginutils';
-import { getPlatformProxy } from 'wrangler';
+import { getPlatformProxy } from '@cloudflare/platform-proxy';
 import { is_dev_or_build } from './utils.js';
 
 /**
- * @param {GetPlatformProxyOptions} options
+ * @param {PluginOptions} plugin_options the options also passed to the Cloudflare Vite plugin
  * @param {string} stub_import
- * @param {() => string | undefined} get_environment the Wrangler environment the Cloudflare Vite plugin resolved
  * @returns {Plugin}
  */
-export function plugin_platform(options, stub_import, get_environment) {
-	const explicit_environment = options.environment;
+export function plugin_platform(plugin_options, stub_import) {
+	/** @type {Extract<GetPlatformProxyOptions, { url?: undefined }>} */
+	let options = {};
 
 	// shared so that concurrent servers start one proxy and only the last close disposes it
 	const setup = async () => {
 		const shared = (globalThis.__sveltekit_cloudflare_platform_setup ??= {
 			servers: 0,
-			proxy: getPlatformProxy(options)
+			proxy: start_platform_proxy(options)
 		});
 		shared.servers += 1;
 		try {
@@ -54,14 +58,20 @@ export function plugin_platform(options, stub_import, get_environment) {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
 		apply: is_dev_or_build,
 		configResolved(config) {
-			// resolve the config path relative to the Vite `root` setting rather than
-			// the current working directory
-			if (options.configPath) {
-				options.configPath = path.resolve(config.root, options.configPath);
-			}
-			// the Cloudflare Vite plugin also reads `CLOUDFLARE_ENV` from `.env` files,
-			// so use the same environment instead of only the shell's `CLOUDFLARE_ENV`
-			options.environment = explicit_environment ?? get_environment();
+			options = {
+				// match the Cloudflare Vite plugin, which reads `cloudflare.config.ts` from Vite's root,
+				// evaluates it with Vite's mode and stores the bindings' data in the same place
+				configPath: path.join(config.root, 'cloudflare.config.ts'),
+				mode: config.mode,
+				persist: plugin_options.persistState,
+				// The Cloudflare Vite plugin turns remote bindings off when `CLOUDFLARE_VITE_FORCE_LOCAL`
+				// is `true`, which `cf-vite dev --local` sets (like `wrangler dev --local`). We do the same
+				// so that the platform proxy matches it. The plugin has already copied `CLOUDFLARE_`
+				// variables from `.env` files into `process.env` by this point. See
+				// https://github.com/cloudflare/workers-sdk/blob/d437be397b9e36d76f1a0cd44fe56e77c70a077d/packages/vite-plugin-cloudflare/src/plugin-config.ts#L338-L344
+				remoteBindings:
+					process.env.CLOUDFLARE_VITE_FORCE_LOCAL === 'true' ? false : plugin_options.remoteBindings
+			};
 		},
 		configureServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives
@@ -76,4 +86,32 @@ export function plugin_platform(options, stub_import, get_environment) {
 			}
 		}
 	};
+}
+
+/**
+ * Starts a platform proxy for the bindings in `cloudflare.config.ts`, or an empty one
+ * when there is no config file, since the Cloudflare Vite plugin doesn't require one
+ * @param {Extract<GetPlatformProxyOptions, { url?: undefined }>} options
+ * @returns {Promise<PlatformProxy>}
+ */
+async function start_platform_proxy(options) {
+	if (options.configPath && fs.existsSync(options.configPath)) {
+		return getPlatformProxy(options);
+	}
+
+	const cache = {
+		delete: () => Promise.resolve(false),
+		match: () => Promise.resolve(undefined),
+		put: () => Promise.resolve()
+	};
+
+	return /** @type {PlatformProxy} */ (
+		/** @type {unknown} */ ({
+			env: {},
+			cf: {},
+			ctx: { waitUntil() {}, passThroughOnException() {}, props: {} },
+			caches: { open: () => Promise.resolve(cache), default: cache },
+			dispose: () => Promise.resolve()
+		})
+	);
 }
