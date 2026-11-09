@@ -82,7 +82,7 @@ export async function handle({ event, resolve }) {
 }
 ```
 
-You should always match on `event.route.id` rather than `event.url.pathname` because the pathname is [encoded](advanced-routing#Encoding). Avoid a check such as `event.url.pathname.startsWith('/admin')` as it can be bypassed with the encoded equivalent `/%61dmin`.
+Whenever possible, you should match on `event.route.id` rather than `event.url.pathname` because `event.route.id` is the actual route the SvelteKit router has matched, and therefore represents the content that will be served if the request is allowed to progress. Simple string checks against the URL's pathname can run into all sorts of issues — for example, the URL pathname can be [encoded](advanced-routing#Encoding), so a check such as `event.url.pathname.startsWith('/admin')` can be bypassed with the encoded equivalent `/%61dmin`. If you absolutely must match on any raw part of the URL, ensure you use proper decoding and write thorough tests.
 
 > [!NOTE] Prerendered pages and static assets are served without invoking `handle`, so they can't be protected this way.
 
