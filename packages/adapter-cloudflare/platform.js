@@ -13,7 +13,7 @@ import { is_dev_or_build } from './utils.js';
  * @returns {Plugin}
  */
 export function plugin_platform(user_options, stub_import) {
-	/** @type {PlatformProxyOptions & { configPath?: string }} */
+	/** @type {PlatformProxyOptions & { configPath?: string; mode?: string }} */
 	let options = {};
 
 	// shared so that concurrent servers start one proxy and only the last close disposes it
@@ -57,10 +57,11 @@ export function plugin_platform(user_options, stub_import) {
 		apply: is_dev_or_build,
 		configResolved(config) {
 			options = {
+				...user_options,
 				// the Cloudflare Vite plugin reads `cloudflare.config.ts` from Vite's root
+				// and evaluates it with Vite's mode
 				configPath: path.join(config.root, 'cloudflare.config.ts'),
-				mode: config.mode,
-				...user_options
+				mode: config.mode
 			};
 		},
 		configureServer: setup,
@@ -81,7 +82,7 @@ export function plugin_platform(user_options, stub_import) {
 /**
  * Starts a platform proxy for the bindings in `cloudflare.config.ts`, or an empty one
  * when there is no config file, since the Cloudflare Vite plugin doesn't require one
- * @param {PlatformProxyOptions & { configPath?: string }} options
+ * @param {PlatformProxyOptions & { configPath?: string; mode?: string }} options
  * @returns {Promise<PlatformProxy>}
  */
 async function start_platform_proxy(options) {

@@ -29,5 +29,5 @@ export interface AdapterOptions {
 
 export type PlatformProxyOptions = Omit<
 	Extract<GetPlatformProxyOptions, { url?: undefined }>,
-	'configPath' | 'url' | 'secret'
+	'configPath' | 'mode' | 'url' | 'secret'
 >;
