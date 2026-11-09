@@ -47,11 +47,11 @@ For Cloudflare Workers, the default behaviour is to return a null-body 404-statu
 
 ### persistState
 
-Whether and where to persist the data of local bindings, such as KV and D1, during `vite dev` and `vite preview`. Pass `false` to start with empty bindings each time, or `{ path }` to change where the data is stored. Defaults to `true`, which stores it in `.cloudflare/state`. This is passed to the Cloudflare Vite plugin's [`persistState`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
+See `persistState` in Cloudflare's [Vite plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig).
 
 ### remoteBindings
 
-Whether bindings with `dev.remote` in `cloudflare.config.ts` connect to the real resources on your Cloudflare account during `vite dev` and `vite preview`. Defaults to `true`. Setting the `CLOUDFLARE_VITE_FORCE_LOCAL=true` environment variable also turns them off. This is passed to the Cloudflare Vite plugin's [`remoteBindings`](https://developers.cloudflare.com/workers/vite-plugin/reference/api/) option.
+See `remoteBindings` in Cloudflare's [Vite plugin documentation](https://developers.cloudflare.com/workers/vite-plugin/reference/api/#interface-pluginconfig).
 
 ## Deployment
 
