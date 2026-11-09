@@ -17,23 +17,23 @@ Code in these modules will run when the application starts up, making them usefu
 
 > [!NOTE] Can be added to `src/hooks.server.js`
 
-This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for implementing routes programmatically, for example).
+This function runs every time the SvelteKit server receives a [request](web-standards#Fetch-APIs-Request) — whether that happens while the app is running, or during [prerendering](page-options#prerender) — and determines the [response](web-standards#Fetch-APIs-Response). It receives an `event` object representing the request and a function called `resolve`, which renders the route and generates a `Response`. This allows you to modify response headers or bodies, or bypass SvelteKit entirely (for rejecting rate-limited requests, for example).
 
 ```js
 /// file: src/hooks.server.js
 // @filename: ambient.d.ts
-declare module '#lib/server/config.js' {
-	export const maintenance: boolean;
+declare module '#lib/server/rate-limit.js' {
+	export function isRateLimited(key: string): Promise<boolean>;
 }
 
 // @filename: index.js
 // ---cut---
-import { maintenance } from '#lib/server/config.js';
+import { isRateLimited } from '#lib/server/rate-limit.js';
 
 /** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
-	if (maintenance) {
-		return new Response('Down for maintenance', { status: 503 });
+	if (await isRateLimited(event.getClientAddress())) {
+		return new Response('Too many requests', { status: 429 });
 	}
 
 	const response = await resolve(event);
