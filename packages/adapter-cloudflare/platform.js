@@ -64,7 +64,11 @@ export function plugin_platform(plugin_options, stub_import) {
 				configPath: path.join(config.root, 'cloudflare.config.ts'),
 				mode: config.mode,
 				persist: plugin_options.persistState,
-				// the plugin copies `CLOUDFLARE_` variables from `.env` files into `process.env`
+				// The Cloudflare Vite plugin turns remote bindings off when `CLOUDFLARE_VITE_FORCE_LOCAL`
+				// is `true`, which `cf-vite dev --local` sets (like `wrangler dev --local`). We do the same
+				// so that the platform proxy matches it. The plugin has already copied `CLOUDFLARE_`
+				// variables from `.env` files into `process.env` by this point. See
+				// https://github.com/cloudflare/workers-sdk/blob/d437be397b9e36d76f1a0cd44fe56e77c70a077d/packages/vite-plugin-cloudflare/src/plugin-config.ts#L338-L344
 				remoteBindings:
 					process.env.CLOUDFLARE_VITE_FORCE_LOCAL === 'true' ? false : plugin_options.remoteBindings
 			};
