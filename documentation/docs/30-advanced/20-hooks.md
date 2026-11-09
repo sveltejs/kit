@@ -28,11 +28,13 @@ declare module '#lib/server/rate-limit.js' {
 
 // @filename: index.js
 // ---cut---
+import { building } from '$app/env';
 import { isRateLimited } from '#lib/server/rate-limit.js';
 
 /** @type {import('@sveltejs/kit/hooks').Handle} */
 export async function handle({ event, resolve }) {
-	if (await isRateLimited(event.getClientAddress())) {
+	// `getClientAddress` is unavailable during prerendering
+	if (!building && (await isRateLimited(event.getClientAddress()))) {
 		return new Response('Too many requests', { status: 429 });
 	}
 
