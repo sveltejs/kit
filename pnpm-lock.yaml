@@ -381,8 +381,8 @@ importers:
   packages/adapter-cloudflare/test/apps/custom-worker:
     devDependencies:
       '@cloudflare/config':
-        specifier: 0.30.2
-        version: 0.30.2
+        specifier: 0.31.0
+        version: 0.31.0
       '@sveltejs/adapter-cloudflare':
         specifier: workspace:*
         version: link:../../..
@@ -2166,9 +2166,6 @@ packages:
 
   '@cloudflare/build-output-utils@0.9.11':
     resolution: {integrity: sha512-KL5rNYyOsJi3nXHSMR6U2aTBnsyoJUE5e9jILoQOJ5o5zP2C9QtH2hAAN1NTUnynTXhwUH47hBIcJwhh7FHSxQ==}
-
-  '@cloudflare/config@0.30.2':
-    resolution: {integrity: sha512-YTasjo8Kvfn3SlVs5gHZ6fy73BNQafY2Y8aosasicO8CTRVj2h8K7h+IJnjHK+tzM00Qi96VcOCfefCNLuMauw==}
 
   '@cloudflare/config@0.31.0':
     resolution: {integrity: sha512-GBQWDJ4Y2svqSBkqnYa+2abF7IUFOoktdEDmrUn7t5Pni6qqbbl3Ru5uQnAghXIRb1QpjcErGoXJyNm4xP+wFg==}
@@ -4988,10 +4985,6 @@ snapshots:
   '@cloudflare/build-output-utils@0.9.11':
     dependencies:
       '@cloudflare/config': 0.31.0
-
-  '@cloudflare/config@0.30.2':
-    dependencies:
-      zod: 4.6.6
 
   '@cloudflare/config@0.31.0':
     dependencies:
