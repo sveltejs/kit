@@ -34,6 +34,14 @@ export function plugin_config(set_cloudflare_config, scan_entries, plugin_option
 		config(config) {
 			validate_entrypoint(config.worker.entrypoint);
 
+			if (config.worker.assets?.basePath !== undefined) {
+				// the adapter already writes assets under `paths.base`, so Cloudflare stripping
+				// `basePath` before looking them up would make every asset request miss
+				throw new Error(
+					'Remove `assets.basePath` from cloudflare.config.ts and set `paths.base` in your SvelteKit config instead'
+				);
+			}
+
 			const env = { ...config.worker.env };
 			if (!Object.values(env).some((binding) => binding.type === 'assets')) {
 				env.ASSETS = { type: 'assets' };

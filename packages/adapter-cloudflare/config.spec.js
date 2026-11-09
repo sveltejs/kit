@@ -103,3 +103,18 @@ test.each([
 		warn.mockRestore();
 	}
 });
+
+test('rejects `assets.basePath`, which conflicts with `paths.base`', async () => {
+	await expect(
+		resolve(
+			`export default {
+				worker: {
+					name: 'app',
+					compatibilityDate: '2026-09-01',
+					assets: { basePath: '/base' }
+				}
+			};`,
+			() => {}
+		)
+	).rejects.toThrow('Remove `assets.basePath` from cloudflare.config.ts');
+});
