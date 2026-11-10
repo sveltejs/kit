@@ -186,6 +186,19 @@ describe('redirect', () => {
 		}
 	});
 
+	it('percent-encodes Latin-1 characters instead of sending them as raw bytes', () => {
+		try {
+			redirect(303, '/café');
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.location, '/caf%C3%A9');
+		}
+	});
+
 	it('leaves an already percent-encoded location as it is', () => {
 		try {
 			redirect(303, '/%E3%84%B1?q=a%20b');
