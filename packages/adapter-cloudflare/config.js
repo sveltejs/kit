@@ -215,7 +215,7 @@ function customize(config, entrypoint) {
 
 /**
  * runs sveltekit in workerd during dev, in a worker of our own that renders the requests sveltekit
- * hands it with @sveltejs/kit/dev-server
+ * hands it with @sveltejs/kit/adapter/dev
  * @param {(forward: Forward | undefined) => void} set_forward
  * @param {PluginOptions} [plugin_options]
  * @param {string[]} [scan_entries] the files Vite scans for the app's dependencies
