@@ -33,7 +33,8 @@ import { process_config, split_config, validate_config } from '../../core/config
 import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-vars.js';
 import { plugin_guard } from './plugins/guard.js';
 import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
-import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
+import * as sync from '../../core/sync/sync.js';
+import { write_tsconfig } from '../../core/sync/write_tsconfig/index.js';
 import { plugin_service_worker_build } from './build/service-worker.js';
 import { plugin_adapter, plugin_compile } from './build/index.js';
 import { bullet_list } from '../../utils/format.js';
@@ -244,7 +245,7 @@ function kit({ svelte_config }) {
 	/** @type {boolean} */
 	let is_build;
 
-	/** @type {ManifestData} */
+	/** @type {ManifestData | undefined} */
 	let manifest_data;
 
 	/** @type {UserConfig} */
@@ -323,6 +324,20 @@ function kit({ svelte_config }) {
 				kit = process_config(svelte_config, root);
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
+
+				if (!is_build && !config_env.isPreview) {
+					// Other plugins can start a dependency scan before `configureServer` runs,
+					// so the generated files have to exist by now
+					write_tsconfig(kit, root);
+
+					try {
+						manifest_data = create_manifest_data(kit, root);
+						sync.create(kit, root, manifest_data, false);
+					} catch {
+						// `dev` retries and reports the error
+						manifest_data = undefined;
+					}
+				}
 
 				global_name = get_global_name(kit.version.name, !is_build);
 				kit_global = `globalThis.${global_name}`;
@@ -557,11 +572,6 @@ function kit({ svelte_config }) {
 		 * Stores the final config.
 		 */
 		configResolved(config) {
-			if (!is_build) {
-				// Dependency scanning starts before configureServer creates the full manifest
-				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
-			}
-
 			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
 			if (unsupported_plugins.length) {
 				const plugins = bullet_list(
@@ -583,6 +593,7 @@ function kit({ svelte_config }) {
 				svelte_config,
 				() => remote_metadata.remotes,
 				root,
+				manifest_data,
 				(data) => {
 					manifest_data = data;
 				}

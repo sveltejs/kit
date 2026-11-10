@@ -27,7 +27,6 @@ import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
 import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
-import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
 import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
 
 /**
@@ -36,6 +35,7 @@ import create_manifest_data from '../../../core/sync/create_manifest_data/index.
  * @param {ValidatedConfig} svelte_config
  * @param {() => RemoteChunk[]} get_remotes
  * @param {string} root The project root directory
+ * @param {ManifestData | undefined} manifest_data The manifest the `config` hook synced, if it could
  * @param {(manifest_data: ManifestData) => void} set_manifest_data
  * @return {Promise<Promise<() => void>>}
  */
@@ -45,6 +45,7 @@ export async function dev(
 	svelte_config,
 	get_remotes,
 	root,
+	manifest_data,
 	set_manifest_data
 ) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
@@ -71,10 +72,6 @@ export async function dev(
 		return fetch(info, init);
 	};
 
-	write_tsconfig(svelte_config, root);
-
-	/** @type {ManifestData} */
-	let manifest_data;
 	/** @type {SSRManifest} */
 	let manifest;
 
@@ -144,9 +141,9 @@ export async function dev(
 		);
 	}
 
-	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
-	// don't depend on it and should be available as soon as the dev server is ready.
-	await update_manifest(false);
+	// Initializing the Vite SSR runner before the server starts is unsafe,
+	// but reporting why the manifest could not be created doesn't depend on it
+	if (!manifest_data) await update_manifest(false);
 
 	/** @param {Error} error */
 	function fix_stack_trace(error) {
