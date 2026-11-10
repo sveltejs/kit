@@ -4,6 +4,9 @@
  */
 export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
 
+/** dev server path that returns the css a module depends on */
+export const DEV_INLINE_STYLES_PATH = '/@sveltejs/kit/dev/inline-styles';
+
 export const GENERATED_COMMENT = '// this file is generated — do not edit it';
 
 export const ENDPOINT_METHODS = [
