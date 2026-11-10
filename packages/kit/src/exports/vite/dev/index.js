@@ -14,7 +14,7 @@ import {
 	loud_ssr_load_module,
 	vite_css_query_regex
 } from './generate_manifest.js';
-import { generate_server_manifest_code, to_code } from './server_manifest_code.js';
+import { generate_server_manifest_code } from './server_manifest_code.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
@@ -22,6 +22,7 @@ import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
+import { s } from '../../../utils/misc.js';
 import { load_error_page } from '../../../core/config/index.js';
 import {
 	DEV_INFO_HEADER,
@@ -96,7 +97,7 @@ export async function dev(
 	const write_origin = () =>
 		write_if_changed(
 			path.join(svelte_config.outDir, 'generated', 'dev', 'origin.js'),
-			`export const origin = ${to_code(get_dev_origin(vite_dev_server))};\n`
+			`export const origin = ${s(get_dev_origin(vite_dev_server))};\n`
 		);
 	write_origin();
 	vite_dev_server.httpServer?.on('listening', write_origin);
