@@ -11,6 +11,7 @@ import {
 	writeRootConfig,
 	writeWorkerConfig
 } from '@cloudflare/build-output-utils';
+import { exactRegex } from '@rolldown/pluginutils';
 import { plugin_config } from './config.js';
 import { plugin_workers_stub } from './platform.js';
 import {
@@ -33,8 +34,13 @@ export default function (options = {}) {
 	let vite_config;
 	/** @type {CloudflareConfig} */
 	let cloudflare_config;
+	/** @type {string | undefined} */
+	let custom_entrypoint;
 	/** @type {import('./config.js').Forward | undefined} */
 	let forward;
+	// the bare import that the custom worker import of the adapter becomes in the build, which adapt
+	// points at the generated worker
+	const worker_placeholder = `__sveltekit_cloudflare_worker_${crypto.randomUUID()}__`;
 
 	if (/** @type {Record<string, unknown>} */ (options).config !== undefined) {
 		throw new Error(
@@ -105,15 +111,16 @@ export default function (options = {}) {
 			}
 
 			// worker
-			const worker_dest_dir = path.dirname(worker_dest);
+			// with a custom worker, the generated one becomes a module that it imports
+			const generated_dest = custom_entrypoint ? `${worker_dir}/sveltekit.js` : worker_dest;
 			builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
-			builder.copy(`${files}/worker.js`, worker_dest, {
+			builder.copy(`${files}/worker.js`, generated_dest, {
 				replace: {
 					// the paths might be Windows paths, so we need to convert them to POSIX paths
 					// or else the backslashes will be interpreted as escape characters and create
 					// an incorrect import path. We also need to ensure the relative imports start
 					// with ./ so that they aren't resolved as package imports
-					SERVER: `./${posixify(path.relative(worker_dest_dir, worker_dir))}/server.js`,
+					SERVER: `./${posixify(path.relative(path.dirname(generated_dest), worker_dir))}/server.js`,
 					BASE_PATH: JSON.stringify(builder.config.paths.base),
 					APP_PATH: JSON.stringify(builder.getAppPath()),
 					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
@@ -121,9 +128,18 @@ export default function (options = {}) {
 					ASSETS_BINDING: get_assets_binding(worker)
 				}
 			});
+			if (custom_entrypoint) {
+				// the custom worker is an entry of the sveltekit server build, so they share modules
+				replace_import(server_dir, worker_placeholder, generated_dest);
+				const entry = `./${posixify(path.relative(worker_dir, server_dir))}/${CUSTOM_WORKER_ENTRY}.js`;
+				fs.writeFileSync(
+					worker_dest,
+					`export * from '${entry}';\nexport { default } from '${entry}';\n`
+				);
+			}
 			if (builder.hasServerInstrumentationFile()) {
 				const initializer = builder.createInstrumentationInitializer({
-					outputDirectory: worker_dest_dir,
+					outputDirectory: worker_dir,
 					serverDirectory: server_dir,
 					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
 				});
@@ -132,8 +148,9 @@ export default function (options = {}) {
 					instrumentation: `${server_dir}/instrumentation.server.js`,
 					initializer,
 					module: {
+						// a custom worker can have named exports, such as durable objects
 						generateText: ({ instrumentation, start, initializer }) =>
-							`import './${initializer}';\nimport './${instrumentation}';\nexport { default } from './${start}';\n`
+							`import './${initializer}';\nimport './${instrumentation}';\nexport * from './${start}';\nexport { default } from './${start}';\n`
 					}
 				});
 			}
@@ -202,6 +219,7 @@ export default function (options = {}) {
 					},
 					...plugin_config({
 						set_config: (config) => (cloudflare_config = config),
+						set_custom_entrypoint: (entrypoint) => (custom_entrypoint = entrypoint),
 						set_forward: (value) => (forward = value),
 						scan_entries: get_scan_entries(config.files),
 						plugin_options
@@ -225,7 +243,8 @@ export default function (options = {}) {
 							}
 						}
 					},
-					plugin_workers_stub(stub_import)
+					plugin_workers_stub(stub_import),
+					plugin_custom_worker_build(() => custom_entrypoint, worker_placeholder)
 				]
 			};
 		}
@@ -305,6 +324,83 @@ function replace_stub(directory, stub_import) {
 				}
 				fs.writeFileSync(file_path, contents);
 			}
+		}
+	}
+}
+
+/** the name of the custom worker entry in the sveltekit server build */
+const CUSTOM_WORKER_ENTRY = 'custom-worker';
+
+const WORKER_VIRTUAL_ID = '\0virtual:@sveltejs/adapter-cloudflare/worker';
+
+/**
+ * builds the custom worker as an entry of the sveltekit server build, so modules both import are
+ * bundled once, and points its import of the adapter at a placeholder that adapt replaces
+ * @param {() => string | undefined} get_custom_entrypoint
+ * @param {string} placeholder
+ * @returns {import('vite').Plugin}
+ */
+function plugin_custom_worker_build(get_custom_entrypoint, placeholder) {
+	let root = process.cwd();
+
+	return {
+		name: 'vite-plugin-sveltekit-adapter-cloudflare-custom-worker-build',
+		apply: 'build',
+		// runs before vite resolves the import to the module the worker uses in dev
+		enforce: 'pre',
+		config(user_config) {
+			root = path.resolve(user_config.root ?? process.cwd());
+		},
+		configEnvironment: {
+			order: 'post',
+			handler(name, config) {
+				const entrypoint = get_custom_entrypoint();
+				if (name !== 'ssr' || !entrypoint) return;
+
+				const input = config.build?.rolldownOptions?.input;
+				if (!input || typeof input !== 'object' || Array.isArray(input)) {
+					throw new Error(
+						"Failed to find SvelteKit's server build inputs. This should not happen."
+					);
+				}
+				input[CUSTOM_WORKER_ENTRY] = path.resolve(root, entrypoint);
+			}
+		},
+		resolveId: {
+			filter: { id: [exactRegex('@sveltejs/adapter-cloudflare/worker'), exactRegex(placeholder)] },
+			handler(id) {
+				if (!get_custom_entrypoint() || this.environment.name !== 'ssr') return;
+				if (id === placeholder) return { id, external: true };
+				return WORKER_VIRTUAL_ID;
+			}
+		},
+		load: {
+			filter: { id: exactRegex(WORKER_VIRTUAL_ID) },
+			handler: () =>
+				`import worker from '${placeholder}';\n` +
+				'export const fetch = (request, env, ctx) => worker.fetch(request, env, ctx);\n'
+		}
+	};
+}
+
+/**
+ * replaces a bare import with a relative import of target in the javascript files in directory
+ * @param {string} directory
+ * @param {string} specifier
+ * @param {string} target
+ */
+function replace_import(directory, specifier, target) {
+	for (const file of fs.readdirSync(directory)) {
+		const file_path = path.join(directory, file);
+		if (fs.statSync(file_path).isDirectory()) {
+			replace_import(file_path, specifier, target);
+		} else if (file.endsWith('.js')) {
+			const contents = fs.readFileSync(file_path, 'utf8');
+			if (!contents.includes(specifier)) continue;
+
+			let relative = posixify(path.relative(path.dirname(file_path), target));
+			if (!relative.startsWith('.')) relative = `./${relative}`;
+			fs.writeFileSync(file_path, contents.replaceAll(specifier, relative));
 		}
 	}
 }

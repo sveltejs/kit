@@ -20,9 +20,10 @@ export function validate_worker_settings() {
 }
 
 /**
- * The adapter generates the Worker entrypoint, so an `entrypoint` set in `cloudflare.config.ts`
- * is ignored. The old generated entry is an error because it no longer exists.
+ * returns the custom worker that entrypoint in cloudflare.config.ts points to, if any, and throws
+ * for the old generated entry, which no longer exists
  * @param {string | undefined} entrypoint
+ * @returns {string | undefined}
  */
 export function validate_entrypoint(entrypoint) {
 	if (!entrypoint) return;
@@ -33,9 +34,7 @@ export function validate_entrypoint(entrypoint) {
 		);
 	}
 
-	console.warn(
-		'Ignoring the Worker `entrypoint` in cloudflare.config.ts. The adapter generates the Worker entrypoint, so remove `entrypoint` to silence this warning'
-	);
+	return entrypoint;
 }
 
 /**
