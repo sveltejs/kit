@@ -1,13 +1,29 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { DevRequestInfo } from 'types' */
+import { try_get_request_store } from '@sveltejs/kit/internal/server';
 import { assets, instrumentation, manifest } from '<sveltekit:generated>/server-manifest.js';
 import { DEV_INFO_HEADER, DEV_REMOTE_EXPORTS_HEADER } from '../../constants.js';
 import { read_asset } from './dev_host.js';
 import { set_read_unlisted_assets } from './internal.js';
 import { get_remote_function, has_remote_prefix, strip_remote_prefix } from './remote-functions.js';
 
-// the runtime reports the features requests use in dev, which are not checked here
-globalThis.__SVELTEKIT_TRACK__ = () => {};
+/**
+ * @typedef {NonNullable<DevRequestInfo['features']>[number]} Feature
+ */
+
+/**
+ * keyed by request since the event is copied for tracing
+ * @type {WeakMap<Request, { route: string; config: any; features: Feature[] }>}
+ */
+const contexts = new WeakMap();
+
+// records the features each request uses, so the vite process can check them against
+// adapter.supports
+globalThis.__SVELTEKIT_TRACK__ = (label) => {
+	const request = try_get_request_store()?.event.request;
+	const context = request && contexts.get(request);
+	context?.features.push({ label, route: context.route, config: context.config });
+};
 
 /** @type {ServerInitOptions | undefined} */
 let options;
@@ -45,14 +61,30 @@ export const server = {
 			return get_remote_exports(request);
 		}
 
+		/** @type {Feature[]} */
+		const features = [];
+
 		// without read, like in production, since it is only for prerendering static files
 		const response = await server.respond(
 			request,
-			/** @type {import('types').InternalRequestOptions} */ (request_options)
+			/** @type {import('types').InternalRequestOptions} */ ({
+				...request_options,
+				before_handle: (event, config, prerender, handle) => {
+					if (prerender !== true) {
+						contexts.set(event.request, {
+							route: /** @type {string} */ (event.route.id),
+							config,
+							features
+						});
+					}
+					return handle();
+				}
+			})
 		);
 
 		/** @type {DevRequestInfo} */
 		const info = {};
+		if (features.length > 0) info.features = features;
 
 		const url = new URL(request.url);
 		if (has_remote_prefix(url)) {
@@ -67,7 +99,7 @@ export const server = {
 			}
 		}
 
-		if (!info.remote) return response;
+		if (!info.features && !info.remote) return response;
 
 		const reported = new Response(response.body, response);
 		reported.headers.set(DEV_INFO_HEADER, encodeURIComponent(JSON.stringify(info)));

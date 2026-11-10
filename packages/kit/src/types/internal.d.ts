@@ -77,6 +77,8 @@ export interface ServerModule {
 
 /** what a dev server in another environment reports about a request */
 export interface DevRequestInfo {
+	/** the features the request used, to check against adapter.supports */
+	features?: Array<{ label: string; route: string; config: any }>;
 	/** the remote function that handled the request */
 	remote?: { name: string; type: RemoteInternals['type']; dev_loc?: RemoteInternals['dev_loc'] };
 }

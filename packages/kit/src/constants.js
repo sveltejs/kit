@@ -13,7 +13,9 @@ export const DEV_SERVER_ASSETS_PATH = '/@sveltejs/kit/dev/server-assets';
 /** dev server path that returns the file of a remote module by its hash */
 export const DEV_REMOTE_PATH = '/@sveltejs/kit/dev/remote';
 
-/** response header that reports the remote function a request used */
+/**
+ * response header that reports the features and remote function a request used
+ */
 export const DEV_INFO_HEADER = 'x-sveltekit-dev-info';
 
 /**

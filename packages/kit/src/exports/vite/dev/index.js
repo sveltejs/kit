@@ -628,7 +628,10 @@ export async function dev(
 				};
 
 				const { response: rendered, info } = adapter_respond
-					? read_dev_info(await adapter_respond(request, { getClientAddress, resolve }))
+					? read_dev_info(
+							await adapter_respond(request, { getClientAddress, resolve }),
+							svelte_config.adapter
+						)
 					: { response: await resolve(request), info: undefined };
 
 				// a server in another environment reports the remote function, so the log does not load it here
@@ -688,16 +691,26 @@ function catch_errors(handler) {
 }
 
 /**
- * reads what a server in another environment reported about a request
+ * reads what a server in another environment reported and checks its features against adapter.supports
  * @param {Response} response
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
  * @returns {{ response: Response; info: DevRequestInfo | undefined }}
  */
-function read_dev_info(response) {
+function read_dev_info(response, adapter) {
 	const header = response.headers.get(DEV_INFO_HEADER);
 	if (!header) return { response, info: undefined };
 
 	/** @type {DevRequestInfo} */
 	const info = JSON.parse(decodeURIComponent(header));
+
+	try {
+		for (const { label, route, config } of info.features ?? []) {
+			check_feature(route, config, label, adapter);
+		}
+	} catch (error) {
+		void response.body?.cancel();
+		throw error;
+	}
 
 	const stripped = new Response(response.body, response);
 	stripped.headers.delete(DEV_INFO_HEADER);
