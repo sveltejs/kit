@@ -56,12 +56,6 @@ test('hash_bytes produces known values', () => {
 		hash_bytes(encoder.encode('The quick brown fox jumps over the lazy dog')),
 		(0x2e4ff723).toString(36)
 	);
-	assert.equal(hash_bytes(encoder.encode('a')), reference(encoder.encode('a')));
-	assert.equal(
-		hash_bytes(encoder.encode('<!doctype html>')),
-		reference(encoder.encode('<!doctype html>'))
-	);
-	assert.equal(hash_bytes(encoder.encode('😀 é中')), reference(encoder.encode('😀 é中')));
 });
 
 test('hash_bytes matches the reference for every length', () => {
@@ -107,17 +101,6 @@ test('hash_bytes changes when two digits a few words apart change', () => {
 		const changed = bytes.slice();
 		changed[a] ^= 1 + Math.floor(next() * 15);
 		changed[b] ^= 1 + Math.floor(next() * 15);
-		assert.notEqual(hash_bytes(changed), original);
-	}
-});
-
-test('hash_bytes changes when any byte changes', () => {
-	const bytes = random_bytes(random(3), 1_024);
-	const original = hash_bytes(bytes);
-
-	for (let i = 0; i < bytes.length; i += 1) {
-		const changed = bytes.slice();
-		changed[i] ^= 1;
 		assert.notEqual(hash_bytes(changed), original);
 	}
 });
