@@ -25,7 +25,7 @@ export const worker_environment = 'cloudflare';
 const scan_kit_modules = {
 	name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
 	resolveId: {
-		filter: { id: /^(\$(app|env)\/|<sveltekit:generated>|virtual:sveltekit\/)/ },
+		filter: { id: /^(\$(app|env)\/|<sveltekit:generated>)/ },
 		handler: (id) => ({ id, external: true })
 	}
 };
@@ -215,7 +215,7 @@ function customize(config, entrypoint) {
 
 /**
  * runs sveltekit in workerd during dev, in a worker of our own that renders the requests sveltekit
- * hands it with virtual:sveltekit/server
+ * hands it with @sveltejs/kit/dev-server
  * @param {(forward: Forward | undefined) => void} set_forward
  * @param {PluginOptions} [plugin_options]
  * @param {string[]} [scan_entries] the files Vite scans for the app's dependencies

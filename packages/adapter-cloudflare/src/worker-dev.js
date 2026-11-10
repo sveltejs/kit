@@ -1,5 +1,5 @@
 // the worker that renders sveltekit in workerd during dev
-import { server } from 'virtual:sveltekit/server';
+import { server } from '@sveltejs/kit/dev-server';
 
 export default {
 	/**
