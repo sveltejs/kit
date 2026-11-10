@@ -56,9 +56,8 @@ declare module '@sveltejs/kit' {
 		 * During `vite dev`, SvelteKit calls this function with each request it would render, after
 		 * serving static files, imported assets and the service worker. Use it to render requests in
 		 * your platform's runtime instead of Node: send them to code that runs there, which imports
-		 * `server` from `virtual:sveltekit/server` and calls `server.respond`.
+		 * `server` from `@sveltejs/kit/dev-server` and calls `server.respond`.
 		 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
-		 * SvelteKit also sends its own requests through it, such as to find what a remote module exports.
 		 * @since 3.3.0
 		 */
 		respond?: (
@@ -1172,6 +1171,27 @@ declare module '@sveltejs/kit/adapter' {
 	 * @since 3.0.0
 	 */
 	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
+
+	export {};
+}
+
+declare module '@sveltejs/kit/dev-server' {
+	import type { Server } from '@sveltejs/kit';
+	/**
+	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
+	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
+	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
+	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
+	 *
+	 * ```js
+	 * import { server } from '@sveltejs/kit/dev-server';
+	 *
+	 * await server.init({ env });
+	 * const response = await server.respond(request, { getClientAddress: () => address });
+	 * ```
+	 * @since 3.3.0
+	 */
+	export const server: Server;
 
 	export {};
 }
@@ -3992,28 +4012,6 @@ declare module '$app/state' {
 		get current(): boolean;
 		check(): Promise<boolean>;
 	};
-
-	export {};
-}
-
-declare module 'virtual:sveltekit/server' {
-	import type { Server } from '@sveltejs/kit';
-	/**
-	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
-	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
-	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
-	 * writes for production. It reads imported assets from the Vite dev server, so `init` doesn't need
-	 * a `read` function. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
-	 *
-	 * ```js
-	 * import { server } from 'virtual:sveltekit/server';
-	 *
-	 * await server.init({ env });
-	 * const response = await server.respond(request, { getClientAddress: () => address });
-	 * ```
-	 * @since 3.3.0
-	 */
-	export const server: Server;
 
 	export {};
 }

@@ -6,4 +6,4 @@ import { mimes, lookup } from 'mrmime';
 // tools, so we use that.
 mimes['ico'] = 'image/x-icon';
 
-export { mimes, lookup };
+export { lookup };

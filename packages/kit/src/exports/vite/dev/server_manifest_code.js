@@ -27,13 +27,12 @@ const escaped_chars = {
  * @param {unknown} value
  * @returns {string}
  */
-function to_code(value) {
+export function to_code(value) {
 	const json = JSON.stringify(value);
 	return json === undefined
 		? 'undefined'
 		: json.replace(unsafe_chars, (char) => escaped_chars[char]);
 }
-import { mimes } from '../../../utils/mime.js';
 
 /**
  * generates the dev manifest as a module, whose loaders import in whichever environment imports it
@@ -73,9 +72,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 		}
 
 		if (node.server) {
-			lines.push(
-				`result.server = await list_server_assets(${file_path(node.server)}, await import(${file_path(node.server)}));`
-			);
+			lines.push(`result.server = await import(${file_path(node.server)});`);
 		}
 
 		lines.push('result.inline_styles = () => inline_styles(css_modules);', 'return result;');
@@ -91,7 +88,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 		pattern: ${devalue.uneval(route.pattern)},
 		params: ${devalue.uneval(route.params)},
 		page: ${devalue.uneval(route.page)},
-		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)}).then((module) => list_server_assets(${file_path(endpoint.file)}, module))` : 'null'},
+		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)})` : 'null'},
 		endpoint_id: ${to_code(route.endpoint_id)}
 	}`;
 	});
@@ -111,13 +108,8 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 
-	/** @type {Record<string, string>} */
-	const mime_types = {};
-	for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
-	Object.assign(mime_types, manifest.mime_types);
-
-	return `// generated during dev for \`virtual:sveltekit/server\`
-import { inline_styles, list_server_assets, remotes, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
+	return `// generated during dev for \`@sveltejs/kit/dev-server\`
+import { inline_styles } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${to_code(assets)};
 
@@ -128,16 +120,14 @@ export const manifest = {
 	app_dir: ${to_code(manifest.app_dir)},
 	app_path: ${to_code(manifest.app_path)},
 	assets: ${devalue.uneval(manifest.assets)},
-	// every mime type, since imported assets are not listed
-	mime_types: ${devalue.uneval(mime_types)},
+	mime_types: ${devalue.uneval(manifest.mime_types)},
 	client: ${devalue.uneval(manifest.client)},
-	// filled in as server modules load
-	server_assets,
+	server_assets: {},
 	nodes: [
 	${nodes.join(',\n\t')}
 	],
 	prerendered_routes: new Set(),
-	remotes,
+	remotes: {},
 	routes: [
 	${routes.join(',\n\t')}
 	],

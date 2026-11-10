@@ -6,15 +6,15 @@ declare module '<sveltekit:generated>/server.js' {
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
 }
 
-/** the dev manifest as code, for virtual:sveltekit/server */
+/** the dev manifest as code, for @sveltejs/kit/dev-server */
 declare module '<sveltekit:generated>/server-manifest.js' {
 	export const assets: string;
 	export const instrumentation: (() => Promise<unknown>) | null;
 	export const manifest: import('types').SSRManifest;
 }
 
-/** the origin of the vite dev server */
-declare module '__sveltekit/dev/host' {
+/** where code outside the vite process can reach the vite dev server */
+declare module '<sveltekit:generated>/origin.js' {
 	export const origin: string;
 }
 

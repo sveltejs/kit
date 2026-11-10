@@ -57,30 +57,7 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(
-		status: number,
-		request: Request,
-		manifest: SSRManifest,
-		get_remote?: (
-			id: string,
-			manifest: SSRManifest
-		) => Promise<
-			| {
-					fn: ((...args: any[]) => any) & { __: RemoteInternals };
-					name: string;
-					additional_args: string;
-			  }
-			| undefined
-		>
-	): Promise<string>;
-}
-
-/** what a dev server in another environment reports about a request */
-export interface DevRequestInfo {
-	/** the features the request used, to check against adapter.supports */
-	features?: Array<{ label: string; route: string; config: any }>;
-	/** the remote function that handled the request */
-	remote?: { name: string; type: RemoteInternals['type']; dev_loc?: RemoteInternals['dev_loc'] };
+	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
 }
 
 /** the built `server/internal.js` */

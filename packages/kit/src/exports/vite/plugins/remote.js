@@ -7,12 +7,10 @@ import { prefixRegex } from '@rolldown/pluginutils';
 import MagicString from 'magic-string';
 import {
 	error_for_missing_config,
-	get_dev_origin,
 	is_remote_module,
 	query_pattern,
 	remote_module_pattern
 } from '../utils.js';
-import { DEV_REMOTE_EXPORTS_HEADER } from '../../../constants.js';
 import { create_exported_declarations } from '../../../core/env.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -48,77 +46,6 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	const remote_original_by_hash = new Map();
 	/** @type {Set<string>} Track which remote hashes have already been emitted */
 	const emitted_remote_hashes = new Set();
-
-	/**
-	 * loads a remote module in this process to find the types of its remote functions
-	 * @param {string} id
-	 * @returns {Promise<Record<string, RemoteInternals['type']>>}
-	 */
-	async function load_exports(id) {
-		const module = await get_runner(vite, dev_server).import(id);
-
-		/** @type {Record<string, RemoteInternals['type']>} */
-		const exports = {};
-		for (const [name, value] of Object.entries(module)) {
-			const type = value?.__?.type;
-			if (type) exports[name] = type;
-		}
-
-		return exports;
-	}
-
-	/**
-	 * finds the types of the remote functions in a module, asking the server when the adapter renders
-	 * elsewhere so the module only runs there
-	 * @param {RemoteChunk} remote
-	 * @param {string} id
-	 * @returns {Promise<Record<string, RemoteInternals['type']>>}
-	 */
-	async function get_dev_exports(remote, id) {
-		const respond = svelte_config.adapter?.vite?.respond;
-		if (!respond) return load_exports(id);
-
-		// the server loads remote modules by their hash, which it looks up in this list
-		if (!remotes.some((existing) => existing.hash === remote.hash)) remotes.push(remote);
-
-		const url = new URL(
-			`${svelte_config.paths.base}/${svelte_config.appDir}/remote/${remote.hash}`,
-			get_dev_origin(dev_server)
-		);
-
-		/** @type {Response} */
-		let response;
-
-		try {
-			response = await respond(
-				new Request(url, { headers: { [DEV_REMOTE_EXPORTS_HEADER]: 'true' } }),
-				{
-					getClientAddress: () => '127.0.0.1',
-					resolve: async () => Response.json(await load_exports(id))
-				}
-			);
-		} catch (error) {
-			return fall_back(/** @type {Error} */ (error).message);
-		}
-
-		if (response.ok) return await response.json();
-
-		// the module failed to load on the server, which loading it here would hide
-		if (response.status >= 500) {
-			throw new Error(`Failed to load ${remote.file} on the server: ${await response.text()}`);
-		}
-
-		// the request did not reach sveltekit, such as when a custom worker handled it
-		return fall_back(`${response.status} ${response.statusText}`);
-
-		/** @param {string} reason */
-		function fall_back(reason) {
-			dev_server.config.logger.warn(
-				`Could not get the exports of ${remote.file} from the server, so it was loaded in the Vite process as well (${reason})`
-			);
-			return load_exports(id);
-		}
-	}
 
 	return {
 		name: 'vite-plugin-sveltekit-remote',
@@ -280,10 +207,15 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 				/** @type {Map<string, RemoteInternals['type']>} */
 				const map = new Map();
 
-				// in dev, find what the server module exports, which loads it if it is not loaded yet
+				// in dev, load the server module here (which will result in this hook
+				// being called again with `opts.ssr === true` if the module isn't
+				// already loaded) so we can determine what it exports
 				if (dev_server) {
-					for (const [name, type] of Object.entries(await get_dev_exports(remote, id))) {
-						map.set(name, type);
+					const module = await get_runner(vite, dev_server).import(id);
+
+					for (const [name, value] of Object.entries(module)) {
+						const type = value?.__?.type;
+						if (type) map.set(name, type);
 					}
 				}
 				// in prod, we already built and analysed the server code before
