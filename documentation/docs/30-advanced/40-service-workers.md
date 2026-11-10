@@ -131,7 +131,7 @@ Service workers run in a different context to the rest of your app. As such, the
 
 ## Manual registration
 
-You can [disable automatic registration](configuration#serviceWorker) if you need to register the service worker with your own logic. The default registration, which is injected into server-rendered HTML, looks something like this:
+You can [disable automatic registration](@sveltejs-kit-vite#serviceWorker) if you need to register the service worker with your own logic. The default registration, which is injected into server-rendered HTML, looks something like this:
 
 ```js
 if ('serviceWorker' in navigator) {
@@ -153,7 +153,7 @@ if ('serviceWorker' in navigator) {
 
 Browsers check for an updated service worker when a full-page navigation happens within its scope, and after functional events such as `push` and `sync`. Client-side navigations are neither, so navigating around your app will not by itself cause a new deployment's service worker to be picked up.
 
-SvelteKit calls [`registration.update()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update) only as part of error recovery — if a route module fails to load or a navigation results in an error status, and [version polling](configuration#version) detects that the app has been redeployed, the service worker is updated before SvelteKit falls back to a full-page navigation.
+SvelteKit calls [`registration.update()`](https://developer.mozilla.org/en-US/docs/Web/API/ServiceWorkerRegistration/update) only as part of error recovery — if a route module fails to load or a navigation results in an error status, and [version polling](@sveltejs-kit-vite#version) detects that the app has been redeployed, the service worker is updated before SvelteKit falls back to a full-page navigation.
 
 If you want new deployments to be picked up more eagerly, you can trigger an update check yourself — for example on every client-side navigation, in your root layout:
 

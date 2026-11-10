@@ -1,0 +1,17 @@
+{
+	"name": "remote-server-directory",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "vite build"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	}
+}

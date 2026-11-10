@@ -6,7 +6,7 @@ import { SvelteKitError } from '@sveltejs/kit/internal';
 vi.stubGlobal('__SVELTEKIT_DEV__', false);
 vi.stubGlobal('__SVELTEKIT_SUPPORTS_ASYNC__', false);
 
-const { handle_error_and_jsonify } = await import('./errors.js');
+const { default_handle_error, handle_error_and_jsonify } = await import('./errors.js');
 const { set_hooks } = await import('./internal.js');
 
 const event = /** @type {RequestEvent} */ (/** @type {unknown} */ ({}));
@@ -77,3 +77,57 @@ test('warns once and discards the result of an async handleError hook during ren
 	expect(warn).toHaveBeenCalledOnce();
 	expect(warn).toContainKitDiagnostic('handle_error_async_without_async_svelte');
 });
+
+test('passes ValidationError with remote info to handleError', async () => {
+	const { ValidationError } = await import('@sveltejs/kit/internal');
+	const handleError = vi.fn();
+	use_hook(handleError);
+
+	const issues = [{ message: 'Expected string' }];
+	const error = new ValidationError(issues, {
+		name: 'getUser',
+		file: 'src/routes/users.remote.js'
+	});
+
+	await handle_error_and_jsonify(event, create_state(), error);
+
+	expect(handleError).toHaveBeenCalledWith({
+		kind: 'validation',
+		error: { status: 400, message: 'Bad Request' },
+		issues,
+		remote: { name: 'getUser', file: 'src/routes/users.remote.js' },
+		event
+	});
+});
+
+test.each([
+	{
+		remote: { name: 'getUser', file: 'src/routes/users.remote.js' },
+		expected_prefix:
+			'Remote function getUser (src/routes/users.remote.js) schema validation failed:'
+	},
+	{
+		remote: { name: 'getUser' },
+		expected_prefix: 'Remote function getUser schema validation failed:'
+	},
+	{
+		remote: undefined,
+		expected_prefix: 'Remote function schema validation failed:'
+	}
+])(
+	'default_handle_error formats validation message correctly with $remote',
+	({ remote, expected_prefix }) => {
+		const log = vi.spyOn(console, 'error').mockImplementation(() => {});
+		const issues = [{ message: 'Expected string' }];
+
+		default_handle_error({
+			kind: 'validation',
+			error: { status: 400, message: 'Bad Request' },
+			issues,
+			remote,
+			event
+		});
+
+		expect(log).toHaveBeenCalledWith(expected_prefix, issues);
+	}
+);

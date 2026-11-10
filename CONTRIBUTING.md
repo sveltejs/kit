@@ -1,5 +1,9 @@
 # SvelteKit Contributing Guide
 
+## Security policy
+
+See https://github.com/sveltejs/kit/security/policy.
+
 ## Preparing
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
@@ -99,6 +103,8 @@ KIT_E2E_WORKERS=undefined
 # Append the modified environment variable before the test command
 KIT_E2E_RETRIES=2 pnpm test:kit
 ```
+
+`KIT_E2E_VARIANT` selects one of the server configuration variants a test app declares in its `playwright.config.js`, e.g. `KIT_E2E_VARIANT=async pnpm -F test-basics pw:dev`.
 
 ## Working on Vite and other dependencies
 

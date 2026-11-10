@@ -14,3 +14,14 @@ test('hash routing resolves to a fragment without the base', () => {
 	expect(resolve('about')).toBe('#/about');
 	expect(resolve('/blog/[slug]', { slug: 'hello' })).toBe('#/blog/hello');
 });
+
+test.each(['https://example.com', 'mailto:hi@example.com', '//example.com'])(
+	'rejects URL input %s',
+	(input) => {
+		expect(() => resolve(input)).toThrowKitError('resolve_url_input', { contains: [input] });
+	}
+);
+
+test('allows URL-like text after the start of a path', () => {
+	expect(resolve('blog?next=https://example.com')).toBe('#/blog?next=https://example.com');
+});
