@@ -132,7 +132,7 @@ export async function watch(options) {
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
 					for (const candidate of [
-						file.name,
+						file.dest,
 						`${file.base}.d.ts`,
 						`${file.base}.d.mts`,
 						`${file.base}.d.cts`
