@@ -241,4 +241,20 @@ test.describe('Remote functions', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
+
+	test('queries throw while rendering a prerendered page, like they do when building', async ({
+		request
+	}) => {
+		const response = await request.get('/remote/query/prerendered');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toContainKitDiagnostic('remote_query_prerender', {
+			contains: ['`query`', '`answer`']
+		});
+	});
+
+	test('queries work while rendering a page that is not prerendered', async ({ page }) => {
+		const response = await page.goto('/remote/query/dynamic');
+		expect(response?.status()).toBe(200);
+		await expect(page.locator('p')).toHaveText('42');
+	});
 });
