@@ -6,7 +6,7 @@ declare module '<sveltekit:generated>/server.js' {
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
 }
 
-/** the dev manifest as code, for @sveltejs/kit/dev-server */
+/** the dev manifest as code, for @sveltejs/kit/adapter/dev */
 declare module '<sveltekit:generated>/server-manifest.js' {
 	export const assets: string;
 	export const instrumentation: (() => Promise<unknown>) | null;
