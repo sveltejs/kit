@@ -168,6 +168,50 @@ describe('redirect', () => {
 			'Invalid redirect location "/invalid\\r\\nset-cookie: x=y": this string contains characters that cannot be used in HTTP headers'
 		);
 	});
+
+	it('percent-encodes non-ASCII characters in the location', () => {
+		try {
+			redirect(303, '/ㄱ/게시판?q=한글#섹션');
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.status, 303);
+			assert.equal(
+				e.location,
+				'/%E3%84%B1/%EA%B2%8C%EC%8B%9C%ED%8C%90?q=%ED%95%9C%EA%B8%80#%EC%84%B9%EC%85%98'
+			);
+		}
+	});
+
+	it('leaves an already percent-encoded location as it is', () => {
+		try {
+			redirect(303, '/%E3%84%B1?q=a%20b');
+			assert.fail('Expected redirect to throw');
+		} catch (e) {
+			if (!isRedirect(e)) {
+				assert.fail('Expected a Redirect error');
+			}
+
+			assert.equal(e.location, '/%E3%84%B1?q=a%20b');
+		}
+	});
+
+	it('names the location as given when an encoded location is still invalid', () => {
+		assert.throws(
+			() => redirect(307, '/한글\r\nset-cookie: x=y'),
+			'Invalid redirect location "/한글\\r\\nset-cookie: x=y": this string contains characters that cannot be used in HTTP headers'
+		);
+	});
+
+	it('throws a descriptive error for a location with an unpaired surrogate', () => {
+		assert.throws(
+			() => redirect(307, '/\ud800'),
+			'this string contains characters that cannot be used in HTTP headers'
+		);
+	});
 });
 
 describe('error', () => {
