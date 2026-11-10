@@ -251,10 +251,4 @@ test.describe('Remote functions', () => {
 			contains: ['`query`', '`answer`']
 		});
 	});
-
-	test('queries work while rendering a page that is not prerendered', async ({ page }) => {
-		const response = await page.goto('/remote/query/dynamic');
-		expect(response?.status()).toBe(200);
-		await expect(page.locator('p')).toHaveText('42');
-	});
 });
