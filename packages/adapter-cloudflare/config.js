@@ -225,7 +225,7 @@ function customize(config, entrypoint) {
 
 /**
  * runs sveltekit in workerd during dev, in the custom worker or a worker of our own, which renders
- * the requests sveltekit hands it with @sveltejs/kit/dev-server
+ * the requests sveltekit hands it with @sveltejs/kit/adapter/dev
  * @param {() => string | undefined} get_custom_entrypoint
  * @param {(forward: Forward | undefined) => void} set_forward
  * @param {PluginOptions} [plugin_options]
