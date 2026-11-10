@@ -8,7 +8,7 @@ import { DEV_INLINE_STYLES_PATH } from '../../constants.js';
  * @returns {Promise<any>}
  */
 async function ask(pathname, params) {
-	// written by the vite dev server once it listens
+	// written by the vite dev server before it serves requests
 	const { origin } = await import('<sveltekit:generated>/origin.js');
 
 	const url = new URL(pathname, origin);
