@@ -1,5 +1,5 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { EnvironmentModuleNode, ViteDevServer } from 'vite' */
+/** @import { ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
@@ -8,12 +8,7 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import {
-	find_deps,
-	generate_manifest,
-	loud_ssr_load_module,
-	vite_css_query_regex
-} from './generate_manifest.js';
+import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js';
 import { generate_server_manifest_code } from './server_manifest_code.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
@@ -22,18 +17,12 @@ import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
-import { s } from '../../../utils/misc.js';
 import { load_error_page } from '../../../core/config/index.js';
-import { DEV_INLINE_STYLES_PATH, SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import {
-	get_dev_origin,
-	is_chrome_devtools_request,
-	is_remote_module,
-	not_found
-} from '../utils.js';
+import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
@@ -85,15 +74,6 @@ export async function dev(
 	};
 
 	write_tsconfig(svelte_config, root);
-
-	// for code outside the vite process, which imports it once the server listens
-	const write_origin = () =>
-		write_if_changed(
-			path.join(svelte_config.outDir, 'generated', 'dev', 'origin.js'),
-			`export const origin = ${s(get_dev_origin(vite_dev_server))};\n`
-		);
-	write_origin();
-	vite_dev_server.httpServer?.on('listening', write_origin);
 
 	/** @type {ManifestData} */
 	let manifest_data;
@@ -301,53 +281,6 @@ export async function dev(
 			write_server(svelte_config, path.join(svelte_config.outDir, 'generated', 'dev'), root);
 		}
 	});
-
-	/**
-	 * finds what a module depends on in the server environments that have it, since a dev server
-	 * in another environment does not know which one it runs in
-	 * @param {string} id the file path or url of the module
-	 * @returns {Promise<Set<EnvironmentModuleNode> | undefined>}
-	 */
-	async function find_server_deps(id) {
-		/** @type {Set<EnvironmentModuleNode> | undefined} */
-		let deps;
-
-		for (const environment of Object.values(vite_dev_server.environments)) {
-			if (environment.config.consumer !== 'server') continue;
-
-			const node =
-				environment.moduleGraph.getModuleById(id) ??
-				(await environment.moduleGraph.getModuleByUrl(id));
-
-			if (node) await find_deps(environment, node, (deps ??= new Set()));
-		}
-
-		return deps;
-	}
-
-	// returns the css a module depends on, for servers in other vite environments
-	vite_dev_server.middlewares.use(
-		DEV_INLINE_STYLES_PATH,
-		catch_errors(async (req, res) => {
-			const url = new URL(req.originalUrl ?? '', 'http://localhost');
-
-			/** @type {Map<string, string>} */
-			const styles = new Map();
-			for (const module of url.searchParams.getAll('module')) {
-				for (const dep of (await find_server_deps(module)) ?? []) {
-					if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-						styles.set(
-							dep.url,
-							dep.url.includes('?') ? dep.url.replace('?', '?inline&') : dep.url + '?inline'
-						);
-					}
-				}
-			}
-
-			res.setHeader('content-type', 'application/json');
-			res.end(JSON.stringify(Array.from(styles, ([url, inline]) => ({ url, inline }))));
-		})
-	);
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 	const asset_server = sirv(svelte_config.files.assets, {
@@ -577,22 +510,6 @@ export async function dev(
 				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
-		});
-	};
-}
-
-/**
- * responds with a 500 when the handler throws, since connect ignores rejected promises and the
- * process would exit
- * @param {(req: import('connect').IncomingMessage, res: import('node:http').ServerResponse) => Promise<void>} handler
- * @returns {import('connect').NextHandleFunction}
- */
-function catch_errors(handler) {
-	return (req, res) => {
-		handler(req, res).catch((error) => {
-			console.error(error);
-			if (!res.headersSent) res.statusCode = 500;
-			res.end();
 		});
 	};
 }

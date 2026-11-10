@@ -13,11 +13,6 @@ declare module '<sveltekit:generated>/server-manifest.js' {
 	export const manifest: import('types').SSRManifest;
 }
 
-/** where code outside the vite process can reach the vite dev server */
-declare module '<sveltekit:generated>/origin.js' {
-	export const origin: string;
-}
-
 declare module '<sveltekit:generated>/env/config.js' {
 	// exported environment variables are defined in env.d.ts
 

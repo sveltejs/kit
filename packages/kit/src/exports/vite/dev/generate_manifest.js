@@ -1,4 +1,4 @@
-/** @import { DevEnvironment, EnvironmentModuleNode, ErrorPayload, ViteDevServer } from 'vite' */
+/** @import { EnvironmentModuleNode, ErrorPayload, ViteDevServer } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
 /** @import { ManifestData, SSRManifest, SSRNode, RemoteChunk, UniversalNode, ValidatedConfig } from 'types' */
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import * as e from '../../../messages/build-errors.js';
 import { styleText } from 'node:util';
 
 // vite-specifc queries that we should skip handling for css urls
-export const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
+const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
 
 /**
  * @param {typeof import('vite')} vite
@@ -137,7 +137,7 @@ export function generate_manifest(
 					const deps = new Set();
 
 					for (const module_node of module_nodes) {
-						await find_deps(vite_dev_server.environments.ssr, module_node, deps);
+						await find_deps(vite_dev_server, module_node, deps);
 					}
 
 					/** @type {Record<string, string>} */
@@ -266,11 +266,11 @@ async function resolve(vite, vite_dev_server, runner, id) {
 }
 
 /**
- * @param {DevEnvironment} environment the vite environment whose module graph to walk
+ * @param {ViteDevServer} vite
  * @param {EnvironmentModuleNode} node
  * @param {Set<EnvironmentModuleNode>} deps
  */
-export async function find_deps(environment, node, deps) {
+async function find_deps(vite, node, deps) {
 	// since `transformResult.deps` contains URLs instead of `ModuleNode`s, this process is asynchronous.
 	// instead of using `await`, we resolve all branches in parallel.
 	/** @type {Promise<void>[]} */
@@ -280,13 +280,13 @@ export async function find_deps(environment, node, deps) {
 	async function add(node) {
 		if (!deps.has(node)) {
 			deps.add(node);
-			await find_deps(environment, node, deps);
+			await find_deps(vite, node, deps);
 		}
 	}
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await environment.moduleGraph.getModuleByUrl(url);
+		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
 
 		if (node) {
 			await add(node);

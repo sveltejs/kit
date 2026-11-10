@@ -1,7 +1,6 @@
 /** @import { ManifestData, SSRManifest, ValidatedConfig } from 'types' */
 import path from 'node:path';
 import * as devalue from 'devalue';
-import { runtime_directory } from '../../../core/utils.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { s } from '../../../utils/misc.js';
@@ -22,14 +21,12 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	const nodes = manifest_data.nodes.map((node, index) => {
 		/** @type {string[]} */
 		const lines = [
-			`const result = { index: ${index}, universal_id: ${s(node.universal)}, server_id: ${s(node.server)}, imports: [], stylesheets: [], fonts: [] };`,
-			// modules whose css is inlined to avoid a flash of unstyled content
-			'const css_modules = [];'
+			`const result = { index: ${index}, universal_id: ${s(node.universal)}, server_id: ${s(node.server)}, imports: [], stylesheets: [], fonts: [] };`
 		];
 
 		if (node.component) {
 			lines.push(
-				`result.component = async () => { css_modules.push(${file_path(node.component)}); return (await import(${file_path(node.component)})).default; };`
+				`result.component = async () => (await import(${file_path(node.component)})).default;`
 			);
 		}
 
@@ -37,10 +34,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 			if (node.page_options?.ssr === false) {
 				lines.push(`result.universal = ${devalue.uneval(node.page_options)};`);
 			} else {
-				lines.push(
-					`css_modules.push(${file_path(node.universal)});`,
-					`result.universal = await import(${file_path(node.universal)});`
-				);
+				lines.push(`result.universal = await import(${file_path(node.universal)});`);
 			}
 		}
 
@@ -48,7 +42,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 			lines.push(`result.server = await import(${file_path(node.server)});`);
 		}
 
-		lines.push('result.inline_styles = () => inline_styles(css_modules);', 'return result;');
+		lines.push('return result;');
 
 		return `async () => {\n\t\t${lines.join('\n\t\t')}\n\t}`;
 	});
@@ -82,8 +76,6 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 
 	return `// generated during dev for \`@sveltejs/kit/adapter/dev\`
-import { inline_styles } from ${s(`${runtime_directory}/server/dev_host.js`)};
-
 export const assets = ${s(assets)};
 
 export const instrumentation = ${instrumentation ? `() => import(${file_path(instrumentation)})` : 'null'};
