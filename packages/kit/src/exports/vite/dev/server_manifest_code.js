@@ -89,7 +89,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
 	Object.assign(mime_types, manifest.mime_types);
 
-	return `// generated during dev for \`@sveltejs/kit/dev-server\`
+	return `// generated during dev for \`@sveltejs/kit/adapter/dev\`
 import { inline_styles, list_server_assets, server_assets } from ${s(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${s(assets)};
