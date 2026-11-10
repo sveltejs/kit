@@ -137,14 +137,16 @@ describe('Caching', () => {
 	});
 
 	test('pages get an etag of their HTML and answer 304 when it matches', async () => {
-		const response = await get('/caching');
+		// this page has non-ASCII text, so its byte length differs from its string length
+		const response = await get('/encoded');
 		const bytes = new Uint8Array(await response.arrayBuffer());
+		expect(bytes.length).toBeGreaterThan(new TextDecoder().decode(bytes).length);
 		expect(response.headers.get('content-length')).toBe(String(bytes.length));
 
 		const etag = /** @type {string} */ (response.headers.get('etag'));
 		expect(etag).toBe(`"${hash_bytes(bytes)}"`);
 
-		const revalidated = await get('/caching', { headers: { 'if-none-match': etag } });
+		const revalidated = await get('/encoded', { headers: { 'if-none-match': etag } });
 		expect(revalidated.status).toBe(304);
 		expect(revalidated.headers.get('etag')).toBe(etag);
 	});

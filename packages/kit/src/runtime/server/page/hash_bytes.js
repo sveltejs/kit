@@ -1,5 +1,3 @@
-const little_endian = new Uint8Array(new Uint32Array([1]).buffer)[0] === 1;
-
 /**
  * MurmurHash3 (x86, 32-bit, seed 0) over the bytes, read as little-endian 32-bit words so every
  * platform computes the same value
@@ -10,13 +8,8 @@ export function hash_bytes(bytes) {
 	const length = bytes.byteLength;
 	const words = length >> 2;
 
-	if (little_endian && bytes.byteOffset % 4 === 0) {
-		const view = new Int32Array(bytes.buffer, bytes.byteOffset, words);
-		for (let i = 0; i < words; i += 1) hash = mix(hash, view[i]);
-	} else {
-		const view = new DataView(bytes.buffer, bytes.byteOffset, length);
-		for (let i = 0; i < words; i += 1) hash = mix(hash, view.getInt32(i * 4, true));
-	}
+	const view = new DataView(bytes.buffer, bytes.byteOffset, length);
+	for (let i = 0; i < words; i += 1) hash = mix(hash, view.getInt32(i * 4, true));
 
 	const rest = words * 4;
 	let k = 0;
