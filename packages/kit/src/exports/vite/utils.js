@@ -361,7 +361,7 @@ export function uses_unsupported_html_hook(plugin) {
 }
 
 /**
- * the origin that code outside the vite process can reach the dev server at
+ * the origin the dev server listens on
  * @param {import('vite').ViteDevServer} server
  * @returns {string}
  */
