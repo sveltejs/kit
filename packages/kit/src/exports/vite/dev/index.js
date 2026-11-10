@@ -1,6 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { EnvironmentModuleNode, ViteDevServer } from 'vite' */
-/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
+/** @import { DevRequestInfo, ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,7 +24,9 @@ import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
 import {
+	DEV_INFO_HEADER,
 	DEV_INLINE_STYLES_PATH,
+	DEV_REMOTE_PATH,
 	DEV_SERVER_ASSETS_PATH,
 	SRC_ROOT,
 	SVELTE_KIT_ASSETS
@@ -402,6 +404,23 @@ export async function dev(
 		})
 	);
 
+	// returns the file of a remote module, for servers in other vite environments
+	vite_dev_server.middlewares.use(DEV_REMOTE_PATH, (req, res) => {
+		const url = new URL(req.originalUrl ?? '', 'http://localhost');
+		const hash = url.searchParams.get('hash');
+		const remote = get_remotes().find((remote) => remote.hash === hash);
+		const file = remote && path.resolve(root, remote.file);
+
+		if (!file || !fs.existsSync(file)) {
+			res.statusCode = 404;
+			res.end();
+			return;
+		}
+
+		res.setHeader('content-type', 'application/json');
+		res.end(JSON.stringify({ file: to_fs(file) }));
+	});
+
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 	const asset_server = sirv(svelte_config.files.assets, {
 		dev: true,
@@ -564,11 +583,16 @@ export async function dev(
 
 				const adapter_respond = svelte_config.adapter?.vite?.respond;
 
+				// whether this process rendered the request and so loaded its modules
+				let rendered_here = !adapter_respond;
+
 				/**
 				 * renders the request in this process
 				 * @param {Request} request
 				 */
 				const resolve = async (request) => {
+					rendered_here = true;
+
 					if (resolved_instrumentation) {
 						const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
 						set_env(env);
@@ -603,23 +627,36 @@ export async function dev(
 					});
 				};
 
-				const rendered = adapter_respond
-					? await adapter_respond(request, { getClientAddress, resolve })
-					: await resolve(request);
+				const { response: rendered, info } = adapter_respond
+					? read_dev_info(await adapter_respond(request, { getClientAddress, resolve }))
+					: { response: await resolve(request), info: undefined };
+
+				// a server in another environment reports the remote function, so the log does not load it here
+				/** @type {Parameters<ServerModule['format_response']>[3]} */
+				const get_remote = rendered_here
+					? undefined
+					: () =>
+							Promise.resolve(
+								info?.remote && {
+									fn: /** @type {any} */ ({ __: info.remote }),
+									name: info.remote.name,
+									additional_args: ''
+								}
+							);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, async () => {
 						log_dev_response(
 							rendered.status,
-							await format_response(rendered.status, request, manifest)
+							await format_response(rendered.status, request, manifest, get_remote)
 						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
 					log_dev_response(
 						rendered.status,
-						await format_response(rendered.status, request, manifest)
+						await format_response(rendered.status, request, manifest, get_remote)
 					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
@@ -648,6 +685,23 @@ function catch_errors(handler) {
 			res.end();
 		});
 	};
+}
+
+/**
+ * reads what a server in another environment reported about a request
+ * @param {Response} response
+ * @returns {{ response: Response; info: DevRequestInfo | undefined }}
+ */
+function read_dev_info(response) {
+	const header = response.headers.get(DEV_INFO_HEADER);
+	if (!header) return { response, info: undefined };
+
+	/** @type {DevRequestInfo} */
+	const info = JSON.parse(decodeURIComponent(header));
+
+	const stripped = new Response(response.body, response);
+	stripped.headers.delete(DEV_INFO_HEADER);
+	return { response: stripped, info };
 }
 
 /**

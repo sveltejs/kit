@@ -83,9 +83,10 @@ export function set_hooks(value) {
  * @param {number} status
  * @param {Request} request
  * @param {SSRManifest} manifest
+ * @param {typeof get_remote_function} [get_remote] finds the remote function that handled the request
  * @returns {Promise<string>}
  */
-export async function format_response(status, request, manifest) {
+export async function format_response(status, request, manifest, get_remote = get_remote_function) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
@@ -104,7 +105,7 @@ export async function format_response(status, request, manifest) {
 		/** @type {Awaited<ReturnType<typeof get_remote_function>>} */
 		let remote;
 		try {
-			remote = await get_remote_function(id, manifest);
+			remote = await get_remote(id, manifest);
 		} catch {
 			// fallback to basic logging
 		}

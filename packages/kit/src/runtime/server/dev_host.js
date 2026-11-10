@@ -1,5 +1,10 @@
 // lets a dev server in another vite environment ask the vite dev server for what only it knows
-import { DEV_INLINE_STYLES_PATH, DEV_SERVER_ASSETS_PATH } from '../../constants.js';
+/** @import { SSRManifest } from 'types' */
+import {
+	DEV_INLINE_STYLES_PATH,
+	DEV_REMOTE_PATH,
+	DEV_SERVER_ASSETS_PATH
+} from '../../constants.js';
 
 /**
  * fetches json from the vite dev server, or undefined when it does not have it
@@ -95,3 +100,42 @@ export async function list_server_assets(file, module) {
 
 	return module;
 }
+
+/**
+ * @param {string} hash
+ * @returns {SSRManifest['remotes'][string]}
+ */
+function load_remote(hash) {
+	return async () => {
+		/** @type {{ file: string } | undefined} */
+		const remote = await ask(DEV_REMOTE_PATH, { hash });
+		if (!remote) return { default: {} };
+
+		const module = await import(/* @vite-ignore */ remote.file);
+		return { default: await list_server_assets(remote.file, module) };
+	};
+}
+
+/** @param {string | symbol} hash */
+const is_hash = (hash) => typeof hash === 'string' && /^[0-9a-z]+$/.test(hash);
+
+/**
+ * remote modules, looked up through the vite dev server on each call since it finds them as it
+ * transforms them
+ * @type {SSRManifest['remotes']}
+ */
+export const remotes = new Proxy(
+	{},
+	{
+		get: (_, hash) => (is_hash(hash) ? load_remote(/** @type {string} */ (hash)) : undefined),
+		getOwnPropertyDescriptor: (_, hash) =>
+			is_hash(hash)
+				? {
+						value: load_remote(/** @type {string} */ (hash)),
+						writable: false,
+						enumerable: true,
+						configurable: true
+					}
+				: undefined
+	}
+);

@@ -10,6 +10,17 @@ export const DEV_INLINE_STYLES_PATH = '/@sveltejs/kit/dev/inline-styles';
 /** dev server path that returns the sizes of the assets a module imports */
 export const DEV_SERVER_ASSETS_PATH = '/@sveltejs/kit/dev/server-assets';
 
+/** dev server path that returns the file of a remote module by its hash */
+export const DEV_REMOTE_PATH = '/@sveltejs/kit/dev/remote';
+
+/** response header that reports the remote function a request used */
+export const DEV_INFO_HEADER = 'x-sveltekit-dev-info';
+
+/**
+ * request header that asks the dev server for the exports of a remote module
+ */
+export const DEV_REMOTE_EXPORTS_HEADER = 'x-sveltekit-dev-remote-exports';
+
 export const GENERATED_COMMENT = '// this file is generated — do not edit it';
 
 export const ENDPOINT_METHODS = [

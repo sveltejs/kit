@@ -117,7 +117,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	Object.assign(mime_types, manifest.mime_types);
 
 	return `// generated during dev for \`@sveltejs/kit/dev-server\`
-import { inline_styles, list_server_assets, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
+import { inline_styles, list_server_assets, remotes, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${to_code(assets)};
 
@@ -137,7 +137,7 @@ export const manifest = {
 	${nodes.join(',\n\t')}
 	],
 	prerendered_routes: new Set(),
-	remotes: {},
+	remotes,
 	routes: [
 	${routes.join(',\n\t')}
 	],
