@@ -185,7 +185,7 @@ export function serve_static(files) {
 		// a stale `If-Range` validator means the client's partial copy is of an older
 		// representation, so it gets the whole current one
 		const if_range = req.headers['if-range'];
-		if (req.headers.range && (!if_range || if_range === etag)) {
+		if (req.method === 'GET' && req.headers.range && (!if_range || if_range === etag)) {
 			const match = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
 
 			if (match && (match[1] || match[2])) {

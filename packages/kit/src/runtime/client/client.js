@@ -220,11 +220,15 @@ function native_navigation(url, replace = false) {
  * tries to update it.
  */
 async function update_service_worker() {
-	if ('serviceWorker' in navigator) {
-		const registration = await navigator.serviceWorker.getRegistration(base || '/');
-		if (registration) {
-			await registration.update();
+	try {
+		if ('serviceWorker' in navigator) {
+			const registration = await navigator.serviceWorker.getRegistration(base || '/');
+			if (registration) {
+				await registration.update();
+			}
 		}
+	} catch {
+		// A failed service worker update must not prevent the fallback document navigation.
 	}
 }
 
@@ -884,8 +888,8 @@ async function initialize(result, target, should_hydrate) {
 
 	/** @type {NavigationEvent} */
 	const nav = {
-		params: current.params,
-		route: { id: current.route?.id ?? null },
+		params: result.state.params,
+		route: { id: result.state.route?.id ?? null },
 		url: new URL(location.href)
 	};
 
@@ -937,7 +941,10 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
-	restore_navigation_snapshot(current_history_index);
+	// Client-only startup restores in `navigate` so don't restore twice
+	if (hydrated) {
+		restore_navigation_snapshot(current_history_index);
+	}
 
 	started = true;
 }
@@ -1829,8 +1836,10 @@ export async function get_navigation_intent(url, invalidating) {
 	} else {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
+			// prefix with the origin, since a pathname like `//evil.com/x` would otherwise be treated
+			// as protocol-relative. Don't use `new URL(pathname, origin)`, which has the same problem
 			/* @vite-ignore */
-			add_resolution_suffix(url.pathname)
+			url.origin + add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
@@ -2073,7 +2082,8 @@ async function navigate({
 
 	updating = true;
 
-	if (!popped) {
+	// Initial entry has no outgoing page, and its persisted snapshots must survive startup.
+	if (started && !popped) {
 		// popstate captures the source entry synchronously, before the traversal is resolved
 		capture_scroll(previous_history_index);
 		capture_snapshot(previous_navigation_index);
@@ -2612,7 +2622,7 @@ async function resolve_intent(url, caller) {
  * `goto` is intended for navigations to routes that belong to the app, and will reject if a route cannot be resolved.
  * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
  *
- * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+ * @param {string | URL} url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
  * @param {GotoOptions} [opts] Options related to the navigation
  * @returns {Promise<void>}
  */
@@ -2772,7 +2782,7 @@ export async function preloadData(href) {
  * Typically, you might call this to speed up subsequent navigation.
  *
  * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
- * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+ * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths).
  * If you have a pathname rather than a route ID, you can convert it with
  * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
  *
@@ -3745,12 +3755,16 @@ function create_navigation(
 
 	/** @type {(Navigation | AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({
-		from: {
-			params: current.params,
-			route: { id: current.route?.id ?? null },
-			url: current.url,
-			scroll: scroll_state()
-		},
+		// the app's first navigation has no page to come from
+		from:
+			type === 'enter'
+				? null
+				: {
+						params: current.params,
+						route: { id: current.route?.id ?? null },
+						url: current.url,
+						scroll: scroll_state()
+					},
 		to: url && {
 			params: target ? target.params : (intent?.params ?? null),
 			route: { id: target ? (target.route?.id ?? null) : (intent?.route?.id ?? null) },

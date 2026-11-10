@@ -2,6 +2,7 @@
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
+import { has_scheme_or_authority } from '../../../utils/url.js';
 import { DEV } from 'esm-env';
 import * as e from '../../../messages/shared-errors.js';
 import * as w from '../../../messages/shared-warnings.js';
@@ -9,7 +10,7 @@ import * as w from '../../../messages/shared-warnings.js';
 export { base, assets, app_dir } from './internal/client.js';
 
 /**
- * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+ * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) if configured, or otherwise by prefixing it with the base path.
  *
  * During server rendering, the base path is relative and depends on the page currently being rendered.
  *
@@ -69,6 +70,10 @@ const pathname_prefix = hash_routing ? '#' : base;
  */
 export function resolve(...args) {
 	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
+
+	if (has_scheme_or_authority(id)) {
+		e.resolve_url_input({ id });
+	}
 
 	if (id[0] === '/') {
 		// route ID

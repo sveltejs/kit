@@ -14,10 +14,20 @@ import {
 	prerendered_assets
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
-import { parse_as_bytes } from './utils.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
 import { create_file_map, serve_static } from './static.js';
 
 /** @import { Middleware } from './static.js' */
+
+const env_origin = env('ORIGIN', undefined);
+
+if (origin && env_origin !== undefined) {
+	console.warn(
+		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
+	);
+}
+
+const public_origin = origin || parse_origin(env_origin);
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -41,10 +51,27 @@ await server.init({
 });
 
 /** @type {Middleware} */
-const ssr = async (req, res) => {
+const ssr = async (req, res, next) => {
+	try {
+		await render(req, res, next);
+	} catch (error) {
+		console.error(error);
+
+		if (res.headersSent) {
+			res.destroy();
+			return;
+		}
+
+		res.getHeaderNames().forEach((name) => res.removeHeader(name));
+		res.writeHead(500).end('Internal Server Error');
+	}
+};
+
+/** @type {Middleware} */
+const render = async (req, res) => {
 	/** @type {Request} */
 	let request;
-	let request_origin = origin;
+	let request_origin = public_origin;
 
 	if (!request_origin) {
 		try {
@@ -99,8 +126,10 @@ const ssr = async (req, res) => {
 	// `cache-control`), which breaks streaming responses like server-sent events.
 	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
+	// The header is set on the Node response rather than the `Response` object,
+	// whose headers may be immutable (e.g. when returned from `fetch`)
 	if (response.headers.get('content-type') === 'text/event-stream') {
-		response.headers.set('x-accel-buffering', 'no');
+		res.setHeader('x-accel-buffering', 'no');
 	}
 
 	setResponse(res, response);

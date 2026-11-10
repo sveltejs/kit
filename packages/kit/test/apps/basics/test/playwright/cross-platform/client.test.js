@@ -1,5 +1,5 @@
 import process from 'node:process';
-import { test } from '../../../../../utils.js';
+import { test, variant } from '../../../../../utils.js';
 import { expect } from '../../../../../playwright-matchers.js';
 
 /** @typedef {{ fromScroll: { x: number, y: number }, toScroll: { x: number, y: number }, type: string }} ScrollState */
@@ -125,6 +125,39 @@ test.describe('a11y', () => {
 			)
 		).toBe('BODY');
 		expect(await page.evaluate(() => document.activeElement?.nodeName)).toBe('BODY');
+	});
+
+	test('an app starting in an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() => {
+			document.body.append(Object.assign(document.createElement('iframe'), { src: '/no-ssr' }));
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		await expect(button).toBeFocused();
+	});
+
+	test('navigating inside an iframe leaves focus in the parent page', async ({ page }) => {
+		await page.goto('/accessibility/a');
+		await page.evaluate(() => {
+			document.body.append(
+				Object.assign(document.createElement('iframe'), { src: '/accessibility/autofocus/a' })
+			);
+		});
+		await page.frameLocator('iframe').locator('body.started').waitFor();
+
+		const button = page.locator('button', { hasText: 'focus me' });
+		await button.focus();
+
+		await page.evaluate(() =>
+			// @ts-expect-error
+			document.querySelector('iframe')?.contentWindow?.goto('/accessibility/autofocus/b')
+		);
+
+		await expect(button).toBeFocused();
 	});
 
 	test('blur handler can access data during navigation', async ({ page, app }) => {
@@ -280,6 +313,16 @@ test.describe('Navigation lifecycle functions', () => {
 		expect(await page.textContent('h1')).toBe(
 			'/navigation-lifecycle/after-navigate/a -> /navigation-lifecycle/after-navigate/b'
 		);
+	});
+
+	test('afterNavigate enter navigation includes the hydrated route and params', async ({
+		page
+	}) => {
+		await page.goto('/navigation-lifecycle/after-navigate-enter/x');
+		expect(await page.textContent('h1')).toBe(
+			'route: /navigation-lifecycle/after-navigate-enter/[slug]'
+		);
+		expect(await page.textContent('p')).toBe('params: {"slug":"x"}');
 	});
 
 	test('onNavigate calls callback', async ({ page, clicknav }) => {
@@ -904,7 +947,7 @@ test.describe('Prefetching', () => {
 		// with server-side route resolution the loaders were cached during `match`,
 		// so no additional `__route.js` request may occur. In client-resolution mode
 		// this is trivially true (no `__route.js` requests exist at all) — the test is
-		// meaningful under the `test:server-side-route-resolution:*` suites, so don't
+		// meaningful under the `resolution` variant, so don't
 		// remove it from the matrix
 		expect(requests.filter((r) => r.includes('__route.js'))).toEqual([]);
 	});
@@ -959,7 +1002,7 @@ test.describe('Prefetching', () => {
 			// `/set-cookie` is a `+server.js` with no `+page`, so there is no code to preload
 			await app.preloadCode('/set-cookie');
 
-			if (process.env.ROUTER_RESOLUTION) {
+			if (variant === 'resolution') {
 				// under server resolution the endpoint tells us the route exists but has no page
 				expect(warnings.join('\n')).toContainKitDiagnostic('preload_code_endpoint_only', {
 					contains: ['/set-cookie']
@@ -973,7 +1016,7 @@ test.describe('Prefetching', () => {
 			}
 		});
 
-		if (!process.env.ROUTER_RESOLUTION) {
+		if (variant !== 'resolution') {
 			test('hints at `match` when preloadCode is called with a pathname', async ({ page, app }) => {
 				await page.goto('/routing/a');
 

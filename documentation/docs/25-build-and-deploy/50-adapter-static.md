@@ -98,7 +98,7 @@ By default, `adapter-static` checks that either all pages and endpoints (if any)
 
 ## GitHub Pages
 
-When building for [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), if your repo name is not equivalent to `your-username.github.io`, make sure to update [`config.paths.base`](configuration#paths) to match your repo name. This is because the site will be served from `https://your-username.github.io/your-repo-name` rather than from the root.
+When building for [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages), if your repo name is not equivalent to `your-username.github.io`, make sure to update [`config.paths.base`](@sveltejs-kit-vite#paths) to match your repo name. This is because the site will be served from `https://your-username.github.io/your-repo-name` rather than from the root.
 
 You'll also want to generate a fallback `404.html` page to replace the default 404 page shown by GitHub Pages.
 
@@ -136,6 +136,14 @@ on:
   push:
     branches: 'main'
 
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 jobs:
   build_site:
     runs-on: ubuntu-latest
@@ -146,21 +154,23 @@ jobs:
       # If you're using pnpm, add this step then change the commands and cache key below to use `pnpm`
       # - name: Install pnpm
       #   uses: pnpm/action-setup@v6
-      #   with:
-      #     version: 8
 
       - name: Install Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
         run: npm i
 
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v6
+
       - name: build
         env:
-          BASE_PATH: '/${{ github.event.repository.name }}'
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: |
           npm run build
 
@@ -169,6 +179,8 @@ jobs:
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
+          # keep dotfiles such as `static/.well-known`
+          include-hidden-files: true
 
   deploy:
     needs: build_site

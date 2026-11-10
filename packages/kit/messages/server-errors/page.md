@@ -124,7 +124,7 @@ A prerendered page requested this `+server` route with `fetch`, but the route is
 
 > Cannot use prerendering if `config.csp.mode === 'nonce'`
 
-A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Set [`csp.mode`](https://svelte.dev/docs/kit/configuration#csp) to `'auto'` or `'hash'` instead, which uses nonces only for pages that are rendered dynamically.
+A nonce must be different for every response, but a [prerendered](https://svelte.dev/docs/kit/page-options#prerender) page is generated once and then served to everyone. Set [`csp.mode`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) to `'auto'` or `'hash'` instead, which uses nonces only for pages that are rendered dynamically.
 
 ## prerender_template_nonce
 
@@ -136,4 +136,4 @@ A nonce must be different for every response, but a [prerendered](https://svelte
 
 > `content-security-policy-report-only` must be specified with either the `report-to` or `report-uri` directives, or both
 
-A [report-only content security policy](https://svelte.dev/docs/kit/configuration#csp) doesn't block anything — it only reports violations. Without a `report-to` or `report-uri` directive, there's nowhere to send those reports. Add one of them to `csp.reportOnly`, or remove `csp.reportOnly`.
+A [report-only content security policy](https://svelte.dev/docs/kit/@sveltejs-kit-vite#csp) doesn't block anything — it only reports violations. Without a `report-to` or `report-uri` directive, there's nowhere to send those reports. Add one of them to `csp.reportOnly`, or remove `csp.reportOnly`.

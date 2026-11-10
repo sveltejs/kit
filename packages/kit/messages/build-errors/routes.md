@@ -62,7 +62,7 @@ Parameter names, and the names of [matchers](https://svelte.dev/docs/kit/advance
 
 > Cannot use server-only files in an app with `router.type === 'hash'`: `%file%`
 
-When [`router.type`](https://svelte.dev/docs/kit/configuration#router) is `'hash'`, the whole app is rendered in the browser from a single page, so there's no server to run `+page.server.js`, `+layout.server.js` or `+server.js` files. Move the logic to a universal `+page.js`/`+layout.js` file, or use the default `'pathname'` router.
+When [`router.type`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router) is `'hash'`, the whole app is rendered in the browser from a single page, so there's no server to run `+page.server.js`, `+layout.server.js` or `+server.js` files. Move the logic to a universal `+page.js`/`+layout.js` file, or use the default `'pathname'` router.
 
 ## route_duplicate_files
 
@@ -86,7 +86,7 @@ A page or layout can [reset its layout hierarchy](https://svelte.dev/docs/kit/ad
 
 > No routes found. If you are using a custom `src/routes` directory, make sure it is specified in your SvelteKit Vite plugin options
 
-The routes directory exists but doesn't contain any `+page`, `+layout`, `+error` or `+server` files. Add a `src/routes/+page.svelte`, or, if your routes are elsewhere, set [`files.routes`](https://svelte.dev/docs/kit/configuration#files) in the options you pass to the SvelteKit Vite plugin.
+The routes directory exists but doesn't contain any `+page`, `+layout`, `+error` or `+server` files. Add a `src/routes/+page.svelte`, or, if your routes are elsewhere, set [`files.routes`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files) in the options you pass to the SvelteKit Vite plugin.
 
 ## route_prerender_page_and_endpoint
 
@@ -112,7 +112,7 @@ SvelteKit only recognises specific [route files](https://svelte.dev/docs/kit/rou
 
 > No matcher found for parameter `%name%` in `%file%`
 
-A route uses a parameter such as `[param=matcher]`, but no matcher with that name exists. Matchers are declared in `src/params.js` (or `src/params.ts`, or the file configured by [`files.params`](https://svelte.dev/docs/kit/configuration#files)) by exporting `params` from `defineParams`:
+A route uses a parameter such as `[param=matcher]`, but no matcher with that name exists. Matchers are declared in `src/params.js` (or `src/params.ts`, or the file configured by [`files.params`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#files)) by exporting `params` from `defineParams`:
 
 ```js
 /// file: src/params.js

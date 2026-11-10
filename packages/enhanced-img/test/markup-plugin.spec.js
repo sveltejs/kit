@@ -50,6 +50,7 @@ it('Image preprocess snapshot test', async () => {
 	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = src}/);
 	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = image}/);
 	expect(transformed_code).not.toMatch(/{@const __img(?:_\d+)? = object\.image}/);
+	expect(transformed_code).not.toContain('NaN');
 	expect(() => compile(transformed_code, { filename })).not.toThrow();
 
 	// Make imports readable
