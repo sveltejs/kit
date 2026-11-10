@@ -172,7 +172,7 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/adapter.js"
 		},
-		"./dev-server": {
+		"./adapter/dev": {
 			"types": "./types/index.d.ts",
 			"import": "./src/runtime/server/dev_instance.js"
 		},

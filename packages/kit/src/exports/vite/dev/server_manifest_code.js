@@ -81,7 +81,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 
-	return `// generated during dev for \`@sveltejs/kit/dev-server\`
+	return `// generated during dev for \`@sveltejs/kit/adapter/dev\`
 import { inline_styles } from ${s(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${s(assets)};
