@@ -4,7 +4,7 @@ title: Cloudflare
 
 To deploy to [Cloudflare Workers](https://workers.cloudflare.com/), use [`adapter-cloudflare`](https://github.com/sveltejs/kit/tree/main/packages/adapter-cloudflare).
 
-This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that `cloudflare:workers` is emulated during local development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
+This adapter will be installed by default when you use [`adapter-auto`](adapter-auto). If you plan on staying with Cloudflare, you can switch from [`adapter-auto`](adapter-auto) to using this adapter directly so that your app runs in Cloudflare's local `workerd` runtime during development, type declarations are automatically applied, and the ability to set Cloudflare-specific options is provided.
 
 ## Comparisons
 
@@ -86,7 +86,7 @@ To make these types available to your app, see Cloudflare's [generated types](ht
 
 ### Testing locally
 
-Cloudflare specific values are emulated during development. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env` during development.
+During development, SvelteKit runs in Cloudflare's local `workerd` runtime, like it does in production. Local [bindings](https://developers.cloudflare.com/workers/runtime-apis/bindings/) are created based on your `cloudflare.config.ts` file and are used to populate `env`. Only the variables and secrets that `cloudflare.config.ts` declares are in `env`, with secrets' values coming from your `.dev.vars` or `.env` file.
 
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
 

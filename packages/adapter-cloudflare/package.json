@@ -28,6 +28,7 @@
 	"types": "index.d.ts",
 	"files": [
 		"src/virtual-cloudflare-workers.js",
+		"src/worker-dev.js",
 		"files/worker.js",
 		"index.js",
 		"index.d.ts",
@@ -47,7 +48,6 @@
 	"dependencies": {
 		"@cloudflare/build-output-utils": "0.9.11",
 		"@cloudflare/config": "0.31.0",
-		"@cloudflare/platform-proxy": "https://pkg.pr.new/cloudflare/workers-sdk/@cloudflare/platform-proxy@0d803c5",
 		"@cloudflare/vite-plugin": "2.0.0-beta.v.13",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
@@ -61,6 +61,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.2.0"
+		"@sveltejs/kit": "^3.3.0"
 	}
 }

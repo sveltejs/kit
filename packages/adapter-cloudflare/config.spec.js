@@ -21,7 +21,7 @@ async function resolve(cloudflare_config, set_config, mode) {
 				mode,
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config(set_config)
+				plugins: plugin_config({ set_config, set_forward: () => {} })
 			},
 			'build'
 		);

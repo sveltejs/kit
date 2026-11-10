@@ -11,9 +11,8 @@ import {
 	writeRootConfig,
 	writeWorkerConfig
 } from '@cloudflare/build-output-utils';
-import { getRequest } from '@sveltejs/kit/node';
 import { plugin_config } from './config.js';
-import { plugin_platform } from './platform.js';
+import { plugin_workers_stub } from './platform.js';
 import {
 	validate_worker_settings,
 	generate_redirects,
@@ -34,6 +33,8 @@ export default function (options = {}) {
 	let vite_config;
 	/** @type {CloudflareConfig} */
 	let cloudflare_config;
+	/** @type {import('./config.js').Forward | undefined} */
+	let forward;
 
 	if (/** @type {Record<string, unknown>} */ (options).config !== undefined) {
 		throw new Error(
@@ -189,13 +190,9 @@ export default function (options = {}) {
 
 			return {
 				customPreview: true,
-				getRequest(options) {
-					const request = getRequest(options);
-					/** @type {import('@cloudflare/workers-types').Request} */ (
-						/** @type {unknown} */ (request)
-					).cf = globalThis.__sveltekit_cloudflare_platform?.cf;
-					return request;
-				},
+				// sveltekit renders requests in the dev worker in workerd
+				respond: (request, { getClientAddress, resolve }) =>
+					forward ? forward(request, getClientAddress) : resolve(request),
 				plugins: [
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
@@ -203,11 +200,12 @@ export default function (options = {}) {
 							vite_config = config;
 						}
 					},
-					...plugin_config(
-						(config) => (cloudflare_config = config),
-						get_scan_entries(config.files),
+					...plugin_config({
+						set_config: (config) => (cloudflare_config = config),
+						set_forward: (value) => (forward = value),
+						scan_entries: get_scan_entries(config.files),
 						plugin_options
-					),
+					}),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
 						apply: is_dev_or_build,
@@ -227,7 +225,7 @@ export default function (options = {}) {
 							}
 						}
 					},
-					plugin_platform(plugin_options, stub_import)
+					plugin_workers_stub(stub_import)
 				]
 			};
 		}

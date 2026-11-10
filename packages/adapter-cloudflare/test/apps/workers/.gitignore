@@ -4,3 +4,6 @@ node_modules
 
 # Cloudflare
 .cloudflare
+
+# miniflare state from vite dev
+.wrangler
