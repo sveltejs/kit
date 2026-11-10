@@ -3,6 +3,7 @@
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
+import http from 'node:http';
 import path from 'node:path';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
@@ -33,12 +34,7 @@ import {
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import {
-	get_dev_origin,
-	is_chrome_devtools_request,
-	is_remote_module,
-	not_found
-} from '../utils.js';
+import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
@@ -91,14 +87,19 @@ export async function dev(
 
 	write_tsconfig(svelte_config, root);
 
-	// for code outside the vite process, which imports it once the server listens
-	const write_origin = () =>
+	if (svelte_config.adapter?.vite?.respond) {
+		// the runtime may not trust the certificate that vite serves https with
+		const loopback = http.createServer(vite_dev_server.middlewares);
+		await new Promise((fulfil) => loopback.listen(0, '127.0.0.1', () => fulfil(undefined)));
+		loopback.unref();
+		vite_dev_server.httpServer?.on('close', () => loopback.close());
+
+		const { port } = /** @type {import('node:net').AddressInfo} */ (loopback.address());
 		write_if_changed(
 			path.join(svelte_config.outDir, 'generated', 'dev', 'origin.js'),
-			`export const origin = ${s(get_dev_origin(vite_dev_server))};\n`
+			`export const origin = ${s(`http://127.0.0.1:${port}`)};\n`
 		);
-	write_origin();
-	vite_dev_server.httpServer?.on('listening', write_origin);
+	}
 
 	/** @type {ManifestData} */
 	let manifest_data;
