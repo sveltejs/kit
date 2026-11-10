@@ -1,0 +1,17 @@
+{
+	"name": "test-static-dev-only",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev --port 5174 --strictPort",
+		"test": "DEV=true playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

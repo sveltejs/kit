@@ -24,7 +24,7 @@ export interface AdapterOptions {
 	 */
 	precompress?: boolean;
 	/**
-	 * By default, `adapter-static` checks that either all pages and endpoints (if any) of your app were prerendered, or you have the `fallback` option set. This check exists to prevent you from accidentally publishing an app where some parts of it are not accessible, because they are not contained in the final output. If you know this is ok (for example when a certain page only exists conditionally), you can set `strict` to `false` to turn off this check.
+	 * By default, `adapter-static` checks that either all pages and endpoints (if any) of your app were prerendered, or you have the `fallback` option set. During `vite dev`, it checks each page you request, and each endpoint that exports `prerender`. This check exists to prevent you from accidentally publishing an app where some parts of it are not accessible, because they are not contained in the final output. If you know this is ok (for example when a certain page only exists conditionally), you can set `strict` to `false` to turn off this check.
 	 * @default true
 	 */
 	strict?: boolean;

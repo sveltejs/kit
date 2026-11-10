@@ -11,7 +11,7 @@ export const config = {
 	// generous timeouts on CI
 	timeout: process.env.CI ? 45000 : 15000,
 	webServer: {
-		command: `node ${serve} build preview`,
+		command: process.env.DEV ? `node ${serve} dev` : `node ${serve} build preview`,
 		port: 5174,
 		gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 }
 	},

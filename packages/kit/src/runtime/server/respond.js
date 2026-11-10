@@ -388,8 +388,34 @@ export async function internal_respond(request, state) {
 		}
 	}
 
+	/** @type {import('types').PrerenderOption | undefined} */
+	let dev_prerender;
+
+	/**
+	 * adds the headers that adapter.vite.respond reads, which the dev server removes again
+	 * @param {Response} response
+	 */
+	const with_dev_headers = (response) => {
+		if (DEV && dev_prerender !== undefined) {
+			try {
+				response.headers.set('x-sveltekit-prerender', String(dev_prerender));
+				response.headers.set('x-sveltekit-routeid', encodeURI(/** @type {string} */ (route?.id)));
+			} catch {
+				// immutable headers, like a fetch response that handle returns
+			}
+		}
+
+		return response;
+	};
+
 	try {
 		page_nodes = route?.page ? new PageNodes(await load_page_nodes(route.page)) : undefined;
+
+		if (DEV && route && !remote_id && state.depth === 0) {
+			// like the build, use the page option when there is a page, and none for an endpoint
+			// without its own, since it inherits the option from the page that fetches it
+			dev_prerender = page_nodes ? page_nodes.prerender() : (await route.endpoint?.())?.prerender;
+		}
 
 		// determine whether we need to redirect to add/remove a trailing slash
 		if (route && !remote_id) {
@@ -447,12 +473,12 @@ export async function internal_respond(request, state) {
 				}
 
 				if (state.before_handle) {
-					return await state.before_handle(event, config, prerender, handle);
+					return with_dev_headers(await state.before_handle(event, config, prerender, handle));
 				}
 			}
 		}
 
-		return await handle();
+		return with_dev_headers(await handle());
 	} catch (e) {
 		if (e instanceof Redirect) {
 			try {
