@@ -1157,6 +1157,34 @@ test.describe('Prefetching', () => {
 });
 
 test.describe('Routing', () => {
+	test('leaving the app while a client-side navigation is loading does not get overridden', async ({
+		page
+	}) => {
+		await page.goto('/routing/unload-during-navigation');
+
+		/** @type {() => void} */
+		let data_requested = () => {};
+		/** @type {Promise<void>} */
+		const requested = new Promise((fulfil) => (data_requested = fulfil));
+
+		// keep the server data request of the client-side navigation pending
+		await page.route('**/__data.json*', () => data_requested());
+
+		await page.click('a[href="/routing/unload-during-navigation/a"]');
+		await requested;
+
+		// Navigating away with a full page load makes some browsers (WebKit) cancel
+		// the pending request straight away. That must not be treated as a load
+		// error that is 'recovered' from by reloading the client-side navigation's
+		// URL, which would replace the navigation the user actually asked for.
+		await page.goto('/routing/unload-during-navigation/b');
+
+		await expect(page.locator('h1')).toHaveText('b');
+		expect(new URL(page.url()).pathname).toBe('/routing/unload-during-navigation/b');
+
+		await page.unrouteAll({ behavior: 'ignoreErrors' });
+	});
+
 	test('navigates to a new page without reloading', async ({ app, page, clicknav }) => {
 		await page.goto('/routing');
 
