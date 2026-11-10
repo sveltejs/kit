@@ -28,7 +28,8 @@ test('renders content in fallback page when JS runs', async ({ page }) => {
 });
 
 test('renders error page for missing page', async ({ page }) => {
-	await page.goto('/nosuchpage');
+	const response = await page.goto('/nosuchpage');
+	expect(response?.status()).toBe(200);
 	expect(await page.textContent('h1')).toEqual('404');
 });
 
