@@ -5,6 +5,34 @@ import { runtime_directory } from '../../../core/utils.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+
+const unsafe_chars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
+
+/** @type {Record<string, string>} */
+const escaped_chars = {
+	'<': '\\u003C',
+	'>': '\\u003E',
+	'\b': '\\b',
+	'\f': '\\f',
+	'\n': '\\n',
+	'\r': '\\r',
+	'\t': '\\t',
+	'\0': '\\0',
+	'\u2028': '\\u2028',
+	'\u2029': '\\u2029'
+};
+
+/**
+ * json for generated code, escaping the characters that could break out of it
+ * @param {unknown} value
+ * @returns {string}
+ */
+function to_code(value) {
+	const json = JSON.stringify(value);
+	return json === undefined
+		? 'undefined'
+		: json.replace(unsafe_chars, (char) => escaped_chars[char]);
+}
 import { mimes } from '../../../utils/mime.js';
 
 /**
@@ -17,12 +45,12 @@ import { mimes } from '../../../utils/mime.js';
  */
 export function generate_server_manifest_code(manifest, manifest_data, svelte_config, root) {
 	/** @param {string} file */
-	const file_path = (file) => JSON.stringify(posixify(path.resolve(root, file)));
+	const file_path = (file) => to_code(posixify(path.resolve(root, file)));
 
 	const nodes = manifest_data.nodes.map((node, index) => {
 		/** @type {string[]} */
 		const lines = [
-			`const result = { index: ${index}, universal_id: ${JSON.stringify(node.universal)}, server_id: ${JSON.stringify(node.server)}, imports: [], stylesheets: [], fonts: [] };`,
+			`const result = { index: ${index}, universal_id: ${to_code(node.universal)}, server_id: ${to_code(node.server)}, imports: [], stylesheets: [], fonts: [] };`,
 			// modules whose css is inlined to avoid a flash of unstyled content
 			'const css_modules = [];'
 		];
@@ -59,12 +87,12 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 		const endpoint = manifest_data.routes.find((r) => r.id === route.id)?.endpoint;
 
 		return `{
-		id: ${JSON.stringify(route.id)},
+		id: ${to_code(route.id)},
 		pattern: ${devalue.uneval(route.pattern)},
 		params: ${devalue.uneval(route.params)},
 		page: ${devalue.uneval(route.page)},
 		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)}).then((module) => list_server_assets(${file_path(endpoint.file)}, module))` : 'null'},
-		endpoint_id: ${JSON.stringify(route.endpoint_id)}
+		endpoint_id: ${to_code(route.endpoint_id)}
 	}`;
 	});
 
@@ -89,16 +117,16 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	Object.assign(mime_types, manifest.mime_types);
 
 	return `// generated during dev for \`virtual:sveltekit/server\`
-import { inline_styles, list_server_assets, remotes, server_assets } from ${JSON.stringify(`${runtime_directory}/server/dev_host.js`)};
+import { inline_styles, list_server_assets, remotes, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
 
-export const assets = ${JSON.stringify(assets)};
+export const assets = ${to_code(assets)};
 
 export const instrumentation = ${instrumentation ? `() => import(${file_path(instrumentation)})` : 'null'};
 
 /** @type {import('types').SSRManifest} */
 export const manifest = {
-	app_dir: ${JSON.stringify(manifest.app_dir)},
-	app_path: ${JSON.stringify(manifest.app_path)},
+	app_dir: ${to_code(manifest.app_dir)},
+	app_path: ${to_code(manifest.app_path)},
 	assets: ${devalue.uneval(manifest.assets)},
 	// every mime type, since imported assets are not listed
 	mime_types: ${devalue.uneval(mime_types)},
