@@ -1,6 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { ViteDevServer } from 'vite' */
-/** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
+/** @import { EnvironmentModuleNode, ViteDevServer } from 'vite' */
+/** @import { DevRequestInfo, ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,7 +8,14 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js';
+import {
+	find_deps,
+	generate_manifest,
+	loud_ssr_load_module,
+	vite_css_query_regex
+} from './generate_manifest.js';
+import { generate_server_manifest_code } from './server_manifest_code.js';
+import { write_if_changed } from '../../../core/sync/utils.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
@@ -16,7 +23,13 @@ import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
-import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
+import {
+	DEV_INFO_HEADER,
+	DEV_INLINE_STYLES_PATH,
+	DEV_SERVER_ASSETS_PATH,
+	SRC_ROOT,
+	SVELTE_KIT_ASSETS
+} from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
@@ -104,6 +117,25 @@ export async function dev(
 			manifest_data = create_manifest_data(svelte_config, root);
 			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
+
+			// written before the first request, which another vite environment may handle on its own
+			write_if_changed(
+				path.join(svelte_config.outDir, 'generated', 'dev', 'server-manifest.js'),
+				generate_server_manifest_code(
+					generate_manifest(
+						vite,
+						vite_dev_server,
+						runner,
+						svelte_config,
+						manifest_data,
+						root,
+						get_remotes
+					),
+					manifest_data,
+					svelte_config,
+					root
+				)
+			);
 
 			if (!validate_params) return;
 
@@ -261,6 +293,93 @@ export async function dev(
 		}
 	});
 
+	// returns the css a module depends on, for servers in other vite environments
+	vite_dev_server.middlewares.use(DEV_INLINE_STYLES_PATH, async (req, res) => {
+		const url = new URL(req.originalUrl ?? '', 'http://localhost');
+		const environment = vite_dev_server.environments[url.searchParams.get('environment') ?? ''];
+
+		if (!environment) {
+			res.statusCode = 404;
+			res.end();
+			return;
+		}
+
+		/** @type {Set<EnvironmentModuleNode>} */
+		const deps = new Set();
+		for (const module of url.searchParams.getAll('module')) {
+			// the generated manifest imports modules by their file path, which is their id
+			const node =
+				environment.moduleGraph.getModuleById(module) ??
+				(await environment.moduleGraph.getModuleByUrl(module));
+			if (node) await find_deps(environment, node, deps);
+		}
+
+		/** @type {Array<{ url: string; inline: string }>} */
+		const styles = [];
+		for (const dep of deps) {
+			if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+				styles.push({
+					url: dep.url,
+					inline: dep.url.includes('?') ? dep.url.replace('?', '?inline&') : dep.url + '?inline'
+				});
+			}
+		}
+
+		res.setHeader('content-type', 'application/json');
+		res.end(JSON.stringify(styles));
+	});
+
+	// returns the sizes of the assets a server module imports, for servers that cannot read files
+	vite_dev_server.middlewares.use(DEV_SERVER_ASSETS_PATH, async (req, res) => {
+		const url = new URL(req.originalUrl ?? '', 'http://localhost');
+		const environment = vite_dev_server.environments[url.searchParams.get('environment') ?? ''];
+		const id = url.searchParams.get('module');
+		const node =
+			environment &&
+			id &&
+			(environment.moduleGraph.getModuleById(id) ??
+				(await environment.moduleGraph.getModuleByUrl(id)));
+
+		if (!node) {
+			res.statusCode = 404;
+			res.end();
+			return;
+		}
+
+		/** @type {Set<EnvironmentModuleNode>} */
+		const deps = new Set();
+		await find_deps(environment, node, deps);
+
+		/** @type {Record<string, number>} */
+		const sizes = {};
+		for (const dep of deps) {
+			if (!dep.file || vite.isCSSRequest(dep.file) || /\.(?:[cm]?[jt]sx?|svelte)$/.test(dep.file)) {
+				continue;
+			}
+
+			/** @type {fs.Stats} */
+			let stats;
+			try {
+				stats = fs.statSync(dep.file);
+			} catch {
+				continue;
+			}
+			if (!stats.isFile()) continue;
+
+			// the same path read gets from the asset url
+			const relative = posixify(path.relative(root, dep.file));
+			const file =
+				relative.startsWith('../') || path.isAbsolute(relative)
+					? `/@fs${posixify(dep.file)}`
+					: relative;
+
+			sizes[file] = stats.size;
+		}
+
+		res.setHeader('content-type', 'application/json');
+		res.end(JSON.stringify(sizes));
+	});
+
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 	const asset_server = sirv(svelte_config.files.assets, {
 		dev: true,
@@ -372,32 +491,20 @@ export async function dev(
 					svelte_config.moduleExtensions
 				);
 
-				if (resolved_instrumentation) {
-					if (svelte_config.adapter && !svelte_config.adapter.supports?.instrumentation?.()) {
-						e.adapter_instrumentation_unsupported({
-							file: resolved_instrumentation,
-							adapter: svelte_config.adapter.name
-						});
-					}
-
-					const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
-					set_env(env);
-					await runner.import(resolved_instrumentation);
+				if (
+					resolved_instrumentation &&
+					svelte_config.adapter &&
+					!svelte_config.adapter.supports?.instrumentation?.()
+				) {
+					e.adapter_instrumentation_unsupported({
+						file: resolved_instrumentation,
+						adapter: svelte_config.adapter.name
+					});
 				}
 
 				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
-
-				const { init, respond } = await configure({
-					manifest,
-					env,
-					read: (file) => createReadableStream(from_fs(file)),
-					assets,
-					fix_stack_trace
-				});
-
-				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
@@ -427,40 +534,91 @@ export async function dev(
 					return;
 				}
 
-				const rendered = await respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				const getClientAddress = () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				};
 
-						return fs.readFileSync(path.join(svelte_config.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
-				});
+				const adapter_respond = svelte_config.adapter?.vite?.respond;
+
+				// whether this process rendered the request and so loaded its modules
+				let rendered_here = !adapter_respond;
+
+				/**
+				 * renders the request in this process
+				 * @param {Request} request
+				 */
+				const resolve = async (request) => {
+					rendered_here = true;
+
+					if (resolved_instrumentation) {
+						const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
+						set_env(env);
+						await runner.import(resolved_instrumentation);
+					}
+
+					const { init, respond } = await configure({
+						manifest,
+						env,
+						read: (file) => createReadableStream(from_fs(file)),
+						assets,
+						fix_stack_trace
+					});
+
+					await init();
+
+					return respond(request, {
+						getClientAddress,
+						read: (file) => {
+							if (file in manifest.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
+
+							return fs.readFileSync(path.join(svelte_config.files.assets, file));
+						},
+						before_handle: async (event, config, prerender, handle) => {
+							// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+							// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+							return await async_local_storage.run({ event, config, prerender }, handle);
+						},
+						emulator
+					});
+				};
+
+				const { response: rendered, info } = adapter_respond
+					? read_dev_info(
+							await adapter_respond(request, { getClientAddress, resolve }),
+							svelte_config.adapter
+						)
+					: { response: await resolve(request), info: undefined };
+
+				// a server in another environment reports the remote function, so the log does not load it here
+				/** @type {Parameters<ServerModule['format_response']>[3]} */
+				const get_remote = rendered_here
+					? undefined
+					: () =>
+							Promise.resolve(
+								info?.remote && {
+									fn: /** @type {any} */ ({ __: info.remote }),
+									name: info.remote.name,
+									additional_args: ''
+								}
+							);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, async () => {
 						log_dev_response(
 							rendered.status,
-							await format_response(rendered.status, request, manifest)
+							await format_response(rendered.status, request, manifest, get_remote)
 						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
 					log_dev_response(
 						rendered.status,
-						await format_response(rendered.status, request, manifest)
+						await format_response(rendered.status, request, manifest, get_remote)
 					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
@@ -473,6 +631,33 @@ export async function dev(
 			}
 		});
 	};
+}
+
+/**
+ * reads what a server in another environment reported and checks its features against adapter.supports
+ * @param {Response} response
+ * @param {import('@sveltejs/kit').Adapter | undefined} adapter
+ * @returns {{ response: Response; info: DevRequestInfo | undefined }}
+ */
+function read_dev_info(response, adapter) {
+	const header = response.headers.get(DEV_INFO_HEADER);
+	if (!header) return { response, info: undefined };
+
+	/** @type {DevRequestInfo} */
+	const info = JSON.parse(decodeURIComponent(header));
+
+	try {
+		for (const { label, route, config } of info.features ?? []) {
+			check_feature(route, config, label, adapter);
+		}
+	} catch (error) {
+		void response.body?.cancel();
+		throw error;
+	}
+
+	const checked = new Response(response.body, response);
+	checked.headers.delete(DEV_INFO_HEADER);
+	return { response: checked, info };
 }
 
 /**

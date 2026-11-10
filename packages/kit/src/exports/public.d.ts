@@ -73,6 +73,24 @@ export interface AdapterViteConfig {
 	 */
 	customPreview?: boolean;
 	/**
+	 * During `vite dev`, SvelteKit calls this function with each request it would render, after
+	 * serving static files, imported assets and the service worker. Use it to render requests in
+	 * your platform's runtime instead of Node: send them to code that runs there, which imports
+	 * `server` from `virtual:sveltekit/server` and calls `server.respond`.
+	 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
+	 * SvelteKit also sends its own requests through it, such as to find what a remote module exports.
+	 * @since 3.3.0
+	 */
+	respond?: (
+		request: Request,
+		options: {
+			/** Returns the IP address of the client that sent the request */
+			getClientAddress: () => string;
+			/** Renders the request in Node */
+			resolve: (request: Request) => Promise<Response>;
+		}
+	) => Promise<Response>;
+	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
 	 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.

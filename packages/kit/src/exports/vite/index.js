@@ -13,6 +13,7 @@ import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import { runtime_directory, get_global_name } from '../../core/utils.js';
 import { dev } from './dev/index.js';
+import { plugin_dev_server } from './dev/plugin.js';
 import { preview } from './preview/index.js';
 import {
 	enforced_config,
@@ -637,6 +638,10 @@ function kit({ svelte_config }) {
 			plugin_env_vars(svelte_config, (vars) => {
 				explicit_env_config = vars;
 			}),
+			plugin_dev_server(
+				() => root,
+				() => remote_metadata.remotes
+			),
 			process.env.TEST !== 'true'
 				? plugin_guard(
 						svelte_config,

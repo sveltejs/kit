@@ -6,6 +6,18 @@ declare module '<sveltekit:generated>/server.js' {
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
 }
 
+/** the dev manifest as code, for virtual:sveltekit/server */
+declare module '<sveltekit:generated>/server-manifest.js' {
+	export const assets: string;
+	export const instrumentation: (() => Promise<unknown>) | null;
+	export const manifest: import('types').SSRManifest;
+}
+
+/** the origin of the vite dev server */
+declare module '__sveltekit/dev/host' {
+	export const origin: string;
+}
+
 declare module '<sveltekit:generated>/env/config.js' {
 	// exported environment variables are defined in env.d.ts
 
