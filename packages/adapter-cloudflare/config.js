@@ -2,6 +2,7 @@
 /** @import { AddressInfo } from 'node:net' */
 /** @import { Connect, Plugin, ResolvedConfig } from 'vite' */
 /** @import { PluginOptions } from './index.js' */
+import crypto from 'node:crypto';
 import http from 'node:http';
 import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
@@ -397,7 +398,17 @@ function only_in_dev(plugin) {
  * @returns {{ forward: Forward; close: () => void }}
  */
 function create_forwarder(handler) {
+	// other local clients can reach the listener, including pages that use dns rebinding, so it only
+	// takes requests that carry this
+	const token = crypto.randomBytes(32).toString('hex');
+
 	const server = http.createServer((req, res) => {
+		if (!has_token(req, token)) {
+			res.statusCode = 403;
+			res.end();
+			return;
+		}
+
 		handler(req, res, (/** @type {unknown} */ error) => {
 			res.statusCode = error ? 500 : 404;
 			res.end(error instanceof Error ? (error.stack ?? error.message) : 'Not Found');
@@ -425,6 +436,7 @@ function create_forwarder(handler) {
 			headers.host = url.host;
 			headers['x-forwarded-proto'] = url.protocol.slice(0, -1);
 			headers['cf-connecting-ip'] = getClientAddress();
+			headers[TOKEN_HEADER] = token;
 
 			const options = {
 				host: '127.0.0.1',
@@ -469,4 +481,24 @@ function create_forwarder(handler) {
 		},
 		close: () => server.close()
 	};
+}
+
+const TOKEN_HEADER = 'x-sveltekit-forward-token';
+
+/**
+ * checks the token in constant time and removes it, so the worker does not see it
+ * @param {import('node:http').IncomingMessage} req
+ * @param {string} token
+ * @returns {boolean}
+ */
+function has_token(req, token) {
+	const value = req.headers[TOKEN_HEADER];
+	delete req.headers[TOKEN_HEADER];
+
+	for (let i = req.rawHeaders.length - 2; i >= 0; i -= 2) {
+		if (req.rawHeaders[i].toLowerCase() === TOKEN_HEADER) req.rawHeaders.splice(i, 2);
+	}
+
+	if (typeof value !== 'string' || value.length !== token.length) return false;
+	return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(token));
 }

@@ -293,92 +293,111 @@ export async function dev(
 		}
 	});
 
+	/**
+	 * only own keys, since the name comes from the request
+	 * @param {string | null} name
+	 */
+	const get_environment = (name) =>
+		name !== null && Object.hasOwn(vite_dev_server.environments, name)
+			? vite_dev_server.environments[name]
+			: undefined;
+
 	// returns the css a module depends on, for servers in other vite environments
-	vite_dev_server.middlewares.use(DEV_INLINE_STYLES_PATH, async (req, res) => {
-		const url = new URL(req.originalUrl ?? '', 'http://localhost');
-		const environment = vite_dev_server.environments[url.searchParams.get('environment') ?? ''];
+	vite_dev_server.middlewares.use(
+		DEV_INLINE_STYLES_PATH,
+		catch_errors(async (req, res) => {
+			const url = new URL(req.originalUrl ?? '', 'http://localhost');
+			const environment = get_environment(url.searchParams.get('environment'));
 
-		if (!environment) {
-			res.statusCode = 404;
-			res.end();
-			return;
-		}
-
-		/** @type {Set<EnvironmentModuleNode>} */
-		const deps = new Set();
-		for (const module of url.searchParams.getAll('module')) {
-			// the generated manifest imports modules by their file path, which is their id
-			const node =
-				environment.moduleGraph.getModuleById(module) ??
-				(await environment.moduleGraph.getModuleByUrl(module));
-			if (node) await find_deps(environment, node, deps);
-		}
-
-		/** @type {Array<{ url: string; inline: string }>} */
-		const styles = [];
-		for (const dep of deps) {
-			if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-				styles.push({
-					url: dep.url,
-					inline: dep.url.includes('?') ? dep.url.replace('?', '?inline&') : dep.url + '?inline'
-				});
+			if (!environment) {
+				res.statusCode = 404;
+				res.end();
+				return;
 			}
-		}
 
-		res.setHeader('content-type', 'application/json');
-		res.end(JSON.stringify(styles));
-	});
+			/** @type {Set<EnvironmentModuleNode>} */
+			const deps = new Set();
+			for (const module of url.searchParams.getAll('module')) {
+				// the generated manifest imports modules by their file path, which is their id
+				const node =
+					environment.moduleGraph.getModuleById(module) ??
+					(await environment.moduleGraph.getModuleByUrl(module));
+				if (node) await find_deps(environment, node, deps);
+			}
+
+			/** @type {Array<{ url: string; inline: string }>} */
+			const styles = [];
+			for (const dep of deps) {
+				if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+					styles.push({
+						url: dep.url,
+						inline: dep.url.includes('?') ? dep.url.replace('?', '?inline&') : dep.url + '?inline'
+					});
+				}
+			}
+
+			res.setHeader('content-type', 'application/json');
+			res.end(JSON.stringify(styles));
+		})
+	);
 
 	// returns the sizes of the assets a server module imports, for servers that cannot read files
-	vite_dev_server.middlewares.use(DEV_SERVER_ASSETS_PATH, async (req, res) => {
-		const url = new URL(req.originalUrl ?? '', 'http://localhost');
-		const environment = vite_dev_server.environments[url.searchParams.get('environment') ?? ''];
-		const id = url.searchParams.get('module');
-		const node =
-			environment &&
-			id &&
-			(environment.moduleGraph.getModuleById(id) ??
-				(await environment.moduleGraph.getModuleByUrl(id)));
+	vite_dev_server.middlewares.use(
+		DEV_SERVER_ASSETS_PATH,
+		catch_errors(async (req, res) => {
+			const url = new URL(req.originalUrl ?? '', 'http://localhost');
+			const environment = get_environment(url.searchParams.get('environment'));
+			const id = url.searchParams.get('module');
+			const node =
+				environment &&
+				id &&
+				(environment.moduleGraph.getModuleById(id) ??
+					(await environment.moduleGraph.getModuleByUrl(id)));
 
-		if (!node) {
-			res.statusCode = 404;
-			res.end();
-			return;
-		}
-
-		/** @type {Set<EnvironmentModuleNode>} */
-		const deps = new Set();
-		await find_deps(environment, node, deps);
-
-		/** @type {Record<string, number>} */
-		const sizes = {};
-		for (const dep of deps) {
-			if (!dep.file || vite.isCSSRequest(dep.file) || /\.(?:[cm]?[jt]sx?|svelte)$/.test(dep.file)) {
-				continue;
+			if (!node) {
+				res.statusCode = 404;
+				res.end();
+				return;
 			}
 
-			/** @type {fs.Stats} */
-			let stats;
-			try {
-				stats = fs.statSync(dep.file);
-			} catch {
-				continue;
+			/** @type {Set<EnvironmentModuleNode>} */
+			const deps = new Set();
+			await find_deps(environment, node, deps);
+
+			/** @type {Record<string, number>} */
+			const sizes = {};
+			for (const dep of deps) {
+				if (
+					!dep.file ||
+					vite.isCSSRequest(dep.file) ||
+					/\.(?:[cm]?[jt]sx?|svelte)$/.test(dep.file)
+				) {
+					continue;
+				}
+
+				/** @type {fs.Stats} */
+				let stats;
+				try {
+					stats = fs.statSync(dep.file);
+				} catch {
+					continue;
+				}
+				if (!stats.isFile()) continue;
+
+				// the same path read gets from the asset url
+				const relative = posixify(path.relative(root, dep.file));
+				const file =
+					relative.startsWith('../') || path.isAbsolute(relative)
+						? `/@fs${posixify(dep.file)}`
+						: relative;
+
+				sizes[file] = stats.size;
 			}
-			if (!stats.isFile()) continue;
 
-			// the same path read gets from the asset url
-			const relative = posixify(path.relative(root, dep.file));
-			const file =
-				relative.startsWith('../') || path.isAbsolute(relative)
-					? `/@fs${posixify(dep.file)}`
-					: relative;
-
-			sizes[file] = stats.size;
-		}
-
-		res.setHeader('content-type', 'application/json');
-		res.end(JSON.stringify(sizes));
-	});
+			res.setHeader('content-type', 'application/json');
+			res.end(JSON.stringify(sizes));
+		})
+	);
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 	const asset_server = sirv(svelte_config.files.assets, {
@@ -629,6 +648,22 @@ export async function dev(
 				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
+		});
+	};
+}
+
+/**
+ * responds with a 500 when the handler throws, since connect ignores rejected promises and the
+ * process would exit
+ * @param {(req: import('connect').IncomingMessage, res: import('node:http').ServerResponse) => Promise<void>} handler
+ * @returns {import('connect').NextHandleFunction}
+ */
+function catch_errors(handler) {
+	return (req, res) => {
+		handler(req, res).catch((error) => {
+			console.error(error);
+			if (!res.headersSent) res.statusCode = 500;
+			res.end();
 		});
 	};
 }
