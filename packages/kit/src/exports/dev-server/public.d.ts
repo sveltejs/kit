@@ -8,7 +8,7 @@ import { Server } from '@sveltejs/kit';
  * a `read` function. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
  *
  * ```js
- * import { server } from 'virtual:sveltekit/server';
+ * import { server } from '@sveltejs/kit/dev-server';
  *
  * await server.init({ env });
  * const response = await server.respond(request, { getClientAddress: () => address });
