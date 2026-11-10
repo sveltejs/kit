@@ -1,5 +1,5 @@
 // lets a dev server in another vite environment ask the vite dev server for what only it knows
-import { DEV_INLINE_STYLES_PATH } from '../../constants.js';
+import { DEV_INLINE_STYLES_PATH, DEV_SERVER_ASSETS_PATH } from '../../constants.js';
 
 /**
  * fetches json from the vite dev server, or undefined when it does not have it
@@ -43,4 +43,55 @@ export async function inline_styles(modules) {
 	}
 
 	return styles;
+}
+
+/**
+ * reads an imported asset from the vite dev server
+ * @param {string} assets the path that asset urls start with
+ * @param {string} file the path relative to the project root, or a /@fs path
+ * @returns {Promise<ReadableStream | null>}
+ */
+export async function read_asset(assets, file) {
+	const { origin } = await import('<sveltekit:generated>/origin.js');
+	const pathname = file.startsWith('/') ? assets + file : `${assets}/${file}`;
+	const url = new URL(encodeURI(pathname), origin);
+	const response = await fetch(url);
+
+	if (!response.ok) {
+		throw new Error(
+			`read(...) failed: could not fetch ${url} (${response.status} ${response.statusText})`
+		);
+	}
+
+	return response.body;
+}
+
+/**
+ * sizes of the assets that server modules import, which read needs for content-length
+ * @type {Record<string, number>}
+ */
+export const server_assets = {};
+
+/** @type {WeakSet<object>} */
+const listed = new WeakSet();
+
+/**
+ * adds the sizes of the assets a server module imports to server_assets, once per module
+ * instance since its imports only change when it does
+ * @template {object} T
+ * @param {string} file the path of the module
+ * @param {T} module
+ * @returns {Promise<T>}
+ */
+export async function list_server_assets(file, module) {
+	if (listed.has(module)) return module;
+	listed.add(module);
+
+	try {
+		Object.assign(server_assets, await ask(DEV_SERVER_ASSETS_PATH, { module: file }));
+	} catch {
+		// read still streams unlisted assets, without a content-length
+	}
+
+	return module;
 }

@@ -34,6 +34,16 @@ export let manifest = /** @type {SSRManifest} */ (
 export let hooks = /** @type {ServerHooks} */ ((__SVELTEKIT_DEV__ && restore(hooks_key)) ?? null);
 
 /**
+ * whether read streams imported assets missing from manifest.server_assets, for dev servers
+ * that cannot see the file system
+ */
+export let read_unlisted_assets = false;
+
+export function set_read_unlisted_assets() {
+	read_unlisted_assets = true;
+}
+
+/**
  * The public `read` may return a promise, the runtime expects a stream
  * @param {NonNullable<import('@sveltejs/kit').ServerInitOptions['read']>} read
  */

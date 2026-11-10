@@ -1,5 +1,7 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 import { assets, instrumentation, manifest } from '<sveltekit:generated>/server-manifest.js';
+import { read_asset } from './dev_host.js';
+import { set_read_unlisted_assets } from './internal.js';
 
 // the runtime reports the features requests use in dev, which are not checked here
 globalThis.__SVELTEKIT_TRACK__ = () => {};
@@ -31,8 +33,9 @@ export const server = {
 			manifest,
 			env,
 			assets,
-			read: options?.read
+			read: options?.read ?? ((file) => read_asset(assets, file))
 		});
+		set_read_unlisted_assets();
 		await server.init();
 
 		// without read, like in production, since it is only for prerendering static files

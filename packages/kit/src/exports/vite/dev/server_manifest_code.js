@@ -5,6 +5,7 @@ import { runtime_directory } from '../../../core/utils.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { mimes } from '../../../utils/mime.js';
 
 const unsafe_chars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
 
@@ -72,7 +73,9 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 		}
 
 		if (node.server) {
-			lines.push(`result.server = await import(${file_path(node.server)});`);
+			lines.push(
+				`result.server = await list_server_assets(${file_path(node.server)}, await import(${file_path(node.server)}));`
+			);
 		}
 
 		lines.push('result.inline_styles = () => inline_styles(css_modules);', 'return result;');
@@ -88,7 +91,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 		pattern: ${devalue.uneval(route.pattern)},
 		params: ${devalue.uneval(route.params)},
 		page: ${devalue.uneval(route.page)},
-		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)})` : 'null'},
+		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)}).then((module) => list_server_assets(${file_path(endpoint.file)}, module))` : 'null'},
 		endpoint_id: ${to_code(route.endpoint_id)}
 	}`;
 	});
@@ -108,8 +111,13 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 
+	/** @type {Record<string, string>} */
+	const mime_types = {};
+	for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
+	Object.assign(mime_types, manifest.mime_types);
+
 	return `// generated during dev for \`@sveltejs/kit/dev-server\`
-import { inline_styles } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
+import { inline_styles, list_server_assets, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${to_code(assets)};
 
@@ -120,9 +128,11 @@ export const manifest = {
 	app_dir: ${to_code(manifest.app_dir)},
 	app_path: ${to_code(manifest.app_path)},
 	assets: ${devalue.uneval(manifest.assets)},
-	mime_types: ${devalue.uneval(manifest.mime_types)},
+	// every mime type, since imported assets are not listed
+	mime_types: ${devalue.uneval(mime_types)},
 	client: ${devalue.uneval(manifest.client)},
-	server_assets: {},
+	// filled in as server modules load
+	server_assets,
 	nodes: [
 	${nodes.join(',\n\t')}
 	],

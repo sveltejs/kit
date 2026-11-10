@@ -23,7 +23,12 @@ import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { load_error_page } from '../../../core/config/index.js';
-import { DEV_INLINE_STYLES_PATH, SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
+import {
+	DEV_INLINE_STYLES_PATH,
+	DEV_SERVER_ASSETS_PATH,
+	SRC_ROOT,
+	SVELTE_KIT_ASSETS
+} from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
@@ -345,6 +350,55 @@ export async function dev(
 
 			res.setHeader('content-type', 'application/json');
 			res.end(JSON.stringify(Array.from(styles, ([url, inline]) => ({ url, inline }))));
+		})
+	);
+
+	// returns the sizes of the assets a server module imports, for servers that cannot read files
+	vite_dev_server.middlewares.use(
+		DEV_SERVER_ASSETS_PATH,
+		catch_errors(async (req, res) => {
+			const url = new URL(req.originalUrl ?? '', 'http://localhost');
+			const id = url.searchParams.get('module');
+			const deps = id ? await find_server_deps(id) : undefined;
+
+			if (!deps) {
+				res.statusCode = 404;
+				res.end();
+				return;
+			}
+
+			/** @type {Record<string, number>} */
+			const sizes = {};
+			for (const dep of deps) {
+				if (
+					!dep.file ||
+					vite.isCSSRequest(dep.file) ||
+					/\.(?:[cm]?[jt]sx?|svelte)$/.test(dep.file)
+				) {
+					continue;
+				}
+
+				/** @type {fs.Stats} */
+				let stats;
+				try {
+					stats = fs.statSync(dep.file);
+				} catch {
+					continue;
+				}
+				if (!stats.isFile()) continue;
+
+				// the same path read gets from the asset url
+				const relative = posixify(path.relative(root, dep.file));
+				const file =
+					relative.startsWith('../') || path.isAbsolute(relative)
+						? `/@fs${posixify(dep.file)}`
+						: relative;
+
+				sizes[file] = stats.size;
+			}
+
+			res.setHeader('content-type', 'application/json');
+			res.end(JSON.stringify(sizes));
 		})
 	);
 
