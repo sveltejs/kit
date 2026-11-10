@@ -1189,8 +1189,7 @@ declare module '@sveltejs/kit/adapter/dev' {
 	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
 	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
 	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
-	 * writes for production. It reads imported assets from the Vite dev server, so `init` doesn't need
-	 * a `read` function. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
+	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
 	 *
 	 * ```js
 	 * import { server } from '@sveltejs/kit/adapter/dev';
