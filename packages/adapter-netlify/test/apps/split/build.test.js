@@ -23,6 +23,32 @@ describe.each([{ edge: false }, { edge: true }])('edge: $edge', ({ edge }) => {
 			.filter(filter);
 	}
 
+	test('split functions exclude higher priority paths independently of function name order', () => {
+		const functions = fs
+			.readdirSync(functions_dir)
+			.filter((f) => /^sveltekit-\d+\.(mjs|js)$/.test(f))
+			.sort((a, b) => Number(a.match(/\d+/)[0]) - Number(b.match(/\d+/)[0]))
+			.map((f) => {
+				const content = fs.readFileSync(path.join(functions_dir, f), 'utf-8');
+				return JSON.parse(content.match(/(?:export const|const|var) config = (\{[\s\S]*?\});/)[1]);
+			});
+
+		expect(functions.length).toBeGreaterThan(10);
+		const seen = [];
+		for (const config of functions) {
+			expect(config.excludedPath).toEqual(expect.arrayContaining(seen));
+			for (const pattern of config.path) {
+				expect(config.excludedPath).not.toContain(pattern);
+			}
+			seen.push(...config.path);
+		}
+
+		// Matchers share a URLPattern, so the lower priority route belongs in the same function.
+		const dynamic = functions.filter((config) => config.path.includes('/z/:param1'));
+		expect(dynamic).toHaveLength(1);
+		expect(dynamic[0].name).toBe('SvelteKit /z/[slug=known]');
+	});
+
 	test('_redirects are copied to publish directory', () => {
 		const redirects = fs.readFileSync(path.join(app, 'build/_redirects'), 'utf-8');
 		expect(redirects).toContain('/redirect-me /greeting/redirected 301');

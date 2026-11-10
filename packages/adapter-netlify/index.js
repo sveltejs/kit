@@ -207,6 +207,9 @@ function get_split_functions(builder) {
 		// skip routes with identical patterns, they were already folded into another function
 		if (seen.has(pattern)) continue;
 
+		// Netlify doesn't resolve overlapping functions by route specificity. Exclude all
+		// higher priority patterns so routing doesn't depend on function name order.
+		const exclude = Array.from(seen);
 		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 		patterns.forEach((pattern) => seen.add(pattern));
 
@@ -225,7 +228,8 @@ function get_split_functions(builder) {
 			routes,
 			patterns,
 			name: `${FUNCTION_PREFIX}${index++}`,
-			display_name: `SvelteKit ${route.id}`
+			display_name: `SvelteKit ${route.id}`,
+			exclude
 		});
 	}
 
