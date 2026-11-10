@@ -249,6 +249,13 @@ test('serves byte ranges', async () => {
 	expect(stale.body).toBe('0123456789');
 });
 
+test('ignores Range on HEAD requests', async () => {
+	const response = await get('/range.txt', { method: 'HEAD', headers: { range: 'bytes=0-1' } });
+	expect(response.status).toBe(200);
+	expect(response.headers['content-length']).toBe('10');
+	expect(response.headers['content-range']).toBeUndefined();
+});
+
 test('negotiates the compressed variant', async () => {
 	const gzip = await get('/range.txt', { headers: { 'accept-encoding': 'gzip' } });
 	expect(gzip.headers['content-encoding']).toBe('gzip');
