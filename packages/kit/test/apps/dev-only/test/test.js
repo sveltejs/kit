@@ -242,7 +242,7 @@ test.describe('Remote functions', () => {
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
 
-	test('queries throw while rendering a prerendered page, like they do when building', async ({
+	test('queries throw when used in a prerendered page', async ({
 		request
 	}) => {
 		const response = await request.get('/remote/query/prerendered');
