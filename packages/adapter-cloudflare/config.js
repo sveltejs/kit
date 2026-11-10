@@ -25,7 +25,7 @@ export const worker_environment = 'cloudflare';
 const scan_kit_modules = {
 	name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
 	resolveId: {
-		filter: { id: /^(\$(app|env)\/|<sveltekit:generated>|virtual:sveltekit\/)/ },
+		filter: { id: /^(\$(app|env)\/|<sveltekit:generated>)/ },
 		handler: (id) => ({ id, external: true })
 	}
 };
@@ -225,7 +225,7 @@ function customize(config, entrypoint) {
 
 /**
  * runs sveltekit in workerd during dev, in the custom worker or a worker of our own, which renders
- * the requests sveltekit hands it with virtual:sveltekit/server
+ * the requests sveltekit hands it with @sveltejs/kit/dev-server
  * @param {() => string | undefined} get_custom_entrypoint
  * @param {(forward: Forward | undefined) => void} set_forward
  * @param {PluginOptions} [plugin_options]

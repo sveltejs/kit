@@ -5,6 +5,7 @@ import { runtime_directory } from '../../../core/utils.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
 import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { mimes } from '../../../utils/mime.js';
 
 const unsafe_chars = /[<>\b\f\n\r\t\0\u2028\u2029]/g;
 
@@ -27,13 +28,12 @@ const escaped_chars = {
  * @param {unknown} value
  * @returns {string}
  */
-function to_code(value) {
+export function to_code(value) {
 	const json = JSON.stringify(value);
 	return json === undefined
 		? 'undefined'
 		: json.replace(unsafe_chars, (char) => escaped_chars[char]);
 }
-import { mimes } from '../../../utils/mime.js';
 
 /**
  * generates the dev manifest as a module, whose loaders import in whichever environment imports it
@@ -116,7 +116,7 @@ export function generate_server_manifest_code(manifest, manifest_data, svelte_co
 	for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
 	Object.assign(mime_types, manifest.mime_types);
 
-	return `// generated during dev for \`virtual:sveltekit/server\`
+	return `// generated during dev for \`@sveltejs/kit/dev-server\`
 import { inline_styles, list_server_assets, remotes, server_assets } from ${to_code(`${runtime_directory}/server/dev_host.js`)};
 
 export const assets = ${to_code(assets)};

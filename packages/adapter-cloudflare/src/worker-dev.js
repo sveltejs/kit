@@ -1,6 +1,6 @@
 // renders sveltekit in workerd during dev, for the custom worker that imports it or as a worker of
 // its own
-import { server } from 'virtual:sveltekit/server';
+import { server } from '@sveltejs/kit/dev-server';
 
 /**
  * @param {Request} request
