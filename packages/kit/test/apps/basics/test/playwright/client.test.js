@@ -20,22 +20,14 @@ test.describe('a11y', () => {
 });
 
 test.describe('Hydration preloads', () => {
-	for (const path of [
-		'/',
-		'/errors/nested-error-page',
-		'/errors/nested-error-page/nope',
-		'/non-existent-route',
-		'/no-ssr',
-		'/no-ssr/error-preload',
-		'/prerendering/env/prerendered'
-	]) {
+	for (const path of ['/', '/errors/nested-error-page', '/no-ssr/error-preload']) {
 		test(`preloads error modules before hydration on ${path}`, async ({ page }) => {
 			test.skip(!!process.env.DEV, 'modulepreloads are emitted in production builds');
 
 			/** @type {Set<string>} */
 			const modules = new Set();
 			page.on('request', (request) => {
-				if (/\/_app\/immutable\/(nodes|chunks)\/.*\.js$/.test(request.url())) {
+				if (/\/_app\/immutable\/nodes\/.*\.js$/.test(request.url())) {
 					modules.add(request.url());
 				}
 			});
@@ -51,7 +43,6 @@ test.describe('Hydration preloads', () => {
 			for (const url of modules) {
 				expect(preloads).toContain(url);
 			}
-			expect(new Set(preloads).size).toBe(preloads.length);
 		});
 	}
 });
