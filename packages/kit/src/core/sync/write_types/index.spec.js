@@ -203,6 +203,16 @@ test('Detects destructured exports', () => {
 	expect(rewritten?.exports).toEqual(['load', 'actions']);
 });
 
+test('Detects destructured exports with holes', () => {
+	const source = `
+		export const [load, , [actions]] = create_page();
+	`;
+
+	const rewritten = tweak_types(source, true);
+
+	expect(rewritten?.exports).toEqual(['load', 'actions']);
+});
+
 test('Appends @ts-nocheck after @ts-check', () => {
 	const source = `// @ts-check
 		/** @type {import('./$types').Get} */
