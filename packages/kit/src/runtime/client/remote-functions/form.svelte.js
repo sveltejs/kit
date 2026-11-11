@@ -439,7 +439,11 @@ export function form(id) {
 					set_nested_value(input, previous_submitter, undefined);
 				}
 
-				if (event.submitter && /** @type {HTMLInputElement} */ (event.submitter).type !== 'image') {
+				if (
+					event.submitter &&
+					/** @type {HTMLButtonElement | HTMLInputElement} */ (event.submitter).form === form &&
+					/** @type {HTMLInputElement} */ (event.submitter).type !== 'image'
+				) {
 					const name = event.submitter.getAttribute('name');
 
 					/** @type {null | ReturnType<typeof parse_form_key>} */
@@ -490,6 +494,8 @@ export function form(id) {
 				// but that makes the types unnecessarily awkward
 				const element = /** @type {HTMLInputElement} */ (event.target);
 
+				if (element.form !== form) return;
+
 				const name = element.name;
 				if (!name) return;
 
@@ -507,7 +513,9 @@ export function form(id) {
 						);
 					} else {
 						const elements = /** @type {HTMLInputElement[]} */ (
-							Array.from(form.querySelectorAll(`[name="${name}"]`))
+							Array.from(form.querySelectorAll(`[name="${name}"]`)).filter(
+								(element) => /** @type {HTMLInputElement} */ (element).form === form
+							)
 						);
 
 						if (DEV) {
@@ -568,7 +576,11 @@ export function form(id) {
 
 			/** @param {Event} e */
 			const handle_focusout = (e) => {
-				const name = /** @type {HTMLInputElement} */ (e.target).name;
+				const element = /** @type {HTMLInputElement} */ (e.target);
+
+				if (element.form !== form) return;
+
+				const name = element.name;
 				if (!name) return;
 
 				const field = parse_form_key(action_id_without_key, name);
