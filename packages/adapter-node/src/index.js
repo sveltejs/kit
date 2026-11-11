@@ -111,11 +111,12 @@ async function remove_stale_socket(socket_path) {
 	if (alive) return;
 
 	try {
-		// Re-stat and compare the inode right before removing: a sibling process may have
-		// cleaned up and bound a new socket at this path while we were probing. Both calls are
-		// synchronous so nothing else runs in this process in between.
+		// Re-stat right before removing: a sibling process may have cleaned up and bound a new
+		// socket at this path while we were probing. The inode number can be reused for that new
+		// socket, so compare the change time too. Both calls are synchronous so nothing else runs
+		// in this process in between.
 		const now = fs.statSync(socket_path);
-		if (now.ino !== before.ino || now.dev !== before.dev || !now.isSocket()) return;
+		if (now.ino !== before.ino || now.ctimeMs !== before.ctimeMs || !now.isSocket()) return;
 		fs.rmSync(socket_path);
 	} catch {
 		// ENOENT: another instance already cleaned up
