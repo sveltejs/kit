@@ -372,6 +372,9 @@ let navigation_token;
 /** @type {WeakSet<{}>} Tokens of navigations that stopped because a newer navigation took over */
 const aborted_navigation_tokens = new WeakSet();
 
+/** @type {WeakMap<{}, {}>} Tokens of cancelled navigations, mapped to the token each one interrupted */
+const cancelled_navigation_tokens = new WeakMap();
+
 /**
  * @type {{}}
  * The latest invalidate(All) token. Superseeded by both later invalidate(All)s and navigations.
@@ -1990,10 +1993,17 @@ async function navigate({
 
 	if (!nav) {
 		block();
+		// `popstate` installs its token before calling this, so it has no earlier one to record
+		if (prev_token !== nav_token) cancelled_navigation_tokens.set(nav_token, prev_token);
 		if (navigation_token === nav_token) {
-			navigation_token = prev_token;
-			// the navigation this one interrupted may have aborted while `beforeNavigate` waited for the route
-			if (aborted_navigation_tokens.has(prev_token)) {
+			// hand the token back to the latest interrupted navigation that wasn't cancelled too
+			let token = prev_token;
+			while (cancelled_navigation_tokens.has(token)) {
+				token = /** @type {{}} */ (cancelled_navigation_tokens.get(token));
+			}
+			navigation_token = token;
+			// that navigation may have aborted while `beforeNavigate` waited for the route
+			if (aborted_navigation_tokens.has(token)) {
 				is_navigating = false;
 				updating = false;
 				set_navigation(null);

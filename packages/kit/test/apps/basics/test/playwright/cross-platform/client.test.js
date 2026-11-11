@@ -281,12 +281,13 @@ test.describe('Navigation lifecycle functions', () => {
 	});
 
 	/**
-	 * Holds route resolution for the `slow-route` link, so that its `beforeNavigate` runs only
+	 * Holds route resolution for a `slow-route` link, so that its `beforeNavigate` runs only
 	 * after the navigation it interrupted has given up. Client-side resolution fetches from the
 	 * `reroute` hook, server-side resolution requests `__route.js`.
 	 * @param {import('@playwright/test').Page} page
+	 * @param {'slow-route' | 'slow-route-2'} name
 	 */
-	async function hold_slow_route(page) {
+	async function hold_slow_route(page, name = 'slow-route') {
 		/** @type {() => void} */
 		let requested = () => {};
 		/** @type {() => void} */
@@ -295,8 +296,9 @@ test.describe('Navigation lifecycle functions', () => {
 		const route_resolved = new Promise((fulfil) => (resolve = () => fulfil(undefined)));
 		await page.route(
 			(url) =>
-				url.pathname.endsWith('/during-navigation/route') ||
-				url.pathname.includes('/during-navigation/slow-route/__route'),
+				(url.pathname.endsWith('/during-navigation/route') &&
+					url.searchParams.get('for') === name) ||
+				url.pathname.includes(`/during-navigation/${name}/__route`),
 			async (route) => {
 				requested();
 				await route_resolved;
@@ -322,6 +324,34 @@ test.describe('Navigation lifecycle functions', () => {
 
 		slow_route.resolve();
 		await expect(page.locator('pre')).toHaveText('2 link');
+		await expect(page.locator('#navigating')).toHaveText('idle');
+		await expect(page.locator('h1')).toHaveText('during navigation');
+	});
+
+	test('cancelling two navigations that outlasted a loading one leaves the router idle', async ({
+		page
+	}) => {
+		const first = await hold_slow_route(page, 'slow-route');
+		const second = await hold_slow_route(page, 'slow-route-2');
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route"]');
+		await first.route_requested;
+		await page.click(
+			'[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route-2"]'
+		);
+		await second.route_requested;
+
+		first.resolve();
+		await expect(page.locator('pre')).toHaveText('2 link');
+		await page.click('#release-b');
+		await expect(page.locator('#b')).toHaveText('aborted');
+
+		second.resolve();
+		await expect(page.locator('pre')).toHaveText('3 link');
 		await expect(page.locator('#navigating')).toHaveText('idle');
 		await expect(page.locator('h1')).toHaveText('during navigation');
 	});

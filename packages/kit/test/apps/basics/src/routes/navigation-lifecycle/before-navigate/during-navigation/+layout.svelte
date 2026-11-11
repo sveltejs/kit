@@ -40,6 +40,7 @@
 <a href="{base}/c">c</a>
 <a href="/navigation-lifecycle/before-navigate/a">a</a>
 <a href="{base}/slow-route">slow route</a>
+<a href="{base}/slow-route-2">second slow route</a>
 <button id="release-b" onclick={() => gate.b.release()}>release b</button>
 <button id="release-c" onclick={() => gate.c.release()}>release c</button>
 <button
