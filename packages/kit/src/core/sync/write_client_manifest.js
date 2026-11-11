@@ -168,7 +168,9 @@ export function write_client_manifest(kit, manifest_data, output, root, metadata
 				transport: ${universal_hooks_file ? 'universal_hooks.transport || ' : ''}{}
 			};
 
-			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.decode]));
+			// values decoded with these don't come from a remote function call (load data, hydration)
+			const no_call = Object.freeze({ call: undefined });
+			export const decoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, (data) => v.decode(data, no_call)]));
 			export const encoders = Object.fromEntries(Object.entries(hooks.transport).map(([k, v]) => [k, v.encode]));
 
 			export const hash = ${s(kit.router.type === 'hash')};

@@ -154,7 +154,27 @@ export interface Transporter<
 	U = any /* minus falsy values, but we can't properly express that */
 > {
 	encode: (value: T) => false | U;
-	decode: (data: U) => T;
+	/**
+	 * Turns the encoding back into an instance of the custom type.
+	 * @param data the value returned by `encode`
+	 * @param context where the value came from
+	 */
+	decode: (data: U, context: TransportDecodeContext) => T;
+}
+
+/**
+ * The second argument to a transporter's `decode` function.
+ * @since 3.3.0
+ */
+export interface TransportDecodeContext {
+	/**
+	 * The [remote function](https://svelte.dev/docs/kit/remote-functions) call the value came from, or `undefined` for anything else, such as `load` data, form action results and data rendered on the server.
+	 *
+	 * `call.id` goes up with each remote function request the browser makes, in the order the requests are sent. Don't rely on ids being consecutive. All values in one response share the same `call`, including updates to other queries carried in a command's or form's response. All values streamed by one `query.live` connection share the same `call`.
+	 *
+	 * On the server, `call` is always `undefined`.
+	 */
+	call: { id: number } | undefined;
 }
 
 export interface ResolveOptions {

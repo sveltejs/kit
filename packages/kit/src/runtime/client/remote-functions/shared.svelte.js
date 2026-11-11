@@ -76,6 +76,35 @@ export function pin_while_resolving(cache_map, cache, id, payload, then) {
 	);
 }
 
+let request_count = 0;
+
+/**
+ * Numbers remote function requests in the order they are made
+ */
+export function next_request_id() {
+	return ++request_count;
+}
+
+/**
+ * Creates the revivers for one remote function response, so that each
+ * transport `decode` learns which call the value came from
+ * @param {number} id the number of the request (see `next_request_id`)
+ * @returns {Record<string, (data: any) => any>}
+ */
+export function create_call_decoders(id) {
+	const context = Object.freeze({ call: Object.freeze({ id }) });
+
+	/** @type {Record<string, (data: any) => any>} */
+	const decoders = {};
+
+	for (const key in app.hooks.transport) {
+		const { decode } = app.hooks.transport[key];
+		decoders[key] = (data) => decode(data, context);
+	}
+
+	return decoders;
+}
+
 /**
  * @returns {{ 'x-sveltekit-pathname': string, 'x-sveltekit-search': string }}
  */
@@ -113,6 +142,7 @@ export function get_remote_request_headers() {
  * @param {Set<string> | null} [refreshes]
  */
 export async function remote_request(url, init, refreshes) {
+	const id = next_request_id();
 	const response = await fetch(url, init);
 	const status = response.status;
 
@@ -133,8 +163,10 @@ export async function remote_request(url, init, refreshes) {
 		throw new HandledHttpError(result.error);
 	}
 
+	// every value in the response, including the single-flight updates
+	// of other queries, belongs to this call
 	const data = /** @type {RemoteFunctionData} */ (
-		result.data ? devalue.parse(result.data, app.decoders) : {}
+		result.data ? devalue.parse(result.data, create_call_decoders(id)) : {}
 	);
 
 	/**

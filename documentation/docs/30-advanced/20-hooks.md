@@ -389,6 +389,37 @@ export const transport = {
 };
 ```
 
+`decode` also receives a second argument, a context object. When the value came from a [remote function](remote-functions) response, `context.call` is set, and `call.id` is a number that goes up with each remote function request the browser makes, in the order the requests are sent. This lets you tell an older response from a newer one, even if they arrive out of order:
+
+```js
+// @errors: 2307
+/// file: src/hooks.js
+import { Fragment } from '#lib/fragment.js';
+
+/** @type {Map<string, number>} */
+const latest = new Map();
+
+/** @type {import('@sveltejs/kit/hooks').Transport} */
+export const transport = {
+	Fragment: {
+		encode: (value) => value instanceof Fragment && [value.key, value.html],
+		decode: ([key, html], { call }) => {
+			const fragment = new Fragment(key, html);
+
+			if (call) {
+				// a response to an older call arrived after a newer one
+				if (call.id < (latest.get(key) ?? 0)) fragment.stale = true;
+				else latest.set(key, call.id);
+			}
+
+			return fragment;
+		}
+	}
+};
+```
+
+Every value in one response shares the same `call`, including updates to other queries that a command or form sends back. Values from `load`, form actions and data rendered on the server have `call: undefined`, as does every value decoded on the server.
+
 
 ## Further reading
 
