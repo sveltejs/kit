@@ -1,7 +1,8 @@
 import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
-import { createFilter, resolveConfig } from 'vite';
+import { createFilter, createServer, resolveConfig } from 'vite';
 import { bullet_list } from '../../../../src/utils/format.js';
 
 const timeout = 60_000;
@@ -77,4 +78,34 @@ test('transformIndexHtml warning for app plugins', { timeout }, () => {
 	expect(result.stderr).toContainKitDiagnostic('transform_index_html_unsupported', {
 		contains: [bullet_list(['app-html-transform'])]
 	});
+});
+
+test('serves a route created while the dev server starts', { timeout }, async () => {
+	const dir = path.join(cwd, 'source/pages/created-during-startup');
+
+	const server = await createServer({
+		configFile: path.join(cwd, 'vite.custom.config.js'),
+		logLevel: 'silent',
+		plugins: [
+			{
+				name: 'create-route',
+				configureServer() {
+					fs.mkdirSync(dir, { recursive: true });
+					fs.writeFileSync(`${dir}/+server.js`, "export const GET = () => new Response('ok');");
+				}
+			}
+		]
+	});
+
+	try {
+		await server.listen();
+
+		// the file watcher does not report files created before it is ready
+		const response = await fetch(`${server.resolvedUrls?.local[0]}/created-during-startup`);
+
+		expect(response.status).toBe(200);
+	} finally {
+		await server.close();
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
 });
