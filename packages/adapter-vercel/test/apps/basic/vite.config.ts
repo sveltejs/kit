@@ -5,7 +5,12 @@ import adapter from '@sveltejs/adapter-vercel';
 export default defineConfig({
 	plugins: [
 		sveltekit({
-			adapter: adapter()
+			adapter: adapter(),
+			appDir: process.env.APP_DIR,
+			paths: { base: process.env.PATHS_BASE },
+			output: {
+				bundleStrategy: process.env.BUNDLE_STRATEGY as 'split' | 'single' | 'inline' | undefined
+			}
 		})
 	]
 });

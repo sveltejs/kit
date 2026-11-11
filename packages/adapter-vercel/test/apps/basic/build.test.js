@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { assert, beforeAll, test } from 'vitest';
-import { deploy } from '../../../../../test-utils/deploy.vitest.js';
+import { assert, beforeAll, describe, test } from 'vitest';
+import { build, deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 const output = path.join(app, '.vercel/output');
@@ -70,3 +70,58 @@ test('process.cwd() is traced from the project directory', () => {
 	const function_dir = fs.realpathSync(`${output}/functions/process-cwd.func`);
 	assert.ok(fs.existsSync(`${function_dir}/asset.txt`));
 });
+
+for (const strategy of ['split', 'single', 'inline']) {
+	describe.each([false, true])(`skew protection with ${strategy}, enabled: %s`, (enabled) => {
+		const base = enabled ? '/base' : '';
+		const app_dir = enabled ? 'custom' : '_app';
+		const app_path = `${base}/${app_dir}`;
+
+		beforeAll(() => {
+			build(app, {
+				BUNDLE_STRATEGY: strategy,
+				PATHS_BASE: base,
+				APP_DIR: app_dir,
+				VERCEL_SKEW_PROTECTION_ENABLED: enabled ? '1' : '',
+				VERCEL_DEPLOYMENT_ID: 'dpl_test'
+			});
+		}, 60_000);
+
+		test('sets both cookies on documents independently of the client bundle', () => {
+			/** @type {{ routes: Array<{ src?: string, handle?: string, headers?: Record<string, string>, has?: unknown[], transforms?: Array<{ type: string, op: string, target: { key: string }, args?: string[] }>, continue?: boolean }> }} */
+			const { routes } = JSON.parse(fs.readFileSync(`${output}/config.json`, 'utf8'));
+			const cookies = routes.filter(
+				(route) =>
+					route.headers?.['Set-Cookie'] ||
+					route.transforms?.some((transform) => transform.target.key === 'Set-Cookie')
+			);
+
+			if (!enabled) {
+				assert.deepEqual(cookies, []);
+				return;
+			}
+
+			assert.equal(cookies.length, 1);
+			const document = cookies[0];
+			assert.deepEqual(document, {
+				src: '/.*',
+				has: [{ type: 'header', key: 'Sec-Fetch-Dest', value: 'document' }],
+				transforms: [
+					{
+						type: 'response.headers',
+						op: 'append',
+						target: { key: 'Set-Cookie' },
+						args: [
+							`__vdpl=dpl_test; Path=${base}/; SameSite=Strict; Secure; HttpOnly`,
+							`__vdpl=; Path=${app_path}/version.json; SameSite=Strict; Secure; HttpOnly`
+						]
+					}
+				],
+				continue: true
+			});
+			assert.ok(
+				routes.indexOf(document) < routes.findIndex((route) => route.handle === 'filesystem')
+			);
+		});
+	});
+}
