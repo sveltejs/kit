@@ -84,6 +84,7 @@ test('serves a route created while the dev server starts', { timeout }, async ()
 	const dir = path.join(cwd, 'source/pages/created-during-startup');
 
 	const server = await createServer({
+		root: cwd,
 		configFile: path.join(cwd, 'vite.custom.config.js'),
 		logLevel: 'silent',
 		plugins: [
