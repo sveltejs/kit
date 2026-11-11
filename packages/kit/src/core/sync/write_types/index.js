@@ -5,6 +5,7 @@ import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { write_if_changed } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -64,7 +65,7 @@ export function write_all_types(config, manifest_data, root) {
 		posixify(path.relative(root, config.files.routes))
 	);
 	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id))
+		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id).replace(/\/$/, ''))
 	);
 
 	if (fs.existsSync(types_dir)) {
@@ -392,7 +393,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	fs.writeFileSync(`${outdir}/$types.d.ts`, output);
+	write_if_changed(`${outdir}/$types.d.ts`, output);
 	to_delete.delete('$types.d.ts');
 
 	for (const file of to_delete) {
@@ -430,7 +431,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 		const basename = path.basename(node.server);
 		const proxy = proxies.server;
 		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${basename}`, proxy.code);
+			write_if_changed(`${outdir}/proxy${basename}`, proxy.code);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
@@ -483,7 +484,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	if (node.universal) {
 		const proxy = proxies.universal;
 		if (proxy?.modified) {
-			fs.writeFileSync(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
+			write_if_changed(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
 		}
 
 		const type = get_data_type(
