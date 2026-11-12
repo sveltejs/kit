@@ -3,7 +3,7 @@ import process from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { expect, test } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import { run } from './fixtures/fork/index.js';
 
 test('waits for the callback, async finally and exit handlers, then stops background work', async () => {
@@ -56,3 +56,34 @@ test('delivers buffered stdout and stderr before exiting', async () => {
 	expect(stdout).toBe('out\n'.repeat(128 * 1024));
 	expect(stderr).toBe('err\n'.repeat(128 * 1024));
 });
+
+afterEach(() => {
+	vi.unstubAllEnvs();
+});
+
+test.each([
+	{ FORCE_COLOR: undefined, NO_COLOR: undefined, expected: '1' },
+	{ FORCE_COLOR: '0', NO_COLOR: undefined, expected: '0' },
+	{ FORCE_COLOR: '1', NO_COLOR: undefined, expected: '1' },
+	{ FORCE_COLOR: '2', NO_COLOR: undefined, expected: '2' },
+	{ FORCE_COLOR: '3', NO_COLOR: undefined, expected: '3' },
+	{ FORCE_COLOR: '', NO_COLOR: undefined, expected: '' },
+	{ FORCE_COLOR: undefined, NO_COLOR: '1', expected: undefined },
+	{ FORCE_COLOR: undefined, NO_COLOR: '0', expected: undefined },
+	{ FORCE_COLOR: undefined, NO_COLOR: '', expected: undefined },
+	{ FORCE_COLOR: '3', NO_COLOR: '1', expected: undefined },
+	{ FORCE_COLOR: '0', NO_COLOR: '', expected: undefined }
+])(
+	'uses parent color settings (FORCE_COLOR=$FORCE_COLOR, NO_COLOR=$NO_COLOR)',
+	async ({ FORCE_COLOR, NO_COLOR, expected }) => {
+		vi.stubEnv('FORCE_COLOR', FORCE_COLOR);
+		vi.stubEnv('NO_COLOR', NO_COLOR);
+
+		await expect(run({ action: 'colors' })).resolves.toEqual({
+			FORCE_COLOR: expected,
+			NO_COLOR
+		});
+		expect(process.env.FORCE_COLOR).toBe(FORCE_COLOR);
+		expect(process.env.NO_COLOR).toBe(NO_COLOR);
+	}
+);
