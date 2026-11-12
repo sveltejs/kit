@@ -2495,7 +2495,7 @@
 				]
 			}
 		],
-		"details": "The same form field path is being used as both an array and an object. Check the names of nested controls and the values passed to `form.fields.field.set(...)`. Numeric indexes must address arrays, while named properties must address objects. Don't mix paths such as `items[0]` and `items.title`."
+		"details": "The same form field path is being used with incompatible shapes. A nested path must traverse plain objects or arrays, not scalar values or non-plain objects such as `File`. Check the names of nested controls and the values passed to `form.fields.field.set(...)`. Numeric indexes must address arrays, while named properties must address objects. Don't mix paths such as `items[0]` and `items.title`, or a scalar field `item` and a nested field `item.title`."
 	},
 	"invalid_error_status": {
 		"variants": [

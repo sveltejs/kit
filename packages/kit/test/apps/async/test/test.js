@@ -4,6 +4,29 @@ import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.describe('remote functions', () => {
+	test('conflicting scalar and nested form fields are diagnosed on submission', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/shape-conflict');
+		await page.getByRole('button', { name: 'Submit' }).click();
+		await expect(page.locator('body')).toContainText('form_field_array_conflict');
+	});
+
+	test('conflicting scalar and nested form fields are diagnosed during SSR', async ({ page }) => {
+		await page.goto('/remote/form/shape-conflict?set');
+		await expect(page.locator('#error')).toContainText('form_field_array_conflict');
+	});
+
+	test('conflicting scalar and nested form fields are diagnosed by fields.set', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled);
+		await page.goto('/remote/form/shape-conflict');
+		await page.getByRole('button', { name: 'Set nested value' }).click();
+		await expect(page.locator('#error')).toContainText('form_field_array_conflict');
+	});
+
 	test('query returns correct data', async ({ page, javaScriptEnabled }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#echo-result')).toHaveText('Hello world');
