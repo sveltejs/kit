@@ -57,18 +57,21 @@ test('prerendering throws', async ({ request }) => {
 	);
 });
 
-test('cloudflare:workers can be used at the top level of a module', async ({ request }) => {
-	const res = await request.get(`${base}/top-level`);
-	expect(await res.json()).toEqual({
-		greeting: 'from cloudflare.config.ts',
-		classes: ['DurableObject', 'WorkerEntrypoint'],
-		kv: 'object'
-	});
+test('cloudflare:workers classes can be extended', async ({ request }) => {
+	const res = await request.get(`${base}/classes`);
+	expect(await res.json()).toEqual(['DurableObject', 'WorkerEntrypoint']);
 });
 
-test('prerendering reads text bindings', async ({ page }) => {
+test('env can be read at the top level of a module', async ({ request }) => {
+	const res = await request.get(`${base}/top-level`);
+	expect(await res.json()).toEqual({ greeting: 'from cloudflare.config.ts', kv: 'object' });
+});
+
+test('prerendering reads text, JSON and secret bindings', async ({ page }) => {
 	await page.goto(`${base}/prerendered`);
 	await expect(page.locator('h1')).toHaveText('from cloudflare.config.ts');
+	await expect(page.locator('#json')).toHaveText('cloudflare.config.ts');
+	await expect(page.locator('#secret')).toHaveText('a secret');
 });
 
 test('the cloudflare:workers stub has the same exports as the real module', async ({ request }) => {

@@ -10,7 +10,7 @@ import { BINDINGS_ENV_KEY } from '../utils.js';
  * @returns {never}
  */
 function unavailable(name) {
-	throw new Error(`Cannot call \`${name}\` from cloudflare:workers outside the Workers runtime`);
+	throw new Error(`Cannot use \`${name}\` from cloudflare:workers outside the Workers runtime`);
 }
 
 /**
@@ -72,10 +72,7 @@ export const env = create_env();
 
 export const exports = new Proxy(
 	{},
-	{
-		get: (_, property) =>
-			typeof property === 'symbol' ? undefined : placeholder(`exports.${property}`)
-	}
+	{ get: () => unavailable('exports'), has: () => unavailable('exports') }
 );
 
 /** @type {Module['withEnv']} */
