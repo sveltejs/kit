@@ -4,3 +4,5 @@ export const get_slow_data = query(async () => {
 	await new Promise((resolve) => setTimeout(resolve, 1000));
 	return 'slow data';
 });
+
+export const get_thing = query('unchecked', (value) => value);
