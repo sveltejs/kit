@@ -52,23 +52,12 @@ test('static and prerendered assets', async ({ request }) => {
 test('prerendering throws', async ({ request }) => {
 	test.skip(!!process.env.DEV);
 	const res = await request.get(`${base}/prerender`);
-	expect(await res.text()).toContain(
-		'Cannot access `get` on the `KV` binding outside the Workers runtime'
-	);
+	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
 });
 
-test('cloudflare:workers can be used at the top level of a module', async ({ request }) => {
-	const res = await request.get(`${base}/top-level`);
-	expect(await res.json()).toEqual({
-		greeting: 'from cloudflare.config.ts',
-		classes: ['DurableObject', 'WorkerEntrypoint'],
-		kv: 'object'
-	});
-});
-
-test('prerendering reads text bindings', async ({ page }) => {
-	await page.goto(`${base}/prerendered`);
-	await expect(page.locator('h1')).toHaveText('from cloudflare.config.ts');
+test('cloudflare:workers classes can be extended', async ({ request }) => {
+	const res = await request.get(`${base}/classes`);
+	expect(await res.json()).toEqual(['DurableObject', 'WorkerEntrypoint']);
 });
 
 test('the cloudflare:workers stub has the same exports as the real module', async ({ request }) => {
