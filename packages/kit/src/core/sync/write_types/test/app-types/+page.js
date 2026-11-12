@@ -1,3 +1,5 @@
+import { resolve } from '$app/paths';
+
 /** @type {import('$app/types').RouteId} */
 let id;
 
@@ -221,6 +223,21 @@ pathname = 'en/gb/deep';
 pathname = 'xyzabout';
 // @ts-expect-error
 pathname = 'xyzdeep';
+
+// Leading slashes denote route IDs, even when a pathname pattern also accepts them.
+resolve('about');
+resolve('en/about');
+resolve('/[[lang]]/about', {});
+// @ts-expect-error this pathname is not a route ID
+resolve('/about');
+// @ts-expect-error query strings do not turn pathnames into route IDs
+resolve('/about?query=1');
+// @ts-expect-error hashes do not turn pathnames into route IDs
+resolve('/about#hash');
+/** @type {'/' | '/about'} */
+const static_or_invalid = Math.random() ? '/' : '/about';
+// @ts-expect-error every leading-slash member must be a valid route ID
+resolve(static_or_invalid, {});
 
 // Test multiple params in a single segment
 pathname = 'multi-param/1-2';
