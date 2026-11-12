@@ -30,5 +30,15 @@ test('read from $app/server works', async ({ request }) => {
 test('prerendering throws', async ({ request }) => {
 	test.skip(!!process.env.DEV);
 	const res = await request.get('/prerender');
-	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
+	expect(await res.text()).toContain('Cannot access `get` on the `KV` binding during the build');
+});
+
+test('env can be read at the top level of a module', async ({ request }) => {
+	const res = await request.get('/top-level');
+	expect(await res.json()).toEqual({ greeting: 'from wrangler.jsonc', kv: 'object' });
+});
+
+test('prerendering reads vars', async ({ page }) => {
+	await page.goto('/prerendered');
+	await expect(page.locator('h1')).toHaveText('from wrangler.jsonc');
 });

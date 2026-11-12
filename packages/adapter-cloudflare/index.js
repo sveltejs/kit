@@ -5,14 +5,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import {
+	getPlatformProxy,
+	unstable_convertConfigBindingsToStartWorkerBindings,
+	unstable_readConfig
+} from 'wrangler';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
 	get_routes_json,
 	parse_redirects,
 	generate_redirects,
-	append_headers
+	append_headers,
+	sync_bindings
 } from './utils.js';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
@@ -260,6 +265,14 @@ function virtual_workers_module(options, stub_import) {
 	};
 	return {
 		name: 'vite-plugin-sveltekit-adapter-cloudflare-virtual-workers-module',
+		config(_, env) {
+			if (env.command !== 'build') return;
+			const wrangler_config = unstable_readConfig({ config: options.configPath });
+			sync_bindings(
+				unstable_convertConfigBindingsToStartWorkerBindings(wrangler_config) ?? {},
+				wrangler_config.secrets?.required ?? []
+			);
+		},
 		configureServer: setup,
 		configurePreviewServer: setup,
 		// a restarting server is set up before the old one closes, so the proxy survives

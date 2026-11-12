@@ -1,12 +1,72 @@
 /** @import { CloudflareWorkersModule } from '@cloudflare/workers-types/experimental/index.js'; */
 import { AsyncLocalStorage } from 'node:async_hooks';
+import process from 'node:process';
+import { BINDINGS_ENV_KEY } from '../utils.js';
 
 const als = new AsyncLocalStorage();
 
 const proxy = globalThis.__sveltekit_cloudflare_platform;
 
+// there is no platform proxy while SvelteKit analyses and prerenders the build
+const build_env = proxy ? undefined : create_build_env();
+
 function get_current_env() {
-	return als.getStore() ?? proxy?.env;
+	return als.getStore() ?? proxy?.env ?? build_env;
+}
+
+/**
+ * A binding that can be passed around during the build, such as `drizzle(env.DB)`, but throws when used
+ * @param {string} name
+ * @returns {unknown}
+ */
+function placeholder(name) {
+	/**
+	 * @param {string | symbol} property
+	 * @returns {never}
+	 */
+	const fail = (property) => {
+		throw new Error(
+			`Cannot access \`${String(property)}\` on the \`${name}\` binding during the build. Only vars and secrets are available while SvelteKit analyses and prerenders your app`
+		);
+	};
+
+	return new Proxy(
+		{},
+		{
+			get(_, property) {
+				// logging and awaiting the placeholder read these
+				if (typeof property === 'symbol' || property === 'then') return undefined;
+				return fail(property);
+			},
+			set: (_, property) => fail(property),
+			has: (_, property) => fail(property)
+		}
+	);
+}
+
+/** @returns {Record<string, unknown>} */
+function create_build_env() {
+	/** @type {import('../utils.js').SerializedBindings} */
+	const bindings = JSON.parse(process.env[BINDINGS_ENV_KEY] ?? '{}');
+
+	/** @type {Record<string, unknown>} */
+	const env = {};
+
+	for (const [name, binding] of Object.entries(bindings)) {
+		if (binding.type === 'text' || binding.type === 'json') {
+			env[name] = binding.value;
+		} else if (binding.type === 'secret') {
+			Object.defineProperty(env, name, {
+				get: () => process.env[name],
+				enumerable: true,
+				configurable: true
+			});
+		} else {
+			env[name] = placeholder(name);
+		}
+	}
+
+	return env;
 }
 
 /** @typedef {typeof CloudflareWorkersModule} Module */
@@ -15,9 +75,6 @@ export const env = new Proxy(
 	{},
 	{
 		get(_, prop) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.get(inner, prop);
@@ -26,9 +83,6 @@ export const env = new Proxy(
 		},
 
 		set(_, prop, newValue) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.set(inner, prop, newValue);
@@ -37,9 +91,6 @@ export const env = new Proxy(
 		},
 
 		has(_, prop) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.has(inner, prop);
@@ -48,9 +99,6 @@ export const env = new Proxy(
 		},
 
 		ownKeys(_) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.ownKeys(inner);
@@ -59,9 +107,6 @@ export const env = new Proxy(
 		},
 
 		deleteProperty(_, prop) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.deleteProperty(inner, prop);
@@ -70,9 +115,6 @@ export const env = new Proxy(
 		},
 
 		defineProperty(_, prop, attr) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.defineProperty(inner, prop, attr);
@@ -81,9 +123,6 @@ export const env = new Proxy(
 		},
 
 		getOwnPropertyDescriptor(_, prop) {
-			if (!proxy) {
-				throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-			}
 			const inner = get_current_env();
 			if (inner) {
 				return Reflect.getOwnPropertyDescriptor(inner, prop);
@@ -95,16 +134,10 @@ export const env = new Proxy(
 
 /** @type {Module['withEnv']} */
 export function withEnv(newEnv, fn) {
-	if (!proxy) {
-		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-	}
 	return als.run(newEnv, fn);
 }
 /** @type {Module['withEnvAndExports']} */
 export function withEnvAndExports(newEnv, _, fn) {
-	if (!proxy) {
-		throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
-	}
 	return als.run(newEnv, fn);
 }
 

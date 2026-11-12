@@ -10,5 +10,6 @@
 	},
 	"vars": {
 		"FOO": "from wrangler.jsonc"
-	}
+	},
+	"kv_namespaces": [{ "binding": "KV", "id": "test" }]
 }
