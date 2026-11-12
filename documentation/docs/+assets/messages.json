@@ -963,6 +963,18 @@
 		],
 		"details": "The two routes can match the same pathname, so SvelteKit can't decide which one should handle it. [Groups](https://svelte.dev/docs/kit/advanced-routing#Advanced-layouts) don't affect the pathname, so `/(a)/about` and `/(b)/about` both match `/about`. An [optional parameter](https://svelte.dev/docs/kit/advanced-routing#Optional-parameters) creates a route both with and without that segment. Rename or move one of the routes, or use a [matcher](https://svelte.dev/docs/kit/advanced-routing#Matching) to tell parameters apart."
 	},
+	"route_static_asset_conflict": {
+		"variants": [
+			{
+				"text": "Route `%id%` conflicts with static asset `%file%`",
+				"variables": [
+					"id",
+					"file"
+				]
+			}
+		],
+		"details": "A page or endpoint has the same pathname as a file in your [static assets directory](https://svelte.dev/docs/kit/project-structure#Project-files-static). Which one handles a request can differ between development and deployment platforms, including for different HTTP methods. Rename or move the route or the static asset so that they have distinct paths. Dynamic routes can still act as fallbacks for paths that do not correspond to static assets."
+	},
 	"route_layout_segment_missing": {
 		"variants": [
 			{
