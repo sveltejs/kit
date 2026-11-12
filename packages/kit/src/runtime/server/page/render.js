@@ -49,7 +49,8 @@ import * as w from '../../../messages/server-warnings.js';
  *   resolve_opts: import('types').RequiredResolveOptions;
  *   action_result?: import('types').ServerActionResult;
  *   data_serializer: import('./types.js').ServerDataSerializer;
- *   error_components?: Array<import('svelte').Component | undefined>
+ *   error_components?: Array<import('svelte').Component | undefined>;
+ *   error_nodes?: import('types').SSRNode[]
  * }} opts
  */
 export async function render_response({
@@ -63,7 +64,8 @@ export async function render_response({
 	resolve_opts,
 	action_result,
 	data_serializer,
-	error_components
+	error_components,
+	error_nodes = []
 }) {
 	if (is_prerendering(state)) {
 		if (options.csp.mode === 'nonce') {
@@ -248,7 +250,6 @@ export async function render_response({
 	}
 
 	for (const { node } of branch) {
-		for (const url of node.imports) modulepreloads.add(url);
 		for (const url of node.stylesheets) stylesheets.add(url);
 		for (const font of node.fonts) fonts.set(font.file, font);
 
@@ -350,6 +351,16 @@ export async function render_response({
 		}
 
 		if (!client.inline) {
+			// The client awaits the root error page and the route's error chain before rendering.
+			// Only preload their JS; unused error-page styles must not affect a successful page.
+			const preload_nodes = new Map(branch.map(({ node }) => [node.index, node]));
+			for (const node of error_nodes) preload_nodes.set(node.index, node);
+			if (!preload_nodes.has(1)) preload_nodes.set(1, await manifest.nodes[1]());
+
+			for (const node of preload_nodes.values()) {
+				for (const url of node.imports) modulepreloads.add(url);
+			}
+
 			for (const dep of modulepreloads) {
 				const path = prefixed(dep);
 
