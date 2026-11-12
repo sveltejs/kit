@@ -5,7 +5,8 @@ export default defineConfig({
 		name: 'test-cloudflare-workers',
 		compatibilityDate: '2026-08-06',
 		env: {
-			FOO: bindings.text('from cloudflare.config.ts')
+			FOO: bindings.text('from cloudflare.config.ts'),
+			KV: bindings.kv()
 		}
 	}
 });
