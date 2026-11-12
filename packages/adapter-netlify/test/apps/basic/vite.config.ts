@@ -8,7 +8,7 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter()
+			adapter: adapter({ nodeVersion: 'nodejs24.x' })
 		})
 	]
 };

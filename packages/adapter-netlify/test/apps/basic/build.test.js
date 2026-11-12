@@ -5,6 +5,25 @@ import { deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 
+test('explicit nodeVersion is included in framework and function metadata', () => {
+	const framework_config = JSON.parse(
+		fs.readFileSync(path.resolve(import.meta.dirname, '.netlify/v1/config.json'), 'utf-8')
+	);
+	expect(framework_config.functions).toEqual({ nodeVersion: '24' });
+
+	const entrypoint = fs.readFileSync(
+		path.resolve(import.meta.dirname, '.netlify/v1/functions/sveltekit-render.mjs'),
+		'utf-8'
+	);
+	const function_config = JSON.parse(entrypoint.match(/export const config = (\{[\s\S]*?\});/)[1]);
+	expect(function_config).toMatchObject({
+		nodeVersion: '24',
+		preferStatic: true,
+		path: ['/*'],
+		excludedPath: ['/.netlify/*']
+	});
+});
+
 test('_redirects are copied to publish directory', () => {
 	const redirects = fs.readFileSync(path.join(app, 'build/_redirects'), 'utf-8');
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
