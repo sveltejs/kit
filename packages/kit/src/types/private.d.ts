@@ -278,11 +278,14 @@ export interface RouteSegment {
 export type TrailingSlash = 'never' | 'always' | 'ignore';
 
 export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
-	? {
-			[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
-				? DeepPartial<T[K]>
-				: T[K];
-		}
+	?
+			| {
+					[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+						? DeepPartial<T[K]>
+						: T[K];
+			  }
+			// Indexed fields can be unset, and the whole array can be absent too.
+			| (T extends unknown[] ? undefined : never)
 	: T | undefined;
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;

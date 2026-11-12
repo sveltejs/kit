@@ -3599,11 +3599,14 @@ declare module '$app/server' {
 	type MaybePromise<T> = T | Promise<T>;
 
 	type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
-		? {
-				[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
-					? DeepPartial<T[K]>
-					: T[K];
-			}
+		?
+				| {
+						[K in keyof T]?: T[K] extends Record<PropertyKey, unknown> | unknown[]
+							? DeepPartial<T[K]>
+							: T[K];
+				  }
+				// Indexed fields can be unset, and the whole array can be absent too.
+				| (T extends unknown[] ? undefined : never)
 		: T | undefined;
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
