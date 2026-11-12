@@ -191,7 +191,8 @@ function get_split_functions(builder) {
 		// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
 		for (const [i, segment] of route.segments.entries()) {
 			if (segment.rest) {
-				parts.push('*');
+				// Make the slash optional too, so rest parameters can match zero segments.
+				parts.push(`:param${i}(.*)?`);
 			} else if (segment.dynamic) {
 				// URLPattern requires params to start with letters
 				const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';

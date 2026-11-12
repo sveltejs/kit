@@ -21,6 +21,9 @@ export function matches(a, b) {
 			return false;
 		}
 
+		// A rest parameter in either route can consume zero or more segments.
+		if (a[0].rest) return matches(b, a);
+
 		if (!b[0].dynamic) {
 			if (!a[0].dynamic && a[0].content !== b[0].content) return false;
 		}
@@ -28,9 +31,9 @@ export function matches(a, b) {
 		if (a.length === 1 && b.length === 1) return true;
 		return matches(a.slice(1), b.slice(1));
 	} else if (a[0]) {
-		return a.length === 1 && a[0].rest;
+		return a.every((segment) => segment.rest);
 	} else {
-		return b.length === 1 && b[0].rest;
+		return b.length > 0 && b.every((segment) => segment.rest);
 	}
 }
 

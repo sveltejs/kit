@@ -15,6 +15,36 @@ test('routes with optional params', async ({ page }) => {
 	await expect(page.locator('p')).toHaveText('optional: value');
 });
 
+test('rest parameters match zero or more segments', async ({ page }) => {
+	for (const [pathname, text] of [
+		['/docs', 'docs: []'],
+		['/docs/a/b', 'docs: [a/b]'],
+		['/files/edit', 'edit: []'],
+		['/files/a/b/edit', 'edit: [a/b]']
+	]) {
+		const response = await page.goto(pathname);
+		expect(response?.status()).toBe(200);
+		await expect(page.locator('h1')).toHaveText(text);
+	}
+});
+
+test('rest matcher rejection falls back to a shorter route', async ({ request }) => {
+	const empty = await request.get('/fallback/suffix');
+	expect(empty.status()).toBe(200);
+	expect(await empty.json()).toEqual({ slug: 'suffix' });
+
+	const nonempty = await request.get('/fallback/a/b/suffix');
+	expect(nonempty.status()).toBe(200);
+	expect(await nonempty.json()).toEqual({ rest: 'a/b' });
+});
+
+test('client navigation fetches empty rest parameter data', async ({ page }) => {
+	await page.goto('/docs/a/b');
+	await page.click('a');
+	await expect(page.locator('h1')).toHaveText('docs: []');
+	await expect(page).toHaveURL('/docs');
+});
+
 test('client-side navigation fetches server load function data', async ({ page }) => {
 	await page.goto('/dynamic');
 	await page.click('a');
