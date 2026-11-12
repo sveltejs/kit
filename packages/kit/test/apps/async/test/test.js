@@ -1076,6 +1076,34 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('queries do not propagate fetched cookies during SSR', async ({ page, context }) => {
+		const response = await page.goto('/remote/fetch-cookies');
+		await expect(page.locator('#ssr-result')).toHaveText('set: unset');
+		expect(await response?.headerValues('set-cookie')).toEqual([
+			expect.stringMatching(/^session=/)
+		]);
+		expect((await context.cookies()).map((cookie) => cookie.name)).not.toContain('injected');
+	});
+
+	test('forms still propagate fetched cookies', async ({ page, context, baseURL }) => {
+		await context.addCookies([{ name: 'deleted', value: 'keep', url: baseURL }]);
+		await page.goto('/remote/fetch-cookies');
+		await page.getByRole('button', { name: 'form', exact: true }).click();
+		await expect(page.locator('#form-result')).toHaveText('set: a%20b');
+		expect(await context.cookies()).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: 'injected',
+					value: 'a%20b',
+					httpOnly: false,
+					secure: false
+				}),
+				expect.objectContaining({ name: 'raw', value: '1' })
+			])
+		);
+		expect((await context.cookies()).map((cookie) => cookie.name)).not.toContain('deleted');
+	});
+
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 

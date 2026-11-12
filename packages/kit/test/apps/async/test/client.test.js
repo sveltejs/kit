@@ -22,6 +22,41 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
 
+	for (const name of ['read', 'read_batch', 'read_live', 'read_prerender']) {
+		test(`${name} does not propagate fetched cookies`, async ({ page, context, baseURL }) => {
+			await context.addCookies([{ name: 'deleted', value: 'keep', url: baseURL }]);
+			await page.goto('/remote/fetch-cookies');
+			const initial_cookies = await context.cookies();
+
+			const [response] = await Promise.all([
+				page.waitForResponse((response) => new URL(response.url()).pathname.includes(`/${name}`)),
+				page.locator(`#${name}`).click()
+			]);
+			await expect(page.locator('#fetch-result')).toHaveText('set: unset');
+			expect(await response.headerValue('set-cookie')).toBeNull();
+			expect(await context.cookies()).toEqual(initial_cookies);
+		});
+	}
+
+	test('commands still propagate fetched cookies', async ({ page, context, baseURL }) => {
+		await context.addCookies([{ name: 'deleted', value: 'keep', url: baseURL }]);
+		await page.goto('/remote/fetch-cookies');
+		await page.locator('#mutate').click();
+		await expect(page.locator('#fetch-result')).toHaveText('set: a%20b');
+		expect(await context.cookies()).toEqual(
+			expect.arrayContaining([
+				expect.objectContaining({
+					name: 'injected',
+					value: 'a%20b',
+					httpOnly: false,
+					secure: false
+				}),
+				expect.objectContaining({ name: 'raw', value: '1' })
+			])
+		);
+		expect((await context.cookies()).map((cookie) => cookie.name)).not.toContain('deleted');
+	});
+
 	test('remote query responses are not cacheable', async ({ page }) => {
 		// the query is kicked off during SSR but fetched by the client after
 		// hydration, so we can observe the response headers on the wire
