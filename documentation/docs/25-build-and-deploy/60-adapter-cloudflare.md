@@ -90,9 +90,51 @@ During development, SvelteKit runs in Cloudflare's local `workerd` runtime, like
 
 Once you have built your site, run `vite preview` to test the built Worker in Cloudflare's local `workerd` runtime.
 
-> [!NOTE] [Durable Objects](https://developers.cloudflare.com/durable-objects/) and [Workflows](https://developers.cloudflare.com/workflows/), which require custom classes to be exported from your worker, are not currently supported. 
+> [!NOTE] To export [Durable Objects](https://developers.cloudflare.com/durable-objects/) or [Workflows](https://developers.cloudflare.com/workflows/) from your Worker, use a [custom Worker](#Custom-Worker).
 
 > [!LEGACY] If you were previously using `wrangler dev`, you may want to take a look at the [migration guide](https://developers.cloudflare.com/workers/vite-plugin/reference/migrating-from-wrangler-dev/).
+
+## Custom Worker
+
+To export [Durable Objects](https://developers.cloudflare.com/durable-objects/), [Workflows](https://developers.cloudflare.com/workflows/) or other handlers such as `scheduled` and `queue` from your Worker, point `entrypoint` in `cloudflare.config.ts` to your own Worker and call SvelteKit's request handler from its `fetch` handler:
+
+```ts
+/// file: cloudflare.config.ts
+// @errors: 2307
+import { bindings, defineConfig, exports } from '@cloudflare/config';
+
+export default defineConfig({
+	worker: {
+		name: 'my-app',
+		compatibilityDate: '2026-11-01',
+		entrypoint: './src/worker.ts',
+		exports: {
+			Counter: exports.durableObject({ storage: 'sqlite' })
+		},
+		env: {
+			COUNTER: bindings.durableObject({ worker: 'my-app', exportName: 'Counter' })
+		}
+	}
+});
+```
+
+```ts
+/// file: src/worker.ts
+// @errors: 2307
+import { DurableObject } from 'cloudflare:workers';
+import { fetch } from '@sveltejs/adapter-cloudflare/worker';
+
+export class Counter extends DurableObject {}
+
+export default {
+	fetch,
+	async scheduled() {
+		// ...
+	}
+};
+```
+
+Your Worker and SvelteKit are built together and run in the same Worker, during development too, where they run in Cloudflare's local `workerd` runtime. So modules that both import are only loaded once, and state that your Worker sets up, such as a client it creates, is visible to your SvelteKit code.
 
 ## Headers and redirects
 
