@@ -278,6 +278,48 @@ test.describe('remote function mutations', () => {
 		);
 	});
 
+	test('command endpoints reject non-POST methods before parsing the body', async ({
+		page,
+		baseURL
+	}) => {
+		await page.goto('/remote');
+
+		const [post] = await Promise.all([
+			page.waitForResponse((response) => response.url().endsWith('/set_count')),
+			page.click('#multiply-btn')
+		]);
+		await expect(page.locator('#command-result')).toHaveText('2');
+
+		const payload = post.request().postData() ?? '';
+		await Promise.all([
+			page.waitForResponse((response) => response.url().endsWith('/set_count_server_refresh')),
+			page.click('#reset-btn')
+		]);
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+
+		for (const method of ['GET', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']) {
+			// Empty/malformed bodies must not be parsed, and valid bodies must not run the command.
+			for (const data of method === 'GET' ? [undefined] : [undefined, 'not json', payload]) {
+				const response = await page.request.fetch(post.url(), {
+					method,
+					data,
+					headers: { origin: baseURL, 'content-type': 'application/json' }
+				});
+
+				// Remote errors use an HTTP 200 envelope at runtime, with the status in the error.
+				expect(response.status()).toBe(200);
+				expect(await response.json()).toEqual({
+					type: 'error',
+					error: { status: 405, message: 'Method Not Allowed' }
+				});
+			}
+		}
+
+		// Check the server state, not the cached zero while a query refresh is still pending.
+		await page.reload();
+		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
+	});
+
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
