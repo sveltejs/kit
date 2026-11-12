@@ -109,32 +109,6 @@ ${formatted_headers}
 `.trim();
 }
 
-/**
- * What the `cloudflare:workers` stub knows about each binding
- * @typedef {Record<string, { type: string; value?: unknown }>} SerializedBindings
- */
-
-export const BINDINGS_ENV_KEY = '__SVELTEKIT_CLOUDFLARE_BINDINGS';
-
-/**
- * Tells the `cloudflare:workers` stub which bindings exist through `process.env`, which the
- * threads that analyse and prerender the build inherit
- * @param {CloudflareConfig['worker']} worker
- */
-export function sync_bindings(worker) {
-	/** @type {SerializedBindings} */
-	const bindings = {};
-
-	for (const [key, binding] of Object.entries(worker.env ?? {})) {
-		bindings[key] =
-			binding.type === 'text' || binding.type === 'json'
-				? { type: binding.type, value: binding.value }
-				: { type: binding.type };
-	}
-
-	process.env[BINDINGS_ENV_KEY] = JSON.stringify(bindings);
-}
-
 /** @type {Map<string, string>} */
 const synced_vars = new Map();
 
