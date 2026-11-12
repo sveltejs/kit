@@ -1410,6 +1410,16 @@ test.describe('env', () => {
 		await clicknav('[href="/prerendering/env/dynamic"]');
 		await expect(page.locator('h2')).toHaveText('prerendering: false');
 	});
+
+	test('starts when a code splitting group contains a module that imports the runtime', async ({
+		page
+	}) => {
+		await page.goto('/code-splitting');
+		await expect(page.locator('#version')).toHaveText('TEST_VERSION');
+
+		await page.locator('button').click();
+		await expect(page.locator('h1')).toHaveText('other');
+	});
 });
 
 test.describe('Snapshots', () => {

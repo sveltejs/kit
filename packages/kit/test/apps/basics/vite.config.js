@@ -8,6 +8,26 @@ export default defineConfig({
 	build: {
 		minify: false
 	},
+	environments: {
+		client: {
+			build: {
+				rolldownOptions: {
+					output: {
+						codeSplitting: {
+							groups: [
+								{
+									name: 'shared',
+									test: /src[\\/]lib[\\/]nav\.js$/,
+									priority: 100,
+									minSize: 0
+								}
+							]
+						}
+					}
+				}
+			}
+		}
+	},
 	clearScreen: false,
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
