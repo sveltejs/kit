@@ -76,7 +76,7 @@ catalog:
   typescript: ^6.0.3
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
-  vite: ^8.2.1
+  vite: ^8.3.3
   wrangler: ^4.120.1
 
   # unit test deps that should be upgraded together
