@@ -37,11 +37,11 @@ describe('parse_route_id', () => {
 		},
 		'/blog/[[slug]]': {
 			pattern: /^\/blog(?:\/([^/]+))?\/?$/,
-			params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: true }]
+			params: [{ name: 'slug', matcher: undefined, optional: true, rest: false, chained: false }]
 		},
 		'/blog/[[slug=type]]/sub': {
 			pattern: /^\/blog(?:\/([^/]+))?\/sub\/?$/,
-			params: [{ name: 'slug', matcher: 'type', optional: true, rest: false, chained: true }]
+			params: [{ name: 'slug', matcher: 'type', optional: true, rest: false, chained: false }]
 		},
 		'/blog/[[slug]].json': {
 			pattern: /^\/blog\/([^/]*)?\.json\/?$/,
@@ -49,11 +49,15 @@ describe('parse_route_id', () => {
 		},
 		'/[...catchall]': {
 			pattern: /^(?:\/([^]*))?\/?$/,
-			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
+			params: [
+				{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: false }
+			]
 		},
 		'/foo/[...catchall]/bar': {
 			pattern: /^\/foo(?:\/([^]*))?\/bar\/?$/,
-			params: [{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: true }]
+			params: [
+				{ name: 'catchall', matcher: undefined, optional: false, rest: true, chained: false }
+			]
 		},
 		'/matched/[id=uuid]': {
 			pattern: /^\/matched\/([^/]+?)\/?$/,
@@ -89,20 +93,20 @@ describe('parse_route_id', () => {
 					matcher: 'positive-integer',
 					optional: true,
 					rest: false,
-					chained: true
+					chained: false
 				}
 			]
 		},
 		'/[...catch-all]': {
 			pattern: /^(?:\/([^]*))?\/?$/,
 			params: [
-				{ name: 'catch-all', matcher: undefined, optional: false, rest: true, chained: true }
+				{ name: 'catch-all', matcher: undefined, optional: false, rest: true, chained: false }
 			]
 		},
 		'/[...catch-all=some-matcher]': {
 			pattern: /^(?:\/([^]*))?\/?$/,
 			params: [
-				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: true }
+				{ name: 'catch-all', matcher: 'some-matcher', optional: false, rest: true, chained: false }
 			]
 		},
 		'/[x+5b]': {
@@ -126,6 +130,18 @@ describe('parse_route_id', () => {
 	}
 });
 
+test.each([
+	['/[[a]]/[b]/[...c]', [true, true, false]],
+	['/[[a]]/(group)/[[b]]', [true, false]],
+	['/[[a]]/static/[...b]', [false, false]],
+	['/[[a]]/prefix[...b]', [false, false]],
+	['/[[a]]/[[b]].json', [false, false]],
+	['/[[a]]/[b].json/[...c]', [true, false, false]],
+	['/[[a]]/[...b].json', [true, false]]
+])('parse_route_id records adjacent captures for %s', (id, expected) => {
+	expect(parse_route_id(id).params.map((param) => param.chained)).toEqual(expected);
+});
+
 describe('validate_route_id_params', () => {
 	test.each([
 		['/blog/[slug]', undefined],
@@ -141,6 +157,106 @@ describe('validate_route_id_params', () => {
 
 describe('exec', () => {
 	const tests = [
+		{
+			route: '/[[lang=doesntmatch]]/[[version=number]]/[slug]',
+			path: '/0/intro',
+			expected: { version: 0, slug: 'intro' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[...rest].json',
+			path: '/a/.json',
+			expected: { rest: 'a/' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/docs/[...path]',
+			path: '/docs/intro',
+			expected: { path: 'intro' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[a]]/[[b]]',
+			path: '/x/y',
+			expected: { a: 'x', b: 'y' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[a]]/[[b]]',
+			path: '/x',
+			expected: { a: 'x' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[a]]/[...rest]',
+			path: '/x/y/z',
+			expected: { a: 'x', rest: 'y/z' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/(group)/[[version]]/[slug]',
+			path: '/v2/intro',
+			expected: { version: 'v2', slug: 'intro' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[version]]/docs/[slug]',
+			path: '/v2/docs/intro',
+			expected: { version: 'v2', slug: 'intro' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[slug]/docs/[...path]',
+			path: '/x/y/docs/intro',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/pre[...path]',
+			path: '/fr/preintro',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[tab]].json',
+			path: '/fr/.json',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[tab].json/[...path]',
+			path: '/fr/tab.json/intro',
+			expected: undefined
+		},
+		{
+			route: '/pre[[lang=doesntmatch]]/[[tab]]',
+			path: '/prefr',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[x+2f]/[...path]',
+			path: '/fr/%2F/intro',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[...rest]',
+			path: '/a%252Fb/c%2Fd',
+			expected: { rest: 'a%2Fb/c/d' }
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[version]]/[slug]',
+			path: '/x/y/z',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/docs/[...path]',
+			path: '/fr/docs/intro',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/about/[[tab]]',
+			path: '/fr/about',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[a]]/[[b]]',
+			path: '/x/y/z',
+			expected: undefined
+		},
+		{
+			route: '/[[lang=doesntmatch]]/[[version]]/[slug]',
+			path: '/v2/intro',
+			expected: { version: 'v2', slug: 'intro' }
+		},
 		{
 			route: '/blog/[[slug]]/sub[[param]]',
 			path: '/blog/sub',
@@ -370,7 +486,8 @@ describe('exec', () => {
 			if (!match) throw new Error(`Failed to match ${path}`);
 			const actual = exec(match, params, {
 				matches: v.string(),
-				doesntmatch: v.never()
+				doesntmatch: v.never(),
+				number
 			});
 			expect(actual).toEqual(expected);
 		});
