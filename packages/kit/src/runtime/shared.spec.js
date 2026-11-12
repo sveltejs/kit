@@ -7,6 +7,7 @@ import {
 	validate_load_response
 } from './shared.js';
 import { init_transport } from '#app/internal/transport';
+import { SvelteKitError } from '@sveltejs/kit/internal';
 
 class Thing {
 	/** @param {number} a @param {number} z */
@@ -293,17 +294,46 @@ describe('stringify_command_arg', () => {
 
 describe('parse_remote_arg', () => {
 	test.each([
+		'{"name":"a"}',
+		'[{"name":1},"a"]',
+		Buffer.from('not json').toString('base64url'),
+		Buffer.from('{"name":"a"}').toString('base64url'),
+		Buffer.from('[["UnknownType",1],null]').toString('base64url'),
+		{},
+		false,
+		0
+	])('malformed argument %j is a framework 400', (payload) => {
+		expect(() => parse_remote_arg(/** @type {string} */ (payload))).toThrow(
+			expect.objectContaining({
+				constructor: SvelteKitError,
+				status: 400,
+				text: 'Bad Request',
+				message: expect.stringContaining('Could not deserialize remote function argument:')
+			})
+		);
+	});
+
+	test.each([
 		['[["__skram",1],null]', 'Invalid data for Map reviver'],
 		['[["__skram",1],[2],null]', 'Invalid data for Map reviver'],
 		['[["__skras",1],null]', 'Invalid data for Set reviver'],
 		['[["__skras",1],[2],null]', 'Invalid data for Set reviver'],
 		['[["__skraf",1],null]', 'Invalid data for File reviver']
 	])('malformed wire payload %s retains its opaque reviver failure', (payload, message) => {
-		expect(() => parse_remote_arg(Buffer.from(payload).toString('base64url'))).toThrow(message);
+		expect(() => parse_remote_arg(Buffer.from(payload).toString('base64url'))).toThrow(
+			expect.objectContaining({
+				status: 400,
+				text: 'Bad Request',
+				message: expect.stringContaining(message)
+			})
+		);
 	});
-	test('returns undefined for an empty payload', () => {
-		expect(parse_remote_arg('')).toBeUndefined();
-	});
+	test.each(['', null, undefined])(
+		'returns undefined for an empty/absent payload %j',
+		(payload) => {
+			expect(parse_remote_arg(/** @type {string} */ (payload))).toBeUndefined();
+		}
+	);
 
 	test('parses remote-arg reducer payloads without transport decoders', () => {
 		const parsed = parse_remote_arg(stringify_remote_arg({ z: 1, nested: { b: 2, a: 1 } }));
