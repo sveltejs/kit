@@ -427,6 +427,7 @@ export interface ServerMetadataRoute {
 	};
 	methods: Array<HttpMethod | '*'>;
 	prerender: PrerenderOption | undefined;
+	trailing_slash: TrailingSlash;
 	entries: string[] | undefined;
 }
 

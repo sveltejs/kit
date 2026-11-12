@@ -1,0 +1,22 @@
+{
+	"name": "test-vercel-trailing-slash",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"preview": "vite preview",
+		"build": "vite build",
+		"test:build": "vitest run build.test.js",
+		"test:platform": "playwright test"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-vercel": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	},
+	"type": "module"
+}
