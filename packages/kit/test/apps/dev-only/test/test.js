@@ -3,6 +3,8 @@ import { test } from '../../../utils.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { resolveConfig } from 'vite';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -103,6 +105,33 @@ https://svelte.dev/e/kit/server_only_import`);
 
 test.describe('Vite', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('normalizes route dependency scan globs and preserves user entries', async () => {
+		const root = path.resolve(import.meta.dirname, '..');
+		const config = await resolveConfig(
+			{
+				configFile: false,
+				root,
+				plugins: [
+					sveltekit({
+						// Resolving config writes a manifest; don't overwrite the running app's.
+						outDir: test.info().outputPath('output'),
+						// Exercise Windows separators even when this test runs on POSIX.
+						files: { routes: 'src\\routes' }
+					})
+				],
+				optimizeDeps: { entries: ['extra/**/*.js'] }
+			},
+			'serve'
+		);
+		const routes = path.resolve(root, 'src/routes').replaceAll('\\', '/');
+
+		expect(config.optimizeDeps.entries).toEqual([
+			'extra/**/*.js',
+			`${routes}/**/+*.{svelte,js,ts}`,
+			`!${routes}/**/+*server.*`
+		]);
+	});
 
 	test('optimizes +page.svelte dependencies', async ({ page }) => {
 		await page.goto('/');
