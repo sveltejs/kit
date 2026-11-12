@@ -18,7 +18,6 @@ import {
 	generate_redirects,
 	append_headers,
 	is_dev_or_build,
-	sync_bindings,
 	sync_process_env
 } from './utils.js';
 
@@ -223,7 +222,6 @@ export default function (options = {}) {
 										? false
 										: path.resolve(root, user_config.envDir ?? '.');
 								sync_process_env(cloudflare_config.worker, env_dir, env.mode);
-								sync_bindings(cloudflare_config.worker);
 							}
 						}
 					},

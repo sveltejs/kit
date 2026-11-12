@@ -2,7 +2,7 @@ import { env } from 'cloudflare:workers';
 
 export function GET() {
 	try {
-		env.KV.get('key');
+		env.FOO;
 		return new Response('no error');
 	} catch (e) {
 		return new Response(String(e));
