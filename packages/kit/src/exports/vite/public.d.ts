@@ -308,6 +308,8 @@ export interface Config extends VitePluginSvelteOptions {
 	paths?: {
 		/**
 		 * An absolute path that your app's files are served from. This is useful if your files are served from a storage bucket of some kind.
+		 *
+		 * The browser loads your app's JavaScript, CSS and fonts from this origin with CORS, so the server must respond with an `Access-Control-Allow-Origin` header that allows your app's origin.
 		 * @default ""
 		 */
 		assets?: '' | `http://${string}` | `https://${string}`;
