@@ -601,4 +601,24 @@ describe('CSPs in prod', () => {
 			"script-src 'self' 'report-sha256' 'report-sha384' 'report-sha512'"
 		);
 	});
+
+	test('quotes the other keyword sources', () => {
+		const csp = new Csp(
+			{
+				mode: 'nonce',
+				directives: {
+					'script-src': ['self', 'trusted-types-eval', 'unsafe-allow-redirects'],
+					'connect-src': ['self', 'unsafe-webtransport-hashes'],
+					'trusted-types': ['my-policy', 'allow-duplicates']
+				},
+				reportOnly: {}
+			},
+			{ prerender: false }
+		);
+
+		assert.equal(
+			csp.csp_provider.get_header(),
+			"script-src 'self' 'trusted-types-eval' 'unsafe-allow-redirects'; connect-src 'self' 'unsafe-webtransport-hashes'; trusted-types my-policy 'allow-duplicates'"
+		);
+	});
 });
