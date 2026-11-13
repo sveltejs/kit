@@ -427,43 +427,48 @@ async function create_http2_request(headers = {}) {
 
 for (const timing of ['before getRequest', 'before reading', 'while reading']) {
 	for (const content_length of [undefined, '10']) {
-		for (const response of [false, true]) {
-			test(`rejects HTTP/2 uploads cancelled ${timing} (content-length: ${content_length}, response: ${response})`, async () => {
-				const h2 = await create_http2_request(
-					content_length ? { 'content-length': content_length } : {}
-				);
-				try {
-					const closed = once(h2.req, 'close');
-					// close() sends END_STREAM before RST_STREAM; without content-length
-					// that is a valid body end. destroy() sends the reset directly.
-					const cancel = () =>
-						content_length ? h2.stream.close(constants.NGHTTP2_CANCEL) : h2.stream.destroy();
-					if (timing === 'before getRequest') {
-						cancel();
-						await closed;
-					}
-					const request = h2.request(response);
-					if (timing === 'before getRequest') {
-						expect(request.signal.aborted).toBe(true);
-					}
-					if (timing === 'before reading') {
-						cancel();
-						await closed;
-					}
-					const data = timing === 'while reading' ? once(h2.req, 'data') : null;
-					const text = expect(request.text()).rejects.toMatchObject({ name: 'AbortError' });
-					if (timing === 'while reading') {
-						await data;
-						cancel();
-					}
-					await text;
+		test(`rejects HTTP/2 uploads cancelled ${timing} (content-length: ${content_length})`, async () => {
+			const h2 = await create_http2_request(
+				content_length ? { 'content-length': content_length } : {}
+			);
+			try {
+				const closed = once(h2.req, 'close');
+				// close() sends END_STREAM before RST_STREAM; without content-length
+				// that is a valid body end. destroy() sends the reset directly.
+				const cancel = () =>
+					content_length ? h2.stream.close(constants.NGHTTP2_CANCEL) : h2.stream.destroy();
+				if (timing === 'before getRequest') {
+					cancel();
 					await closed;
-					expect(request.signal.aborted).toBe(true);
-				} finally {
-					await h2.close();
 				}
-			});
-		}
+				// no response, so only the request can abort the signal
+				const request = h2.request(false);
+				if (timing === 'before getRequest') {
+					expect(request.signal.aborted).toBe(true);
+				}
+				if (timing === 'before reading') {
+					cancel();
+					await closed;
+				}
+				// the signal must already be aborted when the body read rejects, not only on 'close'
+				let aborted_with_body = timing !== 'while reading';
+				h2.req.once('aborted', () => {
+					aborted_with_body = request.signal.aborted;
+				});
+				const data = timing === 'while reading' ? once(h2.req, 'data') : null;
+				const text = expect(request.text()).rejects.toMatchObject({ name: 'AbortError' });
+				if (timing === 'while reading') {
+					await data;
+					cancel();
+				}
+				await text;
+				await closed;
+				expect(aborted_with_body).toBe(true);
+				expect(request.signal.aborted).toBe(true);
+			} finally {
+				await h2.close();
+			}
+		});
 	}
 }
 
