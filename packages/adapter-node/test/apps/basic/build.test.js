@@ -30,3 +30,12 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('server-only assets ship with the server, and are not public', () => {
+	const build = path.join(app, 'build');
+	expect(fs.readFileSync(path.join(build, 'server/server-only/data.txt'), 'utf8')).toBe(
+		'server-only data'
+	);
+	const client = fs.readdirSync(path.join(build, 'client'), { recursive: true, encoding: 'utf8' });
+	expect(client.some((file) => file.endsWith('data.txt'))).toBe(false);
+});

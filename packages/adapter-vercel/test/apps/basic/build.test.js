@@ -70,3 +70,19 @@ test('process.cwd() is traced from the project directory', () => {
 	const function_dir = fs.realpathSync(`${output}/functions/process-cwd.func`);
 	assert.ok(fs.existsSync(`${function_dir}/asset.txt`));
 });
+
+test('server-only assets ship with each function, at their place in the server output', () => {
+	const function_dir = fs.realpathSync(`${output}/functions/server-only-asset.func`);
+	const files = fs.readdirSync(function_dir, { encoding: 'utf8', recursive: true });
+	const asset = files.find((file) => file.endsWith(path.join('server-only', 'data.txt')));
+	assert.ok(asset, 'server-only/data.txt is in the function');
+	// next to the server code that reads it with a relative URL
+	const server_dir = path.dirname(path.dirname(asset));
+	assert.ok(fs.existsSync(path.join(function_dir, server_dir, 'index.js')));
+	assert.equal(fs.readFileSync(path.join(function_dir, asset), 'utf8'), 'server-only data');
+});
+
+test('server-only assets are not public', () => {
+	const files = fs.readdirSync(`${output}/static`, { recursive: true, encoding: 'utf8' });
+	assert.ok(!files.some((file) => file.endsWith('data.txt')));
+});
