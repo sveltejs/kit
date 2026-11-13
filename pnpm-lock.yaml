@@ -868,15 +868,6 @@ importers:
         specifier: ~6.0.3
         version: 6.0.3
 
-  packages/kit/src/core/sync/write_types/test/digit-leading-param:
-    devDependencies:
-      '@typescript/native':
-        specifier: 'catalog:'
-        version: typescript@7.0.2
-      typescript:
-        specifier: ~6.0.3
-        version: 6.0.3
-
   packages/kit/src/core/sync/write_types/test/layout:
     devDependencies:
       '@typescript/native':
