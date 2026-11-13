@@ -826,6 +826,29 @@ function create_field_method(context, path, prop) {
 					base_props.type = type === 'file multiple' ? 'file' : type;
 				}
 
+				// a hidden input with no explicit value reads the field's own state (sveltejs/kit#15887)
+				if (type === 'hidden' && input_value === undefined) {
+					const value = read();
+					base_props.name =
+						get_type_prefix(type, is_array, value) +
+						key +
+						(is_array ? '[]' : '') +
+						'/' +
+						context.form_id;
+
+					return add_props(base_props, {
+						defaultValue: typeof value === 'boolean' ? (value ? 'on' : 'off') : value,
+						value: () => {
+							const current = read();
+							return typeof current === 'boolean'
+								? current
+									? 'on'
+									: 'off'
+								: String(current ?? '');
+						}
+					});
+				}
+
 				// Handle submit and hidden inputs
 				if (type === 'submit' || type === 'hidden') {
 					if (DEV) {
