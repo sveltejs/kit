@@ -81,7 +81,7 @@ The query returned from `getPosts` works as a [`Promise`](https://developer.mozi
 <h1>Recent posts</h1>
 
 <ul>
-	{#each await getPosts() as { title, slug }}
+	{#each await getPosts() as { title, slug } (slug)}
 		<li><a href="/blog/{slug}">{title}</a></li>
 	{/each}
 </ul>
@@ -107,7 +107,7 @@ While using `await` is recommended, as an alternative the query also has `loadin
 	<p>loading...</p>
 {:else}
 	<ul>
-		{#each query.current as { title, slug }}
+		{#each query.current as { title, slug } (slug)}
 			<li><a href="/blog/{slug}">{title}</a></li>
 		{/each}
 	</ul>
@@ -243,7 +243,7 @@ export const getWeather = query.batch(v.string(), async (cityIds) => {
 
 <h2>Weather</h2>
 
-{#each cities.slice(0, limit) as city}
+{#each cities.slice(0, limit) as city (city.id)}
 	<h3>{city.name}</h3>
 	<CityWeather weather={await getWeather(city.id)} />
 {/each}
@@ -846,7 +846,7 @@ When each instance should render different values, pass them as the second argum
 
 <h1>Todos</h1>
 
-{#each await getTodos() as todo}
+{#each await getTodos() as todo (todo.id)}
 	{const modify = modifyTodo.for(todo.id)}
 	<form {...modify}>
 		<input {...modify.fields.description.as('text', todo.description)} />
@@ -1193,6 +1193,8 @@ You can use `prerender` functions on pages that are otherwise dynamic, allowing 
 
 In the browser, prerendered data is saved using the [`Cache`](https://developer.mozilla.org/en-US/docs/Web/API/Cache) API. This cache survives page reloads, and will be cleared when the user first visits a new deployment of your app.
 
+> [!NOTE] `prerender` functions should not be used for private data, as they run at build time, and their results are served publicly as static files.
+
 ### Prerender arguments
 
 As with queries, prerender functions can accept an argument, which should be [validated](#query-Query-arguments) with a [Standard Schema](https://standardschema.dev/):
@@ -1346,6 +1348,83 @@ Note that some properties of `RequestEvent` are different inside remote function
 - you cannot set headers (other than writing cookies, and then only inside `form` and `command` functions)
 - inside `query` functions (including `query.batch` and `query.live`), accessing `route`, `params` or `url` throws an error. Queries are cached by their arguments and are not re-run when the user navigates, so results depending on these values would go stale without the cache noticing. Pass values from the page as arguments to the query instead. You can still derive trusted context from cookies or headers in the [`handle`](hooks#handle) hook and put it on `locals`, but note that for query requests `handle` sees the URL of the remote endpoint, not of the page
 - in `form` and `command` functions, `route`, `params` and `url` relate to the page the remote function was called from, _not_ the URL of the endpoint SvelteKit creates for the remote function. Never use them to determine whether or not a user is authorized to access certain data, as these values are part of the request which could be manipulated
+
+## Implications for authentication
+
+Since a remote function call can come from any page, the request event URL may be manipulated by the client. Therefore, you _must_ run your authentication checks directly inside your remote functions that need it. This check can be created as a shared helper:
+
+```js
+/// file: src/lib/server/auth.js
+// @filename: ambient.d.ts
+interface User {
+	id: string;
+	name: string;
+}
+
+declare namespace App {
+	interface Locals {
+		user: User | null;
+	}
+}
+
+// @filename: index.js
+// ---cut---
+import { redirect } from '@sveltejs/kit';
+import { getRequestEvent } from '$app/server';
+
+export function requireLogin() {
+	const { locals } = getRequestEvent();
+
+	if (!locals.user) redirect(303, '/login');
+
+	return locals.user;
+}
+```
+
+Now you can use it in whichever remote functions require authentication:
+
+```js
+/// file: src/lib/projects.remote.js
+// @filename: ambient.d.ts
+declare module '#lib/server/auth.js' {
+	export function requireLogin(): { id: string; name: string };
+}
+
+declare module '#lib/server/database.js' {
+	export function getProjects(
+		userId: string
+	): Promise<Array<{ id: string; name: string }>>;
+}
+
+// @filename: index.js
+// ---cut---
+import { query } from '$app/server';
+import { requireLogin } from '#lib/server/auth.js';
+import { getProjects } from '#lib/server/database.js';
+
+export const getMyProjects = query(async () => {
+	const user = requireLogin();
+
+	return await getProjects(user.id);
+});
+```
+
+> [!NOTE] `redirect` can't be used inside `command` functions, so commands should use [`error(401)`](@sveltejs-kit#error) instead.
+
+Now, any component that calls `getMyProjects` will only be rendered if the user is logged in, regardless of which page uses it:
+
+```svelte
+<!--- file: src/lib/ProjectList.svelte --->
+<script>
+	import { getMyProjects } from '$lib/projects.remote';
+</script>
+
+<ul>
+	{#each await getMyProjects() as project (project.id)}
+		<li><a href="/projects/{project.id}">{project.name}</a></li>
+	{/each}
+</ul>
+```
 
 ## Redirects
 
