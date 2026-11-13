@@ -225,6 +225,170 @@ test.describe('Navigation lifecycle functions', () => {
 		);
 	});
 
+	test('beforeNavigate prevents a link click while another navigation is pending', async ({
+		page,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/a"]');
+		await expect(page.locator('pre')).toHaveText('2 link');
+
+		await page.click('#release-b');
+		await expect(page.locator('h1')).toHaveText('b');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/during-navigation/b');
+	});
+
+	test('beforeNavigate prevents goto while another navigation is pending', async ({
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await app.goto('/navigation-lifecycle/before-navigate/a');
+		await expect(page.locator('pre')).toHaveText('2 goto');
+
+		await page.click('#release-b');
+		await expect(page.locator('h1')).toHaveText('b');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/during-navigation/b');
+	});
+
+	test('beforeNavigate prevents a shallow goto while another navigation is pending', async ({
+		page,
+		app,
+		baseURL
+	}) => {
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await app.goto('/navigation-lifecycle/before-navigate/during-navigation?x=1', {
+			shallow: true
+		});
+		await expect(page.locator('pre')).toHaveText('2 goto');
+
+		await page.click('#release-b');
+		await expect(page.locator('h1')).toHaveText('b');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/during-navigation/b');
+	});
+
+	/**
+	 * Holds route resolution for a `slow-route` link, so that its `beforeNavigate` runs only
+	 * after the navigation it interrupted has given up. Client-side resolution fetches from the
+	 * `reroute` hook, server-side resolution requests `__route.js`.
+	 * @param {import('@playwright/test').Page} page
+	 * @param {'slow-route' | 'slow-route-2'} name
+	 */
+	async function hold_slow_route(page, name = 'slow-route') {
+		/** @type {() => void} */
+		let requested = () => {};
+		/** @type {() => void} */
+		let resolve = () => {};
+		const route_requested = new Promise((fulfil) => (requested = () => fulfil(undefined)));
+		const route_resolved = new Promise((fulfil) => (resolve = () => fulfil(undefined)));
+		await page.route(
+			(url) =>
+				(url.pathname.endsWith('/during-navigation/route') &&
+					url.searchParams.get('for') === name) ||
+				url.pathname.includes(`/during-navigation/${name}/__route`),
+			async (route) => {
+				requested();
+				await route_resolved;
+				await route.continue();
+			}
+		);
+		return { route_requested, resolve };
+	}
+
+	test('cancelling a navigation that outlasted a loading one leaves the router idle', async ({
+		page
+	}) => {
+		const slow_route = await hold_slow_route(page);
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route"]');
+		await slow_route.route_requested;
+		await page.click('#release-b');
+		await expect(page.locator('#b')).toHaveText('aborted');
+
+		slow_route.resolve();
+		await expect(page.locator('pre')).toHaveText('2 link');
+		await expect(page.locator('#navigating')).toHaveText('idle');
+		await expect(page.locator('h1')).toHaveText('during navigation');
+	});
+
+	test('cancelling two navigations that outlasted a loading one leaves the router idle', async ({
+		page
+	}) => {
+		const first = await hold_slow_route(page, 'slow-route');
+		const second = await hold_slow_route(page, 'slow-route-2');
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/b"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route"]');
+		await first.route_requested;
+		await page.click(
+			'[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route-2"]'
+		);
+		await second.route_requested;
+
+		first.resolve();
+		await expect(page.locator('pre')).toHaveText('2 link');
+		await page.click('#release-b');
+		await expect(page.locator('#b')).toHaveText('aborted');
+
+		second.resolve();
+		await expect(page.locator('pre')).toHaveText('3 link');
+		await expect(page.locator('#navigating')).toHaveText('idle');
+		await expect(page.locator('h1')).toHaveText('during navigation');
+	});
+
+	test('cancelling a navigation that outlasted an onNavigate-held one ends the update', async ({
+		page
+	}) => {
+		const slow_route = await hold_slow_route(page);
+		await page.goto('/navigation-lifecycle/before-navigate/during-navigation');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/c"]');
+		await expect(page.locator('pre')).toHaveText('1 link');
+
+		await page.click('[href="/navigation-lifecycle/before-navigate/during-navigation/slow-route"]');
+		await slow_route.route_requested;
+		await page.click('#release-c');
+		await expect(page.locator('#c')).toHaveText('aborted');
+
+		slow_route.resolve();
+		await expect(page.locator('pre')).toHaveText('2 link');
+		await expect(page.locator('#navigating')).toHaveText('idle');
+
+		// outside a navigation, dev mode rejects `disableScrollHandling()`
+		if (process.env.DEV) {
+			await page.click('#disable-scroll-handling');
+			await expect(page.locator('#scroll-handling')).toHaveText('threw');
+		}
+	});
+
+	test('beforeNavigate prevents a redirect from refreshAll', async ({ page, baseURL }) => {
+		await page.goto('/navigation-lifecycle/before-navigate/refresh-redirect');
+
+		await page.click('button');
+		await expect(page.locator('pre')).toHaveText('1 goto');
+		expect(page.url()).toBe(baseURL + '/navigation-lifecycle/before-navigate/refresh-redirect');
+	});
+
 	test('beforeNavigate prevents unload', async ({ page }) => {
 		await page.goto('/navigation-lifecycle/before-navigate/prevent-navigation');
 		await page.click('h1'); // The browsers block attempts to prevent navigation on a frame that's never had a user gesture.
@@ -295,6 +459,21 @@ test.describe('Navigation lifecycle functions', () => {
 		await page.locator('a[href="/navigation-lifecycle/before-navigate/a"]').click();
 
 		await expect(page.locator('pre')).toHaveText('1 false link');
+	});
+
+	test('beforeNavigate runs once for a navigation that redirects', async ({ page }) => {
+		/** @type {string[]} */
+		const calls = [];
+		page.on('console', (msg) => {
+			if (msg.text().startsWith('beforeNavigate')) calls.push(msg.text());
+		});
+
+		await page.goto('/navigation-lifecycle/before-navigate/complete');
+		const complete = page.waitForEvent('console', (msg) => msg.text() === 'complete');
+		await page.click('a[href="/navigation-lifecycle/before-navigate/redirect"]');
+		await complete;
+
+		expect(calls).toEqual(['beforeNavigate /navigation-lifecycle/before-navigate/redirect']);
 	});
 
 	test("beforeNavigate's complete fulfills after redirect", async ({ page, clicknav }) => {
