@@ -45,13 +45,18 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
+		 * Options that only apply during `vite dev`
+		 * @since 3.3.0
+		 */
+		dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+		/**
 		 * Options for configuring and interacting with Vite
 		 * @since 3.0.0
 		 */
 		vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
 	}
 
-	export interface AdapterViteConfig {
+	export interface AdapterDevConfig {
 		/**
 		 * During `vite dev`, SvelteKit calls this function with each request it would render, after
 		 * serving static files, imported assets and the service worker. Use it to render requests in
@@ -76,6 +81,9 @@ declare module '@sveltejs/kit' {
 				resolve: (request: Request) => Promise<Response>;
 			}
 		) => Promise<Response>;
+	}
+
+	export interface AdapterViteConfig {
 		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
@@ -1002,7 +1010,7 @@ declare module '@sveltejs/kit' {
 	type ValidatedConfig = RecursiveRequired<
 		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
 	> & {
-		adapter: Adapter & { vite?: AdapterViteConfig };
+		adapter: Adapter & { dev?: AdapterDevConfig; vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
 		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
@@ -1188,7 +1196,7 @@ declare module '@sveltejs/kit/adapter/dev' {
 	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
 	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
 	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
-	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterViteConfig).
+	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterDevConfig).
 	 *
 	 * ```js
 	 * import { server } from '@sveltejs/kit/adapter/dev';

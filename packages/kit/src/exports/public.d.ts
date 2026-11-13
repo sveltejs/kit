@@ -58,13 +58,18 @@ export interface Adapter {
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
+	 * Options that only apply during `vite dev`
+	 * @since 3.3.0
+	 */
+	dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+	/**
 	 * Options for configuring and interacting with Vite
 	 * @since 3.0.0
 	 */
 	vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
 }
 
-export interface AdapterViteConfig {
+export interface AdapterDevConfig {
 	/**
 	 * During `vite dev`, SvelteKit calls this function with each request it would render, after
 	 * serving static files, imported assets and the service worker. Use it to render requests in
@@ -89,6 +94,9 @@ export interface AdapterViteConfig {
 			resolve: (request: Request) => Promise<Response>;
 		}
 	) => Promise<Response>;
+}
+
+export interface AdapterViteConfig {
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
