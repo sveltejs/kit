@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { afterAll, expect, test, vi } from 'vitest';
-import { check_spelling, write_if_changed } from './utils.js';
+import { check_spelling, replace_if_changed, write_if_changed } from './utils.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -85,4 +85,21 @@ test.describe('write', () => {
 
 		expect(fs.readFileSync(file, 'utf-8')).toBe('export const a = 1;');
 	});
+
+	test.skipIf(process.platform === 'win32')(
+		'replace_if_changed keeps its contents when another process writes the same file',
+		() => {
+			const file = path.join(dir, 'tsconfig.json');
+			fs.writeFileSync(file, '{"rootDirs":[".svelte-kit-a"]}');
+
+			// another process has truncated the file and is about to write shorter contents
+			const fd = fs.openSync(file, 'w');
+			replace_if_changed(file, '{"rootDirs":[".svelte-kit-ab"]}');
+			fs.writeSync(fd, '{"rootDirs":[]}');
+			fs.closeSync(fd);
+
+			expect(fs.readFileSync(file, 'utf-8')).toBe('{"rootDirs":[".svelte-kit-ab"]}');
+			expect(fs.readdirSync(dir)).not.toContainEqual(expect.stringMatching(/\.tmp$/));
+		}
+	);
 });

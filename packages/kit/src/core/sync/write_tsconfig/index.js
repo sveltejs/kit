@@ -2,7 +2,7 @@
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { write_if_changed } from '../utils.js';
+import { replace_if_changed } from '../utils.js';
 import {
 	ESSENTIAL_OPTIONS,
 	normalize_config,
@@ -96,7 +96,8 @@ function write_parent_tsconfig(root, id, config, transform) {
 
 	const normalized = normalize_config(out_file, config, transform);
 
-	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
+	// processes with a different `outDir` write different contents here
+	replace_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
 }
 
 /**
