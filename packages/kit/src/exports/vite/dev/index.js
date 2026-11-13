@@ -510,7 +510,7 @@ export async function dev(
 					throw new Error('Could not determine clientAddress');
 				};
 
-				const adapter_respond = svelte_config.adapter?.vite?.respond;
+				const adapter_respond = svelte_config.adapter?.dev?.respond;
 
 				/**
 				 * renders the request in this process
