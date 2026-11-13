@@ -1,0 +1,2 @@
+/redirect.txt /asset.txt 302
+/base/redirect.txt /base/asset.txt 302

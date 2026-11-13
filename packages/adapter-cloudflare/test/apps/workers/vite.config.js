@@ -4,7 +4,8 @@ import adapter from '@sveltejs/adapter-cloudflare';
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		sourcemap: true
 	},
 	plugins: [
 		sveltekit({
