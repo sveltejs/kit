@@ -290,6 +290,19 @@ export function resolve_params_missing(_values) {
 }
 
 /**
+ * Cannot use `resolve(...)` with an absolute or protocol-relative URL (got "%id%")
+ * @param {{ "id": string }} _values
+ * @returns {never}
+ */
+export function resolve_url_input(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('resolve_url_input', `Cannot use \`resolve(...)\` with an absolute or protocol-relative URL (got "${_values.id}")`, resolve_url_input);
+	}
+
+	throw new Error('https://svelte.dev/e/kit/resolve_url_input');
+}
+
+/**
  * Missing parameter `%name%` in route `%id%`
  * @param {{ "name": string; "id": string }} _values
  * @returns {never}

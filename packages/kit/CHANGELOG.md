@@ -1,5 +1,67 @@
 # @sveltejs/kit
 
+## 3.2.0
+
+### Minor Changes
+
+- feat: Add clickable links to remote function invocation in dev server logs ([#17547](https://github.com/sveltejs/kit/pull/17547))
+
+### Patch Changes
+
+- fix: reject URL inputs in `resolve` ([#17627](https://github.com/sveltejs/kit/pull/17627))
+
+- fix: respond with JSON instead of rendering the error page for a `__data.json` request to a missing route ([#17630](https://github.com/sveltejs/kit/pull/17630))
+
+- fix: resolve relative paths against the page URL in data requests when `paths.relative` is `true` ([#17630](https://github.com/sveltejs/kit/pull/17630))
+
+- fix: reject binary remote forms referencing files with an empty file-offset table as 400 Bad Request ([#17579](https://github.com/sveltejs/kit/pull/17579))
+
+- fix: correctly populate route and params for `afterNavigate` during hydration ([#17577](https://github.com/sveltejs/kit/pull/17577))
+
+- fix: include assets imported through dynamic imports, remote functions and param matchers in `builder.findServerAssets` so that `read` can find them ([#17505](https://github.com/sveltejs/kit/pull/17505))
+
+- fix: set `navigation.from` to `null` in `afterNavigate` on start when SSR is disabled ([#17587](https://github.com/sveltejs/kit/pull/17587))
+
+- fix: include remote function name and declaration file in schema validation failure logs ([#17495](https://github.com/sveltejs/kit/pull/17495))
+
+- fix: reuse SSR results of remote functions from packages during hydration in dev ([#17604](https://github.com/sveltejs/kit/pull/17604))
+
+- fix: remove empty type output directories for removed routes ([#17472](https://github.com/sveltejs/kit/pull/17472))
+
+- fix: use the UTF-8 byte length when reading inline assets ([#17590](https://github.com/sveltejs/kit/pull/17590))
+
+- chore: simplify a few server and build helpers ([#17531](https://github.com/sveltejs/kit/pull/17531))
+
+- fix: ignore the query string and hash of an imported asset's URL when using `read` ([#17507](https://github.com/sveltejs/kit/pull/17507))
+
+- fix: avoid reloading unrelated server modules when saving files during development ([#17462](https://github.com/sveltejs/kit/pull/17462))
+
+## 3.1.1
+
+### Patch Changes
+
+- fix: return a 400 response instead of throwing when `reroute` rewrites a malformed pathname ([`1d21a3b`](https://github.com/sveltejs/kit/commit/1d21a3b0beca23f044f02789926e011a904f8959))
+
+- fix: restore function snapshots on reload when SSR is disabled ([#17477](https://github.com/sveltejs/kit/pull/17477))
+
+- fix: prevent separate non-exported `query.batch` functions from sharing a batch ([`3529813`](https://github.com/sveltejs/kit/commit/352981356b22f775b0fbe6475fd19c7680ab5c9a))
+
+- fix: reuse the original `fetch` across dev server reloads ([#17548](https://github.com/sveltejs/kit/pull/17548))
+
+- fix: avoid adding a file watcher while loading `src/env` ([#17502](https://github.com/sveltejs/kit/pull/17502))
+
+- fix: parse remote form submissions in linear time ([`d593e7e`](https://github.com/sveltejs/kit/commit/d593e7e8960cd7e97e81cb834d7fa5c56d821944))
+
+- fix: prevent server-side route resolution from loading code from another origin for pathnames starting with `//` ([`dd63fd1`](https://github.com/sveltejs/kit/commit/dd63fd1a2e52221e2024e3c59d6d15f7f0afca64))
+
+- fix: preserve service worker sourcemaps when injecting env ([#17566](https://github.com/sveltejs/kit/pull/17566))
+
+- fix: prevent server-only modules from being imported into browser code via `src/params.js` ([`ae07803`](https://github.com/sveltejs/kit/commit/ae07803806f75b8b5662ae4ab92934ca1356fd84))
+
+- fix: avoid injecting a non-serializable TypeScript config callback by default ([#17512](https://github.com/sveltejs/kit/pull/17512))
+
+- fix: report actionable errors for remote modules in server-only locations ([#17567](https://github.com/sveltejs/kit/pull/17567))
+
 ## 3.1.0
 
 ### Minor Changes

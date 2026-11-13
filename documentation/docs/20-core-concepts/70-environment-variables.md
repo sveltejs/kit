@@ -1,5 +1,6 @@
 ---
 title: Environment variables
+tags: env
 ---
 
 Environment variables are values your app needs that exist separately from the app's source code. They allow you to use sensitive information like API keys and database credentials without storing them in version control.

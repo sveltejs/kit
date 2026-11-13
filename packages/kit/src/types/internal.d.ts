@@ -57,7 +57,7 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(status: number, request: Request): string;
+	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
 }
 
 /** the built `server/internal.js` */
@@ -491,7 +491,10 @@ export interface SSRManifest {
 	/**
 	 * hashed filename -> import to that file
 	 */
-	remotes: Record<string, () => Promise<{ default: Record<string, any> }>>;
+	remotes: Record<
+		string,
+		() => Promise<{ default: Record<string, ((...args: any[]) => any) & { __: RemoteInternals }> }>
+	>;
 	routes: SSRRoute[];
 	prerendered_routes: Set<string>;
 	matchers: () => Promise<Record<string, ParamMatcher>>;
@@ -610,10 +613,16 @@ export type BinaryFormMeta = {
 	validate_only?: boolean;
 };
 
-interface BaseRemoteInternals {
+export interface BaseRemoteInternals {
 	type: string;
 	id: string;
 	name: string;
+	file?: string;
+	dev_loc?: {
+		file: string;
+		line?: number;
+		column?: number;
+	};
 }
 
 export interface RemoteQueryInternals extends BaseRemoteInternals {
@@ -736,6 +745,10 @@ export interface RequestState {
 	 */
 	rerouted_url: string | null;
 	/**
+	 * Headers set with `setHeaders`, keyed by their lowercase name. They are applied to the response once `resolve` returns.
+	 */
+	readonly headers: Record<string, string>;
+	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
@@ -767,9 +780,9 @@ export interface RequestState {
 		requested: null | Map<string, Set<string>>;
 		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
 		ignored: null | Set<string>;
-		/** A map of query.batch ID to payloads requested for that batch within the same macrotask */
+		/** A map of query.batch internals to payloads requested for that batch within the same macrotask */
 		batches: null | Map<
-			string,
+			RemoteQueryBatchInternals,
 			Map<
 				string,
 				{

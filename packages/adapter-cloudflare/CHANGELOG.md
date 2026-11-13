@@ -1,5 +1,13 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.2
+
+### Patch Changes
+
+- fix: prevent prerendered paths from creating unintended rules in `_redirects` and `_routes.json` ([`4a62bee`](https://github.com/sveltejs/kit/commit/4a62beeca491147c78849cd696907561a4c91692))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.1
+
 ## 8.0.1
 
 ### Patch Changes

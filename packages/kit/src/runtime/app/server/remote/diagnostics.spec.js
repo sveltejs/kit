@@ -107,6 +107,20 @@ test('validator issues retain their class and identity', async () => {
 	expect(unexpected).toMatchObject({ status: 400, body: { message: 'Bad Request' } });
 });
 
+test('validator issues attach remote function metadata', async () => {
+	const issues = [{ message: 'user issue', path: ['name'] }];
+	const __ = { type: 'query', id: 'hash/myQuery', name: 'myQuery', file: 'src/lib/test.remote.js' };
+	const validate = create_validator(
+		{ '~standard': { validate: () => ({ issues }) } },
+		() => {},
+		() => __
+	);
+	const error = await Promise.resolve(validate('input')).catch((error) => error);
+	expect(error).toBeInstanceOf(ValidationError);
+	expect(error.issues).toBe(issues);
+	expect(error.remote).toEqual({ name: 'myQuery', file: 'src/lib/test.remote.js' });
+});
+
 test.each(['set', 'delete'])('queries cannot %s cookies', async (operation) => {
 	await expect(
 		run_remote_function(
