@@ -30,8 +30,14 @@ function get_raw_body(req, body_size_limit) {
 	return new ReadableStream({
 		start(controller) {
 			if (req.destroyed) {
-				// Close without cancelling, which would disturb the stream before Request can use it.
-				controller.close();
+				// Settle through the controller rather than cancelling, which would
+				// disturb the stream before Request can use it.
+				if (req.readableAborted) {
+					// same error Node emits when a request is aborted while we're listening
+					controller.error(Object.assign(new Error('aborted'), { code: 'ECONNRESET' }));
+				} else {
+					controller.close();
+				}
 				return;
 			}
 

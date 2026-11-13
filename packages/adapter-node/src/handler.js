@@ -71,6 +71,12 @@ const ssr = async (req, res) => {
 		return;
 	}
 
+	// the client disconnected before we got here, so there is nobody to respond to
+	if (request.signal.aborted) {
+		res.destroy();
+		return;
+	}
+
 	const response = await server.respond(request, {
 		platform: { req },
 		getClientAddress: () => {

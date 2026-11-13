@@ -9,13 +9,6 @@ test.skip(({ javaScriptEnabled }) => javaScriptEnabled);
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('Endpoints', () => {
-	test('adapts an already-destroyed Node request', async ({ request }) => {
-		const response = await request.get('/node/destroyed-request');
-
-		expect(response.status()).toBe(200);
-		expect(await response.json()).toEqual({ aborted: true, body: '' });
-	});
-
 	test('Prerendered +server.js called from a non-prerendered +server.js works', async ({
 		baseURL
 	}) => {

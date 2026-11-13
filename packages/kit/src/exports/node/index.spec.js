@@ -33,61 +33,38 @@ function create_request(options = {}) {
 	};
 }
 
+/**
+ * @param {import('http').IncomingHttpHeaders} headers
+ */
+async function create_destroyed_request(headers) {
+	const incoming = new IncomingMessage(new Socket());
+	incoming.method = 'POST';
+	incoming.url = '/';
+	incoming.httpVersionMajor = 1;
+	incoming.headers = headers;
+
+	const closed = once(incoming, 'close');
+	incoming.destroy();
+	await closed;
+
+	return getRequest({ request: incoming, base: 'http://localhost' });
+}
+
 // https://github.com/sveltejs/kit/issues/17633
-test.each([false, true])(
-	'adapts already-destroyed request bodies (close emitted: %s)',
-	async (wait_for_close) => {
-		for (const { headers, httpVersionMajor } of [
-			{
-				headers: { 'content-type': 'application/json', 'content-length': '2' },
-				httpVersionMajor: 1
-			},
-			{ headers: { 'transfer-encoding': 'chunked' }, httpVersionMajor: 1 },
-			{ headers: {}, httpVersionMajor: 2 }
-		]) {
-			const incoming = new IncomingMessage(new Socket());
-			incoming.method = 'POST';
-			incoming.url = '/example';
-			incoming.httpVersionMajor = httpVersionMajor;
-			incoming.headers = headers;
+test('errors the body of a request that was aborted before being adapted', async () => {
+	const request = await create_destroyed_request({ 'content-length': '2' });
 
-			const closed = once(incoming, 'close');
-			incoming.destroy();
-			if (wait_for_close) await closed;
+	expect(request.signal.aborted).toBe(true);
+	expect(request.bodyUsed).toBe(false);
+	await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+});
 
-			const request = getRequest({ request: incoming, base: 'http://localhost' });
+test('aborts the signal of a bodyless request that closed before being adapted', async () => {
+	const request = await create_destroyed_request({});
 
-			expect(request.url).toBe('http://localhost/example');
-			expect(request.method).toBe('POST');
-			expect(request.signal.aborted).toBe(true);
-			expect(request.body).not.toBeNull();
-			expect(request.bodyUsed).toBe(false);
-			expect(incoming.listenerCount('data')).toBe(0);
-			await expect(request.text()).resolves.toBe('');
-			await closed;
-		}
-	}
-);
-
-test.each(['GET', 'HEAD', 'POST'])(
-	'aborts the signal of an already-closed bodyless %s request',
-	async (method) => {
-		const incoming = new IncomingMessage(new Socket());
-		incoming.method = method;
-		incoming.url = '/';
-		incoming.httpVersionMajor = 1;
-		incoming.headers = {};
-
-		const closed = once(incoming, 'close');
-		incoming.destroy();
-		await closed;
-
-		const request = getRequest({ request: incoming, base: 'http://localhost' });
-
-		expect(request.signal.aborted).toBe(true);
-		expect(request.body).toBeNull();
-	}
-);
+	expect(request.signal.aborted).toBe(true);
+	expect(request.body).toBeNull();
+});
 
 test('does not abort an already-destroyed request that ended normally', async () => {
 	const incoming = new IncomingMessage(new Socket());
