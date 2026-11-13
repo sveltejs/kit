@@ -6,7 +6,7 @@ import { isRedirect } from '@sveltejs/kit';
 import * as paths from '#app/paths';
 import { relative } from '$app/paths/internal/server';
 import { escape_html } from '../../../utils/escape.js';
-import { serialize_data } from './serialize_data.js';
+import { serialize_data, sort_fetched } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
 import { Csp } from './csp.js';
 import { uneval_action_response } from './actions.js';
@@ -329,7 +329,7 @@ export async function render_response({
 	const { data, chunks } = data_serializer.get_data(csp);
 
 	if (page_config.ssr && page_config.csr) {
-		body += `\n\t\t\t${fetched
+		body += `\n\t\t\t${sort_fetched(fetched)
 			.map((item) =>
 				serialize_data(item, resolve_opts.filterSerializedResponseHeaders, is_prerendering(state))
 			)
