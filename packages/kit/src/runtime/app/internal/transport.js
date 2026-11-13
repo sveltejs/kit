@@ -26,6 +26,12 @@ export let decoders = {};
 export let has_custom_transporters = false;
 
 /**
+ * The context passed to `decode` for a value that didn't come from a remote function call
+ * @type {Readonly<{ call: undefined }>}
+ */
+const NO_CALL = Object.freeze({ call: undefined });
+
+/**
  *
  * @param {Transport} transport
  */
@@ -45,7 +51,10 @@ export function init_transport(transport) {
 	};
 
 	encoders = Object.fromEntries(transporters.map(([k, v]) => [k, v.encode]));
-	decoders = Object.fromEntries(transporters.map(([k, v]) => [k, v.decode]));
+	// values parsed here never come from a remote function call on the client
+	decoders = Object.fromEntries(
+		transporters.map(([k, v]) => [k, (/** @type {any} */ data) => v.decode(data, NO_CALL)])
+	);
 
 	uneval = (data) => devalue.uneval(data, replacer);
 	stringify = (data) => devalue.stringify(data, encoders);

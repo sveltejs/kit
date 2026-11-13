@@ -1,8 +1,11 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '#app/paths';
-import { app } from '../../client.js';
 import { notify_version } from '#app/state/client';
-import { handle_side_channel_response } from '../shared.svelte.js';
+import {
+	create_call_decoders,
+	handle_side_channel_response,
+	next_request_id
+} from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop } from '../../../../utils/functions.js';
@@ -23,6 +26,9 @@ export async function* create_live_iterator(
 	on_connect = noop
 ) {
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+
+	// each connection is one call, so every value it streams shares the call's id
+	const decoders = create_call_decoders(next_request_id());
 
 	const response = await fetch(url, {
 		headers: { accept: 'text/event-stream' },
@@ -59,7 +65,7 @@ export async function* create_live_iterator(
 
 		for await (const node of read_sse(reader)) {
 			if (node.type === 'result') {
-				yield devalue.parse(node.result, app.decoders);
+				yield devalue.parse(node.result, decoders);
 				continue;
 			}
 

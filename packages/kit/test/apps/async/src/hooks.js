@@ -4,6 +4,6 @@ import { Foo } from '#lib';
 export const transport = {
 	Foo: {
 		encode: (value) => value instanceof Foo && [value.message],
-		decode: ([message]) => new Foo(message)
+		decode: ([message], { call }) => new Foo(message, call)
 	}
 };
