@@ -182,10 +182,10 @@ function get_origin(headers) {
 		normalise_header(protocol_header, headers[protocol_header]) || 'https'
 	);
 
-	// this helps us avoid host injections through the protocol header
-	if (protocol.includes(':')) {
+	// this helps us avoid host injections and unsupported schemes through the protocol header
+	if (protocol !== 'http' && protocol !== 'https') {
 		throw new Error(
-			`The ${protocol_header} header specified ${protocol} which is an invalid because it includes \`:\`. It should only contain the protocol scheme (e.g. \`https\`)`
+			`The ${protocol_header} header specified ${protocol}, which is not supported. It should be \`http\` or \`https\``
 		);
 	}
 
