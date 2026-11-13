@@ -2,26 +2,28 @@
 import { describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
 import { HandledHttpError, HttpError } from '@sveltejs/kit/internal';
+import { set_remote_env } from '@sveltejs/kit/internal/client';
 
 // Mock `client.js` because the real one pulls in the SvelteKit
 // router/hydration machinery and resolves `$app/paths` to a server-side
 // virtual module that only exists during a real SvelteKit build. We only need
-// the cache `Map`s and a stub `app` for the instances' interactions.
-vi.mock(new URL('../client.js', import.meta.url).pathname, async () => {
-	const { HttpError } = await import('@sveltejs/kit/internal');
-	return {
-		query_map: new Map(),
-		query_responses: {},
-		live_query_map: new Map(),
-		prerender_responses: {},
-		_goto: () => {},
-		handle_error: (/** @type {any} */ error) =>
-			Promise.resolve(
-				error instanceof HttpError
-					? error.body
-					: { message: error?.message ?? String(error), status: 500 }
-			)
-	};
+// the cache `Map`s for the instances' interactions.
+vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
+	query_map: new Map(),
+	query_responses: {},
+	live_query_map: new Map(),
+	prerender_responses: {}
+}));
+
+set_remote_env({
+	page: { url: new URL('http://localhost/') },
+	goto: () => Promise.resolve(),
+	handle_error: (error) =>
+		Promise.resolve(
+			error instanceof HttpError
+				? error.body
+				: { message: /** @type {any} */ (error)?.message ?? String(error), status: 500 }
+		)
 });
 
 // `prerender.svelte.js` references the `__SVELTEKIT_DEV__` build-time constant at

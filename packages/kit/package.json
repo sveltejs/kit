@@ -145,6 +145,9 @@
 			"workerd": "./src/exports/internal/server/index.js",
 			"browser": "./src/exports/internal/client.js",
 			"default": "./src/exports/internal/server/index.js"
+		},
+		"#internal/remote-env": {
+			"default": "./src/exports/internal/remote-env.js"
 		}
 	},
 	"exports": {
@@ -164,9 +167,21 @@
 		"./internal/types": {
 			"types": "./src/exports/internal/types.d.ts"
 		},
+		"./internal/client": {
+			"types": "./types/index.d.ts",
+			"import": "./src/exports/internal/client.js"
+		},
 		"./internal/server": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/internal/server/index.js"
+		},
+		"./internal/remote-client": {
+			"types": "./types/index.d.ts",
+			"import": "./src/runtime/client/remote-functions/index.js"
+		},
+		"./internal/remote-server": {
+			"types": "./types/index.d.ts",
+			"import": "./src/runtime/server/remote-host.js"
 		},
 		"./adapter": {
 			"types": "./types/index.d.ts",

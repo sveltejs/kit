@@ -6,14 +6,8 @@ import { DEV } from 'esm-env';
 import * as e from '../../../messages/client-errors.js';
 import * as w from '../../../messages/client-warnings.js';
 
-import {
-	query_responses,
-	_goto,
-	set_nearest_error_page,
-	handle_error,
-	refreshAll
-} from '../client.js';
-import { page } from '#app/state/client';
+import { query_responses, set_nearest_error_page } from '../client.js';
+import { on_remote_reset, remote_env, reset_generation } from '#internal/remote-env';
 import { tick } from 'svelte';
 import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
@@ -61,6 +55,17 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
 }
 
 /**
+ * Resets the state of each remote form, keyed by its id so that evaluating
+ * a remote module again replaces the entry instead of adding another
+ * @type {Map<string, () => void>}
+ */
+const form_resetters = new Map();
+
+on_remote_reset(() => {
+	for (const reset of form_resetters.values()) reset();
+});
+
+/**
  * Client-version of the `form` function from `$app/server`.
  * @template {RemoteFormInput} T
  * @template U
@@ -87,11 +92,11 @@ export function form(id) {
 
 		/** @returns {string} */
 		function get_action() {
-			if (page.url.search !== cached_search) {
-				cached_search = page.url.search;
+			if (remote_env.page.url.search !== cached_search) {
+				cached_search = remote_env.page.url.search;
 
-				if (page.url.search) {
-					const params = new URLSearchParams(page.url.search);
+				if (remote_env.page.url.search) {
+					const params = new URLSearchParams(remote_env.page.url.search);
 					params.delete('/remote');
 					cached_query = params.toString();
 				} else {
@@ -155,6 +160,22 @@ export function form(id) {
 
 		let submitted = $state(false);
 
+		if (key === undefined) {
+			// the base instance lives as long as the module, so it is reset in place,
+			// while keyed instances are dropped and created again by the next `for(key)`
+			form_resetters.set(id, () => {
+				instances.clear();
+				input = {};
+				raw_issues = [];
+				result = undefined;
+				touched = {};
+				dirty = {};
+				can_validate = {};
+				submitted = false;
+				pending_count = 0;
+			});
+		}
+
 		/** @type {InternalRemoteFormIssue[] | null} */
 		let unread_issues = null;
 
@@ -215,6 +236,9 @@ export function form(id) {
 				entry.count++;
 			}
 
+			// a submission from before a reset must not write into the state of the next test
+			const generation = reset_generation;
+
 			let overrides = /** @type {Array<() => void> | null} */ (null);
 
 			/** @type {Set<string> | null} */
@@ -257,6 +281,8 @@ export function form(id) {
 								refreshes
 							);
 
+							if (generation !== reset_generation) return false;
+
 							({ issues: raw_issues = [], result } = response._ ?? {});
 
 							// if the developer took control of updates via `.updates(...)` (even with
@@ -265,7 +291,7 @@ export function form(id) {
 
 							if (response.redirect) {
 								// Use internal version to allow redirects to external URLs
-								await _goto(response.redirect, {
+								await remote_env.goto(response.redirect, {
 									refreshAll: should_refresh
 								});
 								return true;
@@ -276,7 +302,7 @@ export function form(id) {
 							if (succeeded) {
 								fail_unhandled_refreshes(refreshes);
 								if (should_refresh) {
-									await refreshAll();
+									await remote_env.refresh_all();
 								}
 							} else {
 								if (DEV) {
@@ -286,8 +312,10 @@ export function form(id) {
 
 							return succeeded;
 						} catch (e) {
-							result = undefined;
-							raw_issues = [];
+							if (generation === reset_generation) {
+								result = undefined;
+								raw_issues = [];
+							}
 							throw e;
 						} finally {
 							overrides?.forEach((fn) => fn());
@@ -295,7 +323,7 @@ export function form(id) {
 							void tick().then(() => {
 								if (entry) {
 									entry.count--;
-									if (entry.count === 0) {
+									if (entry.count === 0 && instances.get(key) === entry) {
 										instances.delete(key);
 									}
 								}
@@ -463,6 +491,8 @@ export function form(id) {
 
 				submitted = true;
 
+				const generation = reset_generation;
+
 				try {
 					// Increment pending count immediately so that `pending` reflects
 					// the in-progress state during async preflight validation
@@ -473,14 +503,16 @@ export function form(id) {
 
 					await enhance_callback(create_enhance_callback_instance(form, form_data));
 				} catch (e) {
-					const error = await handle_error(e, {
+					if (generation !== reset_generation) return;
+
+					const error = await remote_env.handle_error(e, {
 						params: {},
 						route: { id: null },
 						url: new URL(location.href)
 					});
 					void set_nearest_error_page(error);
 				} finally {
-					pending_count--;
+					if (generation === reset_generation) pending_count--;
 				}
 			};
 
@@ -617,12 +649,13 @@ export function form(id) {
 					}
 
 					submitted = true;
+					const generation = reset_generation;
 					pending_count++;
 
 					const submission = submit(form_data, true);
 
 					const decrement = () => {
-						pending_count--;
+						if (generation === reset_generation) pending_count--;
 					};
 					void submission.then(decrement, decrement);
 
@@ -690,6 +723,7 @@ export function form(id) {
 				/** @type {RemoteForm<any, any>['validate']} */
 				value: async ({ all = false, preflightOnly = false } = {}) => {
 					const id = ++validate_id;
+					const generation = reset_generation;
 
 					// wait a tick in case the user is calling validate() right after set() which takes time to propagate
 					await tick();
@@ -733,7 +767,7 @@ export function form(id) {
 							}
 						);
 
-						if (validate_id !== id) {
+						if (validate_id !== id || generation !== reset_generation) {
 							return;
 						}
 

@@ -9,6 +9,7 @@
 import { DEV } from 'esm-env';
 import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError, HandledHttpError } from '@sveltejs/kit/internal';
+import { on_remote_reset, set_remote_env } from '#internal/remote-env';
 import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
@@ -53,7 +54,14 @@ import {
 	fetch_cache_url
 } from '../shared.js';
 
-import { page, updated, notify_version, update_page, set_navigation } from '#app/state/client';
+import {
+	page,
+	navigating,
+	updated,
+	notify_version,
+	update_page,
+	set_navigation
+} from '#app/state/client';
 import { payload } from './payload.js';
 import {
 	add_data_suffix,
@@ -261,6 +269,11 @@ export const query_responses = {};
  * @type {Record<string, RemoteFunctionDataNode>}
  */
 export const prerender_responses = {};
+
+on_remote_reset(() => {
+	for (const key in query_responses) delete query_responses[key];
+	for (const key in prerender_responses) delete prerender_responses[key];
+});
 
 /** @type {Array<((url: URL) => boolean)>} */
 const invalidated = [];
@@ -485,6 +498,17 @@ async function _start(_app, _target, data) {
 	app = _app;
 
 	init_transport(app.hooks.transport ?? {});
+
+	set_remote_env({
+		decoders: app.decoders,
+		encoders: app.encoders,
+		page,
+		navigating,
+		goto: _goto,
+		refresh_all: refreshAll,
+		handle_error,
+		notify_version
+	});
 
 	await _app.hooks.init?.();
 
