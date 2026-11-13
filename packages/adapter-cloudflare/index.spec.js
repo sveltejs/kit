@@ -7,6 +7,7 @@ const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
+	unstable_getVarsForDev: vi.fn(() => ({})),
 	unstable_readConfig: vi.fn()
 }));
 
