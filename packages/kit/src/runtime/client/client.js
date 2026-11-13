@@ -3352,6 +3352,9 @@ function _start_router() {
 			current_navigation_index = navigation_index;
 			current_reset_index = reset_index;
 
+			// The entry may come from an earlier document that never persisted its history info.
+			set_history_options(current_history_index, history_metadata);
+
 			const token = navigation_token;
 			const shallow_intent = shallow_url
 				? await get_navigation_intent(shallow_url, false)
