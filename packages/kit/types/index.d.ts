@@ -53,6 +53,15 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterViteConfig {
 		/**
+		 * By default, SvelteKit creates a Node preview server to serve the build
+		 * output during `vite preview`. Set this option to `true` when the adapter
+		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+		 * previewing the build output on its own.
+		 * @default false
+		 * @since 3.3.0
+		 */
+		customPreview?: boolean;
+		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
 		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
