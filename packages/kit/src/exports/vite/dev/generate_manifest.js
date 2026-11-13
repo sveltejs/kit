@@ -1,6 +1,6 @@
 /** @import { EnvironmentModuleNode, ErrorPayload, ViteDevServer } from 'vite' */
 /** @import { ModuleRunner } from 'vite/module-runner' */
-/** @import { ManifestData, SSRManifest, SSRNode, RemoteChunk, UniversalNode, ValidatedConfig } from 'types' */
+/** @import { DevManifestData, DevManifestHost, ManifestData, SSRManifest, RemoteChunk, ValidatedConfig } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { get_mime_lookup, get_runtime_base } from '../../../core/utils.js';
@@ -8,6 +8,7 @@ import { from_fs, to_fs } from '../../../utils/vite.js';
 import { compact } from '../../../utils/array.js';
 import * as e from '../../../messages/build-errors.js';
 import { styleText } from 'node:util';
+import { create_dev_manifest } from '../../../utils/dev_manifest.js';
 
 // vite-specifc queries that we should skip handling for css urls
 const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
@@ -31,10 +32,23 @@ export function generate_manifest(
 	root,
 	get_remotes
 ) {
+	return create_dev_manifest(
+		get_manifest_data(svelte_config, manifest_data, root),
+		create_host(vite, vite_dev_server, runner, manifest_data, root, get_remotes)
+	);
+}
+
+/**
+ * @param {ValidatedConfig} svelte_config
+ * @param {ManifestData} manifest_data
+ * @param {string} root
+ * @returns {DevManifestData}
+ */
+function get_manifest_data(svelte_config, manifest_data, root) {
 	return {
 		app_dir: svelte_config.appDir,
 		app_path: svelte_config.appDir,
-		assets: new Set(manifest_data.assets.map((asset) => asset.file)),
+		assets: manifest_data.assets.map((asset) => asset.file),
 		mime_types: get_mime_lookup(manifest_data),
 		client: {
 			start: `${get_runtime_base(root)}/client/entry.js`,
@@ -72,129 +86,73 @@ export function generate_manifest(
 							})
 						)
 		},
-		server_assets: new Proxy(
-			{},
-			{
-				has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
-				get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
-			}
-		),
-		nodes: manifest_data.nodes.map((node, index) => {
-			return async () => {
-				const result = /** @type {SSRNode} */ ({});
-				result.index = index;
-				result.universal_id = node.universal;
-				result.server_id = node.server;
-
-				// these are unused in dev, but it's easier to include them
-				result.imports = [];
-				result.stylesheets = [];
-				result.fonts = [];
-
-				/** @type {EnvironmentModuleNode[]} */
-				const module_nodes = [];
-
-				if (node.component) {
-					result.component = async () => {
-						const { module_node, module } = await resolve(
-							vite,
-							vite_dev_server,
-							runner,
-							/** @type {string} */ (node.component)
-						);
-
-						module_nodes.push(module_node);
-
-						return module.default;
-					};
-				}
-
-				if (node.universal) {
-					if (node.page_options?.ssr === false) {
-						result.universal = /** @type {UniversalNode} */ (node.page_options);
-					} else {
-						// TODO: explain why the file was loaded on the server if we fail to load it
-						const { module, module_node } = await resolve(
-							vite,
-							vite_dev_server,
-							runner,
-							node.universal
-						);
-						module_nodes.push(module_node);
-						result.universal = module;
-					}
-				}
-
-				if (node.server) {
-					const { module } = await resolve(vite, vite_dev_server, runner, node.server);
-					result.server = module;
-				}
-
-				// in dev we inline all styles to avoid FOUC. this gets populated lazily so that
-				// components/stylesheets loaded via import() during `load` are included
-				result.inline_styles = async () => {
-					/** @type {Set<EnvironmentModuleNode>} */
-					const deps = new Set();
-
-					for (const module_node of module_nodes) {
-						await find_deps(vite_dev_server, module_node, deps);
-					}
-
-					/** @type {Record<string, string>} */
-					const styles = {};
-
-					for (const dep of deps) {
-						if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-							const inlineCssUrl = dep.url.includes('?')
-								? dep.url.replace('?', '?inline&')
-								: dep.url + '?inline';
-							try {
-								const mod = await runner.import(inlineCssUrl);
-								styles[dep.url] = mod.default;
-							} catch {
-								// this can happen with dynamically imported modules, I think
-								// because the Vite module graph doesn't distinguish between
-								// static and dynamic imports? TODO investigate, submit fix
-							}
-						}
-					}
-
-					return styles;
-				};
-
-				return result;
-			};
-		}),
-		prerendered_routes: new Set(),
-		get remotes() {
-			return Object.fromEntries(
-				get_remotes().map((remote) => [
-					remote.hash,
-					() => runner.import(remote.file).then((module) => ({ default: module }))
-				])
-			);
-		},
+		// the same objects, since sync updates their page options in place
+		nodes: manifest_data.nodes,
 		routes: compact(
 			manifest_data.routes.map((route) => {
 				if (!route.page && !route.endpoint) return null;
-
-				const endpoint = route.endpoint;
 
 				return {
 					id: route.id,
 					pattern: route.pattern,
 					params: route.params,
 					page: route.page,
-					endpoint: endpoint
-						? async () => {
-								const url = path.resolve(root, endpoint.file);
-								return await loud_ssr_load_module(vite, vite_dev_server, runner, url);
-							}
-						: null,
-					endpoint_id: endpoint?.file
+					endpoint: route.endpoint?.file ?? null
 				};
 			})
-		),
+		)
+	};
+}
+
+/**
+ * loads modules with the module runner, and reads what it needs from the vite dev server directly
+ * @param {typeof import('vite')} vite
+ * @param {ViteDevServer} vite_dev_server
+ * @param {ModuleRunner} runner
+ * @param {ManifestData} manifest_data
+ * @param {string} root
+ * @param {() => RemoteChunk[]} get_remotes
+ * @returns {DevManifestHost}
+ */
+function create_host(vite, vite_dev_server, runner, manifest_data, root, get_remotes) {
+	/** @param {string} file */
+	const to_url = (file) => (file.startsWith('..') ? to_fs(path.resolve(file)) : `/${file}`);
+
+	return {
+		load: (file) => loud_ssr_load_module(vite, vite_dev_server, runner, to_url(file)),
+		inline_styles: async (files) => {
+			/** @type {Set<EnvironmentModuleNode>} */
+			const deps = new Set();
+
+			for (const file of files) {
+				const url = to_url(file);
+				const module_node = await vite_dev_server.environments.ssr.moduleGraph.getModuleByUrl(url);
+				if (!module_node) throw new Error(`Could not find node for ${url}`);
+
+				await find_deps(vite_dev_server, module_node, deps);
+			}
+
+			/** @type {Record<string, string>} */
+			const styles = {};
+
+			for (const dep of deps) {
+				if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
+					const inlineCssUrl = dep.url.includes('?')
+						? dep.url.replace('?', '?inline&')
+						: dep.url + '?inline';
+					try {
+						const mod = await runner.import(inlineCssUrl);
+						styles[dep.url] = mod.default;
+					} catch {
+						// this can happen with dynamically imported modules, I think
+						// because the Vite module graph doesn't distinguish between
+						// static and dynamic imports? TODO investigate, submit fix
+					}
+				}
+			}
+
+			return styles;
+		},
 		matchers: async () => {
 			if (!manifest_data.params) return {};
 
@@ -206,6 +164,21 @@ export function generate_manifest(
 			}
 
 			return module.params;
+		},
+		server_assets: new Proxy(
+			{},
+			{
+				has: (_, /** @type {string} */ file) => fs.existsSync(from_fs(file)),
+				get: (_, /** @type {string} */ file) => fs.statSync(from_fs(file)).size
+			}
+		),
+		get remotes() {
+			return Object.fromEntries(
+				get_remotes().map((remote) => [
+					remote.hash,
+					() => runner.import(remote.file).then((module) => ({ default: module }))
+				])
+			);
 		}
 	};
 }
@@ -246,23 +219,6 @@ export async function loud_ssr_load_module(vite, vite_dev_server, runner, url) {
 
 		throw err;
 	}
-}
-
-/**
- * @param {typeof import('vite')} vite
- * @param {ViteDevServer} vite_dev_server
- * @param {ModuleRunner} runner
- * @param {string} id
- */
-async function resolve(vite, vite_dev_server, runner, id) {
-	const url = id.startsWith('..') ? to_fs(path.resolve(id)) : `/${id}`;
-
-	const module = await loud_ssr_load_module(vite, vite_dev_server, runner, url);
-
-	const module_node = await vite_dev_server.environments.ssr.moduleGraph.getModuleByUrl(url);
-	if (!module_node) throw new Error(`Could not find node for ${url}`);
-
-	return { module, module_node, url };
 }
 
 /**

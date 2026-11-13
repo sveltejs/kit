@@ -504,6 +504,28 @@ export interface SSRManifest {
 	server_assets: Record<string, number>;
 }
 
+/** what the dev manifest is created from, which can be serialised */
+export interface DevManifestData {
+	app_dir: string;
+	app_path: string;
+	assets: string[];
+	mime_types: Record<string, string>;
+	client: SSRManifest['client'];
+	nodes: Array<Pick<PageNode, 'component' | 'universal' | 'server' | 'page_options'>>;
+	routes: Array<Omit<SSRRoute, 'endpoint' | 'endpoint_id'> & { endpoint: string | null }>;
+}
+
+/** loads the modules of the dev manifest, and reads what only the vite dev server knows */
+export interface DevManifestHost {
+	/** loads a module by its path relative to the project root */
+	load(file: string): Promise<Record<string, any>>;
+	/** the css that the given modules depend on, keyed by url */
+	inline_styles(files: string[]): Promise<Record<string, string>>;
+	matchers: SSRManifest['matchers'];
+	server_assets: SSRManifest['server_assets'];
+	readonly remotes: SSRManifest['remotes'];
+}
+
 export interface SSRNode {
 	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;
