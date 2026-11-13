@@ -1429,3 +1429,71 @@ Now, any component that calls `getMyProjects` will only be rendered if the user 
 ## Redirects
 
 Inside `query`, `form` and `prerender` functions it is possible to use the [`redirect(...)`](@sveltejs-kit#redirect) function. It is *not* possible inside `command` functions, as you should avoid redirecting here. (If you absolutely have to, you can return a `{ redirect: location }` object and deal with it in the client.)
+
+## Testing
+
+Calling a remote function outside a request, for example in a [Vitest](https://vitest.dev) test, throws an error. Use [`withRequestEvent`]($app-server#withRequestEvent) to run the call inside a synthetic request. Vitest must use the `sveltekit()` plugin, which it does when it reads your `vite.config.js`:
+
+```js
+/// file: src/lib/user.test.js
+// @filename: ambient.d.ts
+declare module './user.remote.js' {
+	import type { RemoteCommand, RemoteQueryFunction } from '@sveltejs/kit';
+
+	export const getProfile: RemoteQueryFunction<void, { name: string } | null>;
+	export const login: RemoteCommand<string, void>;
+}
+
+// @filename: index.js
+// ---cut---
+import { expect, test } from 'vitest';
+import { withRequestEvent } from '$app/server';
+import { getProfile, login } from './user.remote.js';
+
+test('getProfile returns the user of the session', async () => {
+	const profile = await withRequestEvent({ cookies: { session_id: 'abc' } }, () => getProfile());
+
+	expect(profile?.name).toBe('Rich');
+});
+
+test('login sets the session cookie', async () => {
+	await withRequestEvent({}, async (event) => {
+		await login('Rich');
+
+		expect(event.cookies.get('session_id')).toBeDefined();
+	});
+});
+```
+
+The first argument can set the `request` (or the `url` of a `POST` request), `locals`, `params`, `route`, `platform`, the `cookies` of the request as `{ name: value }`, and a `signal` that stops a `query.live` function when you abort it. The cookies go on the request's `cookie` header, which browsers drop, so they only work outside browsers. The callback receives the event. Refreshes that a `command` or `form` defers to the end of the request run when the callback's promise resolves. Errors, including `error(...)` and `redirect(...)`, reject the call as they are thrown, without passing through [`handleError`](hooks#handleError). To test what the client receives, send a request to your app.
+
+A form submission has no function to call on the server, so test its logic as a plain function or with an end-to-end test. You can render a component that uses the form on the server:
+
+```js
+/// file: src/lib/CreatePost.test.js
+// @filename: ambient.d.ts
+declare module './CreatePost.svelte' {
+	import type { Component } from 'svelte';
+
+	const component: Component;
+	export default component;
+}
+
+// @filename: index.js
+// ---cut---
+import { expect, test } from 'vitest';
+import { render } from 'svelte/server';
+import { withRequestEvent } from '$app/server';
+import CreatePost from './CreatePost.svelte';
+
+test('the form keeps the query string of the page', async () => {
+	const body = await withRequestEvent({ url: '/blog/new?draft=1' }, async () => {
+		const { body } = await render(CreatePost);
+		return body;
+	});
+
+	expect(body).toContain('action="?draft=1&amp;/remote=');
+});
+```
+
+Remote functions read the request when you call them, but other code such as `render` reads it while it runs, so `await` it inside the callback. In environments without [`AsyncLocalStorage`](https://nodejs.org/api/async_context.html#class-asynclocalstorage), call remote functions synchronously inside the callback.
