@@ -161,7 +161,7 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
-		vite({ config }) {
+		vite: ({ config }) => {
 			if (config.paths.assets) {
 				throw new Error(
 					'@sveltejs/adapter-cloudflare does not support paths.assets. Remove paths.assets from your SvelteKit configuration.'
