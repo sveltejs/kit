@@ -218,6 +218,8 @@ function measure_files(root, files, compressed) {
  * @returns {AssetTable}
  */
 function create_asset_table(base, measured) {
+	// the server leaves `%25` encoded when it decodes a request's pathname, so a
+	// literal `%` in a filename has to be spelled `%25` in its key to be found
 	const entries = measured.map(
 		(entry) =>
 			/** @type {[string, AssetEntry]} */ ([`${base}/${entry.file.replaceAll('%', '%25')}`, entry])
@@ -278,11 +280,14 @@ function create_prerendered_table(base, measured, paths) {
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
 		if (!entry) continue;
 
+		// as in `create_asset_table`, a literal `%` is spelled `%25` in the key
 		const key = base + path.slice(base.length).replaceAll('%', '%25');
 		entries.push([key, entry]);
 
-		// kit decodes paths with `decodeURI`, which leaves reserved characters such as
-		// `%2F` encoded, so `/a%2Fb` and `/a%252Fb` are both recorded as `/a%2Fb`
+		// kit records paths decoded with `decodeURI`, which leaves reserved characters
+		// (`# $ & + , / : ; = ? @`) encoded. `/a%2Fb` and `/a%252Fb` are therefore both
+		// recorded as `/a%2Fb`, and the `%` could be either an escape or a literal.
+		// We can't tell which, so the path is also keyed with those escapes intact
 		const reserved = key.replace(/%25(2[346BCF]|3[ABDF]|40)/gi, '%$1');
 		if (reserved !== key) entries.push([reserved, entry]);
 	}
