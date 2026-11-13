@@ -255,6 +255,15 @@ if (!process.env.CI) {
 			expect(fs.existsSync(join(cwd, 'package/b.d.ts'))).toBe(false);
 			expect(fs.existsSync(join(cwd, 'package/b.js'))).toBe(false);
 
+			// keeps the output when a .ts file is renamed to .js
+			write('src/lib/c.ts', "export const c = 'c';");
+			await settled();
+			fs.renameSync(join(cwd, 'src/lib/c.ts'), join(cwd, 'src/lib/c.js'));
+			await settled();
+			expect(fs.existsSync(join(cwd, 'package/c.js'))).toBe(true);
+			remove('src/lib/c.js');
+			await settled();
+
 			// processes a Svelte file
 			write('src/lib/Test.svelte', '<script lang="ts">export let answer: number</script>');
 			await settled();
@@ -291,6 +300,8 @@ if (!process.env.CI) {
 			remove('src/lib/Test.svelte');
 			remove('src/lib/a.js');
 			remove('src/lib/b.ts');
+			remove('src/lib/c.ts');
+			remove('src/lib/c.js');
 			remove('src/lib/post-error.svelte');
 			fs.rmSync(join(cwd, 'src/lib/nested'), { recursive: true, force: true });
 			fs.rmSync(join(cwd, 'src/lib/renamed'), { recursive: true, force: true });
