@@ -12,6 +12,7 @@
 		"test:build": "pnpm pw:build && pnpm server:build",
 		"pw:dev": "node test/playwright/setup.js && DEV=true playwright test test/playwright",
 		"pw:build": "node test/playwright/setup.js && playwright test test/playwright",
+		"server": "pnpm server:dev && pnpm server:build",
 		"server:dev": "node test/playwright/setup.js && KIT_TEST_DEV=true vitest run -c vitest.server.config.js",
 		"server:build": "node test/playwright/setup.js && pnpm build && vitest run -c vitest.server.config.js",
 		"test:cross-platform:dev": "pnpm test:client-import && node test/playwright/setup.js && DEV=true playwright test test/playwright/cross-platform/",
