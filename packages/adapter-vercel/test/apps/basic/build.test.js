@@ -33,6 +33,28 @@ test('__data.json prerender config is not generated for server-only route', () =
 	assert.ok(!fs.existsSync(`${functions}/__data.json.prerender-config.json`));
 });
 
+test('root and index routes keep distinct functions', () => {
+	const targets = ['/', '/index'].map((pathname) => {
+		const route = config.routes.find(
+			(route) => route.src && route.dest && new RegExp(route.src).test(pathname)
+		);
+		assert.ok(route?.dest && route.src);
+		assert.ok(new RegExp(route.src).test(`${pathname.replace(/\/$/, '')}/__data.json`));
+		const base = `${output}/functions${route.dest}`;
+		const target = fs.realpathSync(`${base}.func`);
+		if (pathname === '/') {
+			assert.ok(
+				config.routes.indexOf(route) < config.routes.findIndex((r) => r.handle === 'filesystem')
+			);
+		} else {
+			assert.equal(fs.realpathSync(`${base}/__data.json.func`), target);
+		}
+		return target;
+	});
+
+	assert.notEqual(targets[0], targets[1]);
+});
+
 test('API route is present in Vercel routing configuration', () => {
 	assert.ok(sources('/api/json').some((src) => !src.includes('__data.json')));
 });
