@@ -392,7 +392,7 @@ export async function internal_respond(request, state) {
 	let dev_prerender;
 
 	/**
-	 * adds the headers that adapter.vite.respond reads, which the dev server removes again
+	 * adds the headers that adapter.dev.respond reads, which the dev server removes again
 	 * @param {Response} response
 	 */
 	const with_dev_headers = (response) => {

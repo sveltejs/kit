@@ -10,7 +10,7 @@ export default function (options) {
 
 	return {
 		name: '@sveltejs/adapter-static',
-		vite: ({ config }) => ({
+		dev: ({ config }) => ({
 			async respond(request, { resolve }) {
 				const response = await resolve(request);
 

@@ -517,7 +517,7 @@ export async function dev(
 }
 
 /**
- * removes the headers that only adapter.vite.respond needs
+ * removes the headers that only adapter.dev.respond needs
  * @param {Response} response
  */
 function without_route_headers(response) {
