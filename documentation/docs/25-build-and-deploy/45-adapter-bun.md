@@ -154,7 +154,7 @@ adapter({
 });
 ```
 
-The result in this example is `dist/application`. Platform targets, native dependencies, and other limitations follow [Bun's executable compilation rules](https://bun.com/docs/bundler/executables).
+The result in this example is `dist/application`. Platform targets, native dependencies, and other limitations follow [Bun's executable compilation rules](https://bun.com/docs/compiler/executables).
 
 Executables bundle production dependencies, since there is no `node_modules` to resolve them from. To resolve a package from `node_modules` at runtime instead, list it in `external` and set `compile: { autoloadPackageJson: true }`. Packages that read files relative to their own location, such as `jsdom`, only work this way.
 
