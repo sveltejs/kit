@@ -96,4 +96,4 @@ The [Svelte CLI](/docs/cli) gives the option to [set up Better Auth](/docs/cli/b
 
 ## Guides
 
-If you'd like to implement your own auth system, [the Lucia auth guide](https://lucia-auth.com/) provides a reference for session-based web app auth with SvelteKit examples.
+If you'd like to implement your own auth system, [Pilcrow's Auth Book](https://auth.pilcrowonpaper.com/) provides a reference for session-based web app auth . There's also a [simple example](https://github.com/lucia-auth/lucia/blob/main/code/auth_session.ts) of how to implement this generally.
