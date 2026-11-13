@@ -129,6 +129,14 @@ ${_values.issues}`);
 }
 
 /**
+ * Could not load TypeScript %version%: %details%
+ * @param {{ "version": string; "details": string }} _values
+ */
+export function typescript_unsupported(_values) {
+	warn('typescript_unsupported', `Could not load TypeScript ${_values.version}: ${_values.details}`);
+}
+
+/**
  * The following Vite config options will be overridden by SvelteKit:
 %options%
  * @param {{ "options": string }} _values

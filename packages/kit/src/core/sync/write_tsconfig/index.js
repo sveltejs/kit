@@ -14,14 +14,7 @@ import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
 import { posixify } from '../../../utils/os.js';
 import { bullet_list } from '../../../utils/format.js';
-
-/** @type {typeof import('typescript')} */
-let ts;
-try {
-	ts = await import('typescript');
-} catch {
-	// The user has not installed TypeScript.
-}
+import { ts } from '../typescript/index.js';
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.

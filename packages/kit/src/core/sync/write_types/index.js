@@ -4,7 +4,7 @@ import MagicString from 'magic-string';
 import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
-import { ts } from '../ts.js';
+import { ts } from '../typescript/index.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');

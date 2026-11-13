@@ -49,6 +49,21 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				}
 			},
 			{
+				test: {
+					name: 'kit-sync-typescript-7',
+					// runs the `sync` tests again, with TypeScript 7 instead of TypeScript 6
+					setupFiles: [
+						...setupFiles,
+						fileURLToPath(new URL('./test/typescript-7.js', import.meta.url))
+					],
+					environment: 'node',
+					include: ['src/core/sync/**/*.spec.js'],
+					exclude: [...exclude, 'src/core/sync/typescript/**'],
+					// after the other projects, as the type generation tests write to the same directories
+					sequence: { groupOrder: 1 }
+				}
+			},
+			{
 				resolve: {
 					conditions: ['browser']
 				},
