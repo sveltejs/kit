@@ -1,6 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import adapter from '../../../index.js';
+import adapter from '@sveltejs/adapter-bun';
 
 const buildOptions =
 	process.env.ADVANCED_COMPILE === 'true'
