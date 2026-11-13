@@ -53,8 +53,11 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterViteConfig {
 		/**
-		 * Set to `true` when the adapter provides its own `vite preview` implementation
-		 * through a Vite plugin, so that SvelteKit doesn't start its Node-based preview server.
+		 * By default, SvelteKit creates a Node preview server to serve the the build
+		 * output during `vite preview`. Set this option to `true` when the adapter
+		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+		 * previewing the build output on its own.
+		 * through a Vite plugin.
 		 * @default false
 		 * @since 3.3.0
 		 */

@@ -43,6 +43,8 @@ export default function (options) {
 			}
 		},
 		vite: {
+			// set this to `true` to disable the default Node server during `vite preview`
+			customPreview: false,
 			getRequest(options) {
 				const request = getRequest(options);
 				// modify the Request object here if needed
