@@ -1,7 +1,9 @@
-/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
+/** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
+import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
-import { unstable_getVarsForDev } from 'wrangler';
+import { parseEnv } from 'node:util';
 
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
@@ -9,44 +11,30 @@ export const is_dev_or_build = (_config, env) => !env.isPreview;
 /** @type {Plugin['apply']} */
 export const is_preview = (_config, env) => env.isPreview === true;
 
-/**
- * @param {WorkerConfig} wrangler_config
- */
-export function validate_worker_settings(wrangler_config) {
+export function validate_worker_settings() {
 	if (process.env.CF_PAGES) {
 		throw new Error(
 			`Cloudflare Pages is no longer supported. Deploy with Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
 		);
 	}
-
-	const config_path = wrangler_config.configPath || 'your wrangler.jsonc file';
-
-	if (wrangler_config.pages_build_output_dir) {
-		throw new Error(
-			`Cloudflare Pages is no longer supported. Remove \`pages_build_output_dir\` from ${config_path} and configure Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
-		);
-	}
 }
 
 /**
- * The adapter generates the Worker entry, so a `main` set in the Wrangler config
+ * The adapter generates the Worker entrypoint, so an `entrypoint` set in `cloudflare.config.ts`
  * is ignored. The old generated entry is an error because it no longer exists.
- * @param {string | undefined} main
- * @param {string | undefined} config_path
+ * @param {string | undefined} entrypoint
  */
-export function validate_main(main, config_path) {
-	if (!main) return;
+export function validate_entrypoint(entrypoint) {
+	if (!entrypoint) return;
 
-	const file = config_path || 'your wrangler.jsonc file';
-
-	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
+	if (entrypoint.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
 		throw new Error(
-			`Remove \`main\` from ${file}. The adapter now generates the Worker entry, so it no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
+			'Remove the Worker `entrypoint` from cloudflare.config.ts. The adapter now generates the Worker entrypoint, so it no longer needs to point at `.svelte-kit/cloudflare/_worker.js`'
 		);
 	}
 
 	console.warn(
-		`Ignoring \`main\` in ${file}. The adapter generates the Worker entry, so remove \`main\` to silence this warning`
+		'Ignoring the Worker `entrypoint` in cloudflare.config.ts. The adapter generates the Worker entrypoint, so remove `entrypoint` to silence this warning'
 	);
 }
 
@@ -123,34 +111,56 @@ ${formatted_headers}
 }
 
 /** @type {Map<string, string>} */
-const wrangler_config_vars = new Map();
+const synced_vars = new Map();
 
 /**
- * Copies Wrangler variables into `process.env` so that SvelteKit can read them while it runs in Node,
- * without overwriting variables set elsewhere and removing the ones we set previously
- * @param {WorkerConfig} wrangler_config
+ * Copies the values of the Worker's text, JSON and secret bindings into `process.env` so that
+ * SvelteKit can read them while it runs in Node, without overwriting variables set elsewhere
+ * and removing the ones we set previously. Like the Worker during development, secrets are read
+ * from `.dev.vars.<mode>` or `.dev.vars`, and otherwise from `.env` files, which Vite already loads.
+ * Other keys in `.dev.vars` files don't reach the Worker, so they're left out too
+ * @param {CloudflareConfig['worker']} worker
+ * @param {string | false} env_dir where to find `.dev.vars` files, or `false` to not read them
+ * @param {string} mode
  */
-export function sync_process_env(wrangler_config) {
-	for (const [key, value] of wrangler_config_vars) {
+export function sync_process_env(worker, env_dir, mode) {
+	for (const [key, value] of synced_vars) {
 		if (process.env[key] === value) delete process.env[key];
 	}
-	wrangler_config_vars.clear();
+	synced_vars.clear();
 
-	const vars = unstable_getVarsForDev(
-		wrangler_config.configPath,
-		undefined,
-		wrangler_config.vars,
-		wrangler_config.targetEnvironment,
-		true,
-		wrangler_config.secrets
-	);
+	const dev_vars = env_dir === false ? undefined : read_dev_vars(env_dir, mode);
 
-	for (const [key, { value }] of Object.entries(vars)) {
+	/** @type {Record<string, string>} */
+	const vars = {};
+
+	for (const [key, binding] of Object.entries(worker.env ?? {})) {
+		if (binding.type === 'text') {
+			vars[key] = binding.value;
+		} else if (binding.type === 'json') {
+			// matches how workerd exposes JSON vars on `process.env`
+			vars[key] = JSON.stringify(binding.value);
+		} else if (binding.type === 'secret' && dev_vars?.[key] !== undefined) {
+			vars[key] = dev_vars[key];
+		}
+	}
+
+	for (const [key, value] of Object.entries(vars)) {
 		if (key in process.env) continue;
+		process.env[key] = value;
+		synced_vars.set(key, value);
+	}
+}
 
-		// matches how workerd exposes JSON vars on `process.env`
-		const stringified_value = typeof value === 'string' ? value : JSON.stringify(value);
-		process.env[key] = stringified_value;
-		wrangler_config_vars.set(key, stringified_value);
+/**
+ * Reads the same `.dev.vars` files as the Cloudflare Vite plugin, where the first one found wins
+ * @param {string} env_dir
+ * @param {string} mode
+ * @returns {Record<string, string | undefined> | undefined}
+ */
+function read_dev_vars(env_dir, mode) {
+	for (const file of [`.dev.vars.${mode}`, '.dev.vars']) {
+		const file_path = path.join(env_dir, file);
+		if (fs.existsSync(file_path)) return parseEnv(fs.readFileSync(file_path, 'utf8'));
 	}
 }

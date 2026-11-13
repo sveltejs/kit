@@ -359,3 +359,24 @@ export function uses_unsupported_html_hook(plugin) {
 		!plugin.name?.includes('storybook')
 	);
 }
+
+/**
+ * the origin the dev server listens on
+ * @param {import('vite').ViteDevServer} server
+ * @returns {string}
+ */
+export function get_dev_origin(server) {
+	const address = server.httpServer?.address();
+	const protocol = server.config.server.https ? 'https' : 'http';
+
+	if (address === null || address === undefined || typeof address === 'string') {
+		return `${protocol}://localhost:${server.config.server.port}`;
+	}
+
+	let host = address.address;
+	if (host === '0.0.0.0') host = '127.0.0.1';
+	if (host === '::') host = '::1';
+	if (host.includes(':')) host = `[${host}]`;
+
+	return `${protocol}://${host}:${address.port}`;
+}

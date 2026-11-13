@@ -9,9 +9,10 @@ const config = {
 	},
 	plugins: [
 		sveltekit({
-			adapter: adapter({
-				config: 'config/wrangler.jsonc'
-			})
+			adapter: adapter(),
+			experimental: {
+				remoteFunctions: true
+			}
 		})
 	]
 };

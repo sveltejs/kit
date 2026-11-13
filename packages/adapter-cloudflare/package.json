@@ -28,6 +28,7 @@
 	"types": "index.d.ts",
 	"files": [
 		"src/virtual-cloudflare-workers.js",
+		"src/worker-dev.js",
 		"files/worker.js",
 		"index.js",
 		"index.d.ts",
@@ -45,7 +46,9 @@
 		"tsc-native": "node node_modules/@typescript/native/bin/tsc"
 	},
 	"dependencies": {
-		"@cloudflare/vite-plugin": "^1.65.0",
+		"@cloudflare/build-output-utils": "0.9.11",
+		"@cloudflare/config": "0.31.0",
+		"@cloudflare/vite-plugin": "2.0.0-beta.v.13",
 		"@rolldown/pluginutils": "^1.0.1"
 	},
 	"devDependencies": {
@@ -58,7 +61,6 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.3.0",
-		"wrangler": "^4.153.0"
+		"@sveltejs/kit": "^3.3.0"
 	}
 }

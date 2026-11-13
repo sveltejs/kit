@@ -45,10 +45,36 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
+		 * Options that only apply during `vite dev`
+		 * @since 3.3.0
+		 */
+		dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+		/**
 		 * Options for configuring and interacting with Vite
 		 * @since 3.0.0
 		 */
 		vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	}
+
+	export interface AdapterDevConfig {
+		/**
+		 * During `vite dev`, SvelteKit calls this function with each request it would render, after
+		 * serving static files, imported assets and the service worker. Use it to render requests in
+		 * your platform's runtime instead of Node: send them to code that runs there, which imports
+		 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
+		 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
+		 * SvelteKit also sends its own requests through it, such as to find what a remote module exports.
+		 * @since 3.3.0
+		 */
+		respond?: (
+			request: Request,
+			options: {
+				/** Returns the IP address of the client that sent the request */
+				getClientAddress: () => string;
+				/** Renders the request in Node */
+				resolve: (request: Request) => Promise<Response>;
+			}
+		) => Promise<Response>;
 	}
 
 	export interface AdapterViteConfig {
@@ -987,7 +1013,7 @@ declare module '@sveltejs/kit' {
 	type ValidatedConfig = RecursiveRequired<
 		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
 	> & {
-		adapter: Adapter & { vite?: AdapterViteConfig };
+		adapter: Adapter & { dev?: AdapterDevConfig; vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
 		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
@@ -1163,6 +1189,27 @@ declare module '@sveltejs/kit/adapter' {
 	 * @since 3.0.0
 	 */
 	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter/dev' {
+	import type { Server } from '@sveltejs/kit';
+	/**
+	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
+	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
+	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
+	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterDevConfig).
+	 *
+	 * ```js
+	 * import { server } from '@sveltejs/kit/adapter/dev';
+	 *
+	 * await server.init({ env });
+	 * const response = await server.respond(request, { getClientAddress: () => address });
+	 * ```
+	 * @since 3.3.0
+	 */
+	export const server: Server;
 
 	export {};
 }

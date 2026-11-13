@@ -3,6 +3,7 @@ node_modules
 /.svelte-kit
 
 # Cloudflare
+.cloudflare
+
+# miniflare state from vite dev
 .wrangler
-/dist
-worker-configuration.d.ts

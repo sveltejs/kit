@@ -42,6 +42,13 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
+		dev: {
+			respond(request, { getClientAddress, resolve }) {
+				// during `vite dev`, render the request in your platform's runtime,
+				// or call `resolve` to render it in Node as usual
+				return resolve(request);
+			}
+		},
 		vite: {
 			// set this to `true` to disable the default Node server during `vite preview`
 			customPreview: false,
@@ -66,7 +73,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite`, and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `dev`, `vite`, and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
@@ -81,3 +88,10 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Rendering in your platform's runtime during development
+
+By default, `vite dev` renders requests in Node. If your platform's runtime can run in a [Vite environment](https://vite.dev/guide/api-environment), for example through a Vite plugin that your platform provides, you can render requests there instead, so that development behaves like production:
+
+- In the code that runs in that environment, import `server` from `@sveltejs/kit/adapter/dev`. It has the same API as the `server` that `builder.generateServerInstance` writes for production: call `await server.init({ env })` and `server.respond(request, { getClientAddress })`
+- Add a `dev.respond` function to your adapter that sends each request to that code and returns its response. SvelteKit calls it after serving static files, imported assets and the service worker, and logs the response as usual. It also sends its own requests through it, such as to find what a remote module exports, so that your app's modules only run in your platform's runtime

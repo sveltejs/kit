@@ -1,0 +1,120 @@
+/** @import { ManifestData, SSRManifest, ValidatedConfig } from 'types' */
+import path from 'node:path';
+import * as devalue from 'devalue';
+import { runtime_directory } from '../../../core/utils.js';
+import { resolve_entry } from '../../../utils/filesystem.js';
+import { posixify } from '../../../utils/os.js';
+import { s } from '../../../utils/misc.js';
+import { SVELTE_KIT_ASSETS } from '../../../constants.js';
+import { mimes } from '../../../utils/mime.js';
+
+/**
+ * generates the dev manifest as a module, whose loaders import in whichever environment imports it
+ * @param {SSRManifest} manifest the dev manifest, for its serialisable parts
+ * @param {ManifestData} manifest_data
+ * @param {ValidatedConfig} svelte_config
+ * @param {string} root
+ * @returns {string}
+ */
+export function generate_server_manifest_code(manifest, manifest_data, svelte_config, root) {
+	/** @param {string} file */
+	const file_path = (file) => s(posixify(path.resolve(root, file)));
+
+	const nodes = manifest_data.nodes.map((node, index) => {
+		/** @type {string[]} */
+		const lines = [
+			`const result = { index: ${index}, universal_id: ${s(node.universal)}, server_id: ${s(node.server)}, imports: [], stylesheets: [], fonts: [] };`,
+			// modules whose css is inlined to avoid a flash of unstyled content
+			'const css_modules = [];'
+		];
+
+		if (node.component) {
+			lines.push(
+				`result.component = async () => { css_modules.push(${file_path(node.component)}); return (await import(${file_path(node.component)})).default; };`
+			);
+		}
+
+		if (node.universal) {
+			if (node.page_options?.ssr === false) {
+				lines.push(`result.universal = ${devalue.uneval(node.page_options)};`);
+			} else {
+				lines.push(
+					`css_modules.push(${file_path(node.universal)});`,
+					`result.universal = await import(${file_path(node.universal)});`
+				);
+			}
+		}
+
+		if (node.server) {
+			lines.push(
+				`result.server = await list_server_assets(${file_path(node.server)}, await import(${file_path(node.server)}));`
+			);
+		}
+
+		lines.push('result.inline_styles = () => inline_styles(css_modules);', 'return result;');
+
+		return `async () => {\n\t\t${lines.join('\n\t\t')}\n\t}`;
+	});
+
+	const routes = manifest.routes.map((route) => {
+		const endpoint = manifest_data.routes.find((r) => r.id === route.id)?.endpoint;
+
+		return `{
+		id: ${s(route.id)},
+		pattern: ${devalue.uneval(route.pattern)},
+		params: ${devalue.uneval(route.params)},
+		page: ${devalue.uneval(route.page)},
+		endpoint: ${endpoint ? `() => import(${file_path(endpoint.file)}).then((module) => list_server_assets(${file_path(endpoint.file)}, module))` : 'null'},
+		endpoint_id: ${s(route.endpoint_id)}
+	}`;
+	});
+
+	const matchers = manifest_data.params
+		? `async () => {
+		const module = await import(${file_path(manifest_data.params)});
+		if (!module.params) throw new Error('${manifest_data.params} must export \`params\`');
+		return module.params;
+	}`
+		: 'async () => ({})';
+
+	const instrumentation = resolve_entry(
+		path.join(svelte_config.files.src, 'instrumentation.server'),
+		svelte_config.moduleExtensions
+	);
+
+	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
+
+	/** @type {Record<string, string>} */
+	const mime_types = {};
+	for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
+	Object.assign(mime_types, manifest.mime_types);
+
+	return `// generated during dev for \`@sveltejs/kit/adapter/dev\`
+import { inline_styles, list_server_assets, remotes, server_assets } from ${s(`${runtime_directory}/server/dev_host.js`)};
+
+export const assets = ${s(assets)};
+
+export const instrumentation = ${instrumentation ? `() => import(${file_path(instrumentation)})` : 'null'};
+
+/** @type {import('types').SSRManifest} */
+export const manifest = {
+	app_dir: ${s(manifest.app_dir)},
+	app_path: ${s(manifest.app_path)},
+	assets: ${devalue.uneval(manifest.assets)},
+	// every mime type, since imported assets are not listed
+	mime_types: ${devalue.uneval(mime_types)},
+	client: ${devalue.uneval(manifest.client)},
+	// filled in as server modules load
+	server_assets,
+	nodes: [
+	${nodes.join(',\n\t')}
+	],
+	prerendered_routes: new Set(),
+	remotes,
+	routes: [
+	${routes.join(',\n\t')}
+	],
+	matchers: ${matchers}
+};
+`;
+}

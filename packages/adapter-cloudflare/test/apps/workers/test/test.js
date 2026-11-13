@@ -11,15 +11,13 @@ test('worker', async ({ page }) => {
 
 test('cloudflare:workers', async ({ request }) => {
 	const res = await request.get(`${base}/env`);
-	expect(await res.text()).toBe('from wrangler.jsonc');
-	if (!process.env.DEV) {
-		expect(res.headers()['x-instrumented']).toBe('from wrangler.jsonc');
-	}
+	expect(await res.text()).toBe('from cloudflare.config.ts');
+	expect(res.headers()['x-instrumented']).toBe('from cloudflare.config.ts');
 });
 
-test('$app/env/private reads Wrangler vars', async ({ request }) => {
+test('$app/env/private reads text bindings from cloudflare.config.ts', async ({ request }) => {
 	const res = await request.get('/env/private');
-	expect(await res.text()).toBe('from wrangler.jsonc');
+	expect(await res.text()).toBe('from cloudflare.config.ts');
 });
 
 test('Request.cf', async ({ request }) => {
@@ -64,4 +62,39 @@ test('CommonJS dependencies can require Node builtins', async ({ request }) => {
 test('dependencies resolve the workerd export condition', async ({ request }) => {
 	const res = await request.get(`${base}/conditions`);
 	expect(await res.text()).toBe('workerd');
+});
+
+test('SvelteKit runs in workerd', async ({ request }) => {
+	const res = await request.get(`${base}/runtime`);
+	expect(await res.text()).toBe('Cloudflare-Workers');
+});
+
+test('remote functions run in workerd', async ({ page }) => {
+	await page.goto(`${base}/remote`);
+	await expect(page.locator('#runtime')).toHaveText('Cloudflare-Workers');
+
+	await page.locator('button').click();
+	await expect(page.locator('button')).toHaveText('1');
+});
+
+test('imported assets are served', async ({ page }) => {
+	await page.goto(`${base}/asset`);
+	await expect(page.locator('img')).not.toHaveAttribute('src', /^data:/);
+	await expect
+		.poll(() => page.locator('img').evaluate((img) => img.complete && img.naturalWidth))
+		.toBe(10);
+});
+
+test('read from $app/server knows the size of the file', async ({ request }) => {
+	// workerd does not send it for streamed responses, so this checks what read returns
+	const length = await (await request.get(`${base}/asset/length`)).text();
+	expect(length).toBe(
+		String(fs.statSync(path.resolve(import.meta.dirname, '../src/routes/asset/logo.svg')).size)
+	);
+});
+
+test('the service worker is served', async ({ request }) => {
+	const res = await request.get(`${base}/service-worker.js`);
+	expect(res.status()).toBe(200);
+	expect(res.headers()['content-type']).toContain('javascript');
 });
