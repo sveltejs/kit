@@ -2283,7 +2283,10 @@ async function finish_navigation(nav, nav_token, url, popped_scroll, reset, upda
 
 	// Update to.scroll to the actual scroll position after navigation completed
 	if (nav.navigation.to) {
-		nav.navigation.to.scroll = scroll_state();
+		nav.navigation.to.scroll =
+			nav.navigation.type === 'enter'
+				? (history_info[current_history_index]?.scroll ?? scroll_state())
+				: scroll_state();
 	}
 
 	after_navigate_callbacks.forEach((fn) => fn(/** @type {AfterNavigate} */ (nav.navigation)));
