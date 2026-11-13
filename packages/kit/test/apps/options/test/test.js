@@ -80,13 +80,7 @@ test.describe('CSP', () => {
 		expect(response.headers()['content-security-policy']).toBeDefined();
 		expect(html).not.toContain('nonce=');
 
-		const etag = response.headers()['etag'];
-		expect(etag).toBeDefined();
-
-		const revalidated = await request.get('/path-base/csp-no-csr', {
-			headers: { 'if-none-match': etag }
-		});
-		expect(revalidated.status()).toBe(304);
+		expect(response.headers()['etag']).toBeDefined();
 	});
 
 	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {

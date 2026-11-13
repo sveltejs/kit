@@ -606,18 +606,16 @@ export async function render_response({
 	// the response body is these bytes, so the etag is hashed from them rather than from the string
 	const encoded = chunks ? null : text_encoder.encode(transformed);
 
-	// a page with a nonce can never generate matching etags, so we can skip processing it
-	const has_nonce =
-		encoded &&
-		(csp.script_needs_nonce || csp.style_needs_nonce || options.app_template_contains_nonce) &&
-		transformed.includes(csp.nonce);
+	const needs_nonce =
+		csp.script_needs_nonce || csp.style_needs_nonce || options.app_template_contains_nonce;
 
-	// an `etag` from `setHeaders` replaces ours, and a `no-store` response is never revalidated
+	// an `etag` from `setHeaders` replaces ours, a `no-store` response is never revalidated,
+	// and a page with a nonce can never generate matching etags, so we can skip processing it
 	if (
 		encoded &&
-		!has_nonce &&
 		!('etag' in state.headers) &&
-		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '')
+		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '') &&
+		!(needs_nonce && transformed.includes(csp.nonce))
 	) {
 		headers.set('etag', `"${hash_bytes(encoded)}"`);
 	}
