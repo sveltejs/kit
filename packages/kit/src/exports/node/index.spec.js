@@ -1,5 +1,6 @@
 import { EventEmitter, once } from 'node:events';
 import { validateHeaderValue } from 'node:http';
+import { connect, constants, createServer } from 'node:http2';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -384,3 +385,153 @@ test('requests with no content-length and no transfer-encoding return null body'
 
 	await expect(text).resolves.toBe(''); // Should return an empty string if bug is actually fixed
 });
+
+/**
+ * Use real compatibility requests: PassThrough does not model HTTP/2 cancellation.
+ * @param {import('node:http2').OutgoingHttpHeaders} [headers]
+ */
+async function create_http2_request(headers = {}) {
+	const server = createServer();
+	await once(server.listen(0, 'localhost'), 'listening');
+	const base = `http://localhost:${/** @type {import('net').AddressInfo} */ (server.address()).port}`;
+	const client = connect(base);
+	const incoming = once(server, 'request');
+	const stream = client.request(
+		{ ':method': 'POST', ':path': '/', ...headers },
+		{ endStream: false }
+	);
+	stream.on('error', () => {});
+	stream.write('abc');
+	const [req, res] =
+		/** @type {[import('node:http2').Http2ServerRequest, import('node:http2').Http2ServerResponse]} */ (
+			await incoming
+		);
+	return {
+		req,
+		res,
+		stream,
+		request: (response = true) =>
+			getRequest({
+				request: /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req)),
+				response: response
+					? /** @type {import('http').ServerResponse} */ (/** @type {unknown} */ (res))
+					: undefined,
+				base
+			}),
+		async close() {
+			client.destroy();
+			await new Promise((resolve) => server.close(resolve));
+		}
+	};
+}
+
+for (const timing of ['before getRequest', 'before reading', 'while reading']) {
+	for (const content_length of [undefined, '10']) {
+		for (const response of [false, true]) {
+			test(`rejects HTTP/2 uploads cancelled ${timing} (content-length: ${content_length}, response: ${response})`, async () => {
+				const h2 = await create_http2_request(
+					content_length ? { 'content-length': content_length } : {}
+				);
+				try {
+					const closed = once(h2.req, 'close');
+					// close() sends END_STREAM before RST_STREAM; without content-length
+					// that is a valid body end. destroy() sends the reset directly.
+					const cancel = () =>
+						content_length ? h2.stream.close(constants.NGHTTP2_CANCEL) : h2.stream.destroy();
+					if (timing === 'before getRequest') {
+						cancel();
+						await closed;
+					}
+					const request = h2.request(response);
+					if (timing === 'before getRequest') {
+						expect(request.signal.aborted).toBe(true);
+					}
+					if (timing === 'before reading') {
+						cancel();
+						await closed;
+					}
+					const data = timing === 'while reading' ? once(h2.req, 'data') : null;
+					const text = expect(request.text()).rejects.toMatchObject({ name: 'AbortError' });
+					if (timing === 'while reading') {
+						await data;
+						cancel();
+					}
+					await text;
+					await closed;
+					expect(request.signal.aborted).toBe(true);
+				} finally {
+					await h2.close();
+				}
+			});
+		}
+	}
+}
+
+for (const response of [false, true]) {
+	test(`does not abort normally completed HTTP/2 requests (response: ${response})`, async () => {
+		const h2 = await create_http2_request({ 'content-length': '3' });
+		try {
+			const request = h2.request(response);
+			h2.stream.end();
+			expect(await request.text()).toBe('abc');
+			const closed = once(h2.req, 'close');
+			h2.res.end('ok');
+			h2.stream.resume();
+			await closed;
+			expect(request.signal.aborted).toBe(false);
+		} finally {
+			await h2.close();
+		}
+	});
+
+	test(`aborts HTTP/2 requests cancelled after reading a complete body (response: ${response})`, async () => {
+		const h2 = await create_http2_request({ 'content-length': '3' });
+		try {
+			const request = h2.request(response);
+			h2.stream.end();
+			expect(await request.text()).toBe('abc');
+			const closed = once(h2.req, 'close');
+			h2.stream.close(constants.NGHTTP2_CANCEL);
+			await closed;
+			expect(request.signal.aborted).toBe(true);
+		} finally {
+			await h2.close();
+		}
+	});
+}
+
+test('rejects a cancelled HTTP/2 upload even if the response has already ended', async () => {
+	const h2 = await create_http2_request({ 'content-length': '10' });
+	try {
+		const data = once(h2.req, 'data');
+		const request = h2.request();
+		const text = expect(request.text()).rejects.toMatchObject({ name: 'AbortError' });
+		await data;
+		const responded = once(h2.stream, 'response');
+		h2.res.end('ok');
+		await responded;
+		const closed = once(h2.req, 'close');
+		h2.stream.close(constants.NGHTTP2_CANCEL);
+		await text;
+		await closed;
+		expect(request.signal.aborted).toBe(true);
+	} finally {
+		await h2.close();
+	}
+});
+
+for (const method of ['GET', 'HEAD']) {
+	test(`aborts an already-cancelled bodyless HTTP/2 ${method} request`, async () => {
+		const h2 = await create_http2_request({ ':method': method });
+		try {
+			const closed = once(h2.req, 'close');
+			h2.stream.close(constants.NGHTTP2_CANCEL);
+			await closed;
+			const request = h2.request(false);
+			expect(request.signal.aborted).toBe(true);
+			expect(request.body).toBe(null);
+		} finally {
+			await h2.close();
+		}
+	});
+}

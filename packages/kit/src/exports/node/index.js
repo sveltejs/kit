@@ -24,6 +24,14 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
+	if (is_http2_aborted(req)) {
+		return new ReadableStream({
+			start(controller) {
+				controller.error(new DOMException('The request was aborted', 'AbortError'));
+			}
+		});
+	}
+
 	if (req.destroyed) {
 		const readable = new ReadableStream();
 		void readable.cancel();
@@ -54,7 +62,11 @@ function get_raw_body(req, body_size_limit) {
 
 			const on_end = () => {
 				if (cancelled) return;
-				controller.close();
+				if (is_http2_aborted(req)) {
+					on_error(new DOMException('The request was aborted', 'AbortError'));
+				} else {
+					controller.close();
+				}
 			};
 
 			/** @param {Buffer} chunk */
@@ -92,6 +104,14 @@ function get_raw_body(req, body_size_limit) {
 				}
 			};
 
+			// HTTP/2 cancellation emits 'aborted', then ends the compatibility request
+			// without an error. Reject before that synthetic end can close the body.
+			if (req.httpVersionMajor >= 2) {
+				req.once('aborted', () => {
+					on_error(new DOMException('The request was aborted', 'AbortError'));
+				});
+			}
+
 			req.on('error', on_error);
 			req.on('end', on_end);
 			req.on('data', on_data);
@@ -107,6 +127,21 @@ function get_raw_body(req, body_size_limit) {
 			req.destroy(reason);
 		}
 	});
+}
+
+/**
+ * HTTP/2 compatibility requests track cancellation separately from Readable's
+ * destroyed/readableAborted state.
+ * @param {import('http').IncomingMessage} request
+ */
+function is_http2_aborted(request) {
+	if (request.httpVersionMajor < 2) return false;
+	const req = /** @type {import('node:http2').Http2ServerRequest} */ (
+		/** @type {unknown} */ (request)
+	);
+	// Once the response has ended, Node no longer emits 'aborted' or sets its flag,
+	// but the stream still records the reset code.
+	return req.aborted || req.stream.rstCode !== 0;
 }
 
 /**
@@ -135,8 +170,15 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 
 	const controller = new AbortController();
 
+	if (is_http2_aborted(request)) {
+		controller.abort();
+	}
+	if (request.httpVersionMajor >= 2) {
+		request.once('aborted', () => controller.abort());
+	}
+
 	request.once('close', () => {
-		if (request.readableAborted) {
+		if (request.readableAborted || is_http2_aborted(request)) {
 			controller.abort();
 		}
 	});
