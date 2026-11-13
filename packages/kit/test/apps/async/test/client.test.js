@@ -882,6 +882,43 @@ test.describe('remote function mutations', () => {
 		expect(finite_connections).toBe(0);
 	});
 
+	for (const trigger of ['#same-page', '#reconnect-live']) {
+		test(`interrupted query.live reconnect from ${trigger} is not unhandled`, async ({ page }) => {
+			await page.goto('/remote/live');
+			await page.click('#reset');
+			await expect(page.locator('#connected')).toHaveText('true');
+
+			/** @type {string[]} */
+			const page_errors = [];
+			page.on('pageerror', (error) => page_errors.push(String(error)));
+
+			// hold the first reconnect open until the second one interrupts it
+			let streams = 0;
+			/** @type {() => void} */
+			let release = () => {};
+			const second = new Promise((/** @type {(value?: unknown) => void} */ fulfil) => {
+				release = fulfil;
+			});
+			await page.route(
+				(url) => url.pathname.endsWith('/get_count'),
+				async (route) => {
+					streams += 1;
+					if (streams === 1) await second;
+					else release();
+					await route.continue().catch(() => {});
+				}
+			);
+
+			await page.click(trigger);
+			await expect.poll(() => streams).toBe(1);
+			await page.click(trigger);
+			await expect.poll(() => streams).toBe(2);
+			await expect(page.locator('#connected')).toHaveText('true');
+
+			expect(page_errors).toEqual([]);
+		});
+	}
+
 	test('query.live can be detached from the page', async ({ page }) => {
 		await page.goto('/remote/live');
 		await page.click('#reset');
