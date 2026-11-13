@@ -3,14 +3,12 @@
 {
 	"$schema": "../node_modules/wrangler/config-schema.json",
 	"main": "../dist/index.js",
-	"compatibility_date": "2026-06-24",
+	"compatibility_date": "2026-08-06",
 	"assets": {
 		"directory": "../dist/public",
 		"binding": "ASSETS"
 	},
 	"vars": {
 		"FOO": "from wrangler.jsonc"
-	},
-	// TODO: remove this after we bump wrangler since it enables it by default for later compat dates
-	"compatibility_flags": ["nodejs_compat"]
+	}
 }
