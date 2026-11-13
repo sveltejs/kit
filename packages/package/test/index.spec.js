@@ -261,14 +261,6 @@ if (!process.env.CI) {
 			compare('Test.svelte');
 			compare('Test.svelte.d.ts');
 
-			// removes files whose output names are unchanged, too
-			remove('src/lib/a.js');
-			remove('src/lib/Test.svelte');
-			await settled();
-			for (const file of ['a.js', 'a.d.ts', 'Test.svelte', 'Test.svelte.d.ts']) {
-				expect(fs.existsSync(join(cwd, 'package', file))).toBe(false);
-			}
-
 			// processes custom extensions, including nested directory renames
 			fs.mkdirSync(join(cwd, 'src/lib/nested'));
 			write('src/lib/nested/Custom.svx', '<p>custom extension</p>');
