@@ -13,8 +13,6 @@ type AdapterSpecificOptions = any;
 
 // @filename: index.js
 // ---cut---
-import { getRequest, setResponse } from '@sveltejs/kit/node';
-
 /** @param {AdapterSpecificOptions} options */
 export default function (options) {
 	/** @type {import('@sveltejs/kit').Adapter} */
@@ -50,15 +48,6 @@ export default function (options) {
 			}
 		},
 		vite: {
-			getRequest(options) {
-				const request = getRequest(options);
-				// modify the Request object here if needed
-				return request;
-			},
-			setResponse(res, response) {
-				// handle WebSockets here, for example
-				setResponse(res, response);
-			},
 			plugins: {
 				// add plugins here to integrate with Vite
 				pre: [],

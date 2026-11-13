@@ -80,8 +80,9 @@ declare module '@sveltejs/kit' {
 		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
-		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
+		 * To call the original `getRequest` function, import it from `@sveltejs/kit/node`.
 		 * @since 3.0.0
+		 * @deprecated Use [`dev.respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterDevConfig) during `vite dev`, and a Vite plugin's `configurePreviewServer` hook during `vite preview`
 		 */
 		getRequest?: typeof getRequest;
 		/**
@@ -89,6 +90,7 @@ declare module '@sveltejs/kit' {
 		 * to write a `Response` object to a `http.ServerResponse`.
 		 * To call the original `setResponse` function, import it from `@sveltejs/kit/node`.
 		 * @since 3.0.0
+		 * @deprecated Use [`dev.respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterDevConfig) during `vite dev`, and a Vite plugin's `configurePreviewServer` hook during `vite preview`
 		 */
 		setResponse?: typeof setResponse;
 		/**
