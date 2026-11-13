@@ -181,6 +181,11 @@ export default function (options = {}) {
 			read: () => true,
 			instrumentation: () => true
 		},
+		dev: {
+			// sveltekit renders requests in the dev worker in workerd
+			respond: (request, { getClientAddress, resolve }) =>
+				forward ? forward(request, getClientAddress) : resolve(request)
+		},
 		vite: ({ config }) => {
 			if (config.paths.assets) {
 				throw new Error(
@@ -190,9 +195,6 @@ export default function (options = {}) {
 
 			return {
 				customPreview: true,
-				// sveltekit renders requests in the dev worker in workerd
-				respond: (request, { getClientAddress, resolve }) =>
-					forward ? forward(request, getClientAddress) : resolve(request),
 				plugins: [
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
