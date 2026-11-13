@@ -241,4 +241,12 @@ test.describe('Remote functions', () => {
 		expect(response.status()).toBe(500);
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
+
+	test('queries throw when used in a prerendered page', async ({ request }) => {
+		const response = await request.get('/remote/query/prerendered');
+		expect(response.status()).toBe(500);
+		expect(await response.text()).toContainKitDiagnostic('remote_query_prerender', {
+			contains: ['`query`', '`answer`']
+		});
+	});
 });
