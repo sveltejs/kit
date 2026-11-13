@@ -2,7 +2,7 @@ import path from 'node:path';
 import { GENERATED_COMMENT } from '../../constants.js';
 import { resolve_entry } from '../../utils/filesystem.js';
 import { posixify } from '../../utils/os.js';
-import { write_if_changed } from './utils.js';
+import { property_key, write_if_changed } from './utils.js';
 import { s } from '../../utils/misc.js';
 import {
 	decode_escape_sequence,
@@ -242,7 +242,7 @@ function generate_app_types(manifest_data, config, dir) {
 		if (route.params.length > 0) {
 			const params = route.params.map((p) => {
 				const type = get_matcher_type(p.matcher);
-				return `${/^\w+$/.test(p.name) ? p.name : `'${p.name}'`}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
+				return `${property_key(p.name)}${p.optional ? '?:' : ':'} ${type}${p.optional ? ' | undefined' : ''}`;
 			});
 
 			if (is_app_route(route)) {
@@ -265,7 +265,7 @@ function generate_app_types(manifest_data, config, dir) {
 			const params = Array.from(layout_params)
 				.map(([name, { optional, matchers }]) => {
 					const type = get_matchers_type(matchers);
-					return `${/^\w+$/.test(name) ? name : `'${name}'`}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
+					return `${property_key(name)}${optional ? '?:' : ':'} ${type}${optional ? ' | undefined' : ''}`;
 				})
 				.join('; ');
 
