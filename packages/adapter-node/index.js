@@ -276,7 +276,15 @@ function create_prerendered_table(base, measured, paths) {
 		const file = path.slice(base.length + 1) || 'index.html';
 		const entry =
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
-		if (entry) entries.push([base + path.slice(base.length).replaceAll('%', '%25'), entry]);
+		if (!entry) continue;
+
+		const key = base + path.slice(base.length).replaceAll('%', '%25');
+		entries.push([key, entry]);
+
+		// kit decodes paths with `decodeURI`, which leaves reserved characters such as
+		// `%2F` encoded, so `/a%2Fb` and `/a%252Fb` are both recorded as `/a%2Fb`
+		const reserved = key.replace(/%25(2[346BCF]|3[ABDF]|40)/gi, '%$1');
+		if (reserved !== key) entries.push([reserved, entry]);
 	}
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));

@@ -106,7 +106,8 @@ test('serves prerendered paths with percent signs', async ({ request }) => {
 	for (const [path, body] of [
 		['/prerendered-%25.txt', 'prerendered percent'],
 		['/prerendered-%252F.txt', 'literal percent2F'],
-		['/prerendered-%2525.txt', 'literal percent25']
+		['/prerendered-%2525.txt', 'literal percent25'],
+		['/prerendered-reserved/a%2Fb.txt', 'a/b']
 	]) {
 		const response = await request.get(path);
 		expect(response.status(), path).toBe(200);
