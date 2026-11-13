@@ -29,17 +29,26 @@ export class Redirect {
 	 * @param {string} location
 	 */
 	constructor(status, location) {
-		try {
-			new Headers({ location });
-		} catch {
-			throw new Error(
-				`Invalid redirect location ${JSON.stringify(location)}: ` +
-					'this string contains characters that cannot be used in HTTP headers'
-			);
-		}
-
 		this.status = status;
-		this.location = location;
+		this.location = encode_redirect_location(location);
+	}
+}
+
+/**
+ * @param {string} location
+ */
+function encode_redirect_location(location) {
+	try {
+		// a header value cannot hold non-ASCII characters, so encode them the way a browser
+		// encodes a URL (#16054); control characters still fail the check below
+		const encoded = location.replace(/[^\p{ASCII}]+/gu, (chars) => encodeURI(chars));
+		new Headers({ location: encoded });
+		return encoded;
+	} catch {
+		throw new Error(
+			`Invalid redirect location ${JSON.stringify(location)}: ` +
+				'this string contains characters that cannot be used in HTTP headers'
+		);
 	}
 }
 
