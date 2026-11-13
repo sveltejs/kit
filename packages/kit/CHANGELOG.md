@@ -1,5 +1,17 @@
 # @sveltejs/kit
 
+## 3.2.1
+
+### Patch Changes
+
+- fix: prerender crawler finds links located after a quoted attribute value ending with `\` ([#17688](https://github.com/sveltejs/kit/pull/17688))
+
+- perf: hash a page's encoded bytes for its `ETag` and send the same bytes as the body, and skip the hash when `setHeaders` already sets an `etag` or the response is `no-store` ([#17674](https://github.com/sveltejs/kit/pull/17674))
+
+- fix: generate valid types for route params whose names start with a digit, such as `[2nd]` ([#17661](https://github.com/sveltejs/kit/pull/17661))
+
+- perf: skip the `ETag` hash for a page that has a CSP nonce in it, since no two responses are the same ([#17743](https://github.com/sveltejs/kit/pull/17743))
+
 ## 3.2.0
 
 ### Minor Changes
