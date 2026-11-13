@@ -60,6 +60,29 @@ test.describe('CSP', () => {
 		expect(hydratable_script_match?.[1]).toBe(nonce);
 	});
 
+	test('does not add an etag to a page with a nonce in it', async ({ request }) => {
+		const response = await request.get('/path-base/csp-hydratable');
+		const html = await response.text();
+
+		const nonce = response.headers()['content-security-policy'].match(/'nonce-([^']+)'/)?.[1];
+		expect(nonce).toBeDefined();
+		expect(html).toContain(`nonce="${nonce}"`);
+
+		// the nonce makes every response different, so an etag could never match
+		expect(response.headers()['etag']).toBeUndefined();
+	});
+
+	test('adds an etag to a page with no nonce in it', async ({ request }) => {
+		const response = await request.get('/path-base/csp-no-csr');
+		const html = await response.text();
+
+		// nothing on this page needs the nonce, so every response is the same
+		expect(response.headers()['content-security-policy']).toBeDefined();
+		expect(html).not.toContain('nonce=');
+
+		expect(response.headers()['etag']).toBeDefined();
+	});
+
 	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
 		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
 
