@@ -9,6 +9,7 @@ import {
 	server_assets as server_files
 } from '#@sveltejs/adapter-bun';
 import path from 'node:path';
+import { negotiateEncoding } from '@sveltejs/adapter-server/runtime';
 
 /**
  * @typedef {(request: Request) => Response} Serve
@@ -66,31 +67,6 @@ function is_fresh(request, etag, mtime) {
 }
 
 /**
- * Picks the precompressed variant the client accepts, preferring brotli. An explicit
- * `q=0` refuses a coding even when `*` accepts the rest.
- * @template T
- * @param {string | null} accept
- * @param {T | undefined} br
- * @param {T | undefined} gz
- * @returns {T | undefined}
- */
-function negotiate(accept, br, gz) {
-	if (accept === null) return;
-
-	/** @type {Map<string, boolean>} */
-	const accepted = new Map();
-	for (const part of accept.split(',')) {
-		const [name = '', ...params] = part.trim().toLowerCase().split(';');
-		accepted.set(name.trim(), !params.some((param) => /^q=0(\.0*)?$/.test(param.trim())));
-	}
-
-	/** @param {string} coding */
-	const ok = (coding) => accepted.get(coding) ?? accepted.get('*') ?? false;
-	if (br && ok('br')) return br;
-	if (gz && ok('gzip')) return gz;
-}
-
-/**
  * Serves one file with its build-time validator and precompressed variants. Everything
  * that does not depend on the request is created once, here, including the `Headers`
  * (Bun copies them into each response).
@@ -129,17 +105,19 @@ function file_entry(file, meta, immutable = false) {
 	};
 
 	const identity = variant();
-	const br = meta.br ? variant('br') : undefined;
-	const gz = meta.gz ? variant('gz') : undefined;
+	const encoded = {
+		br: meta.br ? variant('br') : undefined,
+		gz: meta.gz ? variant('gz') : undefined
+	};
 
 	/** @type {Serve} */
 	const serve = (request) => {
 		// ranges apply to the identity representation
-		const { etag, not_modified, body, ok } =
-			(compressed &&
-				request.headers.get('range') === null &&
-				negotiate(request.headers.get('accept-encoding'), br, gz)) ||
-			identity;
+		const encoding =
+			compressed && request.headers.get('range') === null
+				? negotiateEncoding(request.headers.get('accept-encoding'), meta)
+				: undefined;
+		const { etag, not_modified, body, ok } = (encoding && encoded[encoding]) || identity;
 
 		return is_fresh(request, etag, meta.mtime)
 			? new Response(null, not_modified)

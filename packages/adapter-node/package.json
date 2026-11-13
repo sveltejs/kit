@@ -41,6 +41,9 @@
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write ."
 	},
+	"dependencies": {
+		"@sveltejs/adapter-server": "workspace:^"
+	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",

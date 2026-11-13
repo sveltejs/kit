@@ -1,11 +1,7 @@
 import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-// posix so it matches the module ids Vite reports on every platform
-const src = fileURLToPath(new URL('./src', import.meta.url).href).replaceAll('\\', '/');
-const handoff = '#@sveltejs/adapter-node';
+import { bundleRuntime, isHidden } from '@sveltejs/adapter-server';
 
 /** @type {typeof import('./index.js').default} */
 export default function (opts = {}) {
@@ -87,67 +83,19 @@ export default function (opts = {}) {
 		vite: {
 			plugins: {
 				post: [
-					{
-						name: 'vite-plugin-sveltekit-adapter-node',
-						apply: 'build',
-						config(config) {
-							const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-							// vite-plugin-svelte lists Svelte libraries here so their export conditions resolve at build time
-							const no_external = Array.isArray(config.ssr?.noExternal)
-								? config.ssr.noExternal
-								: [];
-
-							return {
-								ssr: {
-									// Vite doesn't bundle dependencies for SSR by default. Bundle everything
-									// except production dependencies that don't need the build's export conditions
-									external: Object.keys(pkg.dependencies || {}).filter(
-										(dep) =>
-											!no_external.some((rule) =>
-												typeof rule === 'string' ? rule === dep : rule.test(dep)
-											)
-									),
-									noExternal: true
-								},
-								environments: {
-									ssr: {
-										build: {
-											rolldownOptions: {
-												// bundled with the app's server code so shared modules aren't duplicated (#15755)
-												input: {
-													'adapter-index': `${src}/index.js`,
-													'adapter-env': `${src}/env.js`,
-													handler: `${src}/handler.js`
-												},
-												// generated after the Vite build and rewritten to an output-relative path
-												external: [handoff],
-												output: {
-													paths: { [handoff]: '../adapter-node.js' },
-													// the hand-off path only holds at the output root, so adapter chunks may not nest
-													chunkFileNames: (chunk) =>
-														chunk.moduleIds.some((id) => id.startsWith(src))
-															? 'adapter-node-[name].js'
-															: 'chunks/[name].js'
-												}
-											}
-										}
-									}
-								}
-							};
+					bundleRuntime({
+						name: '@sveltejs/adapter-node',
+						src: new URL('./src', import.meta.url),
+						input: {
+							'adapter-index': 'index.js',
+							'adapter-env': 'env.js',
+							handler: 'handler.js'
 						}
-					}
+					})
 				]
 			}
 		}
 	};
-}
-
-/**
- * Dotfiles are not served, with the customary exception of `.well-known`
- * @param {string} file
- */
-function is_hidden(file) {
-	return file.split('/').some((segment) => segment[0] === '.') && !file.startsWith('.well-known/');
 }
 
 /**
@@ -191,7 +139,7 @@ function measure_files(root, files, compressed) {
 	const entries = [];
 
 	for (const file of files) {
-		if (is_hidden(file)) continue;
+		if (isHidden(file)) continue;
 
 		const abs = join(root, file);
 
