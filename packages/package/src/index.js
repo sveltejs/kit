@@ -137,7 +137,7 @@ export async function watch(options) {
 						`${file.base}.d.mts`,
 						`${file.base}.d.cts`
 					]) {
-						// another source file still produces this output, e.g. foo.ts was renamed to foo.js
+						// if foo.ts was renamed to foo.js, avoid deleting the transformed file with the same name
 						if (files.some((current) => current.dest === candidate)) continue;
 
 						const resolved = path.join(output, candidate);
