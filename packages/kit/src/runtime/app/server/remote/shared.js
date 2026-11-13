@@ -27,7 +27,11 @@ export function create_validator(validate_or_fn, maybe_fn, get_internals) {
 	}
 
 	// use https://standardschema.dev validator if provided
-	if ('~standard' in validate_or_fn) {
+	if (
+		validate_or_fn !== null &&
+		(typeof validate_or_fn === 'object' || typeof validate_or_fn === 'function') &&
+		'~standard' in validate_or_fn
+	) {
 		return async (arg) => {
 			// access property and call method in one go to preserve potential this context
 			const result = await validate_or_fn['~standard'].validate(arg);
@@ -202,6 +206,10 @@ export async function* run_remote_generator(event, state, allow_cookies, get_inp
  * @returns {Iterator<T> | AsyncIterator<T>}
  */
 function to_iterator(source, name) {
+	// primitives have no prototype chain to inspect, and `in` would throw
+	if (source === null || (typeof source !== 'object' && typeof source !== 'function')) {
+		e.remote_query_live_not_iterable({ name });
+	}
 	// intentionally using `in` because these could be inherited
 	if ('next' in source && typeof source.next === 'function') {
 		return source;

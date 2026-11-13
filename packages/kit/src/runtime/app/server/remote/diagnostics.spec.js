@@ -63,6 +63,12 @@ test('invalid validators throw at declaration, not at invocation', () => {
 	expect(() => create_validator({}, () => {})).toThrowKitError('remote_invalid_validator');
 });
 
+test('primitive validators throw at declaration, not at invocation', () => {
+	for (const primitive of ['email', 42, true, null]) {
+		expect(() => create_validator(primitive, () => {})).toThrowKitError('remote_invalid_validator');
+	}
+});
+
 test.each(['development', 'production'])(
 	'remote imports work under plain Node %s conditions',
 	(condition) => {
@@ -225,6 +231,21 @@ test('live callbacks must return an iterable', async () => {
 	await expect(iterator.next()).rejects.toThrowKitError('remote_query_live_not_iterable', {
 		contains: ['live']
 	});
+});
+
+test('a live query returning a non-iterable value throws the kit diagnostic', async () => {
+	await expect(
+		run(() =>
+			run_remote_generator(
+				store.event,
+				store.state,
+				false,
+				() => undefined,
+				/** @type {any} */ (() => 42),
+				'test'
+			).next()
+		)
+	).rejects.toThrowKitError('remote_query_live_not_iterable');
 });
 
 test('live generators retain request context and clean up when closed', async () => {
