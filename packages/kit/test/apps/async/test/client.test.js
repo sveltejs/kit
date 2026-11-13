@@ -987,6 +987,21 @@ test.describe('remote function mutations', () => {
 			.toBeGreaterThan(before_cleanup);
 	});
 
+	test('query.live keeps streaming after a link to another app', async ({ page }) => {
+		await page.goto('/remote/live');
+		await page.click('#reset');
+		await expect(page.locator('#count')).toHaveText('0');
+		await expect(page.locator('#connected')).toHaveText('true');
+
+		// a mailto: link fires beforeunload, but the page stays where it is
+		await page.click('#mailto');
+		await expect(page.locator('#beforeunload-count')).toHaveText('1');
+
+		await page.click('#increment');
+		await expect(page.locator('#count')).toHaveText('1');
+		await expect(page.locator('#connected')).toHaveText('true');
+	});
+
 	test('query.live surfaces mid-stream HttpError and does not reconnect', async ({ page }) => {
 		await page.goto('/remote/live-terminal');
 
