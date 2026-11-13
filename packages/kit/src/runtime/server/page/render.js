@@ -606,7 +606,7 @@ export async function render_response({
 	// the response body is these bytes, so the etag is hashed from them rather than from the string
 	const encoded = chunks ? null : text_encoder.encode(transformed);
 
-	// a page with this response's nonce in it is never the same twice, so its `etag` could never match
+	// a page with a nonce can never generate matching etags, so we can skip processing it
 	const has_nonce =
 		encoded &&
 		(csp.script_needs_nonce || csp.style_needs_nonce || options.app_template_contains_nonce) &&
