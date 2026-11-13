@@ -1,11 +1,13 @@
 /** @import { Plugin } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
-
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
+import { exactRegex } from '@rolldown/pluginutils';
+import { getRequest } from '@sveltejs/kit/node';
+import { plugin_config } from './config.js';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
@@ -14,8 +16,6 @@ import {
 	generate_redirects,
 	append_headers
 } from './utils.js';
-import { exactRegex } from '@rolldown/pluginutils';
-import { getRequest } from '@sveltejs/kit/node';
 
 const name = '@sveltejs/adapter-cloudflare';
 
@@ -204,6 +204,7 @@ export default function (options = {}) {
 				return request;
 			},
 			plugins: [
+				...plugin_config(options.config),
 				virtual_workers_module(
 					{
 						configPath: options.config,
@@ -215,6 +216,8 @@ export default function (options = {}) {
 		}
 	};
 }
+
+// TODO: move the Vite plugin stuff into their own file
 
 /**
  * @param {GetPlatformProxyOptions} options
