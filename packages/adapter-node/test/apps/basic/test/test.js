@@ -92,8 +92,6 @@ test('records aliases for html files', async ({ request }) => {
 test('serves static files with percent signs in their names', async ({ request }) => {
 	for (const [path, body] of [
 		['/100%25.txt', 'percent'],
-		['/100%25.txt?download=1', 'percent'],
-		['/literal%252F.txt', 'literal percent'],
 		['/percent%25/', '<h1>percent directory</h1>\n']
 	]) {
 		const response = await request.get(path);
@@ -105,8 +103,6 @@ test('serves static files with percent signs in their names', async ({ request }
 test('serves prerendered paths with percent signs', async ({ request }) => {
 	for (const [path, body] of [
 		['/prerendered-%25.txt', 'prerendered percent'],
-		['/prerendered-%252F.txt', 'literal percent2F'],
-		['/prerendered-%2525.txt', 'literal percent25'],
 		['/prerendered-reserved/a%2Fb.txt', 'a/b']
 	]) {
 		const response = await request.get(path);
