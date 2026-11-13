@@ -1582,6 +1582,100 @@ test.describe('Streaming', () => {
 		expect(page.locator('p.loadingfail')).toBeHidden();
 	});
 
+	for (const [outcome, message] of [
+		['ends early', 'Streamed response ended before all promises were settled'],
+		['fails', 'network error']
+	]) {
+		test(`Rejects pending promises when the data response ${outcome} (client nav)`, async ({
+			page
+		}) => {
+			await page.goto('/streaming');
+
+			// forward only the first line of the data response, which holds the placeholders
+			// for the promises, then end or fail the response before a chunk settles any of them
+			await page.evaluate((outcome) => {
+				const original_fetch = window.fetch;
+
+				window.fetch = async (input, init) => {
+					const response = await original_fetch(input, init);
+					const url = input instanceof Request ? input.url : input.toString();
+
+					if (!url.includes('/__data.json')) return response;
+
+					const reader = /** @type {ReadableStream<Uint8Array>} */ (response.body).getReader();
+					let cut = false;
+
+					return new Response(
+						new ReadableStream({
+							async pull(controller) {
+								if (cut) {
+									// we only get here once the first line has been read
+									void reader.cancel();
+
+									if (outcome === 'fails') {
+										controller.error(new TypeError('network error'));
+									} else {
+										controller.close();
+									}
+
+									return;
+								}
+
+								const { done, value } = await reader.read();
+								if (done) return controller.close();
+
+								const end = value.indexOf(10) + 1; // \n
+								controller.enqueue(end ? value.subarray(0, end) : value);
+								cut = end > 0;
+							}
+						}),
+						response
+					);
+				};
+			}, outcome);
+
+			await page.click('[href="/streaming/server"]');
+
+			await expect(page.locator('p.eager')).toHaveText('eager');
+			await expect(page.locator('p.fail')).toHaveText(message);
+			await expect(page.locator('p.loadingsuccess')).toBeHidden();
+		});
+	}
+
+	test('Rejects pending promises when a chunk cannot be decoded (client nav)', async ({ page }) => {
+		await page.goto('/streaming');
+
+		// replace the value in each chunk with one whose type the client cannot decode
+		await page.evaluate(() => {
+			const original_fetch = window.fetch;
+
+			window.fetch = async (input, init) => {
+				const response = await original_fetch(input, init);
+				const url = input instanceof Request ? input.url : input.toString();
+
+				if (!url.includes('/__data.json')) return response;
+
+				const lines = (await response.text()).split('\n').map((line) => {
+					if (!line) return line;
+
+					const node = JSON.parse(line);
+					if (node.type !== 'chunk') return line;
+
+					node[node.error ? 'error' : 'data'] = [['NotAType', 1], 0];
+					return JSON.stringify(node);
+				});
+
+				return new Response(lines.join('\n'), response);
+			};
+		});
+
+		await page.click('[href="/streaming/server"]');
+
+		await expect(page.locator('p.eager')).toHaveText('eager');
+		await expect(page.locator('p.fail')).toHaveText('Unknown type NotAType');
+		await expect(page.locator('p.loadingsuccess')).toBeHidden();
+	});
+
 	test('Catches fetch errors from server load functions (client nav)', async ({ page }) => {
 		await page.goto('/streaming');
 		page.click('[href="/streaming/server-error"]');
