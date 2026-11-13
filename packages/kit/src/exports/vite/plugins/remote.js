@@ -75,7 +75,7 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	 * @returns {Promise<Record<string, RemoteInternals['type']>>}
 	 */
 	async function get_dev_exports(remote, id) {
-		const respond = svelte_config.adapter?.vite?.respond;
+		const respond = svelte_config.adapter?.dev?.respond;
 		if (!respond) return load_exports(id);
 
 		// the server loads remote modules by their hash, which it looks up in this list
