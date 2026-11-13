@@ -5,14 +5,13 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "sirv -p 5174 -s 200.html build",
+		"preview": "vite preview --port 5174 --strictPort",
 		"test": "playwright test"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "workspace:*",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
-		"sirv-cli": "catalog:",
 		"svelte": "catalog:",
 		"vite": "catalog:"
 	},

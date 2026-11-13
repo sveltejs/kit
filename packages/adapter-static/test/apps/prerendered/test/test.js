@@ -30,3 +30,14 @@ test('exposes public env vars to the client', async ({ page }) => {
 	expect(await page.textContent('h1')).toEqual('The answer is 42');
 	expect(await page.textContent('h2')).toEqual('The dynamic answer is 42');
 });
+
+test('serves 404.html for unknown URLs', async ({ page }) => {
+	const response = await page.goto('/nosuchpage');
+	expect(response?.status()).toBe(404);
+	expect(await page.textContent('h1')).toEqual('custom 404 page');
+});
+
+test('responds with 405 to methods other than GET and HEAD', async ({ request }) => {
+	const response = await request.post('/');
+	expect(response.status()).toBe(405);
+});
