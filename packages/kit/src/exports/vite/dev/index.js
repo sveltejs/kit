@@ -82,7 +82,7 @@ export async function dev(
 
 	write_tsconfig(svelte_config, root);
 
-	if (svelte_config.adapter?.vite?.respond) {
+	if (svelte_config.adapter?.dev?.respond) {
 		// the runtime may not trust the certificate that vite serves https with
 		const loopback = http.createServer(vite_dev_server.middlewares);
 		await new Promise((fulfil) => loopback.listen(0, '127.0.0.1', () => fulfil(undefined)));
