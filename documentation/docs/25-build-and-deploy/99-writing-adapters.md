@@ -43,6 +43,8 @@ export default function (options) {
 			}
 		},
 		vite: {
+			// set this to `true` to disable the default Node server during `vite preview`
+			customPreview: false,
 			respond(request, { getClientAddress, resolve }) {
 				// during `vite dev`, render the request in your platform's runtime,
 				// or call `resolve` to render it in Node as usual
