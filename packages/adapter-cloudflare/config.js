@@ -2,7 +2,7 @@
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { validate_main } from './utils.js';
+import { is_dev_or_build, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -21,13 +21,7 @@ const useful_cloudflare_build_plugins = new Set([
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
-/** @type {Plugin['apply']} */
-export const is_dev_or_build = (_config, env) => !env.isPreview;
-
 /**
- * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that dev emulates workerd and the server output suits it.
- * It also generates the Wrangler deployment config for the build output
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
  * @param {string[]} [scan_entries] the files Vite scans for the SSR environment's dependencies
@@ -67,17 +61,16 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 	}
 
 	return [
-		...cloudflare_plugins.flatMap((plugin) => {
-			if (useful_cloudflare_plugins.has(plugin.name)) {
-				return [{ ...plugin, apply: is_dev_or_build }];
-			}
-
-			if (useful_cloudflare_build_plugins.has(plugin.name)) {
-				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
-			}
-
-			return [];
-		}),
+		...cloudflare_plugins.map(
+			(plugin) =>
+				/** @satisfies {Plugin} */ ({
+					...plugin,
+					apply: (_config, env) =>
+						env.isPreview === true ||
+						useful_cloudflare_plugins.has(plugin.name) ||
+						(env.command === 'build' && useful_cloudflare_build_plugins.has(plugin.name))
+				})
+		),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,

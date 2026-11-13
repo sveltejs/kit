@@ -4,12 +4,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getRequest } from '@sveltejs/kit/node';
-import { is_dev_or_build, plugin_config } from './config.js';
+import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
 import {
 	validate_worker_settings,
 	generate_redirects,
 	append_headers,
+	is_dev_or_build,
 	sync_process_env
 } from './utils.js';
 
@@ -168,6 +169,7 @@ export default function (options = {}) {
 			}
 
 			return {
+				customPreview: true,
 				getRequest(options) {
 					const request = getRequest(options);
 					/** @type {import('@cloudflare/workers-types').Request} */ (

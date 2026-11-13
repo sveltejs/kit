@@ -26,7 +26,7 @@ export interface AdapterOptions {
 
 	/**
 	 * Config object passed to [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#getplatformproxy)
-	 * during development and preview.
+	 * during development.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
 }
