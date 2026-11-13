@@ -594,6 +594,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configurepreviewserver
 		 */
 		configurePreviewServer(server) {
+			if (svelte_config.adapter?.vite?.customPreview) return;
 			return preview(server, svelte_config);
 		}
 	};
