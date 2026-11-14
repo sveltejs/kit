@@ -200,6 +200,8 @@ Any query can be re-fetched via its `refresh` method, which retrieves the latest
 </button>
 ```
 
+If a refresh fails because of a network error or an unstructured HTTP 5xx, 408 or 429 response, awaiting the query continues to return its last successful value, if it has one. The query's `error` property is set and the promise returned by `refresh()` rejects, so you can report the failure and retry explicitly. Errors returned by the remote function and other HTTP failures still reject awaiting consumers. Once such an error has occurred, the old value will not be reused until the query successfully loads again or is updated with `set()`.
+
 > [!NOTE] Queries are cached while they're on the page, meaning `getPosts() === getPosts()`. This means you don't need a reference like `const posts = getPosts()` in order to update the query.
 
 ## query.batch
