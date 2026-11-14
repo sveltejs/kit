@@ -129,7 +129,6 @@ function get_raw_body(req, body_size_limit) {
 			};
 
 			if (req.httpVersionMajor >= 2) {
-				// reject before the `end` that follows can close the body
 				req.once('aborted', () => on_error(aborted_error()));
 			}
 
