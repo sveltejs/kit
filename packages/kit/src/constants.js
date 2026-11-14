@@ -33,10 +33,10 @@ export const SRC_ROOT = import.meta.dirname;
 export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
 
 /**
- * The module that a dev server outside the Vite process imports to report the error in its
- * query, since only the Vite process can log it and show the error overlay
+ * The event that a dev server outside the Vite process sends when a module fails to load,
+ * since only the Vite process can log the error and show the error overlay
  */
-export const DEV_REPORT_ERROR_ID = '/@sveltejs/kit/dev/report-error';
+export const DEV_REPORT_ERROR_EVENT = 'sveltekit:dev-error';
 
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
