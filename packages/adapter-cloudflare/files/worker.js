@@ -42,7 +42,13 @@ export default {
 		await initialized;
 
 		let { pathname, search } = new URL(req.url);
+
+		// prerendered paths are recorded the way kit's router decodes a pathname,
+		// which leaves `%25` and reserved characters such as `%2F` encoded
+		let prerendered_pathname = pathname;
+
 		try {
+			prerendered_pathname = pathname.split('%25').map(decodeURI).join('%25');
 			pathname = decodeURIComponent(pathname);
 		} catch {
 			// ignore invalid URI
@@ -57,15 +63,36 @@ export default {
 			is_static_asset = assets.has(filename) || assets.has(filename + '/index.html');
 		}
 
-		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		let location =
+			prerendered_pathname.at(-1) === '/'
+				? prerendered_pathname.slice(0, -1)
+				: prerendered_pathname + '/';
+
+		const is_router_form = prerendered.has(prerendered_pathname);
+		// older versions of kit recorded prerendered paths fully decoded
+		const is_prerendered = !is_static_asset && (is_router_form || prerendered.has(pathname));
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			is_prerendered ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			let res = await env.ASSETS_BINDING.fetch(req);
+			let asset_request = req;
+
+			if (is_prerendered && is_router_form) {
+				// a prerendered file is named by its fully decoded path, so a path such as
+				// `/a%2Fb` is stored as `a%2Fb.html`, which the asset server serves at `/a%252Fb`
+				try {
+					const url = new URL(req.url);
+					url.pathname = encodeURI(decodeURI(prerendered_pathname));
+					asset_request = new Request(url, req);
+				} catch {
+					// a path recorded by an older version of kit can have a `%` that is not an escape
+				}
+			}
+
+			let res = await env.ASSETS_BINDING.fetch(asset_request);
 			// `_headers` applies cache regardless of status, so we need to ensure an
 			// error response does not get cached
 			if (res.status >= 400) {
@@ -76,6 +103,11 @@ export default {
 		}
 
 		// trailing slash redirect for prerendered pages
+		if (!prerendered.has(location)) {
+			// older versions of kit recorded prerendered paths fully decoded
+			location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		}
+
 		if (location && prerendered.has(location)) {
 			if (search) location += search;
 			return new Response('', {
