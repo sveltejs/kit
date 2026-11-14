@@ -45,10 +45,34 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
+		 * Options that only apply during `vite dev`
+		 * @since 3.3.0
+		 */
+		dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+		/**
 		 * Options for configuring and interacting with Vite
 		 * @since 3.0.0
 		 */
 		vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	}
+
+	export interface AdapterDevConfig {
+		/**
+		 * During `vite dev`, SvelteKit calls this function with each request it would render, after
+		 * serving static files, imported assets and the service worker. Use it to render requests in
+		 * your platform's runtime instead of Node, by sending them to code that runs there.
+		 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
+		 * @since 3.3.0
+		 */
+		respond?: (
+			request: Request,
+			options: {
+				/** Returns the IP address of the client that sent the request */
+				getClientAddress: () => string;
+				/** Renders the request in Node */
+				resolve: (request: Request) => Promise<Response>;
+			}
+		) => Promise<Response>;
 	}
 
 	export interface AdapterViteConfig {
@@ -978,7 +1002,7 @@ declare module '@sveltejs/kit' {
 	type ValidatedConfig = RecursiveRequired<
 		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
 	> & {
-		adapter: Adapter & { vite?: AdapterViteConfig };
+		adapter: Adapter & { dev?: AdapterDevConfig; vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
 		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
