@@ -80,12 +80,6 @@ A service worker must be served from the same origin as your app, but [`paths.as
 
 [Service workers](https://svelte.dev/docs/kit/service-workers) run outside the page, so modules that depend on the page or the client-side router — such as `$app/forms`, `$app/navigation` and `$app/state` — aren't available there. Remove these imports from your service worker and the modules it imports.
 
-## fetch_relative_url
-
-> Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
-
-On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip.
-
 ## preview_build_missing
 
 > Server files not found at `%dir%`, did you run `build` first?

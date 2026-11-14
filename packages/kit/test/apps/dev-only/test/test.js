@@ -242,3 +242,72 @@ test.describe('Remote functions', () => {
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
 });
+
+test('adapters can render requests themselves', async ({ request }) => {
+	const response = await request.get('/adapter-respond');
+	expect(await response.text()).toBe('rendered by the adapter');
+});
+
+test.describe('@sveltejs/kit/adapter/dev', () => {
+	test('renders pages in another environment', async ({ page }) => {
+		await page.goto('/other-environment');
+		await expect(page.locator('p')).toHaveText('rendered in the other environment');
+	});
+
+	test('renders endpoints in another environment', async ({ request }) => {
+		const response = await request.get('/other-environment/endpoint');
+		expect(await response.text()).toBe('other');
+	});
+
+	test('shows the error overlay when a module fails to load', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'the overlay needs JavaScript');
+
+		await page.goto('/other-environment/throws', { wait_for_started: false });
+		await expect(page.locator('vite-error-overlay .message-body')).toHaveText(
+			'thrown while the module loads'
+		);
+	});
+
+	test('inlines styles', async ({ request }) => {
+		const eager = await (await request.get('/other-environment/css')).text();
+		expect(eager).toContain('rgb(1, 2, 3)');
+		expect(eager).toContain('rgb(4, 5, 6)');
+
+		// the same modules as before, which now depend on one more component
+		const lazy = await (await request.get('/other-environment/css?lazy')).text();
+		expect(lazy).toContain('rgb(7, 8, 9)');
+	});
+
+	test('reads imported assets', async ({ request }) => {
+		for (const [query, file] of [
+			['', 'file.bin'],
+			['?svg', 'logo.svg']
+		]) {
+			const content = fs.readFileSync(
+				path.join(import.meta.dirname, '../src/routes/other-environment/read', file)
+			);
+
+			const response = await request.get(`/other-environment/read${query}`);
+			expect(response.headers()['content-length']).toBe(String(content.length));
+			expect((await response.body()).equals(content)).toBe(true);
+		}
+	});
+
+	test('runs remote functions', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'remote functions are called from the browser');
+
+		await page.goto('/other-environment/remote');
+		await expect(page.locator('p')).toHaveText('other');
+
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('1');
+	});
+
+	test('global fetch rejects relative URLs', async ({ request }) => {
+		const response = await request.get('/other-environment/fetch-relative');
+		expect(await response.text()).toContainKitDiagnostic('fetch_relative_url');
+	});
+});

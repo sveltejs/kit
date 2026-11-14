@@ -4,23 +4,6 @@
  */
 export const SVELTE_KIT_ASSETS = '/_svelte_kit_assets';
 
-/** dev server path that returns the css a module depends on */
-export const DEV_INLINE_STYLES_PATH = '/@sveltejs/kit/dev/inline-styles';
-
-/** dev server path that returns the sizes of the assets a module imports */
-export const DEV_SERVER_ASSETS_PATH = '/@sveltejs/kit/dev/server-assets';
-
-/** dev server path that returns the file of a remote module by its hash */
-export const DEV_REMOTE_PATH = '/@sveltejs/kit/dev/remote';
-
-/** response header that reports the remote function a request used */
-export const DEV_INFO_HEADER = 'x-sveltekit-dev-info';
-
-/**
- * request header that asks the dev server for the exports of a remote module
- */
-export const DEV_REMOTE_EXPORTS_HEADER = 'x-sveltekit-dev-remote-exports';
-
 export const GENERATED_COMMENT = '// this file is generated — do not edit it';
 
 export const ENDPOINT_METHODS = [
@@ -42,6 +25,24 @@ export const BODY_DEPENDENT_METHODS = [...MUTATIVE_METHODS, 'QUERY'];
 export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
+
+/**
+ * The module that a dev server outside the Vite process imports to find the CSS that the modules
+ * in its query depend on. Only Vite has the module graph
+ */
+export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
+
+/**
+ * The module that a dev server outside the Vite process imports to read the file in its query,
+ * which it cannot read from the file system
+ */
+export const DEV_ASSET_ID = '/@sveltejs/kit/dev/asset';
+
+/**
+ * The module that a dev server outside the Vite process imports to report the error in its
+ * query, since only the Vite process can log it and show the error overlay
+ */
+export const DEV_REPORT_ERROR_ID = '/@sveltejs/kit/dev/report-error';
 
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;

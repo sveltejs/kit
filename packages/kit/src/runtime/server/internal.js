@@ -34,16 +34,6 @@ export let manifest = /** @type {SSRManifest} */ (
 export let hooks = /** @type {ServerHooks} */ ((__SVELTEKIT_DEV__ && restore(hooks_key)) ?? null);
 
 /**
- * whether read streams imported assets missing from manifest.server_assets, for dev servers
- * that cannot see the file system
- */
-export let read_unlisted_assets = false;
-
-export function set_read_unlisted_assets() {
-	read_unlisted_assets = true;
-}
-
-/**
  * The public `read` may return a promise, the runtime expects a stream
  * @param {NonNullable<import('@sveltejs/kit').ServerInitOptions['read']>} read
  */
@@ -83,10 +73,9 @@ export function set_hooks(value) {
  * @param {number} status
  * @param {Request} request
  * @param {SSRManifest} manifest
- * @param {typeof get_remote_function} [get_remote] finds the remote function that handled the request
  * @returns {Promise<string>}
  */
-export async function format_response(status, request, manifest, get_remote = get_remote_function) {
+export async function format_response(status, request, manifest) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
@@ -105,7 +94,7 @@ export async function format_response(status, request, manifest, get_remote = ge
 		/** @type {Awaited<ReturnType<typeof get_remote_function>>} */
 		let remote;
 		try {
-			remote = await get_remote(id, manifest);
+			remote = await get_remote_function(id, manifest);
 		} catch {
 			// fallback to basic logging
 		}

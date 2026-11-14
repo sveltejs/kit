@@ -58,28 +58,7 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(
-		status: number,
-		request: Request,
-		manifest: SSRManifest,
-		get_remote?: (
-			id: string,
-			manifest: SSRManifest
-		) => Promise<
-			| {
-					fn: ((...args: any[]) => any) & { __: RemoteInternals };
-					name: string;
-					additional_args: string;
-			  }
-			| undefined
-		>
-	): Promise<string>;
-}
-
-/** what a dev server in another environment reports about a request */
-export interface DevRequestInfo {
-	/** the remote function that handled the request */
-	remote?: { name: string; type: RemoteInternals['type']; dev_loc?: RemoteInternals['dev_loc'] };
+	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
 }
 
 /** the built `server/internal.js` */
@@ -524,6 +503,29 @@ export interface SSRManifest {
 	 * A `[file]: size` map of all assets imported by server code.
 	 */
 	server_assets: Record<string, number>;
+}
+
+/** The parts of the dev manifest that can be written to disk */
+export interface DevManifestData {
+	app_dir: string;
+	app_path: string;
+	assets: string[];
+	mime_types: Record<string, string>;
+	client: SSRManifest['client'];
+	/** Files are relative to the project root */
+	nodes: Array<Pick<PageNode, 'component' | 'universal' | 'server' | 'page_options'>>;
+	routes: Array<Omit<SSRRoute, 'endpoint' | 'endpoint_id'> & { endpoint: string | null }>;
+	params: string | null;
+}
+
+/** What the dev manifest needs from the runtime that renders requests */
+export interface DevManifestLoaders {
+	/** Loads a module by its path relative to the project root */
+	load(file: string): Promise<Record<string, any>>;
+	/** The CSS that the given modules depend on, keyed by URL */
+	inline_styles(files: string[]): Promise<Record<string, string>>;
+	server_assets: SSRManifest['server_assets'];
+	remotes(): Array<Pick<RemoteChunk, 'hash' | 'file'>>;
 }
 
 export interface SSRNode {
