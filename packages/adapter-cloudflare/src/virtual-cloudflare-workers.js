@@ -1,52 +1,104 @@
 /** @import { CloudflareWorkersModule } from '@cloudflare/workers-types/experimental/index.js'; */
-// what cloudflare:workers resolves to outside workerd, where bindings do not exist so using them throws
+// what cloudflare:workers resolves to outside workerd, where only text, json and secret bindings have values
+import process from 'node:process';
+import { BINDINGS_ENV_KEY } from '../utils.js';
 
 /** @typedef {typeof CloudflareWorkersModule} Module */
 
-/** @returns {never} */
-function unavailable() {
-	throw new Error(`Cannot access cloudflare:workers in a prerenderable route`);
+/**
+ * @param {string} name
+ * @returns {never}
+ */
+function unavailable(name) {
+	throw new Error(`Cannot use \`${name}\` from cloudflare:workers outside the Workers runtime`);
 }
 
-export const env = new Proxy(
-	{},
-	{
-		get: unavailable,
-		set: unavailable,
-		has: unavailable,
-		ownKeys: unavailable,
-		deleteProperty: unavailable,
-		defineProperty: unavailable,
-		getOwnPropertyDescriptor: unavailable
+/**
+ * A binding that can be passed around outside workerd, such as `drizzle(env.DB)`, but throws when used
+ * @param {string} name
+ * @returns {unknown}
+ */
+function placeholder(name) {
+	/**
+	 * @param {string | symbol} property
+	 * @returns {never}
+	 */
+	const fail = (property) => {
+		throw new Error(
+			`Cannot access \`${String(property)}\` on the \`${name}\` binding outside the Workers runtime. Only text, JSON and secret bindings are available while SvelteKit analyses and prerenders your app`
+		);
+	};
+
+	return new Proxy(
+		{},
+		{
+			get(_, property) {
+				// logging and awaiting the placeholder read these
+				if (typeof property === 'symbol' || property === 'then') return undefined;
+				return fail(property);
+			},
+			set: (_, property) => fail(property),
+			has: (_, property) => fail(property)
+		}
+	);
+}
+
+/** @returns {Record<string, unknown>} */
+function create_env() {
+	/** @type {import('../utils.js').SerializedBindings} */
+	const bindings = JSON.parse(process.env[BINDINGS_ENV_KEY] ?? '{}');
+
+	/** @type {Record<string, unknown>} */
+	const env = {};
+
+	for (const [name, binding] of Object.entries(bindings)) {
+		if (binding.type === 'text' || binding.type === 'json') {
+			env[name] = binding.value;
+		} else if (binding.type === 'secret') {
+			Object.defineProperty(env, name, {
+				get: () => process.env[name],
+				enumerable: true,
+				configurable: true
+			});
+		} else {
+			env[name] = placeholder(name);
+		}
 	}
+
+	return env;
+}
+
+export const env = create_env();
+
+export const exports = new Proxy(
+	{},
+	{ get: () => unavailable('exports'), has: () => unavailable('exports') }
 );
 
 /** @type {Module['withEnv']} */
 export function withEnv() {
-	return unavailable();
-}
-
-/** @type {Module['withEnvAndExports']} */
-export function withEnvAndExports() {
-	return unavailable();
+	return unavailable('withEnv');
 }
 
 /** @type {Module['withExports']} */
 export function withExports() {
-	return unavailable();
+	return unavailable('withExports');
+}
+
+/** @type {Module['withEnvAndExports']} */
+export function withEnvAndExports() {
+	return unavailable('withEnvAndExports');
 }
 
 /** @returns {never} */
 export function abortIsolate() {
-	return unavailable();
+	return unavailable('abortIsolate');
 }
 
 /** @returns {never} */
 export function restore() {
-	return unavailable();
+	return unavailable('restore');
 }
-
-export const exports = new Proxy({}, { get: unavailable, has: unavailable });
 
 // inert so that code which extends them can be imported
 export class RpcTarget {}

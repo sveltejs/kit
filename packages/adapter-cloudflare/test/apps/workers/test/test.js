@@ -53,12 +53,26 @@ test('static and prerendered assets', async ({ request }) => {
 test('prerendering throws', async ({ request }) => {
 	test.skip(!!process.env.DEV);
 	const res = await request.get(`${base}/prerender`);
-	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
+	expect(await res.text()).toContain(
+		'Cannot access `get` on the `KV` binding outside the Workers runtime'
+	);
 });
 
 test('cloudflare:workers classes can be extended', async ({ request }) => {
 	const res = await request.get(`${base}/classes`);
 	expect(await res.json()).toEqual(['DurableObject', 'WorkerEntrypoint']);
+});
+
+test('env can be read at the top level of a module', async ({ request }) => {
+	const res = await request.get(`${base}/top-level`);
+	expect(await res.json()).toEqual({ greeting: 'from cloudflare.config.ts', kv: 'object' });
+});
+
+test('prerendering reads text, JSON and secret bindings', async ({ page }) => {
+	await page.goto(`${base}/prerendered`);
+	await expect(page.locator('h1')).toHaveText('from cloudflare.config.ts');
+	await expect(page.locator('#json')).toHaveText('cloudflare.config.ts');
+	await expect(page.locator('#secret')).toHaveText('a secret');
 });
 
 test('the cloudflare:workers stub has the same exports as the real module', async ({ request }) => {
@@ -94,6 +108,16 @@ test('remote functions run in workerd', async ({ page }) => {
 
 	await page.locator('button').click();
 	await expect(page.locator('button')).toHaveText('1');
+});
+
+test('remote modules can import cloudflare:workers', async ({ page }) => {
+	await page.goto(`${base}/remote/platform`);
+
+	// a click before the page hydrates does nothing
+	await expect(async () => {
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('from cloudflare.config.ts', { timeout: 500 });
+	}).toPass();
 });
 
 test('styles are inlined during dev', async ({ request }) => {
