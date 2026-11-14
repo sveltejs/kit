@@ -390,13 +390,13 @@ importers:
         version: link:../../../../kit
       '@sveltejs/vite-plugin-svelte':
         specifier: 'catalog:'
-        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))
+        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.3(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1))
       svelte:
         specifier: 'catalog:'
         version: 5.57.1(@typescript-eslint/types@8.70.1)
       vite:
         specifier: 'catalog:'
-        version: 8.3.0(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1)
+        version: 8.3.3(@types/node@22.20.4)(esbuild@0.28.2)(yaml@2.9.1)
 
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
