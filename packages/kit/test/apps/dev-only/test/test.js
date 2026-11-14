@@ -270,4 +270,9 @@ test.describe('@sveltejs/kit/adapter/dev', () => {
 			'thrown while the module loads'
 		);
 	});
+
+	test('global fetch rejects relative URLs', async ({ request }) => {
+		const response = await request.get('/other-environment/fetch-relative');
+		expect(await response.text()).toContainKitDiagnostic('fetch_relative_url');
+	});
 });
