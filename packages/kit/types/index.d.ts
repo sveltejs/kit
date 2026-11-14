@@ -63,6 +63,13 @@ declare module '@sveltejs/kit' {
 		 * your platform's runtime instead of Node: send them to code that runs there, which imports
 		 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 		 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
+		 *
+		 * When the request matches a route, the response from `resolve` or `server.respond` has an
+		 * `x-sveltekit-routeid` header with the route's URI-encoded ID, and an `x-sveltekit-prerender`
+		 * header with its `prerender` option (`true`, `false` or `auto`), taken from the page if the
+		 * route has one. An endpoint that doesn't export `prerender` gets neither header, because it
+		 * inherits the option from the page that fetches it. SvelteKit removes both headers before
+		 * sending the response.
 		 * @since 3.3.0
 		 */
 		respond?: (

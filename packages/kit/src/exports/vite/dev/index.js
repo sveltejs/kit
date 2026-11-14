@@ -515,9 +515,11 @@ export const data = ${devalue.uneval({
 					});
 				};
 
-				const rendered = adapter_respond
-					? await adapter_respond(request, { getClientAddress, resolve })
-					: await resolve(request);
+				const rendered = without_route_headers(
+					adapter_respond
+						? await adapter_respond(request, { getClientAddress, resolve })
+						: await resolve(request)
+				);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
@@ -544,6 +546,30 @@ export const data = ${devalue.uneval({
 			}
 		});
 	};
+}
+
+/**
+ * removes the headers that only adapter.dev.respond needs
+ * @param {Response} response
+ */
+function without_route_headers(response) {
+	if (
+		!response.headers.has('x-sveltekit-prerender') &&
+		!response.headers.has('x-sveltekit-routeid')
+	) {
+		return response;
+	}
+
+	// copied since the adapter can return immutable headers
+	const headers = new Headers(response.headers);
+	headers.delete('x-sveltekit-prerender');
+	headers.delete('x-sveltekit-routeid');
+
+	return new Response(response.body, {
+		status: response.status,
+		statusText: response.statusText,
+		headers
+	});
 }
 
 /**
