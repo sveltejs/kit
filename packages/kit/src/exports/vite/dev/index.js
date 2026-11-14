@@ -28,7 +28,7 @@ import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
-import { patch_fetch } from '../../../utils/dev_fetch.js';
+import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -69,7 +69,14 @@ export async function dev(
 		);
 	};
 
-	patch_fetch();
+	const fetch = globalThis.fetch;
+	globalThis.fetch = (info, init) => {
+		if (typeof info === 'string' && !SCHEME.test(info)) {
+			e.fetch_relative_url({ url: info });
+		}
+
+		return fetch(info, init);
+	};
 
 	write_tsconfig(svelte_config, root);
 
