@@ -281,6 +281,21 @@ test.describe('@sveltejs/kit/adapter/dev', () => {
 		expect(lazy).toContain('rgb(7, 8, 9)');
 	});
 
+	test('reads imported assets', async ({ request }) => {
+		for (const [query, file] of [
+			['', 'file.bin'],
+			['?svg', 'logo.svg']
+		]) {
+			const content = fs.readFileSync(
+				path.join(import.meta.dirname, '../src/routes/other-environment/read', file)
+			);
+
+			const response = await request.get(`/other-environment/read${query}`);
+			expect(response.headers()['content-length']).toBe(String(content.length));
+			expect((await response.body()).equals(content)).toBe(true);
+		}
+	});
+
 	test('global fetch rejects relative URLs', async ({ request }) => {
 		const response = await request.get('/other-environment/fetch-relative');
 		expect(await response.text()).toContainKitDiagnostic('fetch_relative_url');
