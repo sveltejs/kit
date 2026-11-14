@@ -55,6 +55,7 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated Use `dev.respond` to render requests in your platform's runtime during development instead
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
@@ -449,6 +450,7 @@ export interface Cookies {
 
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
+ * @deprecated Use `dev.respond` to render requests in your platform's runtime during development instead
  */
 export interface Emulator {
 	/**
