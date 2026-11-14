@@ -1,6 +1,6 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { SSRManifest } from 'types' */
-import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../constants.js';
+import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_EVENT } from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
 import { base64_decode } from '../utils.js';
 import { server_assets } from './dev_assets.js';
@@ -33,31 +33,22 @@ function resolve(root, file) {
 }
 
 /**
- * Has the Vite process log an error and show it in the browser's error overlay
+ * Has the Vite process log an error and show it in the browser's error overlay.
+ * `import.meta.hot` is the only way Vite gives a module to reach the Vite process, so
+ * nothing is reported when the environment has no hot channel, such as with `server.hmr: false`
  * @param {any} error
  */
-async function report(error) {
-	/** @param {unknown} value */
-	const truncate = (value) => (typeof value === 'string' ? value.slice(0, 2000) : value);
-
-	// message and stack are not enumerable. An error can be arbitrarily long, and only the
-	// start of it is useful in a log or an overlay
-	const payload = JSON.stringify({
+function report(error) {
+	// message and stack are not enumerable
+	import.meta.hot?.send(DEV_REPORT_ERROR_EVENT, {
 		...error,
-		message: truncate(error?.message),
-		stack: truncate(error?.stack),
-		frame: truncate(error?.frame)
+		message: error?.message,
+		stack: error?.stack
 	});
-
-	try {
-		await import(/* @vite-ignore */ `${DEV_REPORT_ERROR_ID}?error=${encodeURIComponent(payload)}`);
-	} catch {
-		// the error is thrown regardless
-	}
 }
 
 async function get_manifest() {
-	// imported per request, since SvelteKit rewrites it when routes change
+	// imported per request, since sveltekit rewrites it when routes change
 	const generated = await import('<sveltekit:generated>/manifest-data.js');
 
 	if (current?.generated !== generated) {
@@ -68,7 +59,7 @@ async function get_manifest() {
 				try {
 					return await import(/* @vite-ignore */ resolve(root, file));
 				} catch (error) {
-					await report(error);
+					report(error);
 					throw error;
 				}
 			},
@@ -109,7 +100,7 @@ async function get_manifest() {
  * @param {string} file the path relative to the project root, or a /@fs path
  */
 async function read(file) {
-	// the id must not end with the file's extension, which other plugins may act on
+	// the id must not end with the file extension, which other plugins may act on
 	/** @type {{ default: string }} */
 	const { default: data } = await import(
 		/* @vite-ignore */ `${DEV_ASSET_ID}?file=${encodeURIComponent(file)}&base64`
