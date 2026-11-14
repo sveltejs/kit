@@ -187,40 +187,31 @@ export async function loud_ssr_load_module(vite, vite_dev_server, runner, url) {
 	try {
 		return await runner.import(url);
 	} catch (/** @type {any} */ err) {
-		report_load_error(vite, vite_dev_server, err);
+		const msg = vite.buildErrorMessage(err, [
+			styleText('red', `Internal server error: ${err.message}`)
+		]);
+
+		if (!vite_dev_server.config.logger.hasErrorLogged(err)) {
+			vite_dev_server.config.logger.error(msg, { error: err });
+		}
+
+		// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
+		// and when it does appear it may immediately vanish. `hot.send` broadcasts
+		// to all connected clients, even ones that are unaffected by the error.
+		// we need a more considered approach
+		vite_dev_server.environments.client.hot.send({
+			type: 'error',
+			err: /** @type {ErrorPayload['err']} */ ({
+				...err,
+				// these properties are non-enumerable and will
+				// not be serialized unless we explicitly include them
+				message: err.message,
+				stack: err.stack ?? ''
+			})
+		});
+
 		throw err;
 	}
-}
-
-/**
- * Logs an error from loading a module and shows it in the browser's error overlay
- * @param {typeof import('vite')} vite
- * @param {ViteDevServer} vite_dev_server
- * @param {any} err
- */
-export function report_load_error(vite, vite_dev_server, err) {
-	const msg = vite.buildErrorMessage(err, [
-		styleText('red', `Internal server error: ${err.message}`)
-	]);
-
-	if (!vite_dev_server.config.logger.hasErrorLogged(err)) {
-		vite_dev_server.config.logger.error(msg, { error: err });
-	}
-
-	// TODO this is inadequate — it doesn't reliably show the overlay on every page load,
-	// and when it does appear it may immediately vanish. `hot.send` broadcasts
-	// to all connected clients, even ones that are unaffected by the error.
-	// we need a more considered approach
-	vite_dev_server.environments.client.hot.send({
-		type: 'error',
-		err: /** @type {ErrorPayload['err']} */ ({
-			...err,
-			// these properties are non-enumerable and will
-			// not be serialized unless we explicitly include them
-			message: err.message,
-			stack: err.stack ?? ''
-		})
-	});
 }
 
 /**
