@@ -4,6 +4,7 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
+
 /** @type {WeakMap<IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
