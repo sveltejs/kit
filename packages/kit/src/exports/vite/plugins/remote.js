@@ -11,6 +11,7 @@ import {
 	query_pattern,
 	remote_module_pattern
 } from '../utils.js';
+import { DEV_REMOTE_EXPORTS_HEADER } from '../../../constants.js';
 import { create_exported_declarations } from '../../../core/env.js';
 import { dedent } from '../../../core/sync/utils.js';
 import { runtime_directory } from '../../../core/utils.js';
@@ -46,6 +47,75 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 	const remote_original_by_hash = new Map();
 	/** @type {Set<string>} Track which remote hashes have already been emitted */
 	const emitted_remote_hashes = new Set();
+
+	/**
+	 * Loads a remote module in the Vite process to find its remote functions
+	 * @param {string} id
+	 * @returns {Promise<NonNullable<RemoteChunk['dev_exports']>>}
+	 */
+	async function load_exports(id) {
+		const module = await get_runner(vite, dev_server).import(id);
+
+		/** @type {NonNullable<RemoteChunk['dev_exports']>} */
+		const exports = {};
+		for (const [name, value] of Object.entries(module)) {
+			const type = value?.__?.type;
+			if (type) exports[name] = { type };
+		}
+
+		return exports;
+	}
+
+	/**
+	 * Finds the remote functions in a module. When an adapter renders requests itself, this asks
+	 * the server that renders them, so that the module only runs there
+	 * @param {RemoteChunk} remote
+	 * @param {string} id
+	 * @returns {Promise<NonNullable<RemoteChunk['dev_exports']>>}
+	 */
+	async function get_dev_exports(remote, id) {
+		const respond = svelte_config.adapter?.dev?.respond;
+		if (!respond) return load_exports(id);
+
+		// the server finds the module by its hash in this list
+		let chunk = remotes.find((existing) => existing.hash === remote.hash);
+		if (!chunk) remotes.push((chunk = remote));
+
+		const url = `http://localhost${svelte_config.paths.base}/${svelte_config.appDir}/remote/${remote.hash}`;
+
+		/** @param {string} reason */
+		const fall_back = (reason) => {
+			dev_server.config.logger.warn(
+				`Could not get the exports of ${remote.file} from the server, so it was also loaded in the Vite process (${reason})`
+			);
+			return load_exports(id);
+		};
+
+		/** @type {Response} */
+		let response;
+
+		try {
+			response = await respond(
+				new Request(url, { headers: { [DEV_REMOTE_EXPORTS_HEADER]: 'true' } }),
+				{
+					getClientAddress: () => '127.0.0.1',
+					resolve: async () => Response.json(await load_exports(id))
+				}
+			);
+		} catch (error) {
+			return fall_back(/** @type {Error} */ (error).message);
+		}
+
+		// the module failed to load on the server, which loading it here would hide
+		if (response.status >= 500) {
+			throw new Error(`Failed to load ${remote.file} on the server: ${await response.text()}`);
+		}
+
+		// the request did not reach sveltekit, such as when the adapter handled it another way
+		if (!response.ok) return fall_back(`${response.status} ${response.statusText}`);
+
+		return (chunk.dev_exports = await response.json());
+	}
 
 	return {
 		name: 'vite-plugin-sveltekit-remote',
@@ -207,15 +277,11 @@ export function plugin_remote(svelte_config, get_config, get_build_metadata, set
 				/** @type {Map<string, RemoteInternals['type']>} */
 				const map = new Map();
 
-				// in dev, load the server module here (which will result in this hook
-				// being called again with `opts.ssr === true` if the module isn't
-				// already loaded) so we can determine what it exports
+				// in dev, find what the server module exports, which loads it if it is not loaded yet
+				// and so calls this hook again for the server
 				if (dev_server) {
-					const module = await get_runner(vite, dev_server).import(id);
-
-					for (const [name, value] of Object.entries(module)) {
-						const type = value?.__?.type;
-						if (type) map.set(name, type);
+					for (const [name, { type }] of Object.entries(await get_dev_exports(remote, id))) {
+						map.set(name, type);
 					}
 				}
 				// in prod, we already built and analysed the server code before

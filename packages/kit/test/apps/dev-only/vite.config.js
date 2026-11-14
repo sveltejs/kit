@@ -59,7 +59,7 @@ const config = {
 							return new Response('rendered by the adapter');
 						}
 
-						if (pathname.startsWith('/other-environment')) {
+						if (pathname.startsWith('/other-environment') || pathname.startsWith('/_app/remote/')) {
 							const environment = /** @type {import('vite').RunnableDevEnvironment} */ (
 								vite_dev_server.environments.other
 							);
