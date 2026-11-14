@@ -485,11 +485,16 @@ export const remote_functions = ${s(svelte_config.experimental.remoteFunctions)}
 
 				const adapter_respond = svelte_config.adapter?.dev?.respond;
 
+				// whether this process rendered the request, and so loaded its modules
+				let rendered_here = !adapter_respond;
+
 				/**
 				 * renders the request in this process
 				 * @param {Request} request
 				 */
 				const resolve = async (request) => {
+					rendered_here = true;
+
 					if (resolved_instrumentation) {
 						const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
 						set_env(env);
@@ -528,19 +533,33 @@ export const remote_functions = ${s(svelte_config.experimental.remoteFunctions)}
 					? await adapter_respond(request, { getClientAddress, resolve })
 					: await resolve(request);
 
+				// names the remote function in the log from what the server that rendered the request
+				// reported, since looking it up here would load the remote module in this process
+				/** @type {Parameters<ServerModule['format_response']>[3]} */
+				const get_remote = rendered_here
+					? undefined
+					: (id) => {
+							const [hash, name] = id.split('/');
+							const internals = get_remotes().find((remote) => remote.hash === hash)?.dev_exports?.[
+								name
+							];
+
+							return Promise.resolve(internals && { fn: { __: internals }, name });
+						};
+
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, async () => {
 						log_dev_response(
 							rendered.status,
-							await format_response(rendered.status, request, manifest)
+							await format_response(rendered.status, request, manifest, get_remote)
 						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
 					log_dev_response(
 						rendered.status,
-						await format_response(rendered.status, request, manifest)
+						await format_response(rendered.status, request, manifest, get_remote)
 					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
