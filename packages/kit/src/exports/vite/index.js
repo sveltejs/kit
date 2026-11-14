@@ -330,10 +330,6 @@ function kit({ svelte_config }) {
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
-				// posixify, because backslashes in a Windows path are escape characters in a glob
-				// and the `optimizeDeps.entries` patterns would match nothing
-				const routes = posixify(kit.files.routes);
-
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 
 				// Add `#`-prefixed import keys to the enforced config so users are warned
@@ -370,6 +366,8 @@ function kit({ svelte_config }) {
 				// if there's a client hooks file and pass its directory
 				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
+
+				const routes = posixify(kit.files.routes);
 
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
