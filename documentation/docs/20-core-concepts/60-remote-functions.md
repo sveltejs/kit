@@ -190,6 +190,8 @@ You can `await` a query in any context — components, event handlers, universal
 
 The cache is shared as long as the query is in active use — rendered in a component, currently being awaited, or otherwise referenced. Once nothing is using it, the cached value is released.
 
+On the client, a failed query can be retried by awaiting it again in a later [task](https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide#tasks), for example when resetting a `<svelte:boundary>`. Awaits in the task in which the query failed share the same rejection. Reading `error`, `loading`, `ready` or `current` does not retry a failed query.
+
 ### Refreshing queries
 
 Any query can be re-fetched via its `refresh` method, which retrieves the latest value from the server:
