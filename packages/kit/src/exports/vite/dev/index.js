@@ -440,6 +440,7 @@ export const data = ${devalue.uneval({
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
 
+				// TODO 4.0 remove adapter.vite.getRequest
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
 					request: req,
@@ -526,6 +527,7 @@ export const data = ${devalue.uneval({
 							rendered.status,
 							await format_response(rendered.status, request, manifest)
 						);
+						// TODO 4.0 remove adapter.vite.setResponse
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
@@ -533,6 +535,7 @@ export const data = ${devalue.uneval({
 						rendered.status,
 						await format_response(rendered.status, request, manifest)
 					);
+					// TODO 4.0 remove adapter.vite.setResponse
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
 			} catch (e) {
