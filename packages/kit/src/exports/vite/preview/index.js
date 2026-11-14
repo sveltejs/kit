@@ -211,6 +211,12 @@ export async function preview(vite, svelte_config) {
 				response: res
 			});
 
+			// the client disconnected before we got here, so there is nobody to respond to
+			if (request.signal.aborted) {
+				res.destroy();
+				return;
+			}
+
 			(svelte_config.adapter?.vite?.setResponse ?? setResponse)(
 				res,
 				await server.respond(request, {

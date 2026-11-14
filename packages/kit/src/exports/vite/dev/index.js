@@ -405,6 +405,12 @@ export async function dev(
 					response: res
 				});
 
+				// the client disconnected before we got here, so there is nobody to respond to
+				if (request.signal.aborted) {
+					res.destroy();
+					return;
+				}
+
 				if (manifest_error) {
 					console.error(styleText(['bold', 'red'], manifest_error.message));
 
