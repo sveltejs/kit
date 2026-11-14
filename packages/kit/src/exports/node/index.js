@@ -1,14 +1,16 @@
+/** @import { IncomingMessage, ServerResponse } from 'node:http' */
+/** @import { Http2ServerRequest } from 'node:http2' */
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
 
-/** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
+/** @type {WeakMap<IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
 /**
  * Whether the client went away before the request body finished.
- * @param {import('http').IncomingMessage} request
+ * @param {IncomingMessage} request
  */
 function is_aborted(request) {
 	if (request.readableAborted) return true;
@@ -17,9 +19,7 @@ function is_aborted(request) {
 	// HTTP/2 compatibility requests don't reflect a cancelled stream in
 	// `destroyed`/`readableAborted`. `aborted` isn't set once the response has
 	// ended, but the stream still records the reset code
-	const req = /** @type {import('node:http2').Http2ServerRequest} */ (
-		/** @type {unknown} */ (request)
-	);
+	const req = /** @type {Http2ServerRequest} */ (/** @type {unknown} */ (request));
 	return req.aborted || (req.stream?.rstCode ?? 0) !== 0;
 }
 
@@ -29,7 +29,7 @@ function aborted_error() {
 }
 
 /**
- * @param {import('http').IncomingMessage} req
+ * @param {IncomingMessage} req
  * @param {number} [body_size_limit]
  */
 function get_raw_body(req, body_size_limit) {
@@ -150,8 +150,8 @@ function get_raw_body(req, body_size_limit) {
 
 /**
  * @param {{
- *   request: import('http').IncomingMessage;
- *   response?: import('http').ServerResponse;
+ *   request: IncomingMessage;
+ *   response?: ServerResponse;
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
@@ -227,7 +227,7 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
  * is the intended trade-off (keeping the connection reusable) over destroying it.
  * @see https://github.com/sveltejs/kit/issues/14916
  * @see https://github.com/sveltejs/kit/issues/15526
- * @param {import('http').ServerResponse} res
+ * @param {ServerResponse} res
  */
 function drain_request(res) {
 	const req = res.req;
@@ -251,7 +251,7 @@ function drain_request(res) {
 }
 
 /**
- * @param {import('http').ServerResponse} res
+ * @param {ServerResponse} res
  * @param {Response} response
  * @returns {void}
  */

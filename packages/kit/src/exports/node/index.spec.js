@@ -1,3 +1,5 @@
+/** @import { ServerResponse } from 'node:http' */
+/** @import { AddressInfo } from 'node:net' */
 import { EventEmitter, once } from 'node:events';
 import { IncomingMessage, validateHeaderValue } from 'node:http';
 import { connect, constants, createServer } from 'node:http2';
@@ -14,7 +16,7 @@ import { getRequest, setResponse } from './index.js';
  */
 function create_request(options = {}) {
 	const req = new PassThrough();
-	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+	const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 
 	incoming.headers = {
 		'content-type': 'text/plain',
@@ -129,7 +131,7 @@ test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
 	'enforces body size limit without content-type (%j)',
 	async (headers) => {
 		const req = new PassThrough();
-		const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+		const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 		incoming.headers = headers;
 		incoming.method = 'POST';
 		incoming.url = '/';
@@ -154,7 +156,7 @@ test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
 /**
  * Minimal `ServerResponse` stand-in that records headers and body writes and
  * emits `finish` when ended.
- * @param {import('http').IncomingMessage} [req]
+ * @param {IncomingMessage} [req]
  */
 function create_response(req) {
 	const res = /** @type {any} */ (new EventEmitter());
@@ -182,17 +184,17 @@ function create_response(req) {
 		res.emit('finish');
 		res.emit('close');
 	};
-	return /** @type {import('http').ServerResponse} */ (res);
+	return /** @type {ServerResponse} */ (res);
 }
 
 /**
  * @param {Record<string, string>} [headers]
- * @param {import('stream').PassThrough} [stream]
- * @param {import('http').ServerResponse} [response]
+ * @param {PassThrough} [stream]
+ * @param {ServerResponse} [response]
  */
 function setup_post_request(headers = {}, stream, response) {
 	const req = stream ?? new PassThrough();
-	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+	const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 	incoming.headers = {
 		'content-type': 'text/plain',
 		...headers
@@ -207,7 +209,7 @@ function setup_post_request(headers = {}, stream, response) {
 }
 
 /**
- * @param {import('stream').PassThrough} req
+ * @param {PassThrough} req
  */
 async function expect_request_drained(req) {
 	if (!req.readableEnded) await once(req, 'end');
@@ -445,7 +447,7 @@ test('requests with no content-length and no transfer-encoding return null body'
 async function create_http2_upload() {
 	const server = createServer();
 	await once(server.listen(0, 'localhost'), 'listening');
-	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+	const { port } = /** @type {AddressInfo} */ (server.address());
 	const client = connect(`http://localhost:${port}`);
 
 	const incoming = once(server, 'request');
@@ -453,9 +455,7 @@ async function create_http2_upload() {
 	stream.on('error', () => {});
 	stream.write('abc');
 
-	const [req] = /** @type {[import('http').IncomingMessage]} */ (
-		/** @type {unknown} */ (await incoming)
-	);
+	const [req] = /** @type {[IncomingMessage]} */ (/** @type {unknown} */ (await incoming));
 
 	return {
 		req,

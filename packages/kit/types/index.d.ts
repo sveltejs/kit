@@ -1526,14 +1526,15 @@ declare module '@sveltejs/kit/hooks' {
 }
 
 declare module '@sveltejs/kit/node' {
+	import type { IncomingMessage, ServerResponse } from 'node:http';
 	export function getRequest({ request, response, base, bodySizeLimit }: {
-		request: import("http").IncomingMessage;
-		response?: import("http").ServerResponse;
+		request: IncomingMessage;
+		response?: ServerResponse;
 		base: string;
 		bodySizeLimit?: number;
 	}): Request;
 
-	export function setResponse(res: import("http").ServerResponse, response: Response): void;
+	export function setResponse(res: ServerResponse, response: Response): void;
 	/**
 	 * Converts a file on disk to a readable stream
 	 * @since 2.4.0
