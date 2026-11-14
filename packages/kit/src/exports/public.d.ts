@@ -58,27 +58,24 @@ export interface Adapter {
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
+	 * Options that only apply during `vite dev`
+	 * @since 3.3.0
+	 */
+	dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+	/**
 	 * Options for configuring and interacting with Vite
 	 * @since 3.0.0
 	 */
 	vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
 }
 
-export interface AdapterViteConfig {
-	/**
-	 * Set to `true` when the adapter provides its own `vite preview` implementation
-	 * through a Vite plugin, so that SvelteKit doesn't start its Node-based preview server.
-	 * @default false
-	 * @since 3.2.0
-	 */
-	customPreview?: boolean;
+export interface AdapterDevConfig {
 	/**
 	 * During `vite dev`, SvelteKit calls this function with each request it would render, after
 	 * serving static files, imported assets and the service worker. Use it to render requests in
 	 * your platform's runtime instead of Node: send them to code that runs there, which imports
 	 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 	 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
-	 * SvelteKit also sends its own requests through it, such as to find what a remote module exports.
 	 * @since 3.3.0
 	 */
 	respond?: (
@@ -90,6 +87,18 @@ export interface AdapterViteConfig {
 			resolve: (request: Request) => Promise<Response>;
 		}
 	) => Promise<Response>;
+}
+
+export interface AdapterViteConfig {
+	/**
+	 * By default, SvelteKit creates a Node preview server to serve the build
+	 * output during `vite preview`. Set this option to `true` when the adapter
+	 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+	 * previewing the build output on its own.
+	 * @default false
+	 * @since 3.3.0
+	 */
+	customPreview?: boolean;
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
