@@ -330,6 +330,10 @@ function kit({ svelte_config }) {
 				service_worker_entry_file = resolve_entry(kit.files.serviceWorker, kit.moduleExtensions);
 				service_worker_entry_file &&= posixify(service_worker_entry_file);
 
+				// posixify, because backslashes in a Windows path are escape characters in a glob
+				// and the `optimizeDeps.entries` patterns would match nothing
+				const routes = posixify(kit.files.routes);
+
 				normalized_aliases = get_import_aliases(root, vite.normalizePath.bind(vite));
 
 				// Add `#`-prefixed import keys to the enforced config so users are warned
@@ -418,12 +422,7 @@ function kit({ svelte_config }) {
 						cors: resolve_cors(config.preview?.cors, 'preview.cors', !is_build)
 					},
 					optimizeDeps: {
-						// posixify, because backslashes in a Windows path are escape characters in a glob
-						// and the pattern would match nothing
-						entries: [
-							`${posixify(kit.files.routes)}/**/+*.{svelte,js,ts}`,
-							`!${posixify(kit.files.routes)}/**/+*server.*`
-						],
+						entries: [`${routes}/**/+*.{svelte,js,ts}`, `!${routes}/**/+*server.*`],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 							// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
