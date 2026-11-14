@@ -242,3 +242,20 @@ test.describe('Remote functions', () => {
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
 });
+
+test('adapters can render requests themselves', async ({ request }) => {
+	const response = await request.get('/adapter-respond');
+	expect(await response.text()).toBe('rendered by the adapter');
+});
+
+test.describe('@sveltejs/kit/adapter/dev', () => {
+	test('renders pages in another environment', async ({ page }) => {
+		await page.goto('/other-environment');
+		await expect(page.locator('p')).toHaveText('rendered in the other environment');
+	});
+
+	test('renders endpoints in another environment', async ({ request }) => {
+		const response = await request.get('/other-environment/endpoint');
+		expect(await response.text()).toBe('other');
+	});
+});
