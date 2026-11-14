@@ -1,7 +1,7 @@
 /* eslint-disable n/prefer-global/process */
 import { describe, expect, test, vi } from 'vitest';
 import { tick } from 'svelte';
-import { HandledHttpError, HttpError } from '@sveltejs/kit/internal';
+import { HandledHttpError, HttpError, Redirect } from '@sveltejs/kit/internal';
 
 // Mock `client.js` because the real one pulls in the SvelteKit
 // router/hydration machinery and resolves `$app/paths` to a server-side
@@ -171,4 +171,130 @@ describe('Query.set', () => {
 		expect(await Promise.resolve(query)).toBe('b');
 		awaiter.destroy();
 	});
+});
+
+describe('Query refresh failures', () => {
+	const transient_errors = [
+		new TypeError('Failed to fetch'),
+		...[408, 429, 500, 502, 503, 504].map(
+			(status) => new HttpError({ status, message: 'unavailable' })
+		)
+	];
+	const terminal_errors = [
+		new Redirect(307, '/redirected'),
+		...[400, 401, 403, 404].map((status) => new HttpError({ status, message: 'refused' })),
+		...[408, 429, 500, 503].map(
+			(status) => new HandledHttpError({ status, message: 'application error' })
+		)
+	];
+
+	test.each(transient_errors)('preserves a value after a transient failure (%o)', async (error) => {
+		const fn = vi.fn().mockResolvedValue('value');
+		const query = new Query('transient', fn);
+		expect(await query).toBe('value');
+
+		fn.mockRejectedValue(error);
+		for (let i = 0; i < 2; i++) {
+			await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+			expect(query.error).toBeDefined();
+			expect(query.loading).toBe(false);
+			expect(query.ready).toBe(true);
+			expect(query.current).toBe('value');
+			expect(await query).toBe('value');
+			expect(await query.catch(() => 'caught')).toBe('value');
+			const finally_fn = vi.fn();
+			expect(await query.finally(finally_fn)).toBe('value');
+			expect(finally_fn).toHaveBeenCalledOnce();
+		}
+
+		fn.mockResolvedValue('fresh');
+		await query.refresh();
+		expect(await query).toBe('fresh');
+		expect(query.error).toBeUndefined();
+	});
+
+	test.each(transient_errors)('rejects without a successful value (%o)', async (error) => {
+		const query = new Query('initial', () => Promise.reject(error));
+		await expect(Promise.resolve(query)).rejects.toBeInstanceOf(HandledHttpError);
+		expect(query.ready).toBe(false);
+	});
+
+	test.each(terminal_errors)(
+		'does not resurrect a value after a terminal failure (%o)',
+		async (error) => {
+			const fn = vi.fn().mockResolvedValue('value');
+			const query = new Query('terminal', fn);
+			expect(await query).toBe('value');
+
+			fn.mockRejectedValue(error);
+			await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+			await expect(Promise.resolve(query)).rejects.toBeInstanceOf(HandledHttpError);
+			expect(query.current).toBe('value');
+			expect(query.ready).toBe(true);
+
+			fn.mockRejectedValue(new TypeError('offline'));
+			await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+			await expect(Promise.resolve(query)).rejects.toBeInstanceOf(HandledHttpError);
+
+			// An explicit update makes the value usable again, including during
+			// subsequent transport failures.
+			query.set('updated');
+			await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+			expect(await query).toBe('updated');
+		}
+	);
+
+	test('a server-driven failure invalidates the previous value', async () => {
+		const query = new Query(
+			'fail-after-value',
+			/** @returns {Promise<string>} */ () => Promise.reject(new TypeError('offline'))
+		);
+		query.set('value');
+		query.fail(new HandledHttpError({ status: 503, message: 'application error' }));
+		await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+		await expect(Promise.resolve(query)).rejects.toBeInstanceOf(HandledHttpError);
+	});
+
+	test('undefined is a successful value', async () => {
+		const query = new Query(
+			'undefined-value',
+			/** @returns {Promise<undefined>} */ () => Promise.reject(new TypeError('offline'))
+		);
+		query.set(undefined);
+		await expect(query.refresh()).rejects.toBeInstanceOf(HandledHttpError);
+		expect(await query).toBeUndefined();
+		expect(query.ready).toBe(true);
+	});
+
+	for (const terminal of [false, true]) {
+		test(`a superseding ${terminal ? 'terminal' : 'transient'} failure settles pending value consumers`, async () => {
+			const first = Promise.withResolvers();
+			const second = Promise.withResolvers();
+			let runs = 0;
+			const query = new Query('refresh-overlap', () =>
+				runs++ === 0 ? first.promise : second.promise
+			);
+			query.set('value');
+			const first_refresh = query.refresh();
+			const first_result = Promise.resolve(query).catch((error) => error);
+			await tick();
+			const second_refresh = query.refresh();
+			second.reject(
+				terminal
+					? new HandledHttpError({ status: 404, message: 'deleted' })
+					: new TypeError('offline')
+			);
+			await expect(second_refresh).rejects.toBeInstanceOf(HandledHttpError);
+			await first_refresh;
+			const result = await first_result;
+			if (terminal) {
+				expect(result).toBeInstanceOf(HandledHttpError);
+			} else {
+				expect(result).toBe('value');
+			}
+			first.resolve('obsolete');
+			await flush();
+			expect(query.current).toBe('value');
+		});
+	}
 });
