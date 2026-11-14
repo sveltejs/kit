@@ -2,9 +2,12 @@
 /** @import { SSRManifest } from 'types' */
 import { DEV_REPORT_ERROR_EVENT } from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
+import { patch_fetch } from '../../utils/dev_fetch.js';
 
 // the adapter decides which features its platform supports once it renders requests itself
 globalThis.__SVELTEKIT_TRACK__ = () => {};
+
+patch_fetch();
 
 /** @type {ServerInitOptions | undefined} */
 let options;
