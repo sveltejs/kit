@@ -1,4 +1,4 @@
-import { read_implementation, read_unlisted_assets, manifest } from '../../server/internal.js';
+import { read_implementation, manifest } from '../../server/internal.js';
 import { assets } from '#app/paths';
 import { base64_decode, text_encoder } from '../../utils.js';
 import * as e from '../../../messages/server-errors.js';
@@ -72,15 +72,6 @@ export function read(asset) {
 				'Content-Length': '' + length,
 				'Content-Type': type
 			}
-		});
-	}
-
-	if (__SVELTEKIT_DEV__ && read_unlisted_assets) {
-		// a dev server in another environment may not know the size, so there is no content-length
-		const type = manifest.mime_types[file.slice(file.lastIndexOf('.'))];
-
-		return new Response(read_implementation(file), {
-			headers: type ? { 'Content-Type': type } : {}
 		});
 	}
 

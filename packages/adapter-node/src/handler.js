@@ -50,7 +50,24 @@ await server.init({
 });
 
 /** @type {Middleware} */
-const ssr = async (req, res) => {
+const ssr = async (req, res, next) => {
+	try {
+		await render(req, res, next);
+	} catch (error) {
+		console.error(error);
+
+		if (res.headersSent) {
+			res.destroy();
+			return;
+		}
+
+		res.getHeaderNames().forEach((name) => res.removeHeader(name));
+		res.writeHead(500).end('Internal Server Error');
+	}
+};
+
+/** @type {Middleware} */
+const render = async (req, res) => {
 	/** @type {Request} */
 	let request;
 	let request_origin = public_origin;

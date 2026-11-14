@@ -19,6 +19,11 @@ minimumReleaseAgeExclude:
   - '@cloudflare/config@0.31.0'
   - '@cloudflare/runtime-types@0.1.24'
   - 'miniflare@5.20261109.0-beta'
+  # Renovate security update: sharp@0.35.5
+  - sharp@0.35.5
+  # Renovate security update: vite@8.3.3
+  - vite@8.3.3
+blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
 engineStrict: true
