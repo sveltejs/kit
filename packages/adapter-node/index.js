@@ -259,19 +259,6 @@ function create_asset_table(base, measured) {
 }
 
 /**
- * Kit names a prerendered file by its fully decoded path. Older versions of kit
- * recorded paths already decoded, which can leave a `%` that is not an escape
- * @param {string} path
- */
-function decode(path) {
-	try {
-		return decodeURI(path);
-	} catch {
-		return path;
-	}
-}
-
-/**
  * Keys the measured files by the exact paths kit prerendered, so a lookup
  * hit is precisely a prerendered page, asset or redirect and every other
  * pathname (including the non-canonical trailing-slash form) misses
@@ -287,8 +274,8 @@ function create_prerendered_table(base, measured, paths) {
 	const entries = [];
 
 	for (const path of paths) {
-		// invert `output_filename` in kit's prerenderer
-		const file = decode(path.slice(base.length + 1)) || 'index.html';
+		// kit names a prerendered file by its fully decoded path
+		const file = decodeURI(path.slice(base.length + 1)) || 'index.html';
 		const entry =
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
 		if (entry) entries.push([path, entry]);

@@ -68,9 +68,7 @@ export default {
 				? prerendered_pathname.slice(0, -1)
 				: prerendered_pathname + '/';
 
-		const is_router_form = prerendered.has(prerendered_pathname);
-		// older versions of kit recorded prerendered paths fully decoded
-		const is_prerendered = !is_static_asset && (is_router_form || prerendered.has(pathname));
+		const is_prerendered = !is_static_asset && prerendered.has(prerendered_pathname);
 
 		if (
 			is_static_asset ||
@@ -80,16 +78,12 @@ export default {
 		) {
 			let asset_request = req;
 
-			if (is_prerendered && is_router_form) {
+			if (is_prerendered) {
 				// a prerendered file is named by its fully decoded path, so a path such as
 				// `/a%2Fb` is stored as `a%2Fb.html`, which the asset server serves at `/a%252Fb`
-				try {
-					const url = new URL(req.url);
-					url.pathname = encodeURI(decodeURI(prerendered_pathname));
-					asset_request = new Request(url, req);
-				} catch {
-					// a path recorded by an older version of kit can have a `%` that is not an escape
-				}
+				const url = new URL(req.url);
+				url.pathname = encodeURI(decodeURI(prerendered_pathname));
+				asset_request = new Request(url, req);
 			}
 
 			let res = await env.ASSETS_BINDING.fetch(asset_request);
@@ -103,11 +97,6 @@ export default {
 		}
 
 		// trailing slash redirect for prerendered pages
-		if (!prerendered.has(location)) {
-			// older versions of kit recorded prerendered paths fully decoded
-			location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
-		}
-
 		if (location && prerendered.has(location)) {
 			if (search) location += search;
 			return new Response('', {
