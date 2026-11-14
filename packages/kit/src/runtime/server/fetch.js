@@ -5,6 +5,7 @@ import * as paths from '#app/paths';
 import { hooks, manifest, read_implementation } from './internal.js';
 import { has_prerendered_path } from './utils.js';
 import { fork_state_for_subrequest } from './state.js';
+import { decode_pathname } from '../../utils/url.js';
 
 /**
  * @param {{
@@ -117,7 +118,7 @@ export function create_fetch({ event, state, get_cookie_header, set_internal }) 
 					return await fetch(request, { redirect: 'manual' });
 				}
 
-				if (has_prerendered_path(decoded)) {
+				if (has_prerendered_path(decode_pathname(url.pathname))) {
 					// The path of something prerendered could match a different route
 					// that is still in the manifest, leading to the wrong route being loaded.
 					// We therefore bail early here. The prerendered logic is different for
