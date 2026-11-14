@@ -259,10 +259,17 @@ function create_asset_table(base, measured) {
 }
 
 /**
- * The escapes of `# $ & + , / : ; = ? @`, with their own `%` encoded as `%25`.
- * For example, `%252F` is `%2F` (an encoded `/`) encoded once more
+ * Kit names a prerendered file by its fully decoded path. Older versions of kit
+ * recorded paths already decoded, which can leave a `%` that is not an escape
+ * @param {string} path
  */
-const double_encoded_reserved = /%25(23|24|26|2B|2C|2F|3A|3B|3D|3F|40)/gi;
+function decode(path) {
+	try {
+		return decodeURI(path);
+	} catch {
+		return path;
+	}
+}
 
 /**
  * Keys the measured files by the exact paths kit prerendered, so a lookup
@@ -281,22 +288,10 @@ function create_prerendered_table(base, measured, paths) {
 
 	for (const path of paths) {
 		// invert `output_filename` in kit's prerenderer
-		const file = path.slice(base.length + 1) || 'index.html';
+		const file = decode(path.slice(base.length + 1)) || 'index.html';
 		const entry =
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
-		if (!entry) continue;
-
-		// as in `create_asset_table`, a literal `%` is spelled `%25` in the key
-		const key = base + path.slice(base.length).replaceAll('%', '%25');
-		entries.push([key, entry]);
-
-		// kit records paths decoded with `decodeURI`, which leaves reserved characters
-		// (`# $ & + , / : ; = ? @`) encoded. `/a%2Fb` and `/a%252Fb` are therefore both
-		// recorded as `/a%2Fb`, and the `%` could be either an escape or a literal.
-		// We can't tell which, so the path is also keyed with those escapes intact,
-		// e.g. `/a%252Fb` is also keyed as `/a%2Fb`
-		const reserved = key.replace(double_encoded_reserved, '%$1');
-		if (reserved !== key) entries.push([reserved, entry]);
+		if (entry) entries.push([path, entry]);
 	}
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
