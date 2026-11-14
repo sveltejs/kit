@@ -73,9 +73,10 @@ export function set_hooks(value) {
  * @param {number} status
  * @param {Request} request
  * @param {SSRManifest} manifest
+ * @param {NonNullable<Parameters<import('types').ServerModule['format_response']>[3]>} [get_remote] finds the remote function that handled the request
  * @returns {Promise<string>}
  */
-export async function format_response(status, request, manifest) {
+export async function format_response(status, request, manifest, get_remote = get_remote_function) {
 	const url = new URL(request.url);
 	const requested = url.href.replace(url.origin, '');
 
@@ -91,10 +92,10 @@ export async function format_response(status, request, manifest) {
 		log += pathname + styleText('dim', requested.slice(pathname.length));
 	} else if (has_remote_prefix(url)) {
 		const id = /** @type {string} */ (strip_remote_prefix(url));
-		/** @type {Awaited<ReturnType<typeof get_remote_function>>} */
+		/** @type {Awaited<ReturnType<typeof get_remote>>} */
 		let remote;
 		try {
-			remote = await get_remote_function(id, manifest);
+			remote = await get_remote(id, manifest);
 		} catch {
 			// fallback to basic logging
 		}
