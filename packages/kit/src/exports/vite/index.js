@@ -31,6 +31,7 @@ import { import_peer } from '../../utils/import.js';
 import { should_ignore, has_children } from './static_analysis/utils.js';
 import { process_config, split_config, validate_config } from '../../core/config/index.js';
 import { plugin_env_vars, plugin_service_worker_env_vars } from './plugins/env-vars.js';
+import { plugin_dev_server } from './plugins/dev-server.js';
 import { plugin_guard } from './plugins/guard.js';
 import { plugin_remote, plugin_remote_guard } from './plugins/remote.js';
 import { write_app_manifest } from '../../core/sync/write_app_manifest.js';
@@ -633,6 +634,7 @@ function kit({ svelte_config }) {
 					remote_metadata = metadata;
 				}
 			),
+			plugin_dev_server(svelte_config, () => ({ root, vite })),
 			plugin_env_vars(svelte_config, (vars) => {
 				explicit_env_config = vars;
 			}),
