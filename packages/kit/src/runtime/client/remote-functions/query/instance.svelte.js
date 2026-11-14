@@ -28,6 +28,8 @@ export class Query {
 	#raw = $state.raw();
 	/** @type {Promise<void> | null} */
 	#promise = $state.raw(null);
+	/** @type {WeakSet<Promise<void>>} */
+	#retryable = new WeakSet();
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
@@ -92,7 +94,16 @@ export class Query {
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
-	start() {
+	/** @param {boolean} [retry] */
+	start(retry = false) {
+		// Only a new Promise consumer retries. Invalidating #promise from a timer
+		// would rerun existing reactive consumers, potentially in an endless loop.
+		if (retry) {
+			untrack(() => {
+				if (this.#promise && this.#retryable.has(this.#promise)) this.#promise = null;
+			});
+		}
+
 		// there is a really weird bug with untrack and writes and initializations
 		// every time you see this comment, try removing the `tick.then` here and see
 		// if all the tests still pass with the latest svelte version
@@ -100,6 +111,14 @@ export class Query {
 		void tick()
 			.then(() => this.#get_promise())
 			.catch(noop);
+	}
+
+	/** @param {Promise<void>} promise */
+	#allow_retry(promise) {
+		// Sequential awaits in the failing task should still share its rejection.
+		// Eligibility belongs to the promise, not the query: a discarded fork
+		// must not consume the live view's retry or prevent a failed fork from retrying.
+		setTimeout(() => this.#retryable.add(promise), 0);
 	}
 
 	#clear_pending() {
@@ -161,6 +180,7 @@ export class Query {
 					this.#loading = false;
 				});
 
+				this.#allow_retry(promise);
 				reject(new HandledHttpError(error));
 			});
 
@@ -170,12 +190,12 @@ export class Query {
 	get then() {
 		// TODO this should be unnecessary but due to the bug described
 		// in #start, we need to do this in some circumstances
-		this.start();
+		this.start(true);
 		return this.#then;
 	}
 
 	get catch() {
-		this.start();
+		this.start(true);
 		this.#then;
 		return (/** @type {any} */ reject) => {
 			return this.#then(undefined, reject);
@@ -183,7 +203,7 @@ export class Query {
 	}
 
 	get finally() {
-		this.start();
+		this.start(true);
 		this.#then;
 		return (/** @type {any} */ fn) => {
 			return this.#then(
@@ -270,6 +290,7 @@ export class Query {
 
 		promise.catch(noop);
 		this.#promise = promise;
+		this.#allow_retry(promise);
 	}
 
 	/**
