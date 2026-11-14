@@ -42,6 +42,13 @@ export default function (options) {
 				// Return `false if it can't, or throw a descriptive error.
 			}
 		},
+		dev: {
+			respond(request, { getClientAddress, resolve }) {
+				// during `vite dev`, render the request in your platform's runtime,
+				// or call `resolve` to render it in Node as usual
+				return resolve(request);
+			}
+		},
 		vite: {
 			getRequest(options) {
 				const request = getRequest(options);
@@ -64,7 +71,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite`, and `supports` are optional.
+Of these, `name` and `adapt` are required. `emulate`, `dev`, `vite`, and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
