@@ -45,3 +45,9 @@ test('.wasm imports work', async ({ request }) => {
 	const response = await request.get('/wasm');
 	expect(await response.text()).toBe('3');
 });
+
+test('serves prerendered paths with encoded reserved characters', async ({ request }) => {
+	const response = await request.get('/prerendered-reserved/a%2Fb.txt');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('a/b');
+});

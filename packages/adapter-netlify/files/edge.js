@@ -3,9 +3,12 @@
 
 /**
  * @param {Server} server
+ * @param {string[]} prerendered prerendered paths that Netlify can't exclude from this function
  * @returns {EdgeFunction}
  */
-export function init(server) {
+export function init(server, prerendered) {
+	const prerendered_paths = new Set(prerendered);
+
 	/**
 	 * We don't know the origin until we receive a request, but
 	 * that's guaranteed to happen before we call `read`
@@ -32,6 +35,20 @@ export function init(server) {
 	return async function handler(request, context) {
 		if (!origin) {
 			origin = new URL(request.url).origin;
+		}
+
+		if (prerendered_paths.size > 0) {
+			let { pathname } = new URL(request.url);
+
+			try {
+				// the way kit's router decodes a pathname
+				pathname = pathname.split('%25').map(decodeURI).join('%25');
+			} catch {
+				// ignore invalid URI
+			}
+
+			// let Netlify serve the prerendered file
+			if (prerendered_paths.has(pathname.replace(/(.)\/$/, '$1'))) return context.next();
 		}
 
 		// always await initialization to prevent race condition with concurrent requests
