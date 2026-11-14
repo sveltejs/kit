@@ -4,7 +4,6 @@ import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
-
 /** @type {WeakMap<IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
@@ -56,8 +55,12 @@ function get_raw_body(req, body_size_limit) {
 				return;
 			}
 
-			if (req.destroyed) {
-				controller.close();
+			// something else read the body first, such as body-parsing middleware.
+			// HTTP/2 requests end without being destroyed
+			if (req.readableEnded || req.destroyed) {
+				controller.error(
+					new Error('The request body was already read before it reached SvelteKit')
+				);
 				return;
 			}
 

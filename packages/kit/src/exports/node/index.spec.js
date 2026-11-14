@@ -55,7 +55,7 @@ test('errors the body of a request that was aborted before being adapted', async
 	await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
 });
 
-test('does not abort an already-destroyed request that ended normally', async () => {
+test('errors the body of a request that was already read, without aborting', async () => {
 	const incoming = new IncomingMessage(new Socket());
 	incoming.method = 'POST';
 	incoming.url = '/';
@@ -74,7 +74,8 @@ test('does not abort an already-destroyed request that ended normally', async ()
 	const request = getRequest({ request: incoming, base: 'http://localhost' });
 
 	expect(request.signal.aborted).toBe(false);
-	await expect(request.text()).resolves.toBe('');
+	expect(request.bodyUsed).toBe(false);
+	await expect(request.text()).rejects.toThrow('already read');
 });
 
 test('rejects chunked request bodies that exceed body size limit', async () => {
