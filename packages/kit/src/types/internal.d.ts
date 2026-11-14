@@ -804,6 +804,7 @@ export interface RequestState {
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
+	readonly is_in_server_load: boolean;
 }
 
 export interface RequestStore {

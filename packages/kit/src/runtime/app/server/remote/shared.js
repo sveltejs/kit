@@ -69,8 +69,9 @@ export async function get_response(internals, payload, state, get_result) {
 
 	const cache = get_cache(internals, state);
 
-	if (!state.is_in_remote_query) {
-		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
+	// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response,
+	// unless it's in a server `load` — only what `load` returns should reach the client
+	if (!state.is_in_remote_query && !state.is_in_server_load) {
 		get_implicit_lookup(internals, state)[payload] = get_result;
 	}
 
