@@ -83,6 +83,8 @@ export async function dev(
 
 	/** @type {string | undefined} the last manifest data written for other vite environments */
 	let dev_data;
+	/** how many remote modules that data lists, which only grows while the server runs */
+	let dev_data_remotes = 0;
 
 	const runner = get_runner(vite, vite_dev_server);
 	const { hot } = vite_dev_server.environments.client;
@@ -140,7 +142,11 @@ export const data = ${devalue.uneval({
 				page_options
 			}))
 		})};
+
+export const remotes = ${s(get_remotes().map(({ hash, file }) => ({ hash, file })))};
 `;
+
+		dev_data_remotes = get_remotes().length;
 
 		if (code === dev_data) return;
 		dev_data = code;
@@ -521,6 +527,9 @@ export const data = ${devalue.uneval({
 						emulator
 					});
 				};
+
+				// remote modules found since the manifest data was written
+				if (adapter_respond && get_remotes().length !== dev_data_remotes) write_dev_data();
 
 				const rendered = adapter_respond
 					? await adapter_respond(request, { getClientAddress, resolve })

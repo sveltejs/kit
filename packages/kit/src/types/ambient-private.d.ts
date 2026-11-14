@@ -15,6 +15,7 @@ declare module '<sveltekit:generated>/manifest-data.js' {
 	/** The instrumentation file, relative to the project root */
 	export const instrumentation: string | null;
 	export const data: import('types').DevManifestData;
+	export const remotes: Array<{ hash: string; file: string }>;
 }
 
 declare module '<sveltekit:generated>/env/config.js' {

@@ -57,7 +57,7 @@ async function report(error) {
 }
 
 async function get_manifest() {
-	// imported per request, since SvelteKit rewrites it when routes change
+	// imported per request, since SvelteKit rewrites it when routes or remote modules change
 	const generated = await import('<sveltekit:generated>/manifest-data.js');
 
 	if (current?.generated !== generated) {
@@ -95,7 +95,7 @@ async function get_manifest() {
 				return styles;
 			},
 			server_assets,
-			remotes: () => []
+			remotes: () => generated.remotes
 		});
 
 		current = { generated, manifest };
