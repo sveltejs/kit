@@ -1,0 +1,159 @@
+/** @import { EnvironmentModuleNode, Plugin, ResolvedConfig } from 'vite' */
+/** @import { RemoteChunk, ValidatedConfig } from 'types' */
+import fs from 'node:fs';
+import path from 'node:path';
+import { prefixRegex } from '@rolldown/pluginutils';
+import {
+	DEV_ASSET_ID,
+	DEV_INLINE_STYLES_ID,
+	DEV_REMOTES_ID,
+	DEV_REPORT_ERROR_EVENT
+} from '../../../constants.js';
+import { runtime_directory } from '../../../core/utils.js';
+import { s } from '../../../utils/misc.js';
+import { posixify } from '../../../utils/os.js';
+import { from_fs } from '../../../utils/vite.js';
+import { find_deps, get_inline_css_urls, report_load_error } from '../dev/generate_manifest.js';
+
+const resolved_asset_id = '\0' + DEV_ASSET_ID;
+
+const resolved_remotes_id = '\0' + DEV_REMOTES_ID;
+
+const ids = [DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REMOTES_ID];
+
+/**
+ * Gives a dev server that runs outside the Vite process, through `@sveltejs/kit/adapter/dev`,
+ * what only the Vite process knows
+ * @param {ValidatedConfig} svelte_config
+ * @param {() => { vite: typeof import('vite'); root: string; remotes: RemoteChunk[] }} get_config
+ * @returns {Plugin}
+ */
+export function plugin_dev_server(svelte_config, get_config) {
+	/** @type {ResolvedConfig} */
+	let vite_config;
+
+	return {
+		name: 'vite-plugin-sveltekit-dev-server',
+		apply: 'serve',
+
+		applyToEnvironment(environment) {
+			// the ssr environment runs in the vite process and reads these directly
+			return (
+				!!svelte_config.adapter?.dev?.respond &&
+				environment.config.consumer === 'server' &&
+				environment.name !== 'ssr'
+			);
+		},
+
+		configResolved(config) {
+			vite_config = config;
+		},
+
+		configureServer(server) {
+			if (!svelte_config.adapter?.dev?.respond) return;
+
+			for (const environment of Object.values(server.environments)) {
+				// the ssr environment runs in the vite process and reports errors itself
+				if (environment.config.consumer !== 'server' || environment.name === 'ssr') continue;
+
+				environment.hot.on(DEV_REPORT_ERROR_EVENT, (error) => {
+					report_load_error(get_config().vite, server, error);
+				});
+			}
+		},
+
+		resolveId: {
+			filter: { id: ids.map((id) => prefixRegex(id)) },
+			handler(id) {
+				return '\0' + id;
+			}
+		},
+
+		load: {
+			filter: { id: ids.map((id) => prefixRegex('\0' + id)) },
+			async handler(id) {
+				const { vite } = get_config();
+				const environment = /** @type {import('vite').DevEnvironment} */ (this.environment);
+				const { moduleGraph } = environment;
+
+				if (id.startsWith(resolved_asset_id)) {
+					const { root } = get_config();
+					const file = new URLSearchParams(id.slice(id.indexOf('?'))).get('file') ?? '';
+
+					// the file can change, and its contents should not stay in the module graph
+					const self = moduleGraph.getModuleById(id);
+					if (self) moduleGraph.invalidateModule(self);
+
+					// the path that read gets from the asset url
+					const resolved = file.startsWith('/@fs') ? from_fs(file) : path.join(root, file);
+
+					return `export default ${s(fs.readFileSync(resolved).toString('base64'))};`;
+				}
+
+				if (id.startsWith(resolved_remotes_id)) {
+					// more remote modules can be found at any time
+					const self = moduleGraph.getModuleById(id);
+					if (self) moduleGraph.invalidateModule(self);
+
+					const remotes = get_config().remotes.map(({ hash, file }) => ({ hash, file }));
+
+					return `export default ${JSON.stringify(remotes)};`;
+				}
+
+				/** @type {Set<EnvironmentModuleNode>} */
+				const deps = new Set();
+
+				for (const file of new URLSearchParams(id.slice(id.indexOf('?'))).getAll('module')) {
+					const node = moduleGraph.getModuleById(file);
+					if (node) await find_deps(environment, node, deps);
+				}
+
+				// only valid once, since the answer depends on what has loaded so far
+				// vite does not cache a module that is invalidated while it loads
+				const self = moduleGraph.getModuleById(id);
+				if (self) moduleGraph.invalidateModule(self);
+
+				const stylesheets = Array.from(get_inline_css_urls(vite, deps), ([url, inline]) => ({
+					url,
+					inline
+				}));
+
+				return `export default ${JSON.stringify(stylesheets)};`;
+			}
+		},
+
+		// read needs the size of an asset before it responds, and a server outside
+		// the vite process cannot stat the file, so the asset module provides it
+		transform(code, id) {
+			const { root } = get_config();
+			const [file, query = ''] = id.split('?', 2);
+			const params = new URLSearchParams(query);
+
+			if (params.has('inline') || params.has('raw')) return;
+			if (!params.has('url') && !vite_config.assetsInclude(file)) return;
+
+			/** @type {fs.Stats} */
+			let stats;
+			try {
+				stats = fs.statSync(file);
+			} catch {
+				return;
+			}
+			if (!stats.isFile()) return;
+
+			// the same path that read gets from the asset url
+			const relative = posixify(path.relative(root, file));
+			const key =
+				relative.startsWith('../') || path.isAbsolute(relative)
+					? `/@fs${posixify(file)}`
+					: relative;
+
+			return {
+				code:
+					`import { server_assets as __sveltekit_server_assets } from ${s(`${runtime_directory}/server/dev_assets.js`)};\n` +
+					`${code}\n__sveltekit_server_assets[${s(key)}] = ${stats.size};\n`,
+				map: null
+			};
+		}
+	};
+}

@@ -6,6 +6,7 @@ await createBundle({
 	modules: {
 		'@sveltejs/kit': 'src/exports/public.d.ts',
 		'@sveltejs/kit/adapter': 'src/exports/adapter.js',
+		'@sveltejs/kit/adapter/dev': 'src/exports/adapter/dev/public.d.ts',
 		'@sveltejs/kit/env': 'src/exports/env/public.d.ts',
 		'@sveltejs/kit/hooks': 'src/exports/hooks/public.d.ts',
 		'@sveltejs/kit/node': 'src/exports/node/index.js',

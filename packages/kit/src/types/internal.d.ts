@@ -10,6 +10,7 @@ import {
 	Emulator,
 	HttpError,
 	Adapter,
+	AdapterDevConfig,
 	AdapterViteConfig
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
@@ -57,7 +58,17 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
+	format_response(
+		status: number,
+		request: Request,
+		manifest: SSRManifest,
+		get_remote?: (
+			id: string,
+			manifest: SSRManifest
+		) => Promise<
+			{ fn: { __: Pick<RemoteInternals, 'type' | 'dev_loc'> }; name: string } | undefined
+		>
+	): Promise<string>;
 }
 
 /** the built `server/internal.js` */
@@ -221,6 +232,8 @@ export interface ManifestData {
 export interface RemoteChunk {
 	hash: string;
 	file: string;
+	/** What the module exports, when a dev server outside the Vite process reported it */
+	dev_exports?: Record<string, Pick<RemoteInternals, 'type' | 'dev_loc'>>;
 }
 
 export interface PageNode {
@@ -504,6 +517,29 @@ export interface SSRManifest {
 	server_assets: Record<string, number>;
 }
 
+/** The parts of the dev manifest that can be written to disk */
+export interface DevManifestData {
+	app_dir: string;
+	app_path: string;
+	assets: string[];
+	mime_types: Record<string, string>;
+	client: SSRManifest['client'];
+	/** Files are relative to the project root */
+	nodes: Array<Pick<PageNode, 'component' | 'universal' | 'server' | 'page_options'>>;
+	routes: Array<Omit<SSRRoute, 'endpoint' | 'endpoint_id'> & { endpoint: string | null }>;
+	params: string | null;
+}
+
+/** What the dev manifest needs from the runtime that renders requests */
+export interface DevManifestLoaders {
+	/** Loads a module by its path relative to the project root */
+	load(file: string): Promise<Record<string, any>>;
+	/** The CSS that the given modules depend on, keyed by URL */
+	inline_styles(files: string[]): Promise<Record<string, string>>;
+	server_assets: SSRManifest['server_assets'];
+	remotes(): Array<Pick<RemoteChunk, 'hash' | 'file'>>;
+}
+
 export interface SSRNode {
 	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;
@@ -603,7 +639,7 @@ export interface Uses {
 export type ValidatedConfig = RecursiveRequired<
 	Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
 > & {
-	adapter: Adapter & { vite?: AdapterViteConfig };
+	adapter: Adapter & { dev?: AdapterDevConfig; vite?: AdapterViteConfig };
 	preprocess: Config['preprocess'];
 	typescript: { config: NonNullable<Config['typescript']>['config'] };
 };

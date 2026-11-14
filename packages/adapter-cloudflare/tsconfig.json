@@ -25,7 +25,6 @@
 		"utils.js",
 		"utils.spec.js",
 		"vitest.config.js",
-		"globals.d.ts",
 		"test/utils.js"
 	]
 }

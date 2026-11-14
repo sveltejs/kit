@@ -26,6 +26,36 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
 
+/**
+ * The header on a request that SvelteKit sends through the adapter's `dev.respond` to ask what
+ * a remote module exports, so that the module only runs where requests are rendered
+ */
+export const DEV_REMOTE_EXPORTS_HEADER = 'x-sveltekit-dev-remote-exports';
+
+/**
+ * The module that a dev server outside the Vite process imports to list the remote modules
+ * found so far. Only Vite knows them, since it finds each one as it transforms it
+ */
+export const DEV_REMOTES_ID = '/@sveltejs/kit/dev/remotes';
+
+/**
+ * The module that a dev server outside the Vite process imports to find the CSS that the modules
+ * in its query depend on. Only Vite has the module graph
+ */
+export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
+
+/**
+ * The module that a dev server outside the Vite process imports to read the file in its query,
+ * which it cannot read from the file system
+ */
+export const DEV_ASSET_ID = '/@sveltejs/kit/dev/asset';
+
+/**
+ * The event that a dev server outside the Vite process sends when a module fails to load,
+ * since only the Vite process can log the error and show the error overlay
+ */
+export const DEV_REPORT_ERROR_EVENT = 'sveltekit:dev-error';
+
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
 

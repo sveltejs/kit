@@ -191,6 +191,12 @@ export function validate_config(config) {
 			}
 		}
 
+		if (typeof config.adapter?.dev === 'function') {
+			validated.adapter.dev = config.adapter.dev({
+				config: validated
+			});
+		}
+
 		if (typeof config.adapter?.vite === 'function') {
 			validated.adapter.vite = config.adapter.vite({
 				config: validated

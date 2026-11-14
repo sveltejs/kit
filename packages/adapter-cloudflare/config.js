@@ -1,10 +1,34 @@
-/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-/** @import { Plugin } from 'vite' */
+/** @import { CloudflareConfig } from '@cloudflare/vite-plugin' */
+/** @import { AddressInfo } from 'node:net' */
+/** @import { Connect, Plugin, ResolvedConfig } from 'vite' */
+/** @import { PluginOptions } from './index.js' */
+import crypto from 'node:crypto';
+import http from 'node:http';
+import { Readable } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { is_dev_or_build, validate_main } from './utils.js';
+import { is_dev_or_build, validate_entrypoint } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
+
+/** the worker that runs sveltekit during dev */
+const dev_worker_entry = fileURLToPath(new URL('./src/worker-dev.js', import.meta.url));
+
+/** the vite environment that runs the worker in workerd during dev */
+export const worker_environment = 'cloudflare';
+
+/**
+ * stops the dependency scan following imports into generated modules, which only exist in the dev
+ * server module graph
+ * @type {import('vite').Rolldown.Plugin}
+ */
+const scan_kit_modules = {
+	name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
+	resolveId: {
+		filter: { id: /^(\$(app|env)\/|<sveltekit:generated>)/ },
+		handler: (id) => ({ id, external: true })
+	}
+};
 
 const useful_cloudflare_plugins = new Set([
 	// resolves the plugin config that the other plugins read
@@ -16,36 +40,43 @@ const useful_cloudflare_plugins = new Set([
 ]);
 
 const useful_cloudflare_build_plugins = new Set([
-	'vite-plugin-cloudflare:output-config',
 	'vite-plugin-cloudflare:wasm-helper',
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
 /**
- * @param {string | undefined} config_path
- * @param {(config: WorkerConfig) => void} set_worker_config
- * @param {string[]} [scan_entries] the files Vite scans for the SSR environment's dependencies
+ * @typedef {{
+ *   set_config: (config: CloudflareConfig) => void;
+ *   set_forward: (forward: Forward | undefined) => void;
+ *   scan_entries?: string[];
+ *   plugin_options?: PluginOptions;
+ * }} ConfigHooks
+ */
+
+/**
+ * @param {ConfigHooks} hooks
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config, scan_entries) {
+export function plugin_config(hooks) {
 	const cloudflare_plugins = cloudflare({
-		configPath: config_path,
+		...hooks.plugin_options,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			validate_main(config.main, config.configPath);
+			validate_entrypoint(config.worker.entrypoint);
 
-			// the plugin requires `main` to be populated, so we set it to avoid it
-			// trying to resolve the build-generated entry in the user's wrangler config
-			config.main = worker_entry;
-			config.assets ??= {};
-			config.assets.binding ??= 'ASSETS';
-
-			// Svelte and SvelteKit use `node:async_hooks`
-			if (!config.compatibility_flags.includes('nodejs_als')) {
-				config.compatibility_flags.push('nodejs_als');
+			if (config.worker.assets?.basePath !== undefined) {
+				// the adapter already writes assets under `paths.base`, so Cloudflare stripping
+				// `basePath` before looking them up would make every asset request miss
+				throw new Error(
+					'Remove `assets.basePath` from cloudflare.config.ts and set `paths.base` in your SvelteKit config instead'
+				);
 			}
 
-			set_worker_config(config);
+			// the plugin needs an entrypoint for the Worker environment. Ours stands in
+			// for the build-generated entry that the adapter writes after the build
+			const customized = customize(config, worker_entry);
+			hooks.set_config(customized);
+			return customized;
 		}
 	});
 
@@ -53,6 +84,7 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 		(plugin) => plugin.name === 'vite-plugin-cloudflare:config'
 	);
 	const cloudflare_config_hook = cloudflare_config_plugin?.config;
+	const cloudflare_config_resolved_hook = cloudflare_config_plugin?.configResolved;
 
 	if (typeof cloudflare_config_hook !== 'function') {
 		throw new Error(
@@ -71,6 +103,7 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 						(env.command === 'build' && useful_cloudflare_build_plugins.has(plugin.name))
 				})
 		),
+		...plugin_worker_dev(hooks.set_forward, hooks.plugin_options, hooks.scan_entries),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
@@ -102,10 +135,10 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// the plugin's entry is our stand-in `main`, so we scan the app instead.
+								// the plugin's entry is our stand-in entrypoint, so we scan the app instead.
 								// Otherwise, dependencies found during the first request reload the module
 								// graph and fail that request
-								entries: scan_entries,
+								entries: hooks.scan_entries,
 								include: [
 									...(cloudflare_ssr.optimizeDeps?.include ?? []),
 									'@sveltejs/kit > cookie',
@@ -114,18 +147,7 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 								],
 								rolldownOptions: {
 									...cloudflare_ssr.optimizeDeps?.rolldownOptions,
-									plugins: [
-										cloudflare_ssr.optimizeDeps?.rolldownOptions?.plugins,
-										{
-											// the scan would otherwise follow these into SvelteKit's generated modules,
-											// which only exist in the dev server's module graph
-											name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
-											resolveId: {
-												filter: { id: /^\$(app|env)\// },
-												handler: (id) => ({ id, external: true })
-											}
-										}
-									]
+									plugins: [cloudflare_ssr.optimizeDeps?.rolldownOptions?.plugins, scan_kit_modules]
 								}
 							},
 							build: {
@@ -153,8 +175,311 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 					config.resolve.external = [];
 				}
 			},
-			// lets the Cloudflare output-config Vite plugin read the resolved Vite config
-			configResolved: cloudflare_config_plugin?.configResolved
+			configResolved(config) {
+				if (typeof cloudflare_config_resolved_hook !== 'function') return;
+
+				// the other Cloudflare plugins read the resolved Vite config from this hook
+				return cloudflare_config_resolved_hook.call(this, with_copied_environments(config));
+			}
 		}
 	];
+}
+
+/**
+ * adds the assets binding and compatibility flags the worker needs, and points it at entrypoint
+ * @param {CloudflareConfig} config
+ * @param {string | undefined} entrypoint
+ * @returns {CloudflareConfig}
+ */
+function customize(config, entrypoint) {
+	const env = { ...config.worker.env };
+	if (!Object.values(env).some((binding) => binding.type === 'assets')) {
+		env.ASSETS = { type: 'assets' };
+	}
+
+	return {
+		...config,
+		worker: {
+			...config.worker,
+			entrypoint,
+			// Svelte and SvelteKit use `node:async_hooks`
+			compatibilityFlags: [...new Set([...(config.worker.compatibilityFlags ?? []), 'nodejs_als'])],
+			env
+		}
+	};
+}
+
+/**
+ * @typedef {(request: Request, getClientAddress: () => string) => Promise<Response>} Forward
+ */
+
+/**
+ * runs sveltekit in workerd during dev, in a worker of our own that renders the requests sveltekit
+ * hands it with @sveltejs/kit/adapter/dev
+ * @param {(forward: Forward | undefined) => void} set_forward
+ * @param {PluginOptions} [plugin_options]
+ * @param {string[]} [scan_entries] the files Vite scans for the app's dependencies
+ * @returns {Plugin[]}
+ */
+function plugin_worker_dev(set_forward, plugin_options = {}, scan_entries = []) {
+	const plugins = cloudflare({
+		...plugin_options,
+		viteEnvironment: { name: worker_environment },
+		config: (config) => customize(config, dev_worker_entry)
+	});
+
+	/** @type {Connect.NextHandleFunction | undefined} */
+	let worker_handler;
+
+	const dev_plugins = plugins.map((plugin) => {
+		const gated = only_in_dev(plugin);
+
+		if (plugin.name === 'vite-plugin-cloudflare:config') {
+			const config_resolved = gated.configResolved;
+			if (typeof config_resolved !== 'function') return gated;
+
+			return /** @satisfies {Plugin} */ ({
+				...gated,
+				configResolved(config) {
+					return config_resolved.call(this, with_copied_environments(config));
+				}
+			});
+		}
+
+		if (plugin.name !== 'vite-plugin-cloudflare:dev') return gated;
+
+		const configure_server = gated.configureServer;
+		if (typeof configure_server !== 'function') {
+			throw new Error(
+				"Failed to find the vite-plugin-cloudflare:dev plugin's configureServer hook. This should not happen."
+			);
+		}
+
+		return /** @satisfies {Plugin} */ ({
+			...gated,
+			configureServer: {
+				// runs after sveltekit writes the generated modules that the worker imports
+				order: 'post',
+				async handler(server) {
+					const post = await configure_server.call(this, server);
+
+					return () => {
+						// capture the handler that sends requests to the worker, so sveltekit can serve files first
+						const use = server.middlewares.use;
+						server.middlewares.use = /** @type {typeof use} */ (
+							/** @param {Connect.NextHandleFunction} fn */
+							(fn) => {
+								worker_handler = fn;
+								return server.middlewares;
+							}
+						);
+						try {
+							if (typeof post === 'function') post();
+						} finally {
+							server.middlewares.use = use;
+						}
+					};
+				}
+			}
+		});
+	});
+
+	return [
+		...dev_plugins,
+		{
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-worker-dev',
+			apply: (_config, env) => env.command === 'serve' && !env.isPreview,
+			configEnvironment: {
+				order: 'post',
+				handler(name, config) {
+					if (name !== worker_environment) return;
+
+					// like the ssr environment, scan the app rather than the worker and leave sveltekit as is
+					config.optimizeDeps ??= {};
+					config.optimizeDeps.entries = scan_entries;
+					config.optimizeDeps.exclude = [
+						...(config.optimizeDeps.exclude ?? []),
+						'@sveltejs/kit',
+						'@sveltejs/adapter-cloudflare',
+						// an optional esm dependency of sveltekit, loaded as is so it is not prebundled on the first request
+						'@opentelemetry/api'
+					];
+					config.optimizeDeps.include = [
+						...(config.optimizeDeps.include ?? []),
+						'@sveltejs/kit > cookie',
+						'@sveltejs/kit > devalue',
+						'@sveltejs/kit > esm-env'
+					];
+					config.optimizeDeps.rolldownOptions ??= {};
+					config.optimizeDeps.rolldownOptions.plugins = [
+						config.optimizeDeps.rolldownOptions.plugins,
+						scan_kit_modules
+					];
+				}
+			},
+			configureServer(server) {
+				/** @type {ReturnType<typeof create_forwarder> | undefined} */
+				let forwarder;
+
+				// the handler is captured after this hook runs, so it is looked up on the first request
+				set_forward((request, getClientAddress) => {
+					if (!worker_handler) {
+						throw new Error(
+							"Failed to capture the vite-plugin-cloudflare:dev plugin's request handler. This should not happen."
+						);
+					}
+
+					forwarder ??= create_forwarder(worker_handler);
+					return forwarder.forward(request, getClientAddress);
+				});
+
+				server.httpServer?.once('close', () => {
+					set_forward(undefined);
+					forwarder?.close();
+				});
+			}
+		}
+	];
+}
+
+/**
+ * gives the cloudflare plugin copies of the environments, since it changes their build.outDir
+ * @param {ResolvedConfig} config
+ * @returns {ResolvedConfig}
+ */
+function with_copied_environments(config) {
+	return {
+		...config,
+		environments: Object.fromEntries(
+			Object.entries(config.environments).map(([name, environment]) => [
+				name,
+				{ ...environment, build: { ...environment.build } }
+			])
+		)
+	};
+}
+
+/**
+ * applies the plugin only in dev
+ * @param {Plugin} plugin
+ * @returns {Plugin}
+ */
+function only_in_dev(plugin) {
+	return {
+		...plugin,
+		apply: (_config, env) => env.command === 'serve' && !env.isPreview
+	};
+}
+
+/**
+ * sends requests to the request handler of the cloudflare plugin, which only takes node requests,
+ * through a local http server
+ * TODO use dispatchFetch if the plugin implements FetchableDevEnvironment
+ * @param {Connect.NextHandleFunction} handler
+ * @returns {{ forward: Forward; close: () => void }}
+ */
+function create_forwarder(handler) {
+	// other local clients can reach the listener, including pages that use dns rebinding, so it only
+	// takes requests that carry this
+	const token = crypto.randomBytes(32).toString('hex');
+
+	const server = http.createServer((req, res) => {
+		if (!has_token(req, token)) {
+			res.statusCode = 403;
+			res.end();
+			return;
+		}
+
+		handler(req, res, (/** @type {unknown} */ error) => {
+			res.statusCode = error ? 500 : 404;
+			res.end(error instanceof Error ? (error.stack ?? error.message) : 'Not Found');
+		});
+	});
+
+	/** @type {Promise<number> | undefined} */
+	let port;
+
+	const listen = () =>
+		(port ??= new Promise((fulfil, reject) => {
+			server.once('error', reject);
+			server.listen(0, '127.0.0.1', () =>
+				fulfil(/** @type {AddressInfo} */ (server.address()).port)
+			);
+		}));
+
+	return {
+		async forward(request, getClientAddress) {
+			const url = new URL(request.url);
+
+			/** @type {Record<string, string>} */
+			const headers = Object.fromEntries(request.headers);
+			// the plugin builds the request url of the worker from these
+			headers.host = url.host;
+			headers['x-forwarded-proto'] = url.protocol.slice(0, -1);
+			headers['cf-connecting-ip'] = getClientAddress();
+			headers[TOKEN_HEADER] = token;
+
+			const options = {
+				host: '127.0.0.1',
+				port: await listen(),
+				method: request.method,
+				path: url.pathname + url.search,
+				headers,
+				setHost: false
+			};
+
+			return new Promise((fulfil, reject) => {
+				const outgoing = http.request(options, (incoming) => {
+					const response_headers = new Headers();
+					for (let i = 0; i < incoming.rawHeaders.length; i += 2) {
+						response_headers.append(incoming.rawHeaders[i], incoming.rawHeaders[i + 1]);
+					}
+
+					// these only apply to the connection to the local server
+					for (const name of ['connection', 'keep-alive', 'transfer-encoding']) {
+						response_headers.delete(name);
+					}
+
+					const status = incoming.statusCode ?? 500;
+					const has_body = request.method !== 'HEAD' && ![101, 204, 205, 304].includes(status);
+
+					fulfil(
+						new Response(
+							has_body ? /** @type {ReadableStream} */ (Readable.toWeb(incoming)) : null,
+							{ status, statusText: incoming.statusMessage, headers: response_headers }
+						)
+					);
+				});
+
+				outgoing.once('error', reject);
+
+				if (request.body) {
+					Readable.fromWeb(/** @type {any} */ (request.body)).pipe(outgoing);
+				} else {
+					outgoing.end();
+				}
+			});
+		},
+		close: () => server.close()
+	};
+}
+
+const TOKEN_HEADER = 'x-sveltekit-forward-token';
+
+/**
+ * checks the token in constant time and removes it, so the worker does not see it
+ * @param {import('node:http').IncomingMessage} req
+ * @param {string} token
+ * @returns {boolean}
+ */
+function has_token(req, token) {
+	const value = req.headers[TOKEN_HEADER];
+	delete req.headers[TOKEN_HEADER];
+
+	for (let i = req.rawHeaders.length - 2; i >= 0; i -= 2) {
+		if (req.rawHeaders[i].toLowerCase() === TOKEN_HEADER) req.rawHeaders.splice(i, 2);
+	}
+
+	if (typeof value !== 'string' || value.length !== token.length) return false;
+	return crypto.timingSafeEqual(Buffer.from(value), Buffer.from(token));
 }

@@ -6,6 +6,19 @@ declare module '<sveltekit:generated>/server.js' {
 	export function get_hooks(): Promise<Partial<ServerHooks>>;
 }
 
+/** What `@sveltejs/kit/adapter/dev` builds the dev manifest from */
+declare module '<sveltekit:generated>/manifest-data.js' {
+	/** The project root */
+	export const root: string;
+	/** The path that asset URLs start with */
+	export const assets: string;
+	/** The instrumentation file, relative to the project root */
+	export const instrumentation: string | null;
+	export const data: import('types').DevManifestData;
+	/** Whether remote functions are enabled */
+	export const remote_functions: boolean;
+}
+
 declare module '<sveltekit:generated>/env/config.js' {
 	// exported environment variables are defined in env.d.ts
 

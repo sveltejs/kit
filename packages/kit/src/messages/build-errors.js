@@ -508,16 +508,6 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
- * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
- * @param {{ "url": string }} _values
- * @param {ThrowOptions} [options]
- * @returns {never}
- */
-export function fetch_relative_url(_values, options) {
-	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs`, options, fetch_relative_url);
-}
-
-/**
  * `$lib` has been removed. Use `#lib` instead: https://svelte.dev/docs/kit/$lib. To keep using `$lib`, add `alias: { '$lib': 'src/lib' }` to your SvelteKit config.
  * @param {void} _values
  * @param {ThrowOptions} [options]

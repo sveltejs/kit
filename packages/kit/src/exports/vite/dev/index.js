@@ -8,20 +8,27 @@ import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
-import { generate_manifest, loud_ssr_load_module } from './generate_manifest.js';
+import * as devalue from 'devalue';
+import {
+	generate_manifest,
+	get_dev_manifest_data,
+	loud_ssr_load_module
+} from './generate_manifest.js';
+import { write_if_changed } from '../../../core/sync/utils.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
 import { resolve_entry } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../core/params.js';
 import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
+import { s } from '../../../utils/misc.js';
 import { load_error_page } from '../../../core/config/index.js';
 import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
-import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
+import { mimes } from '../../../utils/mime.js'; // extends mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
-import { SCHEME } from '../../../utils/url.js';
+import { patch_fetch } from '../../../utils/dev_fetch.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -62,14 +69,7 @@ export async function dev(
 		);
 	};
 
-	const fetch = globalThis.fetch;
-	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string' && !SCHEME.test(info)) {
-			e.fetch_relative_url({ url: info });
-		}
-
-		return fetch(info, init);
-	};
+	patch_fetch();
 
 	write_tsconfig(svelte_config, root);
 
@@ -80,6 +80,9 @@ export async function dev(
 
 	/** @type {Error | null} */
 	let manifest_error = null;
+
+	/** @type {string | undefined} the last manifest data written for other vite environments */
+	let dev_data;
 
 	const runner = get_runner(vite, vite_dev_server);
 	const { hot } = vite_dev_server.environments.client;
@@ -98,12 +101,71 @@ export async function dev(
 		}
 	}
 
+	const dev_data_file = path.join(svelte_config.outDir, 'generated', 'dev', 'manifest-data.js');
+
+	/**
+	 * Writes what `@sveltejs/kit/adapter/dev` builds the manifest from, for an adapter that
+	 * renders requests outside the Vite process
+	 */
+	function write_dev_data() {
+		if (!svelte_config.adapter?.dev?.respond || !manifest_data) return;
+
+		const data = get_dev_manifest_data(svelte_config, manifest_data, root);
+
+		/** @type {Record<string, string>} */
+		const mime_types = {};
+		// every mime type, since imported assets are not listed
+		for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
+		Object.assign(mime_types, data.mime_types);
+
+		const instrumentation = resolve_entry(
+			path.join(svelte_config.files.src, 'instrumentation.server'),
+			svelte_config.moduleExtensions
+		);
+
+		const code = `// generated during dev for \`@sveltejs/kit/adapter/dev\`
+export const root = ${s(posixify(root))};
+
+export const assets = ${s(svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base)};
+
+export const instrumentation = ${s(instrumentation ? posixify(path.relative(root, instrumentation)) : null)};
+
+export const data = ${devalue.uneval({
+			...data,
+			mime_types,
+			nodes: data.nodes.map(({ component, universal, server, page_options }) => ({
+				component,
+				universal,
+				server,
+				page_options
+			}))
+		})};
+
+export const remote_functions = ${s(svelte_config.experimental.remoteFunctions)};
+`;
+
+		if (code === dev_data) return;
+		dev_data = code;
+
+		write_if_changed(dev_data_file, code);
+
+		// the watcher would do this too, but a request that needs the new data may arrive first
+		for (const environment of Object.values(vite_dev_server.environments)) {
+			for (const module of environment.moduleGraph.getModulesByFile(posixify(dev_data_file)) ??
+				[]) {
+				environment.moduleGraph.invalidateModule(module);
+			}
+		}
+	}
+
 	/** @param {boolean} [validate_params] */
 	async function update_manifest(validate_params = true) {
 		try {
 			manifest_data = create_manifest_data(svelte_config, root);
 			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
+
+			write_dev_data();
 
 			if (!validate_params) return;
 
@@ -372,32 +434,20 @@ export async function dev(
 					svelte_config.moduleExtensions
 				);
 
-				if (resolved_instrumentation) {
-					if (svelte_config.adapter && !svelte_config.adapter.supports?.instrumentation?.()) {
-						e.adapter_instrumentation_unsupported({
-							file: resolved_instrumentation,
-							adapter: svelte_config.adapter.name
-						});
-					}
-
-					const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
-					set_env(env);
-					await runner.import(resolved_instrumentation);
+				if (
+					resolved_instrumentation &&
+					svelte_config.adapter &&
+					!svelte_config.adapter.supports?.instrumentation?.()
+				) {
+					e.adapter_instrumentation_unsupported({
+						file: resolved_instrumentation,
+						adapter: svelte_config.adapter.name
+					});
 				}
 
 				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
-
-				const { init, respond } = await configure({
-					manifest,
-					env,
-					read: (file) => createReadableStream(from_fs(file)),
-					assets,
-					fix_stack_trace
-				});
-
-				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
@@ -427,40 +477,89 @@ export async function dev(
 					return;
 				}
 
-				const rendered = await respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				const getClientAddress = () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				};
 
-						return fs.readFileSync(path.join(svelte_config.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
-				});
+				const adapter_respond = svelte_config.adapter?.dev?.respond;
+
+				// whether this process rendered the request, and so loaded its modules
+				let rendered_here = !adapter_respond;
+
+				/**
+				 * renders the request in this process
+				 * @param {Request} request
+				 */
+				const resolve = async (request) => {
+					rendered_here = true;
+
+					if (resolved_instrumentation) {
+						const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
+						set_env(env);
+						await runner.import(resolved_instrumentation);
+					}
+
+					const { init, respond } = await configure({
+						manifest,
+						env,
+						read: (file) => createReadableStream(from_fs(file)),
+						assets,
+						fix_stack_trace
+					});
+
+					await init();
+
+					return respond(request, {
+						getClientAddress,
+						read: (file) => {
+							if (file in manifest.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
+
+							return fs.readFileSync(path.join(svelte_config.files.assets, file));
+						},
+						before_handle: async (event, config, prerender, handle) => {
+							// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+							// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+							return await async_local_storage.run({ event, config, prerender }, handle);
+						},
+						emulator
+					});
+				};
+
+				const rendered = adapter_respond
+					? await adapter_respond(request, { getClientAddress, resolve })
+					: await resolve(request);
+
+				// names the remote function in the log from what the server that rendered the request
+				// reported, since looking it up here would load the remote module in this process
+				/** @type {Parameters<ServerModule['format_response']>[3]} */
+				const get_remote = rendered_here
+					? undefined
+					: (id) => {
+							const [hash, name] = id.split('/');
+							const internals = get_remotes().find((remote) => remote.hash === hash)?.dev_exports?.[
+								name
+							];
+
+							return Promise.resolve(internals && { fn: { __: internals }, name });
+						};
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
 					serve_static_middleware.handle(req, res, async () => {
 						log_dev_response(
 							rendered.status,
-							await format_response(rendered.status, request, manifest)
+							await format_response(rendered.status, request, manifest, get_remote)
 						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
 					log_dev_response(
 						rendered.status,
-						await format_response(rendered.status, request, manifest)
+						await format_response(rendered.status, request, manifest, get_remote)
 					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
