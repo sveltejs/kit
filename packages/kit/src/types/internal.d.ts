@@ -58,7 +58,17 @@ export interface ServerModule {
 	configure(options: ServerConfigureOptions): Promise<ServerInstance>;
 	/** the `server` adapters receive from `builder.generateServerInstance` */
 	create_server(manifest: SSRManifest): Server;
-	format_response(status: number, request: Request, manifest: SSRManifest): Promise<string>;
+	format_response(
+		status: number,
+		request: Request,
+		manifest: SSRManifest,
+		get_remote?: (
+			id: string,
+			manifest: SSRManifest
+		) => Promise<
+			{ fn: { __: Pick<RemoteInternals, 'type' | 'dev_loc'> }; name: string } | undefined
+		>
+	): Promise<string>;
 }
 
 /** the built `server/internal.js` */
@@ -222,6 +232,8 @@ export interface ManifestData {
 export interface RemoteChunk {
 	hash: string;
 	file: string;
+	/** What the module exports, when a dev server outside the Vite process reported it */
+	dev_exports?: Record<string, Pick<RemoteInternals, 'type' | 'dev_loc'>>;
 }
 
 export interface PageNode {
