@@ -1,40 +1,43 @@
-/** @import { EnvironmentModuleNode, Plugin, ResolvedConfig, ViteDevServer } from 'vite' */
-/** @import { ValidatedConfig } from 'types' */
+/** @import { EnvironmentModuleNode, Plugin, ResolvedConfig } from 'vite' */
+/** @import { RemoteChunk, ValidatedConfig } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { prefixRegex } from '@rolldown/pluginutils';
-import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../../constants.js';
+import {
+	DEV_ASSET_ID,
+	DEV_INLINE_STYLES_ID,
+	DEV_REMOTES_ID,
+	DEV_REPORT_ERROR_EVENT
+} from '../../../constants.js';
 import { runtime_directory } from '../../../core/utils.js';
 import { s } from '../../../utils/misc.js';
 import { posixify } from '../../../utils/os.js';
 import { from_fs } from '../../../utils/vite.js';
 import { find_deps, get_inline_css_urls, report_load_error } from '../dev/generate_manifest.js';
 
-const resolved_report_error_id = '\0' + DEV_REPORT_ERROR_ID;
 const resolved_asset_id = '\0' + DEV_ASSET_ID;
 
-const ids = [DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID];
+const resolved_remotes_id = '\0' + DEV_REMOTES_ID;
+
+const ids = [DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REMOTES_ID];
 
 /**
  * Gives a dev server that runs outside the Vite process, through `@sveltejs/kit/adapter/dev`,
  * what only the Vite process knows
  * @param {ValidatedConfig} svelte_config
- * @param {() => { vite: typeof import('vite'); root: string }} get_config
+ * @param {() => { vite: typeof import('vite'); root: string; remotes: RemoteChunk[] }} get_config
  * @returns {Plugin}
  */
 export function plugin_dev_server(svelte_config, get_config) {
 	/** @type {ResolvedConfig} */
 	let vite_config;
 
-	/** @type {ViteDevServer} */
-	let vite_dev_server;
-
 	return {
 		name: 'vite-plugin-sveltekit-dev-server',
 		apply: 'serve',
 
 		applyToEnvironment(environment) {
-			// SvelteKit's own `ssr` environment runs in the Vite process and reads these directly
+			// the ssr environment runs in the vite process and reads these directly
 			return (
 				!!svelte_config.adapter?.dev?.respond &&
 				environment.config.consumer === 'server' &&
@@ -47,7 +50,16 @@ export function plugin_dev_server(svelte_config, get_config) {
 		},
 
 		configureServer(server) {
-			vite_dev_server = server;
+			if (!svelte_config.adapter?.dev?.respond) return;
+
+			for (const environment of Object.values(server.environments)) {
+				// the ssr environment runs in the vite process and reports errors itself
+				if (environment.config.consumer !== 'server' || environment.name === 'ssr') continue;
+
+				environment.hot.on(DEV_REPORT_ERROR_EVENT, (error) => {
+					report_load_error(get_config().vite, server, error);
+				});
+			}
 		},
 
 		resolveId: {
@@ -72,21 +84,20 @@ export function plugin_dev_server(svelte_config, get_config) {
 					const self = moduleGraph.getModuleById(id);
 					if (self) moduleGraph.invalidateModule(self);
 
-					// the path that `read` gets from the asset URL
+					// the path that read gets from the asset url
 					const resolved = file.startsWith('/@fs') ? from_fs(file) : path.join(root, file);
 
 					return `export default ${s(fs.readFileSync(resolved).toString('base64'))};`;
 				}
 
-				if (id.startsWith(resolved_report_error_id)) {
-					const error = new URLSearchParams(id.slice(id.indexOf('?'))).get('error');
-					if (error) report_load_error(vite, vite_dev_server, JSON.parse(error));
-
-					// so that the same error is reported each time it happens
+				if (id.startsWith(resolved_remotes_id)) {
+					// more remote modules can be found at any time
 					const self = moduleGraph.getModuleById(id);
 					if (self) moduleGraph.invalidateModule(self);
 
-					return 'export {};';
+					const remotes = get_config().remotes.map(({ hash, file }) => ({ hash, file }));
+
+					return `export default ${JSON.stringify(remotes)};`;
 				}
 
 				/** @type {Set<EnvironmentModuleNode>} */
@@ -97,8 +108,8 @@ export function plugin_dev_server(svelte_config, get_config) {
 					if (node) await find_deps(environment, node, deps);
 				}
 
-				// the answer depends on what has loaded so far, so it is only valid once. Vite does
-				// not cache the result of a module that is invalidated while it loads
+				// only valid once, since the answer depends on what has loaded so far
+				// vite does not cache a module that is invalidated while it loads
 				const self = moduleGraph.getModuleById(id);
 				if (self) moduleGraph.invalidateModule(self);
 
@@ -111,8 +122,8 @@ export function plugin_dev_server(svelte_config, get_config) {
 			}
 		},
 
-		// `read` from `$app/server` needs the size of an asset before it responds, and a server
-		// outside the Vite process cannot stat the file, so the asset's own module provides it
+		// read needs the size of an asset before it responds, and a server outside
+		// the vite process cannot stat the file, so the asset module provides it
 		transform(code, id) {
 			const { root } = get_config();
 			const [file, query = ''] = id.split('?', 2);
@@ -130,7 +141,7 @@ export function plugin_dev_server(svelte_config, get_config) {
 			}
 			if (!stats.isFile()) return;
 
-			// the same path that `read` gets from the asset URL
+			// the same path that read gets from the asset url
 			const relative = posixify(path.relative(root, file));
 			const key =
 				relative.startsWith('../') || path.isAbsolute(relative)

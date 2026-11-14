@@ -27,6 +27,12 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 export const SRC_ROOT = import.meta.dirname;
 
 /**
+ * The module that a dev server outside the Vite process imports to list the remote modules
+ * found so far. Only Vite knows them, since it finds each one as it transforms it
+ */
+export const DEV_REMOTES_ID = '/@sveltejs/kit/dev/remotes';
+
+/**
  * The module that a dev server outside the Vite process imports to find the CSS that the modules
  * in its query depend on. Only Vite has the module graph
  */
@@ -39,10 +45,10 @@ export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
 export const DEV_ASSET_ID = '/@sveltejs/kit/dev/asset';
 
 /**
- * The module that a dev server outside the Vite process imports to report the error in its
- * query, since only the Vite process can log it and show the error overlay
+ * The event that a dev server outside the Vite process sends when a module fails to load,
+ * since only the Vite process can log the error and show the error overlay
  */
-export const DEV_REPORT_ERROR_ID = '/@sveltejs/kit/dev/report-error';
+export const DEV_REPORT_ERROR_EVENT = 'sveltekit:dev-error';
 
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;

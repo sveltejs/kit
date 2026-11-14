@@ -635,7 +635,7 @@ function kit({ svelte_config }) {
 					remote_metadata = metadata;
 				}
 			),
-			plugin_dev_server(svelte_config, () => ({ root, vite })),
+			plugin_dev_server(svelte_config, () => ({ root, vite, remotes: remote_metadata.remotes })),
 			plugin_env_vars(svelte_config, (vars) => {
 				explicit_env_config = vars;
 			}),
