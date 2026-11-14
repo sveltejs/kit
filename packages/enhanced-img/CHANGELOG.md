@@ -1,5 +1,11 @@
 # @sveltejs/enhanced-img
 
+## 1.0.1
+
+### Patch Changes
+
+- fix: compute the missing `width` or `height` at runtime for images imported in the script, instead of outputting `NaN` ([#17499](https://github.com/sveltejs/kit/pull/17499))
+
 ## 1.0.0
 
 ### Major Changes

@@ -140,17 +140,6 @@
 		],
 		"details": "[Service workers](https://svelte.dev/docs/kit/service-workers) run outside the page, so modules that depend on the page or the client-side router — such as `$app/forms`, `$app/navigation` and `$app/state` — aren't available there. Remove these imports from your service worker and the modules it imports."
 	},
-	"fetch_relative_url": {
-		"variants": [
-			{
-				"text": "Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs",
-				"variables": [
-					"url"
-				]
-			}
-		],
-		"details": "On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip."
-	},
 	"preview_build_missing": {
 		"variants": [
 			{
@@ -2179,6 +2168,17 @@
 			}
 		],
 		"details": "When you `fetch` a compressed response, the body you read from it has already been decompressed, but its headers still say that it's compressed. Returning that response as-is would make the browser try to decompress it again. Create a new response without the `content-encoding` (and `content-length`) headers instead:\n\n```js\n/// file: src/routes/proxy/+server.js\nexport async function GET({ fetch }) {\n\tconst response = await fetch('https://example.com/data');\n\n\tconst headers = new Headers(response.headers);\n\theaders.delete('content-encoding');\n\theaders.delete('content-length');\n\n\treturn new Response(response.body, { status: response.status, headers });\n}\n```"
+	},
+	"fetch_relative_url": {
+		"variants": [
+			{
+				"text": "Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs",
+				"variables": [
+					"url"
+				]
+			}
+		],
+		"details": "On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip."
 	},
 	"endpoint_invalid_response": {
 		"variants": [
