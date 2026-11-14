@@ -17,10 +17,8 @@ function is_aborted(request) {
 	if (request.httpVersionMajor < 2) return false;
 
 	// HTTP/2 compatibility requests don't reflect a cancelled stream in
-	// `destroyed`/`readableAborted`. `aborted` isn't set once the response has
-	// ended, but the stream still records the reset code
-	const req = /** @type {Http2ServerRequest} */ (/** @type {unknown} */ (request));
-	return req.aborted || (req.stream?.rstCode ?? 0) !== 0;
+	// `destroyed`/`readableAborted`, only in `aborted`
+	return /** @type {Http2ServerRequest} */ (/** @type {unknown} */ (request)).aborted;
 }
 
 /** The same error Node emits when an HTTP/1.1 request is aborted while we're listening */
