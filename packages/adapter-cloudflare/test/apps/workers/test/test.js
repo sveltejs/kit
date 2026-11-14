@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { location } from '../../../../../../test-utils/deploy.js';
 
 const base = process.env.TEST_BASE ? '/base' : '';
 
@@ -64,6 +65,13 @@ test('dependencies resolve the workerd export condition', async ({ request }) =>
 	expect(await res.text()).toBe('workerd');
 });
 
+test('global fetch rejects relative URLs during dev', async ({ request }) => {
+	test.skip(!process.env.DEV, 'only checked during dev');
+
+	const res = await request.get(`${base}/fetch-relative`);
+	expect(await res.text()).toContain('fetch_relative_url');
+});
+
 test('SvelteKit runs in workerd', async ({ request }) => {
 	const res = await request.get(`${base}/runtime`);
 	expect(await res.text()).toBe('Cloudflare-Workers');
@@ -75,6 +83,69 @@ test('remote functions run in workerd', async ({ page }) => {
 
 	await page.locator('button').click();
 	await expect(page.locator('button')).toHaveText('1');
+});
+
+test('styles are inlined during dev', async ({ request }) => {
+	test.skip(!process.env.DEV, 'styles are only inlined during dev');
+
+	const eager = await (await request.get(`${base}/css`)).text();
+	expect(eager).toContain('rgb(1, 2, 3)');
+	expect(eager).toContain('rgb(4, 5, 6)');
+	expect(eager).not.toContain('rgb(7, 8, 9)');
+
+	// the same modules as before, which now depend on one more component
+	const lazy = await (await request.get(`${base}/css?lazy`)).text();
+	expect(lazy).toContain('rgb(7, 8, 9)');
+});
+
+test.describe.serial('modules that fail to load', () => {
+	test.skip(!process.env.DEV, 'the overlay only exists during dev');
+
+	// the dev server runs in a copy of the app
+	const file = path.join(
+		location(path.resolve(import.meta.dirname, '..')),
+		'src/routes/errors/load/+page.server.js'
+	);
+
+	/** @type {string} */
+	let original;
+
+	test.beforeAll(() => {
+		original = fs.readFileSync(file, 'utf-8');
+	});
+
+	test.afterEach(() => {
+		fs.writeFileSync(file, original);
+	});
+
+	for (const [name, code, message] of [
+		[
+			'throws',
+			"throw new Error('thrown while the module loads');",
+			'thrown while the module loads'
+		],
+		['imports a missing file', "import './does-not-exist.js';", 'does-not-exist.js'],
+		['has a syntax error', 'export function load() {', 'invalid JS syntax'],
+		[
+			'throws a long error',
+			"throw new Error('a long message ' + 'x'.repeat(50000));",
+			'a long message xxx'
+		]
+	]) {
+		test(`a module that ${name} shows the error overlay`, async ({ page, request }) => {
+			// the overlay shows in every connected page, so this one only watches
+			await page.goto(`${base}/errors`);
+			fs.writeFileSync(file, code);
+
+			const overlay = page.locator('vite-error-overlay .message-body');
+
+			// until the dev server has picked up the change
+			await expect(async () => {
+				await request.get(`${base}/errors/load`);
+				await expect(overlay).toContainText(message, { timeout: 500 });
+			}).toPass();
+		});
+	}
 });
 
 test('imported assets are served', async ({ page }) => {

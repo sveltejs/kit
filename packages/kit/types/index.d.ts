@@ -63,7 +63,6 @@ declare module '@sveltejs/kit' {
 		 * your platform's runtime instead of Node: send them to code that runs there, which imports
 		 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 		 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
-		 * SvelteKit also sends its own requests through it, such as to find what a remote module exports.
 		 * @since 3.3.0
 		 */
 		respond?: (
