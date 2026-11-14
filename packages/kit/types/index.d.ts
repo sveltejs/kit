@@ -950,7 +950,11 @@ declare module '@sveltejs/kit' {
 				location: string;
 			}
 		>;
-		/** An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config) */
+		/**
+		 * An array of prerendered paths (without trailing slashes, regardless of the trailingSlash config).
+		 * Paths are decoded the way the router decodes a request's pathname: percent signs (`%25`) and
+		 * reserved characters such as `/` (`%2F`) stay encoded.
+		 */
 		paths: string[];
 	}
 

@@ -284,6 +284,11 @@ test('prerendered.paths omits trailing slashes for endpoints', () => {
 	}
 });
 
+test('prerendered.paths keeps percent signs encoded', () => {
+	assert.isTrue(fs.existsSync(`${build}/encoding/100%.html`));
+	expect(read('service-worker.js')).toMatch('"encoding/100%25"');
+});
+
 test('prerenders responses with immutable Headers', () => {
 	const content = read('immutable-headers');
 	expect(content).toMatch('foo');
