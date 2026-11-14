@@ -31,7 +31,43 @@ export function withEnvAndExports() {
 	return unavailable();
 }
 
+/** @type {Module['withExports']} */
+export function withExports() {
+	return unavailable();
+}
+
+/** @returns {never} */
+export function abortIsolate() {
+	return unavailable();
+}
+
+/** @returns {never} */
+export function restore() {
+	return unavailable();
+}
+
 export const exports = new Proxy({}, { get: unavailable, has: unavailable });
+
+// inert so that code which extends them can be imported
+export class RpcTarget {}
+export class RpcStub {}
+export class RpcPromise {}
+export class RpcProperty {}
+export class ServiceStub {}
+
+class Entrypoint {
+	/**
+	 * @param {unknown} ctx
+	 * @param {unknown} env
+	 */
+	constructor(ctx, env) {
+		this.ctx = ctx;
+		this.env = env;
+	}
+}
+export class WorkerEntrypoint extends Entrypoint {}
+export class DurableObject extends Entrypoint {}
+export class WorkflowEntrypoint extends Entrypoint {}
 
 // no-ops
 /** @type {Module['waitUntil']} */
