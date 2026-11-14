@@ -259,6 +259,12 @@ function create_asset_table(base, measured) {
 }
 
 /**
+ * The escapes of `# $ & + , / : ; = ? @`, with their own `%` encoded as `%25`.
+ * For example, `%252F` is `%2F` (an encoded `/`) encoded once more
+ */
+const double_encoded_reserved = /%25(23|24|26|2B|2C|2F|3A|3B|3D|3F|40)/gi;
+
+/**
  * Keys the measured files by the exact paths kit prerendered, so a lookup
  * hit is precisely a prerendered page, asset or redirect and every other
  * pathname (including the non-canonical trailing-slash form) misses
@@ -287,8 +293,9 @@ function create_prerendered_table(base, measured, paths) {
 		// kit records paths decoded with `decodeURI`, which leaves reserved characters
 		// (`# $ & + , / : ; = ? @`) encoded. `/a%2Fb` and `/a%252Fb` are therefore both
 		// recorded as `/a%2Fb`, and the `%` could be either an escape or a literal.
-		// We can't tell which, so the path is also keyed with those escapes intact
-		const reserved = key.replace(/%25(2[346BCF]|3[ABDF]|40)/gi, '%$1');
+		// We can't tell which, so the path is also keyed with those escapes intact,
+		// e.g. `/a%252Fb` is also keyed as `/a%2Fb`
+		const reserved = key.replace(double_encoded_reserved, '%$1');
 		if (reserved !== key) entries.push([reserved, entry]);
 	}
 
