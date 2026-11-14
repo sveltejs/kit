@@ -26,6 +26,12 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
 
+/**
+ * The module that a dev server outside the Vite process imports to report the error in its
+ * query, since only the Vite process can log it and show the error overlay
+ */
+export const DEV_REPORT_ERROR_ID = '/@sveltejs/kit/dev/report-error';
+
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
 
