@@ -207,7 +207,8 @@ async function handle_remote_call_internal(event, state, id) {
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
-		'sveltekit.remote.call.name': internals.name
+		'sveltekit.remote.call.name': internals.name,
+		'sveltekit.remote.call.file': internals.file
 	});
 
 	/** @type {HeadersInit | undefined} */
