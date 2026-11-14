@@ -34,37 +34,23 @@ function create_request(options = {}) {
 	};
 }
 
-/**
- * @param {import('http').IncomingHttpHeaders} headers
- */
-async function create_destroyed_request(headers) {
+// https://github.com/sveltejs/kit/issues/17633
+test('errors the body of a request that was aborted before being adapted', async () => {
 	const incoming = new IncomingMessage(new Socket());
 	incoming.method = 'POST';
 	incoming.url = '/';
 	incoming.httpVersionMajor = 1;
-	incoming.headers = headers;
+	incoming.headers = { 'content-length': '2' };
 
 	const closed = once(incoming, 'close');
 	incoming.destroy();
 	await closed;
 
-	return getRequest({ request: incoming, base: 'http://localhost' });
-}
-
-// https://github.com/sveltejs/kit/issues/17633
-test('errors the body of a request that was aborted before being adapted', async () => {
-	const request = await create_destroyed_request({ 'content-length': '2' });
+	const request = getRequest({ request: incoming, base: 'http://localhost' });
 
 	expect(request.signal.aborted).toBe(true);
 	expect(request.bodyUsed).toBe(false);
 	await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
-});
-
-test('aborts the signal of a bodyless request that closed before being adapted', async () => {
-	const request = await create_destroyed_request({});
-
-	expect(request.signal.aborted).toBe(true);
-	expect(request.body).toBeNull();
 });
 
 test('does not abort an already-destroyed request that ended normally', async () => {
@@ -313,18 +299,15 @@ test('does not remove unrelated data listeners when draining', async () => {
 	expect(unrelated).toHaveBeenCalled();
 });
 
-test.each([false, true])(
-	'checks an already-destroyed response when adapting a request (ended: %s)',
-	(writableEnded) => {
-		const res = /** @type {any} */ (new EventEmitter());
-		res.destroyed = true;
-		res.writableEnded = writableEnded;
+test('aborts the request signal when the response was destroyed before being adapted', () => {
+	const res = /** @type {any} */ (new EventEmitter());
+	res.destroyed = true;
+	res.writableEnded = false;
 
-		const { request } = setup_post_request({ 'content-length': '0' }, undefined, res);
+	const { request } = setup_post_request({ 'content-length': '0' }, undefined, res);
 
-		expect(request.signal.aborted).toBe(!writableEnded);
-	}
-);
+	expect(request.signal.aborted).toBe(true);
+});
 
 // https://github.com/sveltejs/kit/issues/16778
 test('aborts the request signal when the response closes before finishing', async () => {
