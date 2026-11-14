@@ -33,6 +33,12 @@ export const SRC_ROOT = import.meta.dirname;
 export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
 
 /**
+ * The module that a dev server outside the Vite process imports to read the file in its query,
+ * which it cannot read from the file system
+ */
+export const DEV_ASSET_ID = '/@sveltejs/kit/dev/asset';
+
+/**
  * The module that a dev server outside the Vite process imports to report the error in its
  * query, since only the Vite process can log it and show the error overlay
  */

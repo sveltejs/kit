@@ -1,7 +1,9 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { SSRManifest } from 'types' */
-import { DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../constants.js';
+import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
+import { base64_decode } from '../utils.js';
+import { server_assets } from './dev_assets.js';
 import { patch_fetch } from '../../utils/dev_fetch.js';
 
 // the adapter decides which features its platform supports once it renders requests itself
@@ -92,7 +94,7 @@ async function get_manifest() {
 
 				return styles;
 			},
-			server_assets: {},
+			server_assets,
 			remotes: () => []
 		});
 
@@ -100,6 +102,21 @@ async function get_manifest() {
 	}
 
 	return current;
+}
+
+/**
+ * Reads an imported asset through the Vite process, which can read the file system
+ * @param {string} file the path relative to the project root, or a /@fs path
+ */
+async function read(file) {
+	// the id must not end with the file's extension, which other plugins may act on
+	/** @type {{ default: string }} */
+	const { default: data } = await import(
+		/* @vite-ignore */ `${DEV_ASSET_ID}?file=${encodeURIComponent(file)}&base64`
+	);
+
+	// @ts-ignore passing a Uint8Array to `new Response(...)` is fine
+	return new Response(base64_decode(data)).body;
 }
 
 /** @type {Server} */
@@ -127,7 +144,7 @@ export const server = {
 			manifest,
 			env,
 			assets: generated.assets,
-			read: options?.read
+			read: options?.read ?? read
 		});
 		await server.init();
 

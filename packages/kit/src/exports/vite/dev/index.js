@@ -26,7 +26,7 @@ import { load_error_page } from '../../../core/config/index.js';
 import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
-import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
+import { mimes } from '../../../utils/mime.js'; // extends mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
 import { patch_fetch } from '../../../utils/dev_fetch.js';
 import { check_feature } from '../../../core/features.js';
@@ -112,6 +112,12 @@ export async function dev(
 
 		const data = get_dev_manifest_data(svelte_config, manifest_data, root);
 
+		/** @type {Record<string, string>} */
+		const mime_types = {};
+		// every mime type, since imported assets are not listed
+		for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
+		Object.assign(mime_types, data.mime_types);
+
 		const instrumentation = resolve_entry(
 			path.join(svelte_config.files.src, 'instrumentation.server'),
 			svelte_config.moduleExtensions
@@ -126,6 +132,7 @@ export const instrumentation = ${s(instrumentation ? posixify(path.relative(root
 
 export const data = ${devalue.uneval({
 			...data,
+			mime_types,
 			nodes: data.nodes.map(({ component, universal, server, page_options }) => ({
 				component,
 				universal,
