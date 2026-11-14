@@ -1,5 +1,5 @@
-import { form } from '$app/server';
-import { error, invalid } from '@sveltejs/kit';
+import { form, getRequestEvent } from '$app/server';
+import { error, invalid, redirect } from '@sveltejs/kit';
 import * as v from 'valibot';
 
 export const my_form = form(
@@ -45,4 +45,17 @@ export const unmount_form = form(
 	async (data) => {
 		return data;
 	}
+);
+
+export const redirect_form = form(
+	v.pipeAsync(
+		v.object({ answer: v.pipe(v.string(), v.minLength(3, 'answer is too short')) }),
+		v.checkAsync(() => {
+			if (getRequestEvent().cookies.get('redirect-validation') === 'schema') {
+				redirect(303, '/remote');
+			}
+			return true;
+		})
+	),
+	async () => ({ saved: true })
 );
