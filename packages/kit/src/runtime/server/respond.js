@@ -181,8 +181,7 @@ export async function internal_respond(request, state) {
 		}
 	}
 
-	/** @type {Record<string, string>} */
-	const headers = {};
+	const headers = state.headers;
 
 	const { cookies, new_cookies, get_cookie_header, set_internal, set_trailing_slash } = get_cookies(
 		request,

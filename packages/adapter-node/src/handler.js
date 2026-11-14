@@ -50,7 +50,24 @@ await server.init({
 });
 
 /** @type {Middleware} */
-const ssr = async (req, res) => {
+const ssr = async (req, res, next) => {
+	try {
+		await render(req, res, next);
+	} catch (error) {
+		console.error(error);
+
+		if (res.headersSent) {
+			res.destroy();
+			return;
+		}
+
+		res.getHeaderNames().forEach((name) => res.removeHeader(name));
+		res.writeHead(500).end('Internal Server Error');
+	}
+};
+
+/** @type {Middleware} */
+const render = async (req, res) => {
 	/** @type {Request} */
 	let request;
 	let request_origin = public_origin;
@@ -132,7 +149,7 @@ const ssr = async (req, res) => {
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
 	// The header is set on the Node response rather than the `Response` object,
 	// whose headers may be immutable (e.g. when returned from `fetch`)
-	if (response.headers.get('content-type') === 'text/event-stream') {
+	if (response.headers.get('content-type')?.startsWith('text/event-stream')) {
 		res.setHeader('x-accel-buffering', 'no');
 	}
 
