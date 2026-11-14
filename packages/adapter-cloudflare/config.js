@@ -11,7 +11,7 @@ import { is_dev_or_build, validate_entrypoint } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
-/** the worker that runs sveltekit during dev */
+/** the worker that runs sveltekit during dev when the app has no custom worker */
 const dev_worker_entry = fileURLToPath(new URL('./src/worker-dev.js', import.meta.url));
 
 /** the vite environment that runs the worker in workerd during dev */
@@ -47,6 +47,7 @@ const useful_cloudflare_build_plugins = new Set([
 /**
  * @typedef {{
  *   set_config: (config: CloudflareConfig) => void;
+ *   set_custom_entrypoint: (entrypoint: string | undefined) => void;
  *   set_forward: (forward: Forward | undefined) => void;
  *   scan_entries?: string[];
  *   plugin_options?: PluginOptions;
@@ -58,11 +59,15 @@ const useful_cloudflare_build_plugins = new Set([
  * @returns {Plugin[]}
  */
 export function plugin_config(hooks) {
+	/** @type {string | undefined} */
+	let custom_entrypoint;
+
 	const cloudflare_plugins = cloudflare({
 		...hooks.plugin_options,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			validate_entrypoint(config.worker.entrypoint);
+			custom_entrypoint = validate_entrypoint(config.worker.entrypoint);
+			hooks.set_custom_entrypoint(custom_entrypoint);
 
 			if (config.worker.assets?.basePath !== undefined) {
 				// the adapter already writes assets under `paths.base`, so Cloudflare stripping
@@ -103,7 +108,12 @@ export function plugin_config(hooks) {
 						(env.command === 'build' && useful_cloudflare_build_plugins.has(plugin.name))
 				})
 		),
-		...plugin_worker_dev(hooks.set_forward, hooks.plugin_options, hooks.scan_entries),
+		...plugin_worker_dev(
+			() => custom_entrypoint,
+			hooks.set_forward,
+			hooks.plugin_options,
+			hooks.scan_entries
+		),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
@@ -214,18 +224,24 @@ function customize(config, entrypoint) {
  */
 
 /**
- * runs sveltekit in workerd during dev, in a worker of our own that renders the requests sveltekit
- * hands it with @sveltejs/kit/adapter/dev
+ * runs sveltekit in workerd during dev, in the custom worker or a worker of our own, which renders
+ * the requests sveltekit hands it with @sveltejs/kit/adapter/dev
+ * @param {() => string | undefined} get_custom_entrypoint
  * @param {(forward: Forward | undefined) => void} set_forward
  * @param {PluginOptions} [plugin_options]
  * @param {string[]} [scan_entries] the files Vite scans for the app's dependencies
  * @returns {Plugin[]}
  */
-function plugin_worker_dev(set_forward, plugin_options = {}, scan_entries = []) {
+function plugin_worker_dev(
+	get_custom_entrypoint,
+	set_forward,
+	plugin_options = {},
+	scan_entries = []
+) {
 	const plugins = cloudflare({
 		...plugin_options,
 		viteEnvironment: { name: worker_environment },
-		config: (config) => customize(config, dev_worker_entry)
+		config: (config) => customize(config, config.worker.entrypoint ?? dev_worker_entry)
 	});
 
 	/** @type {Connect.NextHandleFunction | undefined} */
@@ -294,9 +310,12 @@ function plugin_worker_dev(set_forward, plugin_options = {}, scan_entries = []) 
 				handler(name, config) {
 					if (name !== worker_environment) return;
 
-					// like the ssr environment, scan the app rather than the worker and leave sveltekit as is
+					// like the ssr environment, scan the app rather than only the worker and leave sveltekit as is
+					const custom_entrypoint = get_custom_entrypoint();
 					config.optimizeDeps ??= {};
-					config.optimizeDeps.entries = scan_entries;
+					config.optimizeDeps.entries = custom_entrypoint
+						? [custom_entrypoint, ...scan_entries]
+						: scan_entries;
 					config.optimizeDeps.exclude = [
 						...(config.optimizeDeps.exclude ?? []),
 						'@sveltejs/kit',

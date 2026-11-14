@@ -1,0 +1,22 @@
+{
+	"name": "test-cloudflare-custom-worker",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview --port 8787",
+		"test:dev": "DEV=true playwright test",
+		"test:build": "playwright test",
+		"test": "pnpm test:dev && pnpm test:build"
+	},
+	"devDependencies": {
+		"@cloudflare/config": "0.31.0",
+		"@sveltejs/adapter-cloudflare": "workspace:*",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}
