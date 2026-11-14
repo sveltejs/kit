@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: handle already-destroyed incoming Node requests without disturbing their bodies
+fix: handle Node requests that were destroyed or cancelled before or while their body is read, including over HTTP/2

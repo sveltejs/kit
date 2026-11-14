@@ -1,5 +1,6 @@
 import { EventEmitter, once } from 'node:events';
 import { IncomingMessage, validateHeaderValue } from 'node:http';
+import { connect, constants, createServer } from 'node:http2';
 import { Socket } from 'node:net';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
@@ -452,4 +453,69 @@ test('requests with no content-length and no transfer-encoding return null body'
 	req.end();
 
 	await expect(text).resolves.toBe(''); // Should return an empty string if bug is actually fixed
+});
+
+/**
+ * Sends a real HTTP/2 upload that declares 10 bytes and writes 3, because
+ * a mocked stream doesn't model how HTTP/2 reports cancellation
+ */
+async function create_http2_upload() {
+	const server = createServer();
+	await once(server.listen(0, 'localhost'), 'listening');
+	const { port } = /** @type {import('net').AddressInfo} */ (server.address());
+	const client = connect(`http://localhost:${port}`);
+
+	const incoming = once(server, 'request');
+	const stream = client.request({ ':method': 'POST', ':path': '/', 'content-length': '10' });
+	stream.on('error', () => {});
+	stream.write('abc');
+
+	const [req] = /** @type {[import('http').IncomingMessage]} */ (
+		/** @type {unknown} */ (await incoming)
+	);
+
+	return {
+		req,
+		cancel: () => stream.close(constants.NGHTTP2_CANCEL),
+		async close() {
+			client.destroy();
+			await new Promise((resolve) => server.close(resolve));
+		}
+	};
+}
+
+// https://github.com/sveltejs/kit/issues/17752
+test('errors the body of an HTTP/2 request that was cancelled before being adapted', async () => {
+	const upload = await create_http2_upload();
+
+	try {
+		const closed = once(upload.req, 'close');
+		upload.cancel();
+		await closed;
+
+		const request = getRequest({ request: upload.req, base: 'http://localhost' });
+
+		expect(request.signal.aborted).toBe(true);
+		await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+	} finally {
+		await upload.close();
+	}
+});
+
+test('errors the body of an HTTP/2 request that is cancelled while being read', async () => {
+	const upload = await create_http2_upload();
+
+	try {
+		const request = getRequest({ request: upload.req, base: 'http://localhost' });
+		const data = once(upload.req, 'data');
+		const text = expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+
+		await data;
+		upload.cancel();
+
+		await text;
+		expect(request.signal.aborted).toBe(true);
+	} finally {
+		await upload.close();
+	}
 });

@@ -7,6 +7,28 @@ import { noop } from '../../utils/functions.js';
 const body_data_listeners = new WeakMap();
 
 /**
+ * Whether the client went away before the request body finished.
+ * @param {import('http').IncomingMessage} request
+ */
+function is_aborted(request) {
+	if (request.readableAborted) return true;
+	if (request.httpVersionMajor < 2) return false;
+
+	// HTTP/2 compatibility requests don't reflect a cancelled stream in
+	// `destroyed`/`readableAborted`. `aborted` isn't set once the response has
+	// ended, but the stream still records the reset code
+	const req = /** @type {import('node:http2').Http2ServerRequest} */ (
+		/** @type {unknown} */ (request)
+	);
+	return req.aborted || (req.stream?.rstCode ?? 0) !== 0;
+}
+
+/** The same error Node emits when an HTTP/1.1 request is aborted while we're listening */
+function aborted_error() {
+	return Object.assign(new Error('aborted'), { code: 'ECONNRESET' });
+}
+
+/**
  * @param {import('http').IncomingMessage} req
  * @param {number} [body_size_limit]
  */
@@ -29,15 +51,15 @@ function get_raw_body(req, body_size_limit) {
 
 	return new ReadableStream({
 		start(controller) {
+			// Settle through the controller rather than cancelling, which would
+			// disturb the stream before Request can use it.
+			if (is_aborted(req)) {
+				controller.error(aborted_error());
+				return;
+			}
+
 			if (req.destroyed) {
-				// Settle through the controller rather than cancelling, which would
-				// disturb the stream before Request can use it.
-				if (req.readableAborted) {
-					// same error Node emits when a request is aborted while we're listening
-					controller.error(Object.assign(new Error('aborted'), { code: 'ECONNRESET' }));
-				} else {
-					controller.close();
-				}
+				controller.close();
 				return;
 			}
 
@@ -60,7 +82,13 @@ function get_raw_body(req, body_size_limit) {
 
 			const on_end = () => {
 				if (cancelled) return;
-				controller.close();
+
+				// a cancelled HTTP/2 request ends without an error
+				if (is_aborted(req)) {
+					on_error(aborted_error());
+				} else {
+					controller.close();
+				}
 			};
 
 			/** @param {Buffer} chunk */
@@ -97,6 +125,11 @@ function get_raw_body(req, body_size_limit) {
 					req.pause();
 				}
 			};
+
+			if (req.httpVersionMajor >= 2) {
+				// reject before the `end` that follows can close the body
+				req.once('aborted', () => on_error(aborted_error()));
+			}
 
 			req.on('error', on_error);
 			req.on('end', on_end);
@@ -142,12 +175,17 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 	const controller = new AbortController();
 
 	// Either stream may have closed before we started listening.
-	if (request.readableAborted || (response?.destroyed && !response.writableEnded)) {
+	if (is_aborted(request) || (response?.destroyed && !response.writableEnded)) {
 		controller.abort();
 	}
 
+	if (request.httpVersionMajor >= 2) {
+		// abort before a pending body read rejects, rather than on `close`
+		request.once('aborted', () => controller.abort());
+	}
+
 	request.once('close', () => {
-		if (request.readableAborted) {
+		if (is_aborted(request)) {
 			controller.abort();
 		}
 	});
