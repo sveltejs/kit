@@ -102,6 +102,16 @@ test('remote functions run in workerd', async ({ page }) => {
 	await expect(page.locator('button')).toHaveText('1');
 });
 
+test('remote modules can import cloudflare:workers', async ({ page }) => {
+	await page.goto(`${base}/remote/platform`);
+
+	// a click before the page hydrates does nothing
+	await expect(async () => {
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('from cloudflare.config.ts', { timeout: 500 });
+	}).toPass();
+});
+
 test('imported assets are served', async ({ page }) => {
 	await page.goto(`${base}/asset`);
 	await expect(page.locator('img')).not.toHaveAttribute('src', /^data:/);
