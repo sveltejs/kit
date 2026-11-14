@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import * as stub from '../../../../src/virtual-cloudflare-workers.js';
 
 const base = process.env.TEST_BASE ? '/base' : '';
 
@@ -52,6 +53,16 @@ test('prerendering throws', async ({ request }) => {
 	test.skip(!!process.env.DEV);
 	const res = await request.get(`${base}/prerender`);
 	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
+});
+
+test('cloudflare:workers classes can be extended', async ({ request }) => {
+	const res = await request.get(`${base}/classes`);
+	expect(await res.json()).toEqual(['DurableObject', 'WorkerEntrypoint']);
+});
+
+test('the cloudflare:workers stub has the same exports as the real module', async ({ request }) => {
+	const res = await request.get(`${base}/exports`);
+	expect(Object.keys(stub).sort()).toEqual((await res.json()).sort());
 });
 
 test('CommonJS dependencies can require Node builtins', async ({ request }) => {
