@@ -505,6 +505,29 @@ export interface SSRManifest {
 	server_assets: Record<string, number>;
 }
 
+/** The parts of the dev manifest that can be written to disk */
+export interface DevManifestData {
+	app_dir: string;
+	app_path: string;
+	assets: string[];
+	mime_types: Record<string, string>;
+	client: SSRManifest['client'];
+	/** Files are relative to the project root */
+	nodes: Array<Pick<PageNode, 'component' | 'universal' | 'server' | 'page_options'>>;
+	routes: Array<Omit<SSRRoute, 'endpoint' | 'endpoint_id'> & { endpoint: string | null }>;
+	params: string | null;
+}
+
+/** What the dev manifest needs from the runtime that renders requests */
+export interface DevManifestLoaders {
+	/** Loads a module by its path relative to the project root */
+	load(file: string): Promise<Record<string, any>>;
+	/** The CSS that the given modules depend on, keyed by URL */
+	inline_styles(files: string[]): Promise<Record<string, string>>;
+	server_assets: SSRManifest['server_assets'];
+	remotes(): Array<Pick<RemoteChunk, 'hash' | 'file'>>;
+}
+
 export interface SSRNode {
 	/** index into the `nodes` array in the generated `client/app.js`. */
 	index: number;

@@ -156,6 +156,16 @@ ${_values.issues}`, options, env_invalid);
 }
 
 /**
+ * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
+ * @param {{ "url": string }} _values
+ * @param {ServerThrowOptions} [options]
+ * @returns {never}
+ */
+export function fetch_relative_url(_values, options) {
+	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs`, options, fetch_relative_url);
+}
+
+/**
  * Cannot return `fetch(...)` directly from a handler if the response has a `Content-Encoding: %encoding%` header. The body has already been decoded
  * @param {{ "encoding": string }} _values
  * @param {ServerThrowOptions} [options]
