@@ -77,6 +77,9 @@ export async function load_server_data({ event, state, node, parent }) {
 
 	let done = false;
 
+	// remote functions awaited in a server load are not serialized into the page
+	const load_state = { ...state, is_in_server_load: true };
+
 	const result = await record_span({
 		name: 'sveltekit.load',
 		attributes: {
@@ -87,7 +90,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state }, () =>
+			const result = await with_request_store({ event: traced_event, state: load_state }, () =>
 				load.call(null, {
 					...traced_event,
 					fetch: (info, init) => {
