@@ -73,7 +73,8 @@ export interface AdapterDevConfig {
 	/**
 	 * During `vite dev`, SvelteKit calls this function with each request it would render, after
 	 * serving static files, imported assets and the service worker. Use it to render requests in
-	 * your platform's runtime instead of Node, by sending them to code that runs there.
+	 * your platform's runtime instead of Node: send them to code that runs there, which imports
+	 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 	 * Call `resolve` to render a request in Node, as SvelteKit does without this function.
 	 * @since 3.3.0
 	 */

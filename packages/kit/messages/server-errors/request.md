@@ -93,6 +93,12 @@ export async function GET({ fetch }) {
 }
 ```
 
+## fetch_relative_url
+
+> Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
+
+On the server there's no current page for a relative URL to be resolved against, so the global `fetch` needs an absolute URL. Inside `load` functions, actions, hooks and endpoints, use the [`fetch` provided by SvelteKit](https://svelte.dev/docs/kit/load#Making-fetch-requests) (for example `event.fetch` or the `fetch` argument of `load`) instead, which resolves relative URLs against the current request and can call your own endpoints without an HTTP round-trip.
+
 ## endpoint_invalid_response
 
 > Invalid response from route `%path%`: handler should return a `Response` object
