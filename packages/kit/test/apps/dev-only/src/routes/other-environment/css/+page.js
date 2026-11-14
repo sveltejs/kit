@@ -1,3 +1,4 @@
+/** @type {import('./$types').PageLoad} */
 export async function load({ url }) {
 	if (!url.searchParams.has('lazy')) return {};
 
