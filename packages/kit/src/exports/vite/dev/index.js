@@ -1,21 +1,19 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
-/** @import { EnvironmentModuleNode, ViteDevServer } from 'vite' */
+/** @import { ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
 import process from 'node:process';
 import fs from 'node:fs';
-import http from 'node:http';
 import path from 'node:path';
 import { URL } from 'node:url';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { styleText } from 'node:util';
 import sirv from 'sirv';
+import * as devalue from 'devalue';
 import {
-	find_deps,
 	generate_manifest,
-	loud_ssr_load_module,
-	vite_css_query_regex
+	get_dev_manifest_data,
+	loud_ssr_load_module
 } from './generate_manifest.js';
-import { generate_server_manifest_code } from './server_manifest_code.js';
 import { write_if_changed } from '../../../core/sync/utils.js';
 import { createReadableStream, getRequest, setResponse } from '../../../exports/node/index.js';
 import { coalesce_to_error, set_error_stack } from '../../../utils/error.js';
@@ -25,17 +23,12 @@ import { from_fs, to_fs } from '../../../utils/vite.js';
 import { posixify } from '../../../utils/os.js';
 import { s } from '../../../utils/misc.js';
 import { load_error_page } from '../../../core/config/index.js';
-import {
-	DEV_INLINE_STYLES_PATH,
-	DEV_SERVER_ASSETS_PATH,
-	SRC_ROOT,
-	SVELTE_KIT_ASSETS
-} from '../../../constants.js';
+import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
-import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
+import { mimes } from '../../../utils/mime.js'; // extends mrmime with additional types (affects sirv too)
 import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
-import { SCHEME } from '../../../utils/url.js';
+import { patch_fetch } from '../../../utils/dev_fetch.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
 import { escape_html } from '../../../utils/escape.js';
@@ -76,30 +69,9 @@ export async function dev(
 		);
 	};
 
-	const fetch = globalThis.fetch;
-	globalThis.fetch = (info, init) => {
-		if (typeof info === 'string' && !SCHEME.test(info)) {
-			e.fetch_relative_url({ url: info });
-		}
-
-		return fetch(info, init);
-	};
+	patch_fetch();
 
 	write_tsconfig(svelte_config, root);
-
-	if (svelte_config.adapter?.dev?.respond) {
-		// the runtime may not trust the certificate that vite serves https with
-		const loopback = http.createServer(vite_dev_server.middlewares);
-		await new Promise((fulfil) => loopback.listen(0, '127.0.0.1', () => fulfil(undefined)));
-		loopback.unref();
-		vite_dev_server.httpServer?.on('close', () => loopback.close());
-
-		const { port } = /** @type {import('node:net').AddressInfo} */ (loopback.address());
-		write_if_changed(
-			path.join(svelte_config.outDir, 'generated', 'dev', 'origin.js'),
-			`export const origin = ${s(`http://127.0.0.1:${port}`)};\n`
-		);
-	}
 
 	/** @type {ManifestData} */
 	let manifest_data;
@@ -108,6 +80,9 @@ export async function dev(
 
 	/** @type {Error | null} */
 	let manifest_error = null;
+
+	/** @type {string | undefined} the last manifest data written for other vite environments */
+	let dev_data;
 
 	const runner = get_runner(vite, vite_dev_server);
 	const { hot } = vite_dev_server.environments.client;
@@ -126,6 +101,61 @@ export async function dev(
 		}
 	}
 
+	const dev_data_file = path.join(svelte_config.outDir, 'generated', 'dev', 'manifest-data.js');
+
+	/**
+	 * Writes what `@sveltejs/kit/adapter/dev` builds the manifest from, for an adapter that
+	 * renders requests outside the Vite process
+	 */
+	function write_dev_data() {
+		if (!svelte_config.adapter?.dev?.respond || !manifest_data) return;
+
+		const data = get_dev_manifest_data(svelte_config, manifest_data, root);
+
+		/** @type {Record<string, string>} */
+		const mime_types = {};
+		// every mime type, since imported assets are not listed
+		for (const [extension, type] of Object.entries(mimes)) mime_types[`.${extension}`] = type;
+		Object.assign(mime_types, data.mime_types);
+
+		const instrumentation = resolve_entry(
+			path.join(svelte_config.files.src, 'instrumentation.server'),
+			svelte_config.moduleExtensions
+		);
+
+		const code = `// generated during dev for \`@sveltejs/kit/adapter/dev\`
+export const root = ${s(posixify(root))};
+
+export const assets = ${s(svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base)};
+
+export const instrumentation = ${s(instrumentation ? posixify(path.relative(root, instrumentation)) : null)};
+
+export const data = ${devalue.uneval({
+			...data,
+			mime_types,
+			nodes: data.nodes.map(({ component, universal, server, page_options }) => ({
+				component,
+				universal,
+				server,
+				page_options
+			}))
+		})};
+`;
+
+		if (code === dev_data) return;
+		dev_data = code;
+
+		write_if_changed(dev_data_file, code);
+
+		// the watcher would do this too, but a request that needs the new data may arrive first
+		for (const environment of Object.values(vite_dev_server.environments)) {
+			for (const module of environment.moduleGraph.getModulesByFile(posixify(dev_data_file)) ??
+				[]) {
+				environment.moduleGraph.invalidateModule(module);
+			}
+		}
+	}
+
 	/** @param {boolean} [validate_params] */
 	async function update_manifest(validate_params = true) {
 		try {
@@ -133,24 +163,7 @@ export async function dev(
 			sync.create(svelte_config, root, manifest_data, false);
 			set_manifest_data(manifest_data);
 
-			// written before the first request, which another vite environment may handle on its own
-			write_if_changed(
-				path.join(svelte_config.outDir, 'generated', 'dev', 'server-manifest.js'),
-				generate_server_manifest_code(
-					generate_manifest(
-						vite,
-						vite_dev_server,
-						runner,
-						svelte_config,
-						manifest_data,
-						root,
-						get_remotes
-					),
-					manifest_data,
-					svelte_config,
-					root
-				)
-			);
+			write_dev_data();
 
 			if (!validate_params) return;
 
@@ -307,102 +320,6 @@ export async function dev(
 			write_server(svelte_config, path.join(svelte_config.outDir, 'generated', 'dev'), root);
 		}
 	});
-
-	/**
-	 * finds what a module depends on in the server environments that have it, since a dev server
-	 * in another environment does not know which one it runs in
-	 * @param {string} id the file path or url of the module
-	 * @returns {Promise<Set<EnvironmentModuleNode> | undefined>}
-	 */
-	async function find_server_deps(id) {
-		/** @type {Set<EnvironmentModuleNode> | undefined} */
-		let deps;
-
-		for (const environment of Object.values(vite_dev_server.environments)) {
-			if (environment.config.consumer !== 'server') continue;
-
-			const node =
-				environment.moduleGraph.getModuleById(id) ??
-				(await environment.moduleGraph.getModuleByUrl(id));
-
-			if (node) await find_deps(environment, node, (deps ??= new Set()));
-		}
-
-		return deps;
-	}
-
-	// returns the css a module depends on, for servers in other vite environments
-	vite_dev_server.middlewares.use(
-		DEV_INLINE_STYLES_PATH,
-		catch_errors(async (req, res) => {
-			const url = new URL(req.originalUrl ?? '', 'http://localhost');
-
-			/** @type {Map<string, string>} */
-			const styles = new Map();
-			for (const module of url.searchParams.getAll('module')) {
-				for (const dep of (await find_server_deps(module)) ?? []) {
-					if (vite.isCSSRequest(dep.url) && !vite_css_query_regex.test(dep.url)) {
-						styles.set(
-							dep.url,
-							dep.url.includes('?') ? dep.url.replace('?', '?inline&') : dep.url + '?inline'
-						);
-					}
-				}
-			}
-
-			res.setHeader('content-type', 'application/json');
-			res.end(JSON.stringify(Array.from(styles, ([url, inline]) => ({ url, inline }))));
-		})
-	);
-
-	// returns the sizes of the assets a server module imports, for servers that cannot read files
-	vite_dev_server.middlewares.use(
-		DEV_SERVER_ASSETS_PATH,
-		catch_errors(async (req, res) => {
-			const url = new URL(req.originalUrl ?? '', 'http://localhost');
-			const id = url.searchParams.get('module');
-			const deps = id ? await find_server_deps(id) : undefined;
-
-			if (!deps) {
-				res.statusCode = 404;
-				res.end();
-				return;
-			}
-
-			/** @type {Record<string, number>} */
-			const sizes = {};
-			for (const dep of deps) {
-				if (
-					!dep.file ||
-					vite.isCSSRequest(dep.file) ||
-					/\.(?:[cm]?[jt]sx?|svelte)$/.test(dep.file)
-				) {
-					continue;
-				}
-
-				/** @type {fs.Stats} */
-				let stats;
-				try {
-					stats = fs.statSync(dep.file);
-				} catch {
-					continue;
-				}
-				if (!stats.isFile()) continue;
-
-				// the same path read gets from the asset url
-				const relative = posixify(path.relative(root, dep.file));
-				const file =
-					relative.startsWith('../') || path.isAbsolute(relative)
-						? `/@fs${posixify(dep.file)}`
-						: relative;
-
-				sizes[file] = stats.size;
-			}
-
-			res.setHeader('content-type', 'application/json');
-			res.end(JSON.stringify(sizes));
-		})
-	);
 
 	const assets = svelte_config.paths.assets ? SVELTE_KIT_ASSETS : svelte_config.paths.base;
 	const asset_server = sirv(svelte_config.files.assets, {
@@ -632,22 +549,6 @@ export async function dev(
 				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
 			}
-		});
-	};
-}
-
-/**
- * responds with a 500 when the handler throws, since connect ignores rejected promises and the
- * process would exit
- * @param {(req: import('connect').IncomingMessage, res: import('node:http').ServerResponse) => Promise<void>} handler
- * @returns {import('connect').NextHandleFunction}
- */
-function catch_errors(handler) {
-	return (req, res) => {
-		handler(req, res).catch((error) => {
-			console.error(error);
-			if (!res.headersSent) res.statusCode = 500;
-			res.end();
 		});
 	};
 }
