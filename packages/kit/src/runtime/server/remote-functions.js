@@ -306,6 +306,14 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'command': {
+				if (event.request.method !== 'POST') {
+					throw new SvelteKitError(
+						405,
+						'Method Not Allowed',
+						`\`command\` functions must be invoked via POST request, not ${event.request.method}`
+					);
+				}
+
 				/** @type {{ payload: string, refreshes?: string[] }} */
 				const { payload, refreshes } = await event.request.json();
 				state.remote.requested = create_requested_map(refreshes);
