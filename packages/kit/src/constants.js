@@ -27,6 +27,12 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 export const SRC_ROOT = import.meta.dirname;
 
 /**
+ * The module that a dev server outside the Vite process imports to find the CSS that the modules
+ * in its query depend on. Only Vite has the module graph
+ */
+export const DEV_INLINE_STYLES_ID = '/@sveltejs/kit/dev/inline-styles';
+
+/**
  * The event that a dev server outside the Vite process sends when a module fails to load,
  * since only the Vite process can log the error and show the error overlay
  */
