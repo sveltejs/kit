@@ -1,12 +1,12 @@
-/** @import { Plugin, ViteDevServer } from 'vite' */
+/** @import { EnvironmentModuleNode, Plugin, ViteDevServer } from 'vite' */
 /** @import { ValidatedConfig } from 'types' */
 import { prefixRegex } from '@rolldown/pluginutils';
-import { DEV_REPORT_ERROR_ID } from '../../../constants.js';
-import { report_load_error } from '../dev/generate_manifest.js';
+import { DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../../constants.js';
+import { find_deps, get_inline_css_urls, report_load_error } from '../dev/generate_manifest.js';
 
 const resolved_report_error_id = '\0' + DEV_REPORT_ERROR_ID;
 
-const ids = [DEV_REPORT_ERROR_ID];
+const ids = [DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID];
 
 /**
  * Gives a dev server that runs outside the Vite process, through `@sveltejs/kit/adapter/dev`,
@@ -45,9 +45,10 @@ export function plugin_dev_server(svelte_config, get_config) {
 
 		load: {
 			filter: { id: ids.map((id) => prefixRegex('\0' + id)) },
-			handler(id) {
+			async handler(id) {
 				const { vite } = get_config();
-				const { moduleGraph } = /** @type {import('vite').DevEnvironment} */ (this.environment);
+				const environment = /** @type {import('vite').DevEnvironment} */ (this.environment);
+				const { moduleGraph } = environment;
 
 				if (id.startsWith(resolved_report_error_id)) {
 					const error = new URLSearchParams(id.slice(id.indexOf('?'))).get('error');
@@ -59,6 +60,26 @@ export function plugin_dev_server(svelte_config, get_config) {
 
 					return 'export {};';
 				}
+
+				/** @type {Set<EnvironmentModuleNode>} */
+				const deps = new Set();
+
+				for (const file of new URLSearchParams(id.slice(id.indexOf('?'))).getAll('module')) {
+					const node = moduleGraph.getModuleById(file);
+					if (node) await find_deps(environment, node, deps);
+				}
+
+				// the answer depends on what has loaded so far, so it is only valid once. Vite does
+				// not cache the result of a module that is invalidated while it loads
+				const self = moduleGraph.getModuleById(id);
+				if (self) moduleGraph.invalidateModule(self);
+
+				const stylesheets = Array.from(get_inline_css_urls(vite, deps), ([url, inline]) => ({
+					url,
+					inline
+				}));
+
+				return `export default ${JSON.stringify(stylesheets)};`;
 			}
 		}
 	};

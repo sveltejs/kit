@@ -1,6 +1,6 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { SSRManifest } from 'types' */
-import { DEV_REPORT_ERROR_ID } from '../../constants.js';
+import { DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_ID } from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
 import { patch_fetch } from '../../utils/dev_fetch.js';
 
@@ -70,7 +70,28 @@ async function get_manifest() {
 					throw error;
 				}
 			},
-			inline_styles: () => Promise.resolve({}),
+			inline_styles: async (files) => {
+				/** @type {Record<string, string>} */
+				const styles = {};
+				if (files.length === 0) return styles;
+
+				const query = files.map((file) => `module=${encodeURIComponent(resolve(root, file))}`);
+
+				/** @type {{ default: Array<{ url: string, inline: string }> }} */
+				const { default: stylesheets } = await import(
+					/* @vite-ignore */ `${DEV_INLINE_STYLES_ID}?${query.join('&')}`
+				);
+
+				for (const { url, inline } of stylesheets) {
+					try {
+						styles[url] = (await import(/* @vite-ignore */ inline)).default;
+					} catch {
+						// this can happen with dynamically imported modules, like in the node dev server
+					}
+				}
+
+				return styles;
+			},
 			server_assets: {},
 			remotes: () => []
 		});

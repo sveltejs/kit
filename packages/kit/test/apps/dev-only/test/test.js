@@ -271,6 +271,16 @@ test.describe('@sveltejs/kit/adapter/dev', () => {
 		);
 	});
 
+	test('inlines styles', async ({ request }) => {
+		const eager = await (await request.get('/other-environment/css')).text();
+		expect(eager).toContain('rgb(1, 2, 3)');
+		expect(eager).toContain('rgb(4, 5, 6)');
+
+		// the same modules as before, which now depend on one more component
+		const lazy = await (await request.get('/other-environment/css?lazy')).text();
+		expect(lazy).toContain('rgb(7, 8, 9)');
+	});
+
 	test('global fetch rejects relative URLs', async ({ request }) => {
 		const response = await request.get('/other-environment/fetch-relative');
 		expect(await response.text()).toContainKitDiagnostic('fetch_relative_url');
