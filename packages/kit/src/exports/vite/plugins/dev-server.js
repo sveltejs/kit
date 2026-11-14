@@ -1,9 +1,14 @@
 /** @import { EnvironmentModuleNode, Plugin, ResolvedConfig } from 'vite' */
-/** @import { ValidatedConfig } from 'types' */
+/** @import { RemoteChunk, ValidatedConfig } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { prefixRegex } from '@rolldown/pluginutils';
-import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_EVENT } from '../../../constants.js';
+import {
+	DEV_ASSET_ID,
+	DEV_INLINE_STYLES_ID,
+	DEV_REMOTES_ID,
+	DEV_REPORT_ERROR_EVENT
+} from '../../../constants.js';
 import { runtime_directory } from '../../../core/utils.js';
 import { s } from '../../../utils/misc.js';
 import { posixify } from '../../../utils/os.js';
@@ -12,13 +17,15 @@ import { find_deps, get_inline_css_urls, report_load_error } from '../dev/genera
 
 const resolved_asset_id = '\0' + DEV_ASSET_ID;
 
-const ids = [DEV_ASSET_ID, DEV_INLINE_STYLES_ID];
+const resolved_remotes_id = '\0' + DEV_REMOTES_ID;
+
+const ids = [DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REMOTES_ID];
 
 /**
  * Gives a dev server that runs outside the Vite process, through `@sveltejs/kit/adapter/dev`,
  * what only the Vite process knows
  * @param {ValidatedConfig} svelte_config
- * @param {() => { vite: typeof import('vite'); root: string }} get_config
+ * @param {() => { vite: typeof import('vite'); root: string; remotes: RemoteChunk[] }} get_config
  * @returns {Plugin}
  */
 export function plugin_dev_server(svelte_config, get_config) {
@@ -81,6 +88,16 @@ export function plugin_dev_server(svelte_config, get_config) {
 					const resolved = file.startsWith('/@fs') ? from_fs(file) : path.join(root, file);
 
 					return `export default ${s(fs.readFileSync(resolved).toString('base64'))};`;
+				}
+
+				if (id.startsWith(resolved_remotes_id)) {
+					// more remote modules can be found at any time
+					const self = moduleGraph.getModuleById(id);
+					if (self) moduleGraph.invalidateModule(self);
+
+					const remotes = get_config().remotes.map(({ hash, file }) => ({ hash, file }));
+
+					return `export default ${JSON.stringify(remotes)};`;
 				}
 
 				/** @type {Set<EnvironmentModuleNode>} */

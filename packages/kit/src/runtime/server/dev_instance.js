@@ -1,6 +1,12 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { SSRManifest } from 'types' */
-import { DEV_ASSET_ID, DEV_INLINE_STYLES_ID, DEV_REPORT_ERROR_EVENT } from '../../constants.js';
+import {
+	DEV_ASSET_ID,
+	DEV_INLINE_STYLES_ID,
+	DEV_REMOTE_EXPORTS_HEADER,
+	DEV_REMOTES_ID,
+	DEV_REPORT_ERROR_EVENT
+} from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
 import { base64_decode } from '../utils.js';
 import { server_assets } from './dev_assets.js';
@@ -13,6 +19,9 @@ patch_fetch();
 
 /** @type {ServerInitOptions | undefined} */
 let options;
+
+/** @type {Array<{ hash: string, file: string }>} the remote modules that Vite has found so far */
+let remotes = [];
 
 /** @type {{ generated: typeof import('<sveltekit:generated>/manifest-data.js'), manifest: SSRManifest } | undefined} */
 let current;
@@ -86,7 +95,7 @@ async function get_manifest() {
 				return styles;
 			},
 			server_assets,
-			remotes: () => []
+			remotes: () => remotes
 		});
 
 		current = { generated, manifest };
@@ -110,6 +119,28 @@ async function read(file) {
 	return new Response(base64_decode(data)).body;
 }
 
+/**
+ * Tells SvelteKit in the Vite process what a remote module exports, so that it does not
+ * have to load the module there as well
+ * @param {Request} request
+ * @param {SSRManifest} manifest
+ */
+async function remote_exports(request, manifest) {
+	const hash = new URL(request.url).pathname.split('/').pop() ?? '';
+	if (!Object.hasOwn(manifest.remotes, hash)) return new Response('Not Found', { status: 404 });
+
+	const module = await manifest.remotes[hash]();
+
+	/** @type {Record<string, { type: string, dev_loc: unknown }>} */
+	const exports = {};
+	for (const [name, value] of Object.entries(module.default)) {
+		const internals = value?.__;
+		if (internals?.type) exports[name] = { type: internals.type, dev_loc: internals.dev_loc };
+	}
+
+	return Response.json(exports);
+}
+
 /** @type {Server} */
 export const server = {
 	init(opts) {
@@ -126,6 +157,15 @@ export const server = {
 			const { set_env } = await import('<sveltekit:generated>/env/config.js');
 			set_env(env);
 			await import(/* @vite-ignore */ resolve(generated.root, generated.instrumentation));
+		}
+
+		if (generated.remote_functions) {
+			// asked per request, since vite finds remote modules as it transforms them
+			({ default: remotes } = await import(/* @vite-ignore */ DEV_REMOTES_ID));
+		}
+
+		if (request.headers.has(DEV_REMOTE_EXPORTS_HEADER)) {
+			return remote_exports(request, manifest);
 		}
 
 		const { configure } = await import('./index.js');

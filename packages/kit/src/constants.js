@@ -27,6 +27,18 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 export const SRC_ROOT = import.meta.dirname;
 
 /**
+ * The header on a request that SvelteKit sends through the adapter's `dev.respond` to ask what
+ * a remote module exports, so that the module only runs where requests are rendered
+ */
+export const DEV_REMOTE_EXPORTS_HEADER = 'x-sveltekit-dev-remote-exports';
+
+/**
+ * The module that a dev server outside the Vite process imports to list the remote modules
+ * found so far. Only Vite knows them, since it finds each one as it transforms it
+ */
+export const DEV_REMOTES_ID = '/@sveltejs/kit/dev/remotes';
+
+/**
  * The module that a dev server outside the Vite process imports to find the CSS that the modules
  * in its query depend on. Only Vite has the module graph
  */

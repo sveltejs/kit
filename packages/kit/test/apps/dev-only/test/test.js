@@ -296,6 +296,16 @@ test.describe('@sveltejs/kit/adapter/dev', () => {
 		}
 	});
 
+	test('runs remote functions', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled, 'remote functions are called from the browser');
+
+		await page.goto('/other-environment/remote');
+		await expect(page.locator('p')).toHaveText('other');
+
+		await page.locator('button').click();
+		await expect(page.locator('button')).toHaveText('1');
+	});
+
 	test('global fetch rejects relative URLs', async ({ request }) => {
 		const response = await request.get('/other-environment/fetch-relative');
 		expect(await response.text()).toContainKitDiagnostic('fetch_relative_url');
