@@ -86,3 +86,10 @@ Within the `adapt` method, there are a number of things that an adapter should d
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
+
+## Rendering in your platform's runtime during development
+
+By default, `vite dev` renders requests in Node. If your platform's runtime can run in a [Vite environment](https://vite.dev/guide/api-environment), for example through a Vite plugin that your platform provides, you can render requests there instead, so that development behaves like production:
+
+- In the code that runs in that environment, import `server` from `@sveltejs/kit/adapter/dev`. It has the same API as the `server` that `builder.generateServerInstance` writes for production: call `await server.init({ env })` and `server.respond(request, { getClientAddress })`
+- Add a `dev.respond` function to your adapter that sends each request to that code and returns its response. SvelteKit calls it after serving static files, imported assets and the service worker, and logs the response as usual

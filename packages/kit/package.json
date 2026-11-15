@@ -172,6 +172,10 @@
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/adapter.js"
 		},
+		"./adapter/dev": {
+			"types": "./types/index.d.ts",
+			"import": "./src/runtime/server/dev_instance.js"
+		},
 		"./node": {
 			"types": "./types/index.d.ts",
 			"import": "./src/exports/node/index.js"

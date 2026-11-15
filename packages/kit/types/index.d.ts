@@ -58,8 +58,8 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterDevConfig {
 		/**
-	 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
-	 * To call the original `respond`, return the result of `options.resolve(request)`.
+		 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
+		 * To call the original `respond`, return the result of `options.resolve(request)`.
 		 * @since 3.3.0
 		 */
 		respond?: (
@@ -1176,6 +1176,27 @@ declare module '@sveltejs/kit/adapter' {
 	 * @since 3.0.0
 	 */
 	export function applyReroute(response: Response, next: (url: URL) => Response | Promise<Response>): Response | Promise<Response>;
+
+	export {};
+}
+
+declare module '@sveltejs/kit/adapter/dev' {
+	import type { Server } from '@sveltejs/kit';
+	/**
+	 * SvelteKit's server during `vite dev`, for code that renders requests in a Vite environment
+	 * outside the Vite process, such as an adapter's Worker in workerd. It has the same API as the
+	 * [server](https://svelte.dev/docs/kit/@sveltejs-kit#Server) that `builder.generateServerInstance`
+	 * writes for production. See [`respond`](https://svelte.dev/docs/kit/@sveltejs-kit#AdapterDevConfig).
+	 *
+	 * ```js
+	 * import { server } from '@sveltejs/kit/adapter/dev';
+	 *
+	 * await server.init({ env });
+	 * const response = await server.respond(request, { getClientAddress: () => address });
+	 * ```
+	 * @since 3.3.0
+	 */
+	export const server: Server;
 
 	export {};
 }
