@@ -60,11 +60,83 @@ export function merge_families(families) {
 			existing.src = [...(existing.src ?? []), ...family.src];
 		}
 		if (family.weights?.length) {
-			existing.weights = [...new Set([...(existing.weights ?? []), ...family.weights])];
+			existing.weights = unique_strings(existing.weights, family.weights);
+		}
+		if (family.styles?.length) {
+			existing.styles = /** @type {FontFamily['styles']} */ (
+				unique_strings(existing.styles, family.styles)
+			);
+		}
+		if (family.subsets?.length) {
+			existing.subsets = unique_strings(existing.subsets, family.subsets);
 		}
 	}
 
 	return [...merged.values()];
+}
+
+/**
+ * @param {string[] | undefined} existing
+ * @param {string[]} incoming
+ * @returns {string[]}
+ */
+function unique_strings(existing, incoming) {
+	return [...new Set([...(existing ?? []), ...incoming])];
+}
+
+/**
+ * Root-relative when Vite's base is `./` (Kit `paths.relative`), so nested
+ * routes do not resolve fonts against the document directory.
+ *
+ * @param {string | undefined} vite_base
+ * @param {string} [kit_paths_base]
+ * @returns {string}
+ */
+export function font_public_base(vite_base, kit_paths_base = '') {
+	const b = vite_base ?? '/';
+	if (/^[a-z][a-z0-9+.-]*:/i.test(b) || b.startsWith('//')) {
+		return b;
+	}
+	if (b === './' || b === '.') {
+		return (kit_paths_base ?? '').replace(/\/+$/, '');
+	}
+	return b;
+}
+
+/**
+ * @param {{ base?: string; define?: Record<string, string> }} config
+ * @returns {string}
+ */
+export function font_base_from_vite_config(config) {
+	let kit_paths_base = '';
+	const raw = config.define?.__SVELTEKIT_PATHS_BASE__;
+	if (typeof raw === 'string') {
+		try {
+			const parsed = JSON.parse(raw);
+			if (typeof parsed === 'string') kit_paths_base = parsed;
+		} catch {
+			// ignore invalid define replacements
+		}
+	}
+	return font_public_base(config.base, kit_paths_base);
+}
+
+/**
+ * @param {string} base
+ * @param {string} file_name
+ * @returns {string}
+ */
+export function join_font_url(base, file_name) {
+	const file = file_name.replace(/^\/+/, '');
+	if (/^[a-z][a-z0-9+.-]*:/i.test(base) || base.startsWith('//')) {
+		const origin = base.endsWith('/') ? base : `${base}/`;
+		return new URL(file, origin).href;
+	}
+	if (!base || base === '/' || base === '.' || base === './') {
+		return `/${file}`;
+	}
+	const prefix = base.replace(/\/+$/, '');
+	return `${prefix}/${file}`.replace(/\/{2,}/g, '/');
 }
 
 /**
@@ -82,7 +154,7 @@ export async function resolve_families(families, ctx) {
 	const file_by_hash = new Map();
 
 	const assets_dir = ctx.assets_dir.replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
-	const base = (ctx.base ?? '/').replace(/\/+$/, '') || '';
+	const base = ctx.base ?? '/';
 
 	for (const family of validated) {
 		/** @type {Array<{ url: string; weight: string; style: string; subset?: string; unicode_range?: string }>} */
@@ -179,7 +251,7 @@ function emit_bytes_face(face, family, assets_dir, base, files, file_by_hash) {
 	}
 
 	const file_name = `${assets_dir}/fonts/${slug(family.name)}-${face.weight}-${face.style}.${hash}.woff2`;
-	const url = `${base}/${file_name}`.replace(/\/{2,}/g, '/');
+	const url = join_font_url(base, file_name);
 	const emitted = { file_name, source: face.bytes, url };
 	file_by_hash.set(hash, emitted);
 	files.push(emitted);

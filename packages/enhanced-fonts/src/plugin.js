@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { resolve_families } from './resolve.js';
+import { font_base_from_vite_config, resolve_families } from './resolve.js';
 import { write_css_variable_types } from './types-gen.js';
 
 /** @import { EnhancedFontsOptions } from '../types/index.js' */
@@ -30,7 +30,7 @@ export function enhancedFonts(options = { families: [] }) {
 			resolving = resolve_families(families, {
 				root: vite_config.root,
 				assets_dir,
-				base: vite_config.base
+				base: font_base_from_vite_config(vite_config)
 			})
 				.then((value) => {
 					resolved = value;

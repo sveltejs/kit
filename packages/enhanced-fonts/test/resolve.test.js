@@ -4,7 +4,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'vitest';
 import { write_css_variable_types } from '../src/types-gen.js';
-import { merge_families, resolve_families } from '../src/resolve.js';
+import {
+	font_base_from_vite_config,
+	font_public_base,
+	merge_families,
+	resolve_families
+} from '../src/resolve.js';
 
 const fixture = fileURLToPath(new URL('./fixtures/test.woff2', import.meta.url));
 
@@ -75,6 +80,106 @@ describe('local resolve and merge', () => {
 			'400',
 			'600'
 		]);
+	});
+
+	test('merges Google styles and subsets for the same name and cssVariable', () => {
+		const merged = merge_families([
+			{
+				name: 'Inter',
+				cssVariable: '--font-inter',
+				provider: 'google',
+				weights: ['400'],
+				styles: ['normal'],
+				subsets: ['latin']
+			},
+			{
+				name: 'Inter',
+				cssVariable: '--font-inter',
+				provider: 'google',
+				weights: ['400'],
+				styles: ['italic'],
+				subsets: ['latin-ext']
+			}
+		]);
+		expect(merged).toHaveLength(1);
+		expect(merged[0].styles).toEqual(['normal', 'italic']);
+		expect(merged[0].subsets).toEqual(['latin', 'latin-ext']);
+		expect(merged[0].weights).toEqual(['400']);
+	});
+
+	test('absolute CDN asset base keeps protocol slashes', async () => {
+		const resolved = await resolve_families(
+			[
+				{
+					name: 'Test',
+					cssVariable: '--font-test',
+					provider: 'local',
+					src: [{ path: fixture, weight: '400', style: 'normal' }]
+				}
+			],
+			{
+				root: path.dirname(fixture),
+				assets_dir: '_app/immutable',
+				base: 'https://cdn.example.com/'
+			}
+		);
+
+		expect(resolved.files[0].url).toMatch(
+			/^https:\/\/cdn\.example\.com\/_app\/immutable\/fonts\/.+\.woff2$/
+		);
+	});
+
+	test('relative Vite base emits root-relative font URLs', async () => {
+		const resolved = await resolve_families(
+			[
+				{
+					name: 'Test',
+					cssVariable: '--font-test',
+					provider: 'local',
+					src: [{ path: fixture, weight: '400', style: 'normal' }]
+				}
+			],
+			{
+				root: path.dirname(fixture),
+				assets_dir: '_app/immutable',
+				base: './'
+			}
+		);
+
+		expect(resolved.files[0].url).toMatch(/^\/_app\/immutable\/fonts\/.+\.woff2$/);
+		expect(resolved.files[0].url).not.toMatch(/^\.\//);
+	});
+
+	test('relative Vite base plus Kit paths.base prefixes the app base', async () => {
+		const resolved = await resolve_families(
+			[
+				{
+					name: 'Test',
+					cssVariable: '--font-test',
+					provider: 'local',
+					src: [{ path: fixture, weight: '400', style: 'normal' }]
+				}
+			],
+			{
+				root: path.dirname(fixture),
+				assets_dir: '_app/immutable',
+				base: font_public_base('./', '/sveltekit-fonts-playground')
+			}
+		);
+
+		expect(resolved.files[0].url).toMatch(
+			/^\/sveltekit-fonts-playground\/_app\/immutable\/fonts\/.+\.woff2$/
+		);
+	});
+
+	test('Kit relative Vite config uses paths.base, not ./', () => {
+		expect(
+			font_base_from_vite_config({
+				base: './',
+				define: { __SVELTEKIT_PATHS_BASE__: JSON.stringify('/docs') }
+			})
+		).toBe('/docs');
+		expect(font_base_from_vite_config({ base: './' })).toBe('');
 	});
 });
 
