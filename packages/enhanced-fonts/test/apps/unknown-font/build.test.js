@@ -10,7 +10,8 @@ test('unknown Font cssVariable throws at build/SSR', () => {
 		});
 		throw new Error('expected build to fail');
 	} catch (err) {
+		if (err instanceof Error && err.message === 'expected build to fail') throw err;
 		const text = `${err.stdout ?? ''}\n${err.stderr ?? ''}\n${err.message}`;
 		expect(text).toMatch(/Unknown font cssVariable "--font-not-in-config"/);
 	}
-});
+}, 120_000);
