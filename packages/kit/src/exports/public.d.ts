@@ -73,8 +73,6 @@ export interface AdapterDevConfig {
 	/**
 	 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
 	 * To call the original `respond`, return the result of `options.resolve(request)`.
-	 * To render requests in your platform's runtime, send them to code that runs there, which imports
-	 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 	 * @since 3.3.0
 	 */
 	respond?: (
