@@ -11,8 +11,12 @@ import { normalizePath } from 'vite';
  * @returns {import('types').AssetDependencies}
  */
 export function find_deps(manifest, entry, add_dynamic_css, root) {
-	/** @type {Set<string>} */
-	const seen = new Set();
+	/**
+	 * Maps each visited chunk to whether it was visited with `add_js`. A chunk first reached
+	 * through a dynamic import must be visited again if a static import reaches it later.
+	 * @type {Map<string, boolean>}
+	 */
+	const seen = new Map();
 
 	/** @type {Set<string>} */
 	const imports = new Set();
@@ -33,8 +37,8 @@ export function find_deps(manifest, entry, add_dynamic_css, root) {
 	 * @param {number} dynamic_import_depth
 	 */
 	function traverse(current, add_js, initial_importer, dynamic_import_depth) {
-		if (seen.has(current)) return;
-		seen.add(current);
+		if (seen.has(current) && (seen.get(current) || !add_js)) return;
+		seen.set(current, add_js);
 
 		const { chunk } = resolve_symlinks(manifest, current, root);
 
