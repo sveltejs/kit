@@ -1,5 +1,6 @@
 /** @import { Server, ServerInitOptions } from '@sveltejs/kit' */
 /** @import { SSRManifest } from 'types' */
+import { DEV_REPORT_ERROR_EVENT } from '../../constants.js';
 import { create_dev_manifest } from '../../utils/dev_manifest.js';
 
 // the adapter decides which features its platform supports once it renders requests itself
@@ -26,6 +27,21 @@ function resolve(root, file) {
 	return parts.join('/');
 }
 
+/**
+ * Has the Vite process log an error and show it in the browser's error overlay.
+ * `import.meta.hot` is the only way Vite gives a module to reach the Vite process, so
+ * nothing is reported when the environment has no hot channel, such as with `server.hmr: false`
+ * @param {any} error
+ */
+function report(error) {
+	// message and stack are not enumerable
+	import.meta.hot?.send(DEV_REPORT_ERROR_EVENT, {
+		...error,
+		message: error?.message,
+		stack: error?.stack
+	});
+}
+
 async function get_manifest() {
 	// imported per request, since sveltekit rewrites it when routes change
 	const generated = await import('<sveltekit:generated>/manifest-data.js');
@@ -34,7 +50,14 @@ async function get_manifest() {
 		const { root } = generated;
 
 		const manifest = create_dev_manifest(generated.data, {
-			load: (file) => import(/* @vite-ignore */ resolve(root, file)),
+			load: async (file) => {
+				try {
+					return await import(/* @vite-ignore */ resolve(root, file));
+				} catch (error) {
+					report(error);
+					throw error;
+				}
+			},
 			inline_styles: () => Promise.resolve({}),
 			server_assets: {},
 			remotes: () => []

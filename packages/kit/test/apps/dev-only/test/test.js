@@ -258,4 +258,16 @@ test.describe('@sveltejs/kit/adapter/dev', () => {
 		const response = await request.get('/other-environment/endpoint');
 		expect(await response.text()).toBe('other');
 	});
+
+	test('shows the error overlay when a module fails to load', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(!javaScriptEnabled, 'the overlay needs JavaScript');
+
+		await page.goto('/other-environment/throws', { wait_for_started: false });
+		await expect(page.locator('vite-error-overlay .message-body')).toHaveText(
+			'thrown while the module loads'
+		);
+	});
 });

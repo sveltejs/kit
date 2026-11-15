@@ -26,6 +26,12 @@ export const PAGE_METHODS = ['GET', 'POST', 'HEAD'];
 
 export const SRC_ROOT = import.meta.dirname;
 
+/**
+ * The event that a dev server outside the Vite process sends when a module fails to load,
+ * since only the Vite process can log the error and show the error overlay
+ */
+export const DEV_REPORT_ERROR_EVENT = 'sveltekit:dev-error';
+
 // eslint-disable-next-line n/prefer-global/process
 export const IN_WEBCONTAINER = !!globalThis.process?.versions?.webcontainer;
 
