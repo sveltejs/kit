@@ -60,15 +60,12 @@ declare module '@sveltejs/kit' {
 		/**
 		 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
 		 * To call the original `respond`, return the result of `options.resolve(request)`.
-		 * To render requests in your platform's runtime, send them to code that runs there, which imports
-		 * `server` from `@sveltejs/kit/adapter/dev` and calls `server.respond`.
 		 *
-		 * When the request matches a route, the response from `resolve` or `server.respond` has an
-		 * `x-sveltekit-routeid` header with the route's URI-encoded ID, and an `x-sveltekit-prerender`
-		 * header with its `prerender` option (`true`, `false` or `auto`), taken from the page if the
-		 * route has one. An endpoint that doesn't export `prerender` gets neither header, because it
-		 * inherits the option from the page that fetches it. SvelteKit removes both headers before
-		 * sending the response.
+		 * When the request matches a route, the response from `resolve` has an `x-sveltekit-routeid`
+		 * header with the route's URI-encoded ID, and an `x-sveltekit-prerender` header with its
+		 * `prerender` option (`true`, `false` or `auto`), taken from the page if the route has one. An
+		 * endpoint that doesn't export `prerender` gets neither header, because it inherits the option
+		 * from the page that fetches it. SvelteKit removes both headers before sending the response.
 		 * @since 3.3.0
 		 */
 		respond?: (
