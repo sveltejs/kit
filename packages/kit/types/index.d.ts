@@ -58,8 +58,8 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterDevConfig {
 		/**
-	 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
-	 * To call the original `respond`, return the result of `options.resolve(request)`.
+		 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
+		 * To call the original `respond`, return the result of `options.resolve(request)`.
 		 * @since 3.3.0
 		 */
 		respond?: (
