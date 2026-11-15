@@ -145,6 +145,14 @@ test.describe('Miscellaneous', () => {
 		const response = await request.get('/prerendering/中文');
 		expect(response.status()).toBe(200);
 	});
+
+	test('does not send the headers that tell adapters about the route', async ({ request }) => {
+		for (const path of ['/', '/prerendering/prerendered-endpoint/api']) {
+			const headers = (await request.get(path)).headers();
+			expect(headers['x-sveltekit-prerender']).toBeUndefined();
+			expect(headers['x-sveltekit-routeid']).toBeUndefined();
+		}
+	});
 });
 
 test.describe('reroute', () => {
