@@ -16,6 +16,7 @@ const config = {
 	plugins: [
 		sveltekit({
 			adapter: adapter(),
+			subresourceIntegrity: 'sha384',
 			paths: {
 				origin: 'http://prerender.origin'
 			},

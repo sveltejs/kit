@@ -264,6 +264,14 @@ const options = {
 		options: validate(undefined, object({}, true))
 	}),
 
+	subresourceIntegrity: validate(false, (input, keypath) => {
+		if (input === false) return false;
+		if (!['sha256', 'sha384', 'sha512'].includes(input)) {
+			throw new Error(`${keypath} should be false, "sha256", "sha384" or "sha512"`);
+		}
+		return input;
+	}),
+
 	tracing: object({
 		server: boolean(false)
 	}),

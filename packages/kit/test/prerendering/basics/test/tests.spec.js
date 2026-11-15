@@ -1,4 +1,6 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { replace_hydration_attrs } from '../../test-utils';
@@ -313,4 +315,36 @@ test('identifies missing ids', () => {
 	expect(missing_ids[0].message).toContainKitDiagnostic('prerender_missing_id', {
 		contains: ['/missing-id#missing-id', 'id="missing-id"']
 	});
+});
+
+test('integrity hashes match the assets after prerendering rewrites them', () => {
+	// `/app-manifest` imports `prerendered` from `$app/manifest`, so its chunk is rewritten
+	// after prerendering — the hashes in every page must still match the final bytes
+	expect(read('app-manifest.html')).toContain('integrity=');
+
+	let checked = 0;
+
+	for (const file of fs.readdirSync(build, { recursive: true, encoding: 'utf-8' })) {
+		if (!file.endsWith('.html')) continue;
+
+		const html = read(file);
+
+		/** @type {Array<[string, string]>} */
+		const entries = Array.from(
+			html.matchAll(/<link href="([^"]+)"[^>]*integrity="([^"]+)"/g),
+			(match) => [match[1], match[2]]
+		);
+
+		const import_map = html.match(/<script type="importmap"[^>]*>(.+?)<\/script>/);
+		if (import_map) entries.push(...Object.entries(JSON.parse(import_map[1]).integrity));
+
+		for (const [href, integrity] of entries) {
+			const asset = path.join(build, path.dirname(file), href);
+			const hash = createHash('sha384').update(fs.readFileSync(asset)).digest('base64');
+			expect(integrity, `${href} in ${file}`).toBe(`sha384-${hash}`);
+			checked += 1;
+		}
+	}
+
+	expect(checked).toBeGreaterThan(0);
 });
