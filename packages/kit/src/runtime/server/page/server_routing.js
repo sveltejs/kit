@@ -192,5 +192,6 @@ function create_css_import(route, url, client) {
 
 	if (!css) return '';
 
-	return `${create_client_import(client.start, paths)}.then(x => x.load_css([${css}]));\n`;
+	// CSS paths are relative to this module, not the document we are navigating from.
+	return `${create_client_import(client.start, paths)}.then(x => x.load_css([${css}].map(p => new URL(p, import.meta.url).href)));\n`;
 }
