@@ -105,7 +105,7 @@ export function not_found(req, res, base) {
 	}
 }
 
-const query_pattern = /\?.*$/s;
+export const query_pattern = /\?.*$/s;
 
 /**
  * Removes cwd path from the start of the id and replaces any `#`-prefixed

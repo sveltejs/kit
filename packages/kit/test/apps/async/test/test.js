@@ -21,6 +21,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query can read a file imported by the remote module', async ({ page }) => {
+		await page.goto('/remote/read-file');
+		await expect(page.locator('#text')).toHaveText('Imported by a remote function 😎');
+	});
+
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');
@@ -107,6 +112,12 @@ test.describe('remote functions', () => {
 
 		// ...but the raw private query result must never appear in the serialized payload
 		expect(body).not.toContain('private-data');
+	});
+
+	test('private (non-exported) query.batch functions do not share a batch', async ({ page }) => {
+		await page.goto('/remote/batch-private');
+
+		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
 	});
 
 	test('queries cannot access the route/url of the page they were called from', async ({

@@ -41,3 +41,15 @@ test(
 		});
 	}
 );
+
+test('#lib/**/server/* is not importable from param matchers', { timeout }, () => {
+	expect(build('server-only-params', env)).toContainKitDiagnostic('server_only_import', {
+		contains: ['#lib/server/secret.js', ' src/params.js imports\n  #lib/server/secret.js']
+	});
+});
+
+test('#lib/*.server.* is not importable from the client with a query containing a slash', { timeout }, () => {
+	expect(build('server-only-module-query', env)).toContainKitDiagnostic('server_only_import', {
+		contains: ['#lib/test.server.js']
+	});
+});

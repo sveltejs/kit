@@ -133,6 +133,11 @@ export interface ActionFailure<T = undefined> {
 export interface ValidationError {
 	/** The validation issues */
 	issues: StandardSchemaV1.Issue[];
+	/** Information about the remote function that failed validation */
+	remote?: {
+		name?: string;
+		file?: string;
+	};
 }
 
 type UnpackValidationError<T> =

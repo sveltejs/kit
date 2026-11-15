@@ -96,3 +96,12 @@ export function check_spelling(original, typo, description, extensions) {
 
 	w.file_name_misspelled({ description, corrected, file: path.resolve(misspelled) });
 }
+
+/**
+ * Returns `key` as it should be written in an object type — unquoted
+ * if it is a valid identifier, quoted otherwise (e.g. `my-param` or `2nd`)
+ * @param {string} key
+ */
+export function property_key(key) {
+	return /^[a-zA-Z_$][\w$]*$/.test(key) ? key : `'${key}'`;
+}

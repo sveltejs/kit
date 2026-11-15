@@ -367,12 +367,24 @@ function kit({ svelte_config }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
+				const routes = posixify(kit.files.routes);
+
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
 					appType: 'custom',
 					environments: {
 						ssr: {
+							dev: {
+								createEnvironment:
+									config.environments?.ssr?.dev?.createEnvironment ??
+									((name, config) =>
+										vite.createRunnableDevEnvironment(name, config, {
+											// Kit imports server modules per request, which already picks up
+											// invalidations. HMR would reload the entire program instead.
+											hot: false
+										}))
+							},
 							build: {
 								sourcemap:
 									config.environments?.ssr?.build?.sourcemap ?? config.build?.sourcemap ?? true
@@ -408,10 +420,7 @@ function kit({ svelte_config }) {
 						cors: resolve_cors(config.preview?.cors, 'preview.cors', !is_build)
 					},
 					optimizeDeps: {
-						entries: [
-							`${kit.files.routes}/**/+*.{svelte,js,ts}`,
-							`!${kit.files.routes}/**/+*server.*`
-						],
+						entries: [`${routes}/**/+*.{svelte,js,ts}`, `!${routes}/**/+*server.*`],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 							// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057

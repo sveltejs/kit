@@ -1,5 +1,25 @@
 # @sveltejs/adapter-node
 
+## 6.0.2
+
+### Patch Changes
+
+- fix: ignore `Range` headers on `HEAD` requests for static assets ([#17602](https://github.com/sveltejs/kit/pull/17602))
+
+- fix: respond with a 500 instead of crashing the server when handling a request fails unexpectedly ([#17696](https://github.com/sveltejs/kit/pull/17696))
+
+- fix: support the `ORIGIN` environment variable when `paths.origin` is not set ([#17632](https://github.com/sveltejs/kit/pull/17632))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.0
+
+## 6.0.1
+
+### Patch Changes
+
+- fix: avoid crashing the server when a `text/event-stream` response has immutable headers ([`9435bad`](https://github.com/sveltejs/kit/commit/9435bad75a19248877f63908a3e8e1f2a7603277))
+- Updated dependencies:
+  - @sveltejs/kit@3.1.1
+
 ## 6.0.0
 
 ### Major Changes

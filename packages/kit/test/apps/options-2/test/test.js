@@ -1,8 +1,8 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 
-test.skip(() => !!process.env.REGISTER_SERVICE_WORKER);
+test.skip(() => variant === 'service-worker');
 
 test.describe.configure({ mode: 'parallel' });
 
@@ -31,19 +31,24 @@ test.describe('paths', () => {
 		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${base}`);
 	});
 
-	test('uses correct relative paths when rendering an error page for a missing __data.json', async ({
-		page,
-		javaScriptEnabled
-	}) => {
-		// a non-existent page requested with the data suffix renders the error page. Its relative
-		// paths must be resolved against the requested URL (including the `__data.json` suffix),
-		// otherwise they end up one directory too shallow and fail to load the app's assets
-		await page.goto('/basepath/this/does/not/exist/__data.json');
+	test('responds with JSON for a __data.json request to a missing route', async ({ request }) => {
+		// even when visited directly, a `__data.json` URL never gets an HTML page, so relative
+		// paths can always be resolved against the page URL
+		const response = await request.get('/basepath/this/does/not/exist/__data.json', {
+			headers: { accept: 'text/html' }
+		});
 
-		const expected = javaScriptEnabled ? '/basepath/' : '../../../../';
+		expect(response.status()).toBe(404);
+		expect(response.headers()['content-type']).toContain('application/json');
+		expect(await response.json()).toEqual({ message: 'Not Found', status: 404 });
+	});
 
-		expect(await page.textContent('[data-testid="base"]')).toBe(`base: ${expected}`);
-		expect(await page.textContent('[data-testid="assets"]')).toBe(`assets: ${expected}`);
+	test('uses relative paths of the page URL in a __data.json response', async ({ request }) => {
+		const response = await request.get('/basepath/redirect-relative/__data.json');
+		expect(await response.json()).toEqual({ type: 'redirect', status: 303, location: './hello' });
+
+		const data = await (await request.get('/basepath/relative-data/a/b/__data.json')).json();
+		expect(data.nodes.at(-1).data).toEqual([{ hello: 1 }, '../../hello']);
 	});
 
 	test('serves /basepath with trailing slash always', async ({ page }) => {
