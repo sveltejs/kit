@@ -25,12 +25,13 @@
 		"check": "node node_modules/@typescript/native/bin/tsc",
 		"format": "oxfmt --write .",
 		"test": "pnpm test:unit && pnpm test:integration",
-		"test:unit": "vitest run test/*.test.js",
+		"test:unit": "vitest run test/*.test.js test/eslint/*.test.js",
 		"test:integration": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test"
 	},
 	"files": [
 		"src",
-		"types"
+		"types",
+		"eslint"
 	],
 	"exports": {
 		".": {
@@ -42,6 +43,10 @@
 			"svelte": "./src/Font.svelte",
 			"default": "./src/Font.svelte"
 		},
+		"./eslint": {
+			"types": "./eslint/index.d.ts",
+			"import": "./eslint/index.js"
+		},
 		"./package.json": "./package.json"
 	},
 	"types": "types/index.d.ts",
@@ -51,14 +56,31 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"@typescript/native": "catalog:",
+		"eslint": "catalog:",
+		"eslint-plugin-svelte": "^3.24.1",
 		"svelte": "catalog:",
+		"svelte-eslint-parser": "^1.10.1",
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^7.0.0",
+		"eslint": ">=9",
+		"eslint-plugin-svelte": "^3.0.0",
 		"svelte": "^5.0.0",
+		"svelte-eslint-parser": "^1.0.0",
 		"vite": ">=8.0.12"
+	},
+	"peerDependenciesMeta": {
+		"eslint": {
+			"optional": true
+		},
+		"eslint-plugin-svelte": {
+			"optional": true
+		},
+		"svelte-eslint-parser": {
+			"optional": true
+		}
 	},
 	"engines": {
 		"node": ">=22"
