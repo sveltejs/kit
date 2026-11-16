@@ -1,5 +1,5 @@
 ---
-'@sveltejs/kit': patch
+'@sveltejs/kit': minor
 ---
 
-fix: show the Vite DevTools dock in pages during dev
+feat: support the Vite DevTools dock in dev
