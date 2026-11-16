@@ -32,7 +32,7 @@
 		"vite": "catalog:",
 		"vitest": "catalog:"
 	},
-	"packageManager": "pnpm@12.20.0+sha512.6ccc74997ccef4e67999788e18dbfbfa583e2a849668668db4707b6a8306662f47156e650232a985bd3ec24cf9364c1aa154d37e51ed7aac62c1cd1e3afc80c3",
+	"packageManager": "pnpm@12.21.0+sha512.66fd8278ee28935ce951792d34367ff3af5c432a2756445823029533835b8da529bbe0be5130afd56ed0713fb8789e47bad82d93bd5ae2fe54b15562d6276ef0",
 	"engines": {
 		"pnpm": ">=11.0.0"
 	}
