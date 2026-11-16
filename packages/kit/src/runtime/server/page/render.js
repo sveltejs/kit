@@ -22,7 +22,6 @@ import { try_get_request_store, with_request_store } from '@sveltejs/kit/interna
 import { stream_text, text_encoder } from '../../utils.js';
 import { count_non_ssi_comments, is_prerendering } from '../utils.js';
 import { hash_bytes } from './hash_bytes.js';
-import { serialize_dev_html_tags } from './dev_html_tags.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
@@ -557,12 +556,13 @@ export async function render_response({
 		}>${init_app}</script>\n\t\t`;
 	}
 
-	// tags from Vite plugins such as Vite DevTools, which usually add them through `transformIndexHtml`.
-	// This has to happen before the CSP header is generated below
-	const dev_tags =
-		DEV && manifest.dev_html_tags?.length
-			? await serialize_dev_html_tags(manifest.dev_html_tags, csp)
-			: null;
+	if (DEV && manifest.vite_devtools) {
+		// Vite DevTools' dock, which Vite only adds to HTML it serves itself
+		// https://devtools.vite.dev/guide/#projects-without-an-html-entry
+		body += `\n\t\t\t<script type="module" src="/__devtools/embedded.js"${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}></script>`;
+	}
 
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
@@ -597,8 +597,8 @@ export async function render_response({
 	}
 
 	const html = options.templates.app({
-		head: dev_tags ? dev_tags['head-prepend'] + head.build() + dev_tags.head : head.build(),
-		body: dev_tags ? dev_tags['body-prepend'] + body + dev_tags.body : body,
+		head: head.build(),
+		body,
 		assets,
 		nonce: /** @type {string} */ (csp.nonce),
 		env: env.explicit_public_env

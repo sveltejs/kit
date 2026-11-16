@@ -347,14 +347,6 @@ export function comparable(value) {
 }
 
 /**
- * Plugins whose `transformIndexHtml` tags SvelteKit adds to every page during dev
- */
-const dev_html_hook_plugins = new Set([
-	// Vite DevTools' in-page dock
-	'vite:devtools:injection'
-]);
-
-/**
  * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
  * @param {import('vite').Plugin} plugin
  * @param {'build' | 'serve'} command
@@ -366,46 +358,6 @@ export function uses_unsupported_html_hook(plugin, command) {
 	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
 	if (plugin.name === 'vitest:browser:loader' || plugin.name?.includes('storybook')) return false;
 
-	return !(command === 'serve' && dev_html_hook_plugins.has(plugin.name));
-}
-
-/**
- * Runs the `transformIndexHtml` hooks of the plugins SvelteKit supports during dev,
- * and returns the tags they want added to the page
- * @param {import('vite').ViteDevServer} server
- * @param {string} filename the app template
- * @returns {Promise<import('vite').HtmlTagDescriptor[]>}
- */
-export async function get_dev_html_tags(server, filename) {
-	/** @type {import('vite').HtmlTagDescriptor[]} */
-	const tags = [];
-
-	for (const plugin of server.config.plugins) {
-		const hook = plugin.transformIndexHtml;
-		if (!hook || !dev_html_hook_plugins.has(plugin.name)) continue;
-
-		const handler = typeof hook === 'function' ? hook : hook.handler;
-
-		try {
-			const html = fs.readFileSync(filename, 'utf-8');
-			const result = await handler.call(
-				/** @type {import('vite').MinimalPluginContextWithoutEnvironment} */ ({}),
-				html,
-				{ path: '/', filename, server }
-			);
-
-			// only tags can be added to pages rendered by SvelteKit, a changed `html` string can't
-			if (Array.isArray(result)) {
-				tags.push(...result);
-			} else if (result && typeof result === 'object') {
-				tags.push(...result.tags);
-			}
-		} catch (error) {
-			server.config.logger.error(
-				`Could not add the tags from the \`${plugin.name}\` plugin to the page: ${/** @type {Error} */ (error).message}`
-			);
-		}
-	}
-
-	return tags;
+	// SvelteKit adds the Vite DevTools dock to pages itself during dev
+	return !(command === 'serve' && plugin.name === 'vite:devtools:injection');
 }
