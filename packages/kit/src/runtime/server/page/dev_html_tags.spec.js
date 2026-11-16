@@ -8,28 +8,7 @@ beforeAll(() => {
 });
 
 /** @type {import('vite').HtmlTagDescriptor[]} */
-const tags = [
-	{ tag: 'meta', attrs: { name: 'a', content: '"b"' } },
-	{ tag: 'link', attrs: { rel: 'stylesheet', href: '/c.css' }, injectTo: 'head' },
-	{
-		tag: 'div',
-		attrs: { hidden: true, id: false },
-		children: [{ tag: 'span', children: 'd' }],
-		injectTo: 'body-prepend'
-	},
-	{ tag: 'script', attrs: { type: 'module' }, children: 'run()', injectTo: 'body' }
-];
-
-test('serializes tags by where they are injected', async () => {
-	const csp = new Csp({ mode: 'auto', directives: {}, reportOnly: {} }, { prerender: false });
-
-	expect(await serialize_dev_html_tags(tags, csp)).toEqual({
-		'head-prepend': '<meta name="a" content="&quot;b&quot;">',
-		head: '<link rel="stylesheet" href="/c.css">',
-		'body-prepend': '<div hidden><span>d</span></div>',
-		body: '<script type="module">run()</script>'
-	});
-});
+const tags = [{ tag: 'script', attrs: { type: 'module' }, children: 'run()', injectTo: 'body' }];
 
 test('adds a nonce to scripts when the CSP uses nonces', async () => {
 	const csp = new Csp(

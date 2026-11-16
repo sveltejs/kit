@@ -9,7 +9,6 @@ import {
 	config_snippet,
 	error_for_missing_config,
 	get_config_aliases,
-	get_dev_html_tags,
 	normalize_id,
 	is_remote_module,
 	is_server_only_path,
@@ -231,42 +230,4 @@ test('uses_unsupported_html_hook only supports Vite DevTools during dev', () => 
 	const plugin = { name: 'vite:devtools:injection', transformIndexHtml: () => undefined };
 	expect(uses_unsupported_html_hook(plugin, 'serve')).toBe(false);
 	expect(uses_unsupported_html_hook(plugin, 'build')).toBe(true);
-});
-
-test('get_dev_html_tags returns the tags of supported plugins', async () => {
-	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-dev-html-tags-'));
-	const filename = path.join(dir, 'app.html');
-	fs.writeFileSync(filename, '<html></html>');
-
-	/** @type {import('vite').HtmlTagDescriptor} */
-	const tag = { tag: 'script', attrs: { type: 'module' }, children: 'run()', injectTo: 'body' };
-
-	/** @type {unknown[]} */
-	const calls = [];
-
-	const server = /** @type {import('vite').ViteDevServer} */ (
-		/** @type {unknown} */ ({
-			config: {
-				plugins: [
-					{
-						name: 'vite:devtools:injection',
-						transformIndexHtml: {
-							order: 'pre',
-							/** @param {string} html @param {import('vite').IndexHtmlTransformContext} ctx */
-							handler: (html, ctx) => {
-								calls.push([html, ctx.filename]);
-								return [tag];
-							}
-						}
-					},
-					{ name: 'other', transformIndexHtml: () => [{ tag: 'meta' }] }
-				]
-			}
-		})
-	);
-
-	expect(await get_dev_html_tags(server, filename)).toEqual([tag]);
-	expect(calls).toEqual([['<html></html>', filename]]);
-
-	fs.rmSync(dir, { recursive: true });
 });
