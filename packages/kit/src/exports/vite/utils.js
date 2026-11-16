@@ -1,7 +1,6 @@
 /** @import { UserConfig } from 'vite' */
 /** @import { EnforcedConfig } from './types.js' */
 import fs from 'node:fs';
-import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { posixify } from '../../utils/os.js';
@@ -354,23 +353,10 @@ export function comparable(value) {
  * @returns {boolean}
  */
 export function adds_vite_devtools_dock(config) {
-	if (
-		config.command !== 'serve' ||
-		!config.plugins.some((plugin) => plugin.name === 'vite:devtools:injection')
-	) {
-		return false;
-	}
-
-	try {
-		const require = createRequire(path.join(config.root, 'package.json'));
-		const pkg = require.resolve('@vitejs/devtools/package.json');
-		const { version } = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
-		const [major, minor] = version.split('.').map(Number);
-		// /__devtools/embedded.js is served from 0.5
-		return major > 0 || minor >= 5;
-	} catch {
-		return false;
-	}
+	return (
+		config.command === 'serve' &&
+		config.plugins.some((plugin) => plugin.name === 'vite:devtools:injection')
+	);
 }
 
 /**

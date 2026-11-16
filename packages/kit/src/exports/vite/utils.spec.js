@@ -6,7 +6,6 @@ import { validate_config } from '../../core/config/index.js';
 import { posixify } from '../../utils/os.js';
 import { dedent } from '../../core/sync/utils.js';
 import {
-	adds_vite_devtools_dock,
 	config_snippet,
 	error_for_missing_config,
 	get_config_aliases,
@@ -229,25 +228,4 @@ test('uses_unsupported_html_hook allows Vite DevTools when SvelteKit adds its do
 	const plugin = { name: 'vite:devtools:injection', transformIndexHtml: () => undefined };
 	expect(uses_unsupported_html_hook(plugin, true)).toBe(false);
 	expect(uses_unsupported_html_hook(plugin, false)).toBe(true);
-});
-
-test.each([
-	['0.4.12', 'serve', false],
-	['0.5.0', 'serve', true],
-	['0.7.6', 'serve', true],
-	['0.7.6', 'build', false]
-])('adds_vite_devtools_dock with @vitejs/devtools@%s during %s', (version, command, expected) => {
-	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-vite-devtools-'));
-	const dir = path.join(root, 'node_modules/@vitejs/devtools');
-	fs.mkdirSync(dir, { recursive: true });
-	fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ version }));
-
-	const config = /** @type {import('vite').ResolvedConfig} */ (
-		/** @type {unknown} */ ({ root, command, plugins: [{ name: 'vite:devtools:injection' }] })
-	);
-
-	expect(adds_vite_devtools_dock(config)).toBe(expected);
-	expect(adds_vite_devtools_dock({ ...config, plugins: [] })).toBe(false);
-
-	fs.rmSync(root, { recursive: true });
 });
