@@ -218,13 +218,11 @@ test.each([
 	['vite:storybook-inject-mocker-runtime', false],
 	['vite-plugin-storybook-test', false]
 ])('uses_unsupported_html_hook(%j) with transformIndexHtml', (name, expected) => {
-	expect(uses_unsupported_html_hook({ name, transformIndexHtml: () => undefined }, true)).toBe(
-		expected
-	);
+	expect(uses_unsupported_html_hook({ name, transformIndexHtml: () => undefined })).toBe(expected);
 });
 
 test('uses_unsupported_html_hook ignores plugins without transformIndexHtml', () => {
-	expect(uses_unsupported_html_hook({ name: 'app-plugin' }, true)).toBe(false);
+	expect(uses_unsupported_html_hook({ name: 'app-plugin' })).toBe(false);
 });
 
 test('uses_unsupported_html_hook allows Vite DevTools when SvelteKit adds its dock', () => {

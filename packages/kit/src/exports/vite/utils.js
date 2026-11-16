@@ -376,14 +376,15 @@ export function adds_vite_devtools_dock(config) {
 /**
  * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
  * @param {import('vite').Plugin} plugin
- * @param {boolean} adds_dock whether SvelteKit adds the Vite DevTools dock itself
+ * @param {boolean} [adds_dock] whether SvelteKit adds the Vite DevTools dock itself
  * @returns {boolean}
  */
-export function uses_unsupported_html_hook(plugin, adds_dock) {
-	if (!plugin.transformIndexHtml) return false;
-
+export function uses_unsupported_html_hook(plugin, adds_dock = false) {
 	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
-	if (plugin.name === 'vitest:browser:loader' || plugin.name?.includes('storybook')) return false;
-
-	return !(adds_dock && plugin.name === 'vite:devtools:injection');
+	return (
+		!!plugin.transformIndexHtml &&
+		plugin.name !== 'vitest:browser:loader' &&
+		!plugin.name?.includes('storybook') &&
+		!(adds_dock && plugin.name === 'vite:devtools:injection')
+	);
 }
