@@ -77,6 +77,8 @@ declare global {
 	 * to throw an error if the feature would fail in production.
 	 */
 	var __SVELTEKIT_TRACK__: (label: string) => void;
+	/** the channel to devtools clients, set only by the dev server */
+	var __SVELTEKIT_DEVTOOLS_CHANNEL__: import('types').DevtoolsChannel | undefined;
 	var Bun: object;
 	var Deno: object;
 }

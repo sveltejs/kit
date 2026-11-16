@@ -37,7 +37,8 @@ export function create_validator(validate_or_fn, maybe_fn, get_internals) {
 				const internals = get_internals?.();
 				throw new ValidationError(
 					result.issues,
-					internals?.name ? { name: internals.name, file: internals.file } : undefined
+					internals?.name ? { name: internals.name, file: internals.file } : undefined,
+					internals?.id
 				);
 			}
 

@@ -29,6 +29,7 @@ import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
 import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
 import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
+import { create_devtools_channel } from './devtools.js';
 
 /**
  * @param {typeof import('vite')} vite the peer resolved vite module
@@ -83,6 +84,9 @@ export async function dev(
 
 	const runner = get_runner(vite, vite_dev_server);
 	const { hot } = vite_dev_server.environments.client;
+
+	// the runnable ssr environment shares this process, so a global reaches the runtime
+	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot);
 
 	/**
 	 * Log a response to the console, routed through Vite's logger so that it

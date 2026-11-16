@@ -709,6 +709,54 @@ export type RecordSpan = <T>(options: {
 	fn: (current: Span) => Promise<T>;
 }) => Promise<T>;
 
+/** set by the dev server so the runtime can send events to devtools clients */
+export interface DevtoolsChannel {
+	/** whether any client has subscribed */
+	readonly active: boolean;
+	send(event: DevtoolsEvent): void;
+	/** formats console arguments like node */
+	format(args: unknown[]): string;
+}
+
+export interface DevtoolsSpan {
+	id: string;
+	parent_id: string | null;
+	request_id: string;
+	name: string;
+	attributes: Record<string, any>;
+	/** epoch milliseconds */
+	start: number;
+	end: number;
+	status: 'ok' | 'error';
+	error: { name: string; message: string; stack?: string } | null;
+}
+
+/** payload of the sveltekit devtools hmr event, shaped like the client remote function events */
+export type DevtoolsEvent =
+	| {
+			type: 'request:completed';
+			time: number;
+			request_id: string;
+			method: string;
+			url: string;
+			status: number;
+			start: number;
+			end: number;
+			spans: DevtoolsSpan[];
+	  }
+	| { type: 'span:ended'; time: number; span: DevtoolsSpan }
+	| { type: 'log:written'; time: number; request_id: string; level: string; message: string }
+	| {
+			type: 'validation:failed';
+			time: number;
+			request_id: string;
+			/** remote function id as used on the client */
+			id: string | null;
+			name: string | null;
+			file: string | null;
+			issues: Array<{ message: string; path?: PropertyKey[] }>;
+	  };
+
 /**
  * Internal state associated with the current `RequestEvent`,
  * used for tracking things like remote function calls
