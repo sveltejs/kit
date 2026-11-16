@@ -53,12 +53,12 @@ When using `adapter-node` the equivalent is a [custom server](adapter-node#Custo
 
 ### src/service-worker.js
 
-Most imports from `@sapper/service-worker` have equivalents in [`$app/manifest`]($app-manifest) and [`$app/env`]($app-env):
+Most imports from `@sapper/service-worker` have equivalents in [`$service-worker`]($service-worker), which SvelteKit 3 replaced with [`$app/manifest`]($app-manifest) and [`$app/env`]($app-env):
 
-- `files` is now `assets` from `$app/manifest`
+- `files` is unchanged (`assets` from `$app/manifest` in SvelteKit 3)
 - `routes` has been removed
-- `shell` is now `immutable` from `$app/manifest`
-- `timestamp` is now `version` from `$app/env`
+- `shell` is now `build` (`immutable` from `$app/manifest` in SvelteKit 3)
+- `timestamp` is now `version` (from `$app/env` in SvelteKit 3)
 
 ### src/template.html
 
@@ -115,7 +115,7 @@ const { preloading, page, session } = stores();
 
 The `page` store still exists; `preloading` has been replaced with a `navigating` store that contains `from` and `to` properties. `page` now has `url` and `params` properties, but no `path` or `query`.
 
-You access them differently in SvelteKit. Import `navigating` and `page` directly from [`$app/state`]($app-state).
+You access them differently in SvelteKit. `stores` is now `getStores`, but in most cases it is unnecessary since you can import `navigating`, and `page` directly from [`$app/stores`]($app-stores). If you're on Svelte 5 and SvelteKit 2.12 or higher, use [`$app/state`]($app-state) instead, since `$app/stores` was removed in SvelteKit 3.
 
 ### Routing
 
