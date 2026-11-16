@@ -86,7 +86,7 @@ export async function dev(
 	const { hot } = vite_dev_server.environments.client;
 
 	// the runnable ssr environment shares this process, so a global reaches the runtime
-	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot);
+	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot, vite_dev_server.ws);
 
 	/**
 	 * Log a response to the console, routed through Vite's logger so that it
