@@ -7,7 +7,7 @@ import { stringify_remote_arg } from '../../../shared.js';
 import { parse, stringify } from '#app/internal/transport';
 import { noop } from '../../../../utils/functions.js';
 import { app_dir, base } from '#app/paths';
-import { create_validator, get_response, run_remote_function } from './shared.js';
+import { create_validator, get_response, get_schema, run_remote_function } from './shared.js';
 
 /**
  * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
@@ -73,6 +73,7 @@ export function prerender(validate_or_fn, fn_or_options, maybe_options) {
 		type: 'prerender',
 		id: '',
 		name: '',
+		schema: get_schema(validate_or_fn, maybe_fn),
 		has_arg: !!maybe_fn,
 		inputs: options?.inputs,
 		dynamic: options?.dynamic

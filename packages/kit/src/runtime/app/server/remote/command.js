@@ -2,7 +2,7 @@
 /** @import { MaybePromise, RemoteCommandInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
-import { create_validator, run_remote_function } from './shared.js';
+import { create_validator, get_schema, run_remote_function } from './shared.js';
 import { MUTATIVE_METHODS } from '../../../../constants.js';
 import * as e from '../../../../messages/server-errors.js';
 
@@ -57,7 +57,12 @@ export function command(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {RemoteCommandInternals} */
-	const __ = { type: 'command', id: '', name: '' };
+	const __ = {
+		type: 'command',
+		id: '',
+		name: '',
+		schema: get_schema(validate_or_fn, maybe_fn)
+	};
 
 	/** @type {(arg?: any) => MaybePromise<Input>} */
 	const validate = create_validator(validate_or_fn, maybe_fn, () => __);

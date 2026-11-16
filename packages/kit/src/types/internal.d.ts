@@ -13,6 +13,7 @@ import {
 	AdapterViteConfig
 } from '@sveltejs/kit';
 import { RemoteFormIssue, RemoteQuery, RemoteLiveQuery } from '$app/server';
+import { StandardSchemaV1 } from '@standard-schema/spec';
 import { Config } from '@sveltejs/kit/vite';
 import { ParamMatcher } from '@sveltejs/kit/params';
 import {
@@ -617,6 +618,8 @@ export interface BaseRemoteInternals {
 	type: string;
 	id: string;
 	name: string;
+	/** read by tools such as devtools, kit does not use it */
+	schema: StandardSchemaV1 | null;
 	file?: string;
 	dev_loc?: {
 		file: string;
