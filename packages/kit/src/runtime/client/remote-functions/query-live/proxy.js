@@ -1,6 +1,7 @@
 import { live_query_map } from '../../client.js';
 import { pin_in_effect, pin_while_resolving, QUERY_RESOURCE_KEY } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { remote_env } from '#internal/remote-env';
 import { LiveQuery } from './instance.svelte.js';
 import { cache } from './cache.js';
 
@@ -20,7 +21,7 @@ export class LiveQueryProxy {
 	 */
 	constructor(id, arg) {
 		this.#id = id;
-		this.#payload = stringify_remote_arg(arg);
+		this.#payload = stringify_remote_arg(arg, remote_env.encoders);
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 

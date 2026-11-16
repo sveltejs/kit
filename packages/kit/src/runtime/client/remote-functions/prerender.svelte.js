@@ -69,7 +69,7 @@ function put(url, encoded) {
  */
 export function prerender(id) {
 	return (arg) => {
-		const payload = stringify_remote_arg(arg);
+		const payload = stringify_remote_arg(arg, remote_env.encoders);
 		const cache_key = create_remote_key(id, payload);
 
 		let resource = prerender_resources.get(cache_key)?.deref();

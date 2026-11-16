@@ -9,7 +9,7 @@ import {
 	remote_request,
 	fail_unhandled_refreshes
 } from './shared.svelte.js';
-import { on_remote_reset, reset_generation } from '#internal/remote-env';
+import { on_remote_reset, remote_env, reset_generation } from '#internal/remote-env';
 
 /**
  * Resets the pending count of each command, keyed by its id so that evaluating
@@ -75,7 +75,7 @@ export function command(id) {
 							{
 								method: 'POST',
 								body: JSON.stringify({
-									payload: await stringify_command_arg(arg),
+									payload: await stringify_command_arg(arg, remote_env.encoders),
 									refreshes: Array.from(refreshes ?? [])
 								}),
 								headers

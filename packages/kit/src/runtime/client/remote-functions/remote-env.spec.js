@@ -489,3 +489,88 @@ test('reset_remote_state waits for prerender cache writes that are still in flig
 	await expect(get_value(undefined)).resolves.toBe('B');
 	expect(env.fetch).toHaveBeenCalledTimes(2);
 });
+
+/**
+ * Decodes an encoded remote function argument with the test's decoders
+ * @param {string} payload
+ */
+function decode_arg(payload) {
+	const json = atob(payload.replaceAll('-', '+').replaceAll('_', '/'));
+	return devalue.parse(json, decoders);
+}
+
+test('arguments of a custom type are encoded with the env encoders', async () => {
+	env.fetch.mockImplementation(() => result({ _: null }));
+
+	await command('hash/movePoint')(new Point(1));
+	const { payload } = JSON.parse(env.fetch.mock.calls[0][1].body);
+	expect(decode_arg(payload)).toEqual(new Point(1));
+
+	await query('hash/getPointAt')(new Point(2));
+	const url = new URL(env.fetch.mock.calls[1][0], 'http://localhost');
+	expect(decode_arg(/** @type {string} */ (url.searchParams.get('payload')))).toEqual(new Point(2));
+});
+
+/**
+ * A preflight schema whose validation settles only when the test says so
+ */
+function deferred_schema() {
+	/** @type {Array<(result: any) => void>} */
+	const pending = [];
+
+	const schema = {
+		'~standard': {
+			version: 1,
+			vendor: 'test',
+			validate: () => new Promise((resolve) => pending.push(resolve))
+		}
+	};
+
+	return { schema, pending };
+}
+
+test.each(/** @type {const} */ (['submit', 'validate']))(
+	'a preflight that finds issues after reset_remote_state does not restore them (%s)',
+	async (via) => {
+		const { schema, pending } = deferred_schema();
+		const remote = form(`hash/preflightIssues_${via}`).preflight(/** @type {any} */ (schema));
+		const { detach } = attach(remote);
+
+		try {
+			const started = via === 'submit' ? remote.submit() : remote.validate({ all: true });
+			await vi.waitFor(() => expect(pending).toHaveLength(1));
+
+			await reset_remote_state();
+
+			pending[0]({ issues: [{ message: 'Too short', path: ['title'] }] });
+			await started;
+
+			expect(remote.fields.allIssues()).toBeUndefined();
+		} finally {
+			detach();
+		}
+	}
+);
+
+test.each(/** @type {const} */ (['submit', 'validate']))(
+	'a preflight that passes after reset_remote_state does not send the request (%s)',
+	async (via) => {
+		const { schema, pending } = deferred_schema();
+		const remote = form(`hash/preflightPasses_${via}`).preflight(/** @type {any} */ (schema));
+		const { detach } = attach(remote);
+
+		try {
+			const started = via === 'submit' ? remote.submit() : remote.validate({ all: true });
+			await vi.waitFor(() => expect(pending).toHaveLength(1));
+
+			await reset_remote_state();
+
+			pending[0]({ value: { title: 'Hello' } });
+			await Promise.resolve(started).catch(() => {});
+
+			expect(env.fetch).not.toHaveBeenCalled();
+		} finally {
+			detach();
+		}
+	}
+);

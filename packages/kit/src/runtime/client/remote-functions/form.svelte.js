@@ -381,9 +381,13 @@ export function form(id) {
 		 * @param {FormData} form_data
 		 */
 		async function preflight(form_data) {
+			const generation = reset_generation;
 			const data = convert(form_data);
 			const schema = preflight_schema ?? shared_preflight_schema;
 			const validated = await schema?.['~standard'].validate(data);
+
+			// after a reset, the form belongs to the next test: neither write its issues nor submit
+			if (generation !== reset_generation) return false;
 
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
@@ -744,7 +748,7 @@ export function form(id) {
 					const schema = preflight_schema ?? shared_preflight_schema;
 					const validated = await schema?.['~standard'].validate(data);
 
-					if (validate_id !== id) {
+					if (validate_id !== id || generation !== reset_generation) {
 						return;
 					}
 

@@ -101,8 +101,9 @@ const remote_arg_marker = Symbol(remote_object);
 
 /**
  * @param {boolean} sort
+ * @param {Record<string, (value: any) => any>} transport_encoders
  */
-function create_remote_arg_reducers(sort) {
+function create_remote_arg_reducers(sort, transport_encoders) {
 	/** @type {Record<string, (value: unknown) => unknown>} */
 	const remote_fns_reducers = {
 		/** @param {unknown} value */
@@ -173,7 +174,7 @@ function create_remote_arg_reducers(sort) {
 		};
 	}
 
-	const all_reducers = { ...encoders, ...remote_fns_reducers };
+	const all_reducers = { ...transport_encoders, ...remote_fns_reducers };
 
 	/** @type {(value: unknown) => string} */
 	const stringify = (value) => devalue.stringify(value, all_reducers);
@@ -257,12 +258,13 @@ function create_remote_arg_revivers() {
  * Stringifies the argument (if any) for a remote function in such a way that
  * it is both a valid URL and a valid file name (necessary for prerendering).
  * @param {any} value
+ * @param {Record<string, (value: any) => any>} [transport_encoders] the client passes the encoders from its remote env
  */
-export function stringify_remote_arg(value) {
+export function stringify_remote_arg(value, transport_encoders = encoders) {
 	if (value === undefined) return '';
 
 	// If people hit file/url size limits, we can look into using something like compress_and_encode_text from svelte.dev beyond a certain size
-	const json = devalue.stringify(value, create_remote_arg_reducers(true));
+	const json = devalue.stringify(value, create_remote_arg_reducers(true, transport_encoders));
 
 	return url_friendly_base64_encode(json);
 }
@@ -270,11 +272,12 @@ export function stringify_remote_arg(value) {
 /**
  * Stringifies command arguments, including `File` objects.
  * @param {any} value
+ * @param {Record<string, (value: any) => any>} [transport_encoders] the client passes the encoders from its remote env
  */
-export async function stringify_command_arg(value) {
+export async function stringify_command_arg(value, transport_encoders = encoders) {
 	if (value === undefined) return '';
 
-	const reducers = create_remote_arg_reducers(false);
+	const reducers = create_remote_arg_reducers(false, transport_encoders);
 
 	/** @type {Set<Promise<any>>} */
 	const allowed_promises = new Set();
