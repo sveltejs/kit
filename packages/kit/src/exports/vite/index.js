@@ -1,7 +1,7 @@
 /** @import { EnvVarConfig } from '@sveltejs/kit/env' */
 /** @import { Options } from '@sveltejs/vite-plugin-svelte' */
 /** @import { PreprocessorGroup } from 'svelte/compiler' */
-/** @import { ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
+/** @import { DevRouteInfo, ManifestData, RemoteChunk, ServerMetadata, ValidatedConfig } from 'types' */
 /** @import { CorsOptions, Plugin, ResolvedConfig, Rolldown, UserConfig } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -13,6 +13,7 @@ import { posixify } from '../../utils/os.js';
 import { to_fs } from '../../utils/vite.js';
 import { runtime_directory, get_global_name } from '../../core/utils.js';
 import { dev } from './dev/index.js';
+import { get_route_info } from './dev/route_info.js';
 import { preview } from './preview/index.js';
 import {
 	enforced_config,
@@ -283,11 +284,35 @@ function kit({ svelte_config }) {
 		}
 	};
 
+	let is_dev_server = false;
+
+	/** @type {{ routes: DevRouteInfo[], matchers: string | null } | null} */
+	let route_info = null;
+
+	/** @type {Set<() => void>} */
+	const route_info_listeners = new Set();
+
 	/** @type {Plugin} */
 	const plugin_setup = {
 		name: 'vite-plugin-sveltekit-setup',
 		api: {
-			options: svelte_config
+			options: svelte_config,
+			/** experimental and dev only, not covered by semver */
+			devtools: {
+				/** null outside vite dev or before the routes first load */
+				routes() {
+					if (!is_dev_server || !manifest_data) return null;
+					return (route_info ??= get_route_info(manifest_data, root));
+				},
+				/**
+				 * @param {() => void} fn called when route files or their page options change
+				 * @returns {() => void} a function that removes the listener
+				 */
+				on_routes_change(fn) {
+					route_info_listeners.add(fn);
+					return () => route_info_listeners.delete(fn);
+				}
+			}
 		},
 		resolveId: {
 			filter: { id: removed_modules.map(({ pattern }) => pattern) },
@@ -576,6 +601,7 @@ function kit({ svelte_config }) {
 		 * @see https://vitejs.dev/guide/api-plugin.html#configureserver
 		 */
 		async configureServer(server) {
+			is_dev_server = true;
 			return await dev(
 				vite,
 				server,
@@ -584,6 +610,8 @@ function kit({ svelte_config }) {
 				root,
 				(data) => {
 					manifest_data = data;
+					route_info = null;
+					for (const fn of route_info_listeners) fn();
 				}
 			);
 		},

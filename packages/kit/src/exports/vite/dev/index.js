@@ -36,7 +36,7 @@ import create_manifest_data from '../../../core/sync/create_manifest_data/index.
  * @param {ValidatedConfig} svelte_config
  * @param {() => RemoteChunk[]} get_remotes
  * @param {string} root The project root directory
- * @param {(manifest_data: ManifestData) => void} set_manifest_data
+ * @param {(manifest_data: ManifestData) => void} set_manifest_data called whenever the manifest is created or updated
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(
@@ -234,7 +234,12 @@ export async function dev(
 		// Don't run for a single file if the whole manifest is about to get updated
 		// Unless it's a file where the trailing slash page option might have changed
 		if (timeout || !/\+(page|layout|server).*$/.test(file)) return;
-		if (!sync.update(svelte_config, manifest_data, file, root)) debounce(update_manifest);
+		if (sync.update(svelte_config, manifest_data, file, root)) {
+			// page options may have changed
+			set_manifest_data(manifest_data);
+		} else {
+			debounce(update_manifest);
+		}
 	});
 
 	const { appTemplate, errorTemplate, serviceWorker, hooks } = svelte_config.files;
