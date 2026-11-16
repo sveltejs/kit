@@ -1416,7 +1416,7 @@ Now, any component that calls `getMyProjects` will only be rendered if the user 
 ```svelte
 <!--- file: src/lib/ProjectList.svelte --->
 <script>
-	import { getMyProjects } from '$lib/projects.remote';
+	import { getMyProjects } from '#lib/projects.remote.js';
 </script>
 
 <ul>
