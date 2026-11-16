@@ -34,6 +34,9 @@ import { options } from '<sveltekit:generated>/server.js';
 import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
 
+const vite_devtools_loader =
+	"const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; document.body.appendChild(s);";
+
 // TODO rename this function/module
 
 /**
@@ -557,11 +560,11 @@ export async function render_response({
 	}
 
 	if (DEV && manifest.vite_devtools) {
-		// Vite DevTools' dock, which Vite only adds to HTML it serves itself
-		// https://devtools.vite.dev/guide/#projects-without-an-html-entry
-		body += `\n\t\t\t<script type="module" src="/__devtools/embedded.js"${
+		// inline so the csp can allow it
+		await csp.add_script(vite_devtools_loader);
+		body += `\n\t\t\t<script type="module"${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
-		}></script>`;
+		}>${vite_devtools_loader}</script>`;
 	}
 
 	const headers = new Headers({

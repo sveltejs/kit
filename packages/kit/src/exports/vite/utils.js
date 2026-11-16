@@ -1,6 +1,7 @@
 /** @import { UserConfig } from 'vite' */
 /** @import { EnforcedConfig } from './types.js' */
 import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
 import { posixify } from '../../utils/os.js';
@@ -347,17 +348,42 @@ export function comparable(value) {
 }
 
 /**
- * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
- * @param {import('vite').Plugin} plugin
- * @param {'build' | 'serve'} command
+ * Whether SvelteKit adds the Vite DevTools dock, which Vite only adds to HTML it serves itself
+ * @see https://devtools.vite.dev/guide/#projects-without-an-html-entry
+ * @param {import('vite').ResolvedConfig} config
  * @returns {boolean}
  */
-export function uses_unsupported_html_hook(plugin, command) {
+export function adds_vite_devtools_dock(config) {
+	if (
+		config.command !== 'serve' ||
+		!config.plugins.some((plugin) => plugin.name === 'vite:devtools:injection')
+	) {
+		return false;
+	}
+
+	try {
+		const require = createRequire(path.join(config.root, 'package.json'));
+		const pkg = require.resolve('@vitejs/devtools/package.json');
+		const { version } = JSON.parse(fs.readFileSync(pkg, 'utf-8'));
+		const [major, minor] = version.split('.').map(Number);
+		// /__devtools/embedded.js is served from 0.5
+		return major > 0 || minor >= 5;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
+ * @param {import('vite').Plugin} plugin
+ * @param {boolean} adds_dock whether SvelteKit adds the Vite DevTools dock itself
+ * @returns {boolean}
+ */
+export function uses_unsupported_html_hook(plugin, adds_dock) {
 	if (!plugin.transformIndexHtml) return false;
 
 	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
 	if (plugin.name === 'vitest:browser:loader' || plugin.name?.includes('storybook')) return false;
 
-	// SvelteKit adds the Vite DevTools dock to pages itself during dev
-	return !(command === 'serve' && plugin.name === 'vite:devtools:injection');
+	return !(adds_dock && plugin.name === 'vite:devtools:injection');
 }
