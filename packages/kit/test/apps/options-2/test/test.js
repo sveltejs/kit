@@ -198,6 +198,7 @@ test.describe('Link header preload', () => {
 
 		expect(header).toContain('rel="modulepreload"');
 		expect(header).toContain('as="font"');
+		expect(header).not.toContain('nopush');
 	});
 
 	test('does not inject Link headers on prerendered pages', async ({ request }) => {
