@@ -291,7 +291,7 @@ export async function render_response({
 	 */
 	const add_preload = (path, attributes) => {
 		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && !is_prerendering(state)) {
-			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}`);
 		} else {
 			head.add_link_tag(path, attributes);
 		}
@@ -308,7 +308,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
-				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"`);
 			}
 		}
 
