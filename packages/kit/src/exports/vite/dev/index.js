@@ -29,7 +29,7 @@ import { get_runner } from '../../../runner.js';
 import { write_server } from '../../../core/sync/write_server.js';
 import { write_tsconfig } from '../../../core/sync/write_tsconfig/index.js';
 import create_manifest_data from '../../../core/sync/create_manifest_data/index.js';
-import { create_devtools_channel } from './devtools.js';
+import { create_devtools_channel, get_devtools_auth_config } from './devtools.js';
 
 /**
  * @param {typeof import('vite')} vite the peer resolved vite module
@@ -38,6 +38,7 @@ import { create_devtools_channel } from './devtools.js';
  * @param {() => RemoteChunk[]} get_remotes
  * @param {string} root The project root directory
  * @param {(manifest_data: ManifestData) => void} set_manifest_data
+ * @param {unknown} user_devtools_config devtools option of the user vite config
  * @return {Promise<Promise<() => void>>}
  */
 export async function dev(
@@ -46,7 +47,8 @@ export async function dev(
 	svelte_config,
 	get_remotes,
 	root,
-	set_manifest_data
+	set_manifest_data,
+	user_devtools_config
 ) {
 	/** @type {AsyncLocalStorage<{ event: RequestEvent, config: any, prerender: PrerenderOption }>} */
 	const async_local_storage = new AsyncLocalStorage();
@@ -86,7 +88,15 @@ export async function dev(
 	const { hot } = vite_dev_server.environments.client;
 
 	// the runnable ssr environment shares this process, so a global reaches the runtime
-	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot, vite_dev_server.ws);
+	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot, {
+		...get_devtools_auth_config(vite_dev_server.config.devtools, user_devtools_config),
+		storage_file: path.resolve(root, svelte_config.outDir, 'devtools-auth.json'),
+		get_urls: () => {
+			const urls = vite_dev_server.resolvedUrls;
+			return urls ? [...urls.local, ...urls.network] : [];
+		},
+		log: (message) => vite_dev_server.config.logger.info(message)
+	});
 
 	/**
 	 * Log a response to the console, routed through Vite's logger so that it

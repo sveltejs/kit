@@ -260,7 +260,13 @@ test.describe('Devtools channel', () => {
 		});
 
 		await new Promise((resolve) => ws.addEventListener('open', resolve));
-		ws.send(JSON.stringify({ type: 'custom', event: 'sveltekit:devtools:subscribe', data: {} }));
+		ws.send(
+			JSON.stringify({
+				type: 'custom',
+				event: 'sveltekit:devtools:subscribe',
+				data: { token: 'devtools-e2e-token' }
+			})
+		);
 		await expect
 			.poll(() => events.some((e) => e.event === 'sveltekit:devtools:subscribed'))
 			.toBe(true);
