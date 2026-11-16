@@ -15,7 +15,13 @@ import {
 } from '../client.js';
 import { page } from '#app/state/client';
 import { tick } from 'svelte';
-import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
+import {
+	categorize_updates,
+	fail_unhandled_refreshes,
+	override_keys,
+	remote_request
+} from './shared.svelte.js';
+import { listening, mutation_settled, mutation_started } from './devtools.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
@@ -226,6 +232,9 @@ export function form(id) {
 			const promise =
 				/** @type {Promise<boolean> & { updates: (...args: RemoteQueryUpdate[]) => Promise<boolean> }} */ (
 					(async () => {
+						/** @type {ReturnType<typeof mutation_started> | null} */
+						let dev = null;
+
 						try {
 							await Promise.resolve();
 
@@ -236,6 +245,16 @@ export function form(id) {
 							if (should_preflight) {
 								const valid = await preflight(form_data);
 								if (!valid) return false;
+							}
+
+							if (DEV && listening()) {
+								dev = mutation_started(
+									'form',
+									action_id_without_key,
+									convert(form_data),
+									refreshes,
+									override_keys(overrides)
+								);
 							}
 
 							const { blob } = serialize_binary_form(convert(form_data), {
@@ -273,6 +292,15 @@ export function form(id) {
 
 							const succeeded = raw_issues.length === 0;
 
+							if (DEV && dev) {
+								mutation_settled(dev, {
+									ok: succeeded,
+									result,
+									issues: raw_issues,
+									data: response
+								});
+							}
+
 							if (succeeded) {
 								fail_unhandled_refreshes(refreshes);
 								if (should_refresh) {
@@ -288,6 +316,7 @@ export function form(id) {
 						} catch (e) {
 							result = undefined;
 							raw_issues = [];
+							if (DEV && dev) mutation_settled(dev, { ok: false, error: e });
 							throw e;
 						} finally {
 							overrides?.forEach((fn) => fn());

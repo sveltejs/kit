@@ -8,6 +8,8 @@ import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page, notify_version } from '#app/state/client';
 import * as e from '../../../messages/client-errors.js';
+import { DEV } from 'esm-env';
+import { set_source } from './devtools.svelte.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -148,6 +150,8 @@ export async function remote_request(url, init, refreshes) {
 				entry.resource.fail(new HandledHttpError(result.e));
 			} else {
 				entry.resource.set(result.v);
+				// only commands and forms pass refreshes, otherwise this is the query response
+				if (DEV) set_source(key, refreshes === undefined ? 'fetch' : 'mutation');
 			}
 		} else if (!result.e) {
 			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
@@ -223,6 +227,19 @@ export async function handle_side_channel_response(response) {
 	}
 
 	return response;
+}
+
+/**
+ * keys of the queries these override release functions belong to
+ * @param {Array<() => void> | null} overrides
+ * @returns {string[]}
+ */
+export function override_keys(overrides) {
+	return (overrides ?? []).flatMap((fn) =>
+		Object.hasOwn(fn, QUERY_OVERRIDE_KEY)
+			? [/** @type {string} */ (/** @type {any} */ (fn)[QUERY_OVERRIDE_KEY])]
+			: []
+	);
 }
 
 /**

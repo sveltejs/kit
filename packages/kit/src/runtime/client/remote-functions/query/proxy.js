@@ -8,6 +8,8 @@ import {
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { Query } from './instance.svelte.js';
 import { cache } from './cache.js';
+import { DEV } from 'esm-env';
+import { set_source } from '../devtools.svelte.js';
 
 /**
  * Manages the caching layer between the user and the actual {@link Query} instance. This is the thing
@@ -84,6 +86,7 @@ export class QueryProxy {
 	/** @type {Query<T>['set']} */
 	set(value) {
 		this.#get_cached_query().set(value);
+		if (DEV) set_source(this.#key, 'set');
 	}
 
 	/** @type {Query<T>['withOverride']} */
