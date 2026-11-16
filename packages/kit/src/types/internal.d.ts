@@ -34,6 +34,7 @@ import {
 	TrailingSlash
 } from './private.js';
 import { Span } from '@opentelemetry/api';
+import { HtmlTagDescriptor } from 'vite';
 import { PageOptions } from '../exports/vite/static_analysis/types.js';
 import { SharedIterator } from '../utils/shared-iterator.js';
 
@@ -487,6 +488,8 @@ export interface SSRManifest {
 	 */
 	mime_types: Record<string, string>;
 	client: BuildData['client'];
+	/** Tags from Vite plugins' `transformIndexHtml` hooks to add to every page. Only set in dev */
+	dev_html_tags?: HtmlTagDescriptor[];
 	nodes: SSRNodeLoader[];
 	/**
 	 * hashed filename -> import to that file

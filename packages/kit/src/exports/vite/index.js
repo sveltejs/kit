@@ -561,7 +561,9 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
+			const unsupported_plugins = config.plugins.filter((plugin) =>
+				uses_unsupported_html_hook(plugin, config.command)
+			);
 			if (unsupported_plugins.length) {
 				const plugins = bullet_list(
 					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')

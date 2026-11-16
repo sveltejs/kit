@@ -20,7 +20,12 @@ import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
+import {
+	get_dev_html_tags,
+	is_chrome_devtools_request,
+	is_remote_module,
+	not_found
+} from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
@@ -142,7 +147,11 @@ export async function dev(
 			root,
 			get_remotes
 		);
+		manifest.dev_html_tags = dev_html_tags;
 	}
+
+	// e.g. the in-page dock of Vite DevTools, which plugins usually add through `transformIndexHtml`
+	const dev_html_tags = await get_dev_html_tags(vite_dev_server, svelte_config.files.appTemplate);
 
 	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
 	// don't depend on it and should be available as soon as the dev server is ready.
