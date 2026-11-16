@@ -175,6 +175,18 @@ test('runs the deferred reconnect of a query.live inside the request', async () 
 	expect(runs).toBe(1);
 });
 
+test('a query resource returned from the callback can be awaited after it', async () => {
+	const get_post = query('unchecked', (/** @type {number} */ id) => ({ id }));
+	const get_posts = query.batch('unchecked', () => (/** @type {number} */ id) => ({ id }));
+	const count = query.live(function* () {
+		yield 1;
+	});
+
+	expect(await withRequestEvent({}, () => get_post(1))).toEqual({ id: 1 });
+	expect(await withRequestEvent({}, () => get_posts(2))).toEqual({ id: 2 });
+	expect(await withRequestEvent({}, () => count())).toBe(1);
+});
+
 test('rejects with the error of a deferred refresh', async () => {
 	const failure = new Error('refresh failed');
 	const broken = query(() => {
