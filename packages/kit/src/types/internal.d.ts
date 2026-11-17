@@ -128,6 +128,12 @@ export interface BuildData {
 		};
 	} | null;
 	server_manifest: import('vite').Manifest;
+	/**
+	 * Assets emitted by the server build outside `appDir`, which SvelteKit never copies to the
+	 * client output (for example, a file a Vite plugin emits next to the server code that reads
+	 * it). Paths are relative to the server output directory.
+	 */
+	server_only_assets: string[];
 }
 
 export interface CSRPageNode {

@@ -77,5 +77,6 @@ Within the `adapt` method, there are a number of things that an adapter should d
 	- expose any platform-specific information to SvelteKit via the `platform` option passed to `server.respond`
 - Bundle the output to avoid needing to install dependencies on the target platform, if necessary
 - Put the user's static files and the generated JS/CSS in the correct location for the target platform
+- Deploy the files listed by `builder.findServerOnlyAssets()` with the server code, at the same location relative to it. These are files the server build emitted outside `appDir`, typically by a Vite plugin, for server code to read at runtime (for example with `fs.readFile(new URL('./data.bin', import.meta.url))`). They are never copied to the client output. An adapter that deploys the whole server directory (`builder.writeServer`) already does this; one that only deploys traced or bundled files must add them
 
 Where possible, we recommend putting the adapter output under the `build/` directory with any intermediate output placed under `.svelte-kit/[adapter-name]`.
