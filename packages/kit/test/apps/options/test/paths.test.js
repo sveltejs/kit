@@ -266,3 +266,27 @@ test.describe('inlineStyleThreshold', () => {
 		expect(await get_computed_style('#conditionally', 'color')).toBe('rgb(0, 0, 255)');
 	});
 });
+
+test('respects CSS minification independently of JS minification', async ({ page }) => {
+	test.skip(!!process.env.DEV || variant === 'paths-assets');
+
+	await page.goto('/path-base/css-minify');
+	await expect(page.locator('h2')).toHaveText('CSS minification');
+
+	// The server and client must use the same minifier to avoid duplicate CSS assets.
+	const assets = '_wheee/nested/immutable/assets';
+	const client_dir = `.custom-out-dir/output/client/${assets}`;
+	const server_dir = `.custom-out-dir/output/server/${assets}`;
+	const filename = readdirSync(client_dir).find(
+		(name) =>
+			name.endsWith('.css') &&
+			readFileSync(`${client_dir}/${name}`, 'utf-8').includes('@container anchored')
+	);
+	expect(filename).toBeDefined();
+	const css = readFileSync(`${client_dir}/${filename}`, 'utf-8');
+	expect(css).toContain('@container anchored(fallback: top){.tooltip{color:#00f}}');
+	const hash = filename?.split('.').slice(1).join('.');
+	const server_filename = readdirSync(server_dir).find((name) => name.endsWith(`.${hash}`));
+	expect(server_filename).toBeDefined();
+	expect(readFileSync(`${server_dir}/${server_filename}`, 'utf-8')).toBe(css);
+});

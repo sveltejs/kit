@@ -237,7 +237,9 @@ export function plugin_compile(
 					base: relative ? './' : base,
 					build: {
 						cssCodeSplit: !inline,
-						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						cssMinify:
+							initial_config.build?.cssMinify ??
+							(initial_config.build?.minify == null ? true : !!initial_config.build.minify),
 						manifest: true,
 						rolldownOptions: {
 							output: {

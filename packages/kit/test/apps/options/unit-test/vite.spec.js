@@ -2,6 +2,7 @@ import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { createFilter, resolveConfig } from 'vite';
+import { sveltekit } from '@sveltejs/kit/vite';
 import { bullet_list } from '../../../../src/utils/format.js';
 
 const timeout = 60_000;
@@ -77,4 +78,37 @@ test('transformIndexHtml warning for app plugins', { timeout }, () => {
 	expect(result.stderr).toContainKitDiagnostic('transform_index_html_unsupported', {
 		contains: [bullet_list(['app-html-transform'])]
 	});
+});
+
+/** @type {Array<[import('vite').BuildOptions, boolean | 'esbuild' | 'lightningcss']>} */
+const css_minify_cases = [
+	[{}, true],
+	[{ minify: false }, false],
+	[{ minify: true }, true],
+	[{ minify: 'oxc' }, true],
+	[{ cssMinify: false }, false],
+	[{ cssMinify: true, minify: false }, true],
+	[{ cssMinify: 'esbuild' }, 'esbuild'],
+	[{ cssMinify: 'esbuild', minify: false }, 'esbuild'],
+	[{ cssMinify: 'lightningcss', minify: false }, 'lightningcss']
+];
+
+test.each(css_minify_cases)('CSS minification for %j resolves to %s', async (build, expected) => {
+	const config = await resolveConfig(
+		{
+			configFile: false,
+			build,
+			plugins: [
+				sveltekit({
+					files: { src: 'source', routes: 'source/pages', appTemplate: 'source/template.html' },
+					outDir: '.custom-out-dir'
+				})
+			]
+		},
+		'build'
+	);
+
+	for (const name of ['ssr', 'client']) {
+		expect(config.environments[name].build.cssMinify).toBe(expected);
+	}
 });

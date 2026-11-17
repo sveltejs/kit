@@ -6,6 +6,7 @@ import { sveltekit } from '@sveltejs/kit/vite';
 const config = {
 	build: {
 		minify: false,
+		cssMinify: 'esbuild',
 		assetsInlineLimit: 0
 	},
 	clearScreen: false,
