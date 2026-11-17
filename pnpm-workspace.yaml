@@ -13,10 +13,6 @@ minimumReleaseAgeExclude:
   - esm-env
   - vite-imagetools
   - imagetools-core
-  # Renovate security update: sharp@0.35.5
-  - sharp@0.35.5
-  # Renovate security update: vite@8.3.3
-  - vite@8.3.3
 blockExoticSubdeps: true
 linkWorkspacePackages: true
 shellEmulator: true
@@ -58,7 +54,6 @@ catalog:
   '@opentelemetry/sdk-node': ^0.301.0
   '@opentelemetry/sdk-trace': ^3.0.0
   '@playwright/test': ^1.62.1
-  '@polka/url': ^1.0.0-next.29
   '@standard-schema/spec': ^1.1.0
   '@sveltejs/eslint-config': ^10.0.4
   '@sveltejs/vite-plugin-svelte': ^7.3.0
@@ -79,7 +74,7 @@ catalog:
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
   vite: ^8.2.1
-  wrangler: ^4.118.0
+  wrangler: ^4.162.0
 
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^5.0.1
