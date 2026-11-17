@@ -18,7 +18,7 @@ test('resolves a relative wrangler config path against the working directory', a
 					root,
 					configFile: false,
 					logLevel: 'silent',
-					plugins: plugin_config('test/apps/workers/config/wrangler.jsonc')
+					plugins: plugin_config('test/apps/workers/config/wrangler.jsonc', () => {})
 				},
 				'build'
 			)

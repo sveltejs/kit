@@ -1,5 +1,6 @@
 /** @import { Plugin } from 'vite' */
 /** @import { GetPlatformProxyOptions } from 'wrangler' */
+/** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -7,14 +8,15 @@ import { fileURLToPath } from 'node:url';
 import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
-import { plugin_config } from './config.js';
+import { is_dev_or_build, plugin_config } from './config.js';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
 	get_routes_json,
 	parse_redirects,
 	generate_redirects,
-	append_headers
+	append_headers,
+	sync_process_env
 } from './utils.js';
 
 const name = '@sveltejs/adapter-cloudflare';
@@ -24,6 +26,10 @@ export default function (options = {}) {
 	// Add a random query so we can reliably string-replace the stub
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
+
+	/** @type {WorkerConfig} */
+	let worker_config;
+
 	return {
 		name,
 		async adapt(builder) {
@@ -204,7 +210,19 @@ export default function (options = {}) {
 				return request;
 			},
 			plugins: [
-				...plugin_config(options.config),
+				...plugin_config(options.config, (config) => (worker_config = config)),
+				{
+					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
+					apply: is_dev_or_build,
+					config: {
+						// runs after the Cloudflare Vite plugin resolved the Wrangler config
+						// but before SvelteKit reads `process.env`
+						order: 'post',
+						handler() {
+							sync_process_env(worker_config);
+						}
+					}
+				},
 				virtual_workers_module(
 					{
 						configPath: options.config,

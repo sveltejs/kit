@@ -109,7 +109,7 @@ export function plugin_compile(
 		config: {
 			// avoids overwriting the base setting that's also set by Vitest
 			order: 'pre',
-			handler(config, config_env) {
+			handler(config) {
 				let kit_global;
 				let sourcemapIgnoreList;
 
@@ -127,8 +127,6 @@ export function plugin_compile(
 
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
-
-				env = vite.loadEnv(config_env.mode, kit.env.dir, '');
 
 				/** @type {Record<string, string>} */
 				const server_input = {
@@ -388,6 +386,8 @@ export function plugin_compile(
 
 		configResolved(resolved_config) {
 			vite_config = resolved_config;
+			// read after the `config` hooks so that plugins (e.g. adapters) can populate `process.env`
+			env = vite.loadEnv(resolved_config.mode, kit.env.dir, '');
 		},
 
 		applyToEnvironment(environment) {
