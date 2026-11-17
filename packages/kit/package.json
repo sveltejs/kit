@@ -64,6 +64,7 @@
 		"svelte-kit": "svelte-kit.js"
 	},
 	"files": [
+		"docs",
 		"src",
 		"!src/**/*.spec.js",
 		"!src/**/fixtures",

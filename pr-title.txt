@@ -1,0 +1,1 @@
+docs: ship concise guides with the Kit package
