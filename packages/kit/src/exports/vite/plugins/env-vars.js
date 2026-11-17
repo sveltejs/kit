@@ -32,6 +32,7 @@ export function plugin_env_vars(config, callback) {
 	let deps = new Set();
 
 	let is_build = false;
+	let is_dev = false;
 
 	/** @type {Promise<void> | undefined} */
 	let generated;
@@ -62,6 +63,10 @@ export function plugin_env_vars(config, callback) {
 	return {
 		name: 'vite-plugin-sveltekit-env-vars',
 
+		config(_, config_env) {
+			is_dev = config_env.command === 'serve' && !config_env.isPreview;
+		},
+
 		async configResolved(c) {
 			resolved_config = c;
 
@@ -73,6 +78,9 @@ export function plugin_env_vars(config, callback) {
 			dir = posixify(
 				path.resolve(c.root, config.outDir, `generated/${is_build ? 'build' : 'dev'}/env`)
 			);
+
+			// Other plugins can start a dependency scan before `buildStart` runs in dev
+			if (is_dev) await (generated ??= generate());
 		},
 
 		async buildStart() {

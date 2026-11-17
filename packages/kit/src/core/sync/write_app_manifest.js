@@ -17,7 +17,7 @@ import { dedent, write_if_changed } from './utils.js';
  * importers' hashes are stable regardless of the manifest content.
  *
  * @param {string} out
- * @param {ManifestData | undefined} manifest_data
+ * @param {ManifestData} manifest_data
  * @param {boolean} is_build
  */
 export function write_app_manifest(out, manifest_data, is_build) {
@@ -32,19 +32,17 @@ export function write_app_manifest(out, manifest_data, is_build) {
 			export const prerendered = __SVELTEKIT_MANIFEST_PRERENDERED__;
 			export const routes = __SVELTEKIT_MANIFEST_ROUTES__;
 		`
-		: // In dev, an empty manifest is written before dependency scanning starts.
-			// `configureServer` replaces it with the full manifest before modules are served.
-			dedent`
+		: dedent`
 		// empty during dev
 		export const immutable = [];
 		export const prerendered = [];
 
 		export const assets = [
-			${stringify_assets(manifest_data?.assets)}
+			${stringify_assets(manifest_data.assets)}
 		];
 
 		export const routes = [
-			${stringify_routes(manifest_data?.routes)}
+			${stringify_routes(manifest_data.routes)}
 		];
 	`;
 
@@ -52,32 +50,30 @@ export function write_app_manifest(out, manifest_data, is_build) {
 }
 
 /**
- * @param {Asset[] | undefined} assets
+ * @param {Asset[]} assets
  * @returns {string}
  */
 function stringify_assets(assets) {
-	return assets?.map((asset) => s({ path: asset.file })).join(',\n') ?? '';
+	return assets.map((asset) => s({ path: asset.file })).join(',\n');
 }
 
 /**
- * @param {RouteData[] | undefined} routes
+ * @param {RouteData[]} routes
  * @returns {ManifestRoute[]}
  */
 export function get_manifest_routes(routes) {
-	return (
-		routes?.filter(is_app_route).map(
-			(route) =>
-				/** @type {ManifestRoute} */ ({
-					id: route.id,
-					page: is_page_route(route),
-					endpoint: is_endpoint_route(route)
-				})
-		) ?? []
+	return routes.filter(is_app_route).map(
+		(route) =>
+			/** @type {ManifestRoute} */ ({
+				id: route.id,
+				page: is_page_route(route),
+				endpoint: is_endpoint_route(route)
+			})
 	);
 }
 
 /**
- * @param {RouteData[] | undefined} routes
+ * @param {RouteData[]} routes
  * @returns {string}
  */
 function stringify_routes(routes) {

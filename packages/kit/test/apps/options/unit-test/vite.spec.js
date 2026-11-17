@@ -1,5 +1,6 @@
 import { test, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { createFilter, resolveConfig } from 'vite';
 import { bullet_list } from '../../../../src/utils/format.js';
@@ -22,6 +23,25 @@ test('ignores all outDir files except generated files', async () => {
 	expect(is_ignored(`${out_dir}/generated`)).toBe(false);
 	expect(is_ignored(`${out_dir}/generated/root.js`)).toBe(false);
 	expect(is_ignored(`${out_dir}/generated/client/app.js`)).toBe(false);
+});
+
+test('generates the files a dependency scan reads before the dev server exists', async () => {
+	const generated = path.join(cwd, '.custom-out-dir/generated/dev');
+	const tsconfig = path.join(cwd, 'node_modules/$app/tsconfig.json');
+
+	fs.rmSync(generated, { recursive: true, force: true });
+	fs.rmSync(tsconfig, { force: true });
+
+	await resolveConfig({ configFile: path.join(cwd, 'vite.custom.config.js') }, 'serve');
+
+	for (const file of [
+		tsconfig,
+		`${generated}/app-manifest.js`,
+		`${generated}/server.js`,
+		`${generated}/env/private/server.js`
+	]) {
+		expect(fs.existsSync(file), file).toBe(true);
+	}
 });
 
 test('no overridden options warning', { timeout }, () => {
