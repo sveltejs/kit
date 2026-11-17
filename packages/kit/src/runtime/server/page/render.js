@@ -34,6 +34,9 @@ import { options } from '<sveltekit:generated>/server.js';
 import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
 
+const vite_devtools_loader =
+	"{ const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; s.nonce = document.currentScript.nonce; document.body.appendChild(s); }";
+
 // TODO rename this function/module
 
 /**
@@ -554,6 +557,14 @@ export async function render_response({
 		body += `\n\t\t\t<script${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 		}>${init_app}</script>\n\t\t`;
+	}
+
+	if (DEV && manifest.vite_devtools) {
+		// inline so the csp can allow it
+		await csp.add_script(vite_devtools_loader);
+		body += `\n\t\t\t<script${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}>${vite_devtools_loader}</script>`;
 	}
 
 	const headers = new Headers({
