@@ -1,22 +1,27 @@
+import { getReleasePlan } from '@changesets/get-release-plan';
+import { existsSync, readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { assert, test } from 'vitest';
 import { adapters } from '../adapters.js';
-import { existsSync, readFileSync } from 'node:fs';
 
-test('adapter versions are up to date', () => {
+test('adapter versions are up to date', async () => {
+	// check if we have a major release planned ...
+	const { releases } = await getReleasePlan(fileURLToPath(new URL('../../../', import.meta.url)));
+	const planned_versions = new Map(releases.map((release) => [release.name, release.newVersion]));
+
 	for (const adapter of adapters) {
+		// otherwise, check the package.json
 		const dir = adapter.module.replace('@sveltejs/', '');
-		const package_json = `../${dir}/package.json`;
+		const package_json = new URL(`../../${dir}/package.json`, import.meta.url);
 		if (!existsSync(package_json)) {
 			continue;
 		}
-		const adapter_version = JSON.parse(readFileSync(package_json, 'utf-8')).version;
+
+		/** @type {{ version: string }} */
+		const { version } = JSON.parse(readFileSync(package_json, 'utf-8'));
+		const adapter_version = planned_versions.get(adapter.module) ?? version;
 		const [major] = adapter_version.split('.');
 
-		// TODO get rid of `next` support once we exit pre-release mode
-		if (adapter.version === 'next') {
-			console.warn(`Update ${adapter.name} config to use a stable version`);
-		} else {
-			assert.equal(adapter.version, major, `${adapter.name} adapter is outdated`);
-		}
+		assert.equal(adapter.version, major, `${adapter.name} adapter is outdated`);
 	}
 });
