@@ -198,3 +198,14 @@ export function generate_placeholder(content, key) {
 
 	return placeholder;
 }
+
+/**
+ * Uses the user's `build.cssMinify` if they set one. Otherwise follows `build.minify`:
+ * Vite's own default would leave server CSS unminified while the client CSS is
+ * minified, which gives the same file two different hashes.
+ * @param {import('vite').UserConfig['build']} build
+ * @returns {NonNullable<import('vite').UserConfig['build']>['cssMinify']}
+ */
+export function resolve_css_minify(build) {
+	return build?.cssMinify ?? (build?.minify == null ? true : !!build.minify);
+}

@@ -639,7 +639,7 @@ You don't need to wait until the form is submitted to validate the data — you 
 </form>
 ```
 
-By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ includeUntouched: true })`.
+By default, issues will be ignored if they belong to form controls that haven't yet been interacted with. To validate _all_ inputs, call `validate({ all: true })`.
 
 For client-side validation, you can specify a _preflight_ schema which will populate `issues()` and prevent data being sent to the server if the data doesn't validate:
 
@@ -1416,7 +1416,7 @@ Now, any component that calls `getMyProjects` will only be rendered if the user 
 ```svelte
 <!--- file: src/lib/ProjectList.svelte --->
 <script>
-	import { getMyProjects } from '$lib/projects.remote';
+	import { getMyProjects } from '#lib/projects.remote.js';
 </script>
 
 <ul>
