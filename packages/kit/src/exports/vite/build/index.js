@@ -9,7 +9,7 @@ import { styleText } from 'node:util';
 import { code, include } from '@rolldown/pluginutils';
 import { build_server_nodes } from './build_server.js';
 import { treeshake_prerendered_remotes } from './remote.js';
-import { find_deps, resolve_symlinks } from './utils.js';
+import { find_deps, resolve_css_minify, resolve_symlinks } from './utils.js';
 import { warn_overridden_config } from '../utils.js';
 import { adapt } from '../../../core/adapt/index.js';
 import { generate_manifest } from '../../../core/generate_manifest/index.js';
@@ -237,7 +237,7 @@ export function plugin_compile(
 					base: relative ? './' : base,
 					build: {
 						cssCodeSplit: !inline,
-						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						cssMinify: resolve_css_minify(initial_config.build),
 						manifest: true,
 						rolldownOptions: {
 							output: {
