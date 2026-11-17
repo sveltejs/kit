@@ -149,7 +149,7 @@ const render = async (req, res) => {
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
 	// The header is set on the Node response rather than the `Response` object,
 	// whose headers may be immutable (e.g. when returned from `fetch`)
-	if (response.headers.get('content-type') === 'text/event-stream') {
+	if (response.headers.get('content-type')?.startsWith('text/event-stream')) {
 		res.setHeader('x-accel-buffering', 'no');
 	}
 
@@ -206,7 +206,9 @@ function get_origin(headers) {
 		);
 	}
 
-	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
+	// a proxy on a non-standard port can forward a host that already includes the port
+	// (e.g. `example.com:8443`), so replace it rather than appending a second one
+	return port ? `${protocol}://${host.replace(/:\d*$/, '')}:${port}` : `${protocol}://${host}`;
 }
 
 const serve = serve_static(

@@ -13,7 +13,7 @@ export const adapters = [
 		name: 'Cloudflare Workers',
 		test: () => !!process.env.WORKERS_CI,
 		module: '@sveltejs/adapter-cloudflare',
-		version: '8'
+		version: '9'
 	},
 	{
 		name: 'Netlify',
@@ -43,7 +43,6 @@ export const adapters = [
 		name: 'Render',
 		test: () => !!process.env.RENDER,
 		module: '@sveltejs/adapter-node',
-		// TODO replace with a stable version
-		version: 'next'
+		version: '6'
 	}
 ];

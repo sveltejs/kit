@@ -155,25 +155,10 @@ export function crawl(html, base) {
 								const quote = html[i++];
 
 								const start = i;
-								let escaped = false;
 
-								while (i < html.length) {
-									if (escaped) {
-										escaped = false;
-									} else {
-										const char = html[i];
-
-										if (html[i] === quote) {
-											break;
-										}
-
-										if (char === '\\') {
-											escaped = true;
-										}
-									}
-
-									i += 1;
-								}
+								// HTML has no escape sequences in attribute values, so the value
+								// ends at the next matching quote, even after a backslash
+								while (i < html.length && html[i] !== quote) i += 1;
 
 								value = html.slice(start, i);
 							} else {

@@ -132,11 +132,14 @@ export async function watch(options) {
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
 					for (const candidate of [
-						file.name,
+						file.dest,
 						`${file.base}.d.ts`,
 						`${file.base}.d.mts`,
 						`${file.base}.d.cts`
 					]) {
+						// if foo.ts was renamed to foo.js, avoid deleting the transformed file with the same name
+						if (files.some((current) => current.dest === candidate)) continue;
+
 						const resolved = path.join(output, candidate);
 
 						if (fs.existsSync(resolved)) {
