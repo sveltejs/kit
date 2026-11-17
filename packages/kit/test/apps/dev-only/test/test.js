@@ -242,3 +242,12 @@ test.describe('Remote functions', () => {
 		expect(await response.text()).toContain('remote_module_invalid_export');
 	});
 });
+
+test.describe('Vite DevTools', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('adds the in-page dock', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('devframes-dock-embedded')).toBeAttached();
+	});
+});
