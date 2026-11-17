@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.4
+
+### Patch Changes
+
+- fix: support all bundle strategies with Vercel Skew Protection ([#17731](https://github.com/sveltejs/kit/pull/17731))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.1
+
 ## 7.0.3
 
 ### Patch Changes
