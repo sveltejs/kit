@@ -7,6 +7,7 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
+	devtools: { apply: 'serve' },
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
 		// the reload confuses Playwright
