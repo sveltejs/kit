@@ -55,6 +55,7 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated This will be removed in the next major version
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
@@ -425,6 +426,7 @@ export interface Cookies {
 
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
+ * @deprecated This will be removed in the next major version
  */
 export interface Emulator {
 	/**

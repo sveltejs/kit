@@ -223,3 +223,9 @@ test.each([
 test('uses_unsupported_html_hook ignores plugins without transformIndexHtml', () => {
 	expect(uses_unsupported_html_hook({ name: 'app-plugin' })).toBe(false);
 });
+
+test('uses_unsupported_html_hook allows Vite DevTools when SvelteKit adds its dock', () => {
+	const plugin = { name: 'vite:devtools:injection', transformIndexHtml: () => undefined };
+	expect(uses_unsupported_html_hook(plugin, true)).toBe(false);
+	expect(uses_unsupported_html_hook(plugin, false)).toBe(true);
+});

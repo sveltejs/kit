@@ -7,9 +7,9 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	// kit reads these auth options even without @vitejs/devtools installed
 	devtools: {
-		enabled: false,
+		apply: 'serve',
+		// trusted by the devtools channel test
 		clientAuthTokens: ['devtools-e2e-token']
 	},
 	optimizeDeps: {
