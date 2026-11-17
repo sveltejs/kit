@@ -1,6 +1,15 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import process from 'node:process';
-import { assert, test, describe } from 'vitest';
-import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { afterEach, assert, beforeEach, test, describe } from 'vitest';
+import {
+	create_optional_peer_dependency_checker,
+	escape_src,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -222,4 +231,130 @@ describe('resolve_runtime with node detected', () => {
 			});
 		}
 	);
+});
+
+describe('optional peer dependency warnings', () => {
+	/** @type {string} */
+	let dir;
+	/** @type {string} */
+	let importer;
+	/** @type {ReturnType<typeof create_optional_peer_dependency_checker>} */
+	let check;
+
+	/** @param {string} file @param {string} content */
+	function write(file, content) {
+		fs.mkdirSync(path.dirname(file), { recursive: true });
+		fs.writeFileSync(file, content);
+	}
+
+	beforeEach(() => {
+		dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vercel-optional-peers-'));
+		importer = path.join(dir, 'node_modules/fixture/dist/index.mjs');
+		write(importer, '');
+		write(
+			path.join(dir, 'node_modules/fixture/package.json'),
+			JSON.stringify({
+				peerDependencies: { 'absent-optional-peer': '*', '@optional/peer': '*' },
+				peerDependenciesMeta: {
+					'absent-optional-peer': { optional: true },
+					'@optional/peer': { optional: true }
+				}
+			})
+		);
+		check = create_optional_peer_dependency_checker();
+	});
+
+	afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+	test('recognizes scoped and unscoped optional peers, including subpaths', () => {
+		for (const name of [
+			'absent-optional-peer',
+			'absent-optional-peer/render',
+			'@optional/peer',
+			'@optional/peer/render'
+		]) {
+			assert.equal(check(name, importer), true);
+		}
+	});
+
+	test('does not suppress relative, absolute, internal or unknown imports', () => {
+		for (const name of ['./absent-optional-peer', '../absent-optional-peer', '#optional']) {
+			assert.equal(check(name, importer), false);
+		}
+		assert.equal(check(path.join(dir, 'absent-optional-peer'), importer), false);
+		assert.equal(check('absent-optional-peer', '(unknown)'), false);
+		assert.equal(check('absent-optional-peer', path.join(dir, 'missing.mjs')), false);
+	});
+
+	test('requires peer membership and an explicitly boolean optional flag', () => {
+		write(
+			path.join(dir, 'node_modules/fixture/package.json'),
+			JSON.stringify({
+				peerDependencies: { required: '*', truthy: '*', missing: '*' },
+				peerDependenciesMeta: {
+					required: { optional: false },
+					truthy: { optional: 'true' },
+					undeclared: { optional: true }
+				},
+				optionalDependencies: { optional: '*' }
+			})
+		);
+		for (const name of ['required', 'truthy', 'missing', 'undeclared', 'optional']) {
+			assert.equal(check(name, importer), false);
+		}
+	});
+
+	test('uses only the nearest manifest', () => {
+		write(path.join(dir, 'node_modules/fixture/dist/package.json'), '{}');
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('does not search past invalid metadata', () => {
+		write(path.join(dir, 'node_modules/fixture/dist/package.json'), '{');
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('does not cross node_modules into another package', () => {
+		fs.rmSync(path.join(dir, 'node_modules/fixture/package.json'));
+		write(
+			path.join(dir, 'package.json'),
+			JSON.stringify({
+				peerDependencies: { 'absent-optional-peer': '*' },
+				peerDependenciesMeta: { 'absent-optional-peer': { optional: true } }
+			})
+		);
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('resolves symlinked importers to their own package metadata', () => {
+		const link = path.join(dir, 'linked.mjs');
+		fs.symlinkSync(importer, link);
+		write(path.join(dir, 'package.json'), '{}');
+		assert.equal(check('absent-optional-peer', link), true);
+	});
+
+	test('does not hide resolution failures for installed optional peers', () => {
+		write(path.join(dir, 'node_modules/@optional/peer/package.json'), '{}');
+		assert.equal(check('@optional/peer', importer), false);
+		assert.equal(check('@optional/peer/missing', importer), false);
+	});
+
+	test('does not hide resolution failures for broken linked optional peers', () => {
+		fs.symlinkSync(
+			path.join(dir, 'missing-workspace-peer'),
+			path.join(dir, 'node_modules/absent-optional-peer'),
+			'junction'
+		);
+		assert.equal(check('absent-optional-peer', importer), false);
+		assert.equal(check('absent-optional-peer/missing', importer), false);
+	});
+
+	test('does not share stale metadata between function bundles', () => {
+		assert.equal(check('absent-optional-peer', importer), true);
+		write(path.join(dir, 'node_modules/fixture/package.json'), '{}');
+		assert.equal(
+			create_optional_peer_dependency_checker()('absent-optional-peer', importer),
+			false
+		);
+	});
 });

@@ -4,7 +4,13 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	create_optional_peer_dependency_checker,
+	escape_src,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -547,6 +553,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 	/** @type {Map<string, string[]>} */
 	const resolution_failures = new Map();
+	const is_optional_peer_dependency = create_optional_peer_dependency_checker();
 
 	traced.warnings.forEach((error) => {
 		// pending https://github.com/vercel/nft/issues/284
@@ -560,6 +567,8 @@ async function create_function_bundle(builder, entry, dir, config) {
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
 			const [, module, importer] = match.exec(error.message) ?? [, error.message, '(unknown)'];
+
+			if (is_optional_peer_dependency(module, importer)) return;
 
 			if (!resolution_failures.has(importer)) {
 				resolution_failures.set(importer, []);
