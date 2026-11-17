@@ -1,0 +1,21 @@
+{
+	"name": "enhanced-fonts-basics",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/enhanced-fonts": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	},
+	"type": "module"
+}

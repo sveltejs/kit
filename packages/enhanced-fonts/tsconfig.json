@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"target": "es2022",
+		"module": "node16",
+		"moduleResolution": "node16",
+		"paths": {
+			"types": ["./types/index"],
+			"types/*": ["./types/*"]
+		},
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"types": ["node"]
+	},
+	"include": ["src/**/*.js", "src/**/*.d.ts", "types/**/*", "test/**/*.js", "eslint/**/*.js"],
+	"exclude": ["test/apps"]
+}

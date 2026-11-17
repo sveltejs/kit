@@ -1,0 +1,19 @@
+{
+	"name": "enhanced-fonts-unknown-font",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"build": "vite build",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/enhanced-fonts": "workspace:^",
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	},
+	"type": "module"
+}

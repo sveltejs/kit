@@ -31,6 +31,7 @@ packages:
   - packages/adapter-vercel/test/apps/*
   - packages/adapter-static/test/apps/*
   - packages/enhanced-img/test/apps/*
+  - packages/enhanced-fonts/test/apps/*
   - packages/kit/src/core/sync/write_types/test/*
   - packages/kit/test/apps/*
   - packages/kit/test/prerendering/*

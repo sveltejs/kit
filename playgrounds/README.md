@@ -1,4 +1,8 @@
-You may use these playgrounds to experiment with your changes to SvelteKit. Make sure you don't check in any changes to the files in `src` that aren't already gitignored. The easiest way to do this is to run the following from the root of the project:
+You may use these playgrounds to experiment with your changes to SvelteKit.
+
+`playgrounds/fonts` is a committed `@sveltejs/enhanced-fonts` demo (three-route preload matrix). Check those files in.
+
+For `playgrounds/basic`, make sure you don't check in any changes to the files in `src` that aren't already gitignored. The easiest way to do this is to run the following from the root of the project:
 
 ```bash
 git update-index --skip-worktree playgrounds/basic/src/routes/+layout.svelte

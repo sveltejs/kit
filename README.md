@@ -16,6 +16,7 @@ Web development, streamlined. Read the [documentation](https://svelte.dev/docs/k
 | [@sveltejs/adapter-static](packages/adapter-static)         | [Changelog](packages/adapter-static/CHANGELOG.md)     |
 | [@sveltejs/adapter-vercel](packages/adapter-vercel)         | [Changelog](packages/adapter-vercel/CHANGELOG.md)     |
 | [@sveltejs/enhanced-img](packages/enhanced-img)             | [Changelog](packages/enhanced-img/CHANGELOG.md)       |
+| [@sveltejs/enhanced-fonts](packages/enhanced-fonts)         | [Changelog](packages/enhanced-fonts/CHANGELOG.md)     |
 | [@sveltejs/package](packages/package)                       | [Changelog](packages/package/CHANGELOG.md)            |
 
 [Additional adapters](https://sveltesociety.dev/packages?category=sveltekit-adapters) are maintained by the community.

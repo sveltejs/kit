@@ -1,0 +1,27 @@
+{
+	"name": "playground-fonts",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsgo --incremental",
+		"format": "oxfmt --write .",
+		"lint": "oxfmt --check ."
+	},
+	"devDependencies": {
+		"@fontsource/libre-barcode-128-text": "catalog:",
+		"@sveltejs/adapter-node": "workspace:*",
+		"@sveltejs/adapter-static": "workspace:*",
+		"@sveltejs/enhanced-fonts": "workspace:*",
+		"@sveltejs/kit": "workspace:*",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"@typescript/native": "catalog:",
+		"svelte": "catalog:",
+		"svelte-check": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}
