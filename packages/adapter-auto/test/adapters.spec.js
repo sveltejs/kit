@@ -5,12 +5,11 @@ import { assert, test } from 'vitest';
 import { adapters } from '../adapters.js';
 
 test('adapter versions are up to date', async () => {
-	// check if we have a major release planned ...
+	// check if we have a major release planned
 	const { releases } = await getReleasePlan(fileURLToPath(new URL('../../../', import.meta.url)));
 	const planned_versions = new Map(releases.map((release) => [release.name, release.newVersion]));
 
 	for (const adapter of adapters) {
-		// otherwise, check the package.json
 		const dir = adapter.module.replace('@sveltejs/', '');
 		const package_json = new URL(`../../${dir}/package.json`, import.meta.url);
 		if (!existsSync(package_json)) {
