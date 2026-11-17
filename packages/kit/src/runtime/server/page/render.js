@@ -35,7 +35,7 @@ import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
 
 const vite_devtools_loader =
-	"const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; document.body.appendChild(s);";
+	"{ const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; s.nonce = document.currentScript.nonce; document.body.appendChild(s); }";
 
 // TODO rename this function/module
 
@@ -562,7 +562,7 @@ export async function render_response({
 	if (DEV && manifest.vite_devtools) {
 		// inline so the csp can allow it
 		await csp.add_script(vite_devtools_loader);
-		body += `\n\t\t\t<script type="module"${
+		body += `\n\t\t\t<script${
 			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
 		}>${vite_devtools_loader}</script>`;
 	}
