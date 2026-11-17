@@ -1,5 +1,11 @@
 # @sveltejs/kit
 
+## 3.3.0
+
+### Minor Changes
+
+- feat: support the Vite DevTools dock in dev ([#17787](https://github.com/sveltejs/kit/pull/17787))
+
 ## 3.2.1
 
 ### Patch Changes
