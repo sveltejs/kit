@@ -1,5 +1,13 @@
 # @sveltejs/adapter-node
 
+## 6.0.4
+
+### Patch Changes
+
+- fix: replace the port in the forwarded host with `PORT_HEADER` instead of appending a second one ([#17779](https://github.com/sveltejs/kit/pull/17779))
+- Updated dependencies:
+  - @sveltejs/kit@3.3.0
+
 ## 6.0.3
 
 ### Patch Changes
