@@ -28,6 +28,10 @@ test.describe('Endpoints', () => {
 			[
 				'proxied',
 				`${baseURL}/prerendering/prerendered-endpoint/proxy?api-with-param-option=prerendered`
+			],
+			[
+				'proxied with a percent sign',
+				`${baseURL}/prerendering/prerendered-endpoint/proxy?api-with-param-option=percent`
 			]
 		]) {
 			await test.step(description, async () => {

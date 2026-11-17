@@ -8,3 +8,4 @@
 
 <a href="/encoding/dynamic path with spaces">dynamic path with spaces</a>
 <a href="/encoding/dynamic%20path%20with%20encoded%20spaces">dynamic path with encoded spaces</a>
+<a href="/encoding/100%25">path with a percent sign</a>

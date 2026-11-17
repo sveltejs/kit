@@ -500,11 +500,19 @@ async function generate_edge_function(builder, tmp, fn, reroute_id) {
 	builder.generateServerInstance(`${tmp}/server-${fn.name}.js`, { routes: fn.routes });
 
 	const entry = `${tmp}/entry-${fn.name}.js`;
+	// Netlify matches `excludedPath` against the decoded pathname, so it can't exclude
+	// a prerendered path with an encoded reserved character such as `%2F`.
+	// The function hands those requests back to Netlify itself
+	const prerendered = builder.prerendered.paths
+		.filter((path) => /%(23|24|26|2B|2C|2F|3A|3B|3D|3F|40)/i.test(path))
+		.map((path) => path.replace(/(.)\/$/, '$1'));
+
 	const code = generate_edge_function_module(
 		fn.type,
 		'./edge.js',
 		`./server-${fn.name}.js`,
-		reroute_id
+		reroute_id,
+		prerendered
 	);
 	const config = create_function_config('edge', fn);
 	writeFileSync(entry, `${code}\n${config}`);
@@ -542,17 +550,24 @@ async function generate_edge_function(builder, tmp, fn, reroute_id) {
  * @param {string} init
  * @param {string} server
  * @param {string | undefined} reroute_id
+ * @param {string[]} prerendered paths the function passes on to Netlify
  * @returns {string}
  */
-function generate_edge_function_module(type, init, server, reroute_id) {
-	if (type === 'singular') {
-		return generate_function_module(type, init, server);
-	}
-
+function generate_edge_function_module(type, init, server, reroute_id, prerendered) {
 	const runtime_imports = [
 		`import { init } from '${init}';`,
 		`import { server } from '${server}';`
 	].join('\n');
+	const respond = `init(server, ${JSON.stringify(prerendered)})`;
+
+	if (type === 'singular') {
+		return `\
+${runtime_imports}
+
+export default ${respond};
+`;
+	}
+
 	const reroute_parameter = `__sveltekit_original_pathname_${reroute_id}`;
 
 	if (type === 'catch-all') {
@@ -560,7 +575,7 @@ function generate_edge_function_module(type, init, server, reroute_id) {
 import { applyReroute } from '@sveltejs/kit/adapter';
 ${runtime_imports}
 
-const respond = init(server);
+const respond = ${respond};
 
 export default async (request, context) => {
 	const response = await respond(request, context);
@@ -579,7 +594,7 @@ export default async (request, context) => {
 	return `\
 ${runtime_imports}
 
-const respond = init(server);
+const respond = ${respond};
 
 export default async (request, context) => {
 	const url = new URL(request.url);

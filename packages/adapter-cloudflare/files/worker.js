@@ -42,7 +42,13 @@ export default {
 		await initialized;
 
 		let { pathname, search } = new URL(req.url);
+
+		// prerendered paths are recorded the way kit's router decodes a pathname,
+		// which leaves `%25` and reserved characters such as `%2F` encoded
+		let prerendered_pathname = pathname;
+
 		try {
+			prerendered_pathname = pathname.split('%25').map(decodeURI).join('%25');
 			pathname = decodeURIComponent(pathname);
 		} catch {
 			// ignore invalid URI
@@ -57,15 +63,30 @@ export default {
 			is_static_asset = assets.has(filename) || assets.has(filename + '/index.html');
 		}
 
-		let location = pathname.at(-1) === '/' ? stripped_pathname : pathname + '/';
+		let location =
+			prerendered_pathname.at(-1) === '/'
+				? prerendered_pathname.slice(0, -1)
+				: prerendered_pathname + '/';
+
+		const is_prerendered = !is_static_asset && prerendered.has(prerendered_pathname);
 
 		if (
 			is_static_asset ||
-			prerendered.has(pathname) ||
+			is_prerendered ||
 			pathname === version_file ||
 			pathname.startsWith(immutable)
 		) {
-			let res = await env.ASSETS_BINDING.fetch(req);
+			let asset_request = req;
+
+			if (is_prerendered) {
+				// a prerendered file is named by its fully decoded path, so a path such as
+				// `/a%2Fb` is stored as `a%2Fb.html`, which the asset server serves at `/a%252Fb`
+				const url = new URL(req.url);
+				url.pathname = encodeURI(decodeURI(prerendered_pathname));
+				asset_request = new Request(url, req);
+			}
+
+			let res = await env.ASSETS_BINDING.fetch(asset_request);
 			// `_headers` applies cache regardless of status, so we need to ensure an
 			// error response does not get cached
 			if (res.status >= 400) {

@@ -32,3 +32,18 @@ test('prerendering throws', async ({ request }) => {
 	const res = await request.get('/prerender');
 	expect(await res.text()).toContain('Cannot access cloudflare:workers in a prerenderable route');
 });
+
+test('serves prerendered paths with percent signs and encoded reserved characters', async ({
+	request
+}) => {
+	test.skip(!!process.env.DEV);
+
+	for (const [path, body] of [
+		['/prerendered-%25.txt', 'percent'],
+		['/prerendered-reserved/a%2Fb.txt', 'a/b']
+	]) {
+		const response = await request.get(path);
+		expect(response.status(), path).toBe(200);
+		expect(await response.text(), path).toBe(body);
+	}
+});

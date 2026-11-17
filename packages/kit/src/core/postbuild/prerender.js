@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
-import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
+import { decode_pathname, decode_uri, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { write } from '../sync/utils.js';
@@ -587,7 +587,7 @@ async function prerender({
 							location: resolved
 						});
 
-						prerendered.paths.push(decoded);
+						prerendered.paths.push(decode_pathname(encoded));
 					}
 				}
 			} else {
@@ -624,7 +624,7 @@ async function prerender({
 				});
 			}
 
-			prerendered.paths.push(decoded);
+			prerendered.paths.push(decode_pathname(encoded));
 		} else if (response_type !== OK) {
 			handle_http_error({
 				status: response.status,

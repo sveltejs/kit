@@ -8,6 +8,9 @@ export function entries() {
 	return [
 		{
 			option: 'prerendered'
+		},
+		{
+			option: '100%'
 		}
 	];
 }

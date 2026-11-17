@@ -218,8 +218,11 @@ function measure_files(root, files, compressed) {
  * @returns {AssetTable}
  */
 function create_asset_table(base, measured) {
+	// the server leaves `%25` encoded when it decodes a request's pathname, so a
+	// literal `%` in a filename has to be spelled `%25` in its key to be found
 	const entries = measured.map(
-		(entry) => /** @type {[string, AssetEntry]} */ ([`${base}/${entry.file}`, entry])
+		(entry) =>
+			/** @type {[string, AssetEntry]} */ ([`${base}/${entry.file.replaceAll('%', '%25')}`, entry])
 	);
 
 	entries.sort(([a], [b]) => (a < b ? -1 : 1));
@@ -271,8 +274,8 @@ function create_prerendered_table(base, measured, paths) {
 	const entries = [];
 
 	for (const path of paths) {
-		// invert `output_filename` in kit's prerenderer
-		const file = path.slice(base.length + 1) || 'index.html';
+		// kit names a prerendered file by its fully decoded path
+		const file = decodeURI(path.slice(base.length + 1)) || 'index.html';
 		const entry =
 			by_file.get(file) ?? by_file.get(file + (file.endsWith('/') ? 'index.html' : '.html'));
 		if (entry) entries.push([path, entry]);
