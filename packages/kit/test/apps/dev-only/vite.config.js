@@ -12,7 +12,24 @@ const config = {
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [sveltekit({ experimental: { remoteFunctions: true } })],
+	plugins: [
+		sveltekit({
+			adapter: {
+				name: 'test-adapter',
+				adapt: () => {},
+				dev: {
+					respond: (request, { resolve }) => {
+						if (new URL(request.url).pathname === '/adapter-respond') {
+							return Promise.resolve(new Response('rendered by the adapter'));
+						}
+
+						return resolve(request);
+					}
+				}
+			},
+			experimental: { remoteFunctions: true }
+		})
+	],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]

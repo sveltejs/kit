@@ -372,32 +372,20 @@ export async function dev(
 					svelte_config.moduleExtensions
 				);
 
-				if (resolved_instrumentation) {
-					if (svelte_config.adapter && !svelte_config.adapter.supports?.instrumentation?.()) {
-						e.adapter_instrumentation_unsupported({
-							file: resolved_instrumentation,
-							adapter: svelte_config.adapter.name
-						});
-					}
-
-					const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
-					set_env(env);
-					await runner.import(resolved_instrumentation);
+				if (
+					resolved_instrumentation &&
+					svelte_config.adapter &&
+					!svelte_config.adapter.supports?.instrumentation?.()
+				) {
+					e.adapter_instrumentation_unsupported({
+						file: resolved_instrumentation,
+						adapter: svelte_config.adapter.name
+					});
 				}
 
 				const { configure, format_response } = /** @type {ServerModule} */ (
 					await runner.import(`${get_runtime_base(root)}/server/index.js`)
 				);
-
-				const { init, respond } = await configure({
-					manifest,
-					env,
-					read: (file) => createReadableStream(from_fs(file)),
-					assets,
-					fix_stack_trace
-				});
-
-				await init();
 
 				const request = (svelte_config.adapter?.vite?.getRequest ?? getRequest)({
 					base,
@@ -427,26 +415,56 @@ export async function dev(
 					return;
 				}
 
-				const rendered = await respond(request, {
-					getClientAddress: () => {
-						const { remoteAddress } = req.socket;
-						if (remoteAddress) return remoteAddress;
-						throw new Error('Could not determine clientAddress');
-					},
-					read: (file) => {
-						if (file in manifest.server_assets) {
-							return fs.readFileSync(from_fs(file));
-						}
+				const getClientAddress = () => {
+					const { remoteAddress } = req.socket;
+					if (remoteAddress) return remoteAddress;
+					throw new Error('Could not determine clientAddress');
+				};
 
-						return fs.readFileSync(path.join(svelte_config.files.assets, file));
-					},
-					before_handle: async (event, config, prerender, handle) => {
-						// we need to use .run because .enterWith() is not supported in Cloudflare Workers
-						// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
-						return await async_local_storage.run({ event, config, prerender }, handle);
-					},
-					emulator
-				});
+				const adapter_respond = svelte_config.adapter?.dev?.respond;
+
+				/**
+				 * renders the request in this process
+				 * @param {Request} request
+				 */
+				const resolve = async (request) => {
+					if (resolved_instrumentation) {
+						const { set_env } = await runner.import('<sveltekit:generated>/env/config.js');
+						set_env(env);
+						await runner.import(resolved_instrumentation);
+					}
+
+					const { init, respond } = await configure({
+						manifest,
+						env,
+						read: (file) => createReadableStream(from_fs(file)),
+						assets,
+						fix_stack_trace
+					});
+
+					await init();
+
+					return respond(request, {
+						getClientAddress,
+						read: (file) => {
+							if (file in manifest.server_assets) {
+								return fs.readFileSync(from_fs(file));
+							}
+
+							return fs.readFileSync(path.join(svelte_config.files.assets, file));
+						},
+						before_handle: async (event, config, prerender, handle) => {
+							// we need to use .run because .enterWith() is not supported in Cloudflare Workers
+							// see https://blog.cloudflare.com/workers-node-js-asynclocalstorage/
+							return await async_local_storage.run({ event, config, prerender }, handle);
+						},
+						emulator
+					});
+				};
+
+				const rendered = adapter_respond
+					? await adapter_respond(request, { getClientAddress, resolve })
+					: await resolve(request);
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
