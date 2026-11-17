@@ -43,7 +43,6 @@ export const adapters = [
 		name: 'Render',
 		test: () => !!process.env.RENDER,
 		module: '@sveltejs/adapter-node',
-		// TODO replace with a stable version
-		version: 'next'
+		version: '6'
 	}
 ];
