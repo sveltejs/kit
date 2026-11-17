@@ -114,3 +114,13 @@ test('reads auth options from the resolved vite devtools config, then the user c
 		client_auth_tokens: ['a']
 	});
 });
+
+test('stores only token hashes', () => {
+	const { connect, code, auth } = setup();
+	const client = connect();
+	client.send('sveltekit:devtools:request-code');
+	client.send('sveltekit:devtools:exchange', { code: code() });
+	const token = client.received.at(-1)?.[1].token;
+
+	expect(fs.readFileSync(auth.storage_file, 'utf-8')).not.toContain(token);
+});

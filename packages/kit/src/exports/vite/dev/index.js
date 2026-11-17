@@ -1,6 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { ViteDevServer } from 'vite' */
 /** @import { ManifestData, PrerenderOption, RemoteChunk, ServerModule, ValidatedConfig, SSRManifest } from 'types' */
+import os from 'node:os';
 import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -90,7 +91,8 @@ export async function dev(
 	// the runnable ssr environment shares this process, so a global reaches the runtime
 	globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = create_devtools_channel(hot, {
 		...get_devtools_auth_config(vite_dev_server.config.devtools, user_devtools_config),
-		storage_file: path.resolve(root, svelte_config.outDir, 'devtools-auth.json'),
+		// outside the project like vite devtools, since the dev server serves files under the root
+		storage_file: path.join(os.homedir(), '.svelte-kit', 'devtools-auth.json'),
 		get_urls: () => {
 			const urls = vite_dev_server.resolvedUrls;
 			return urls ? [...urls.local, ...urls.network] : [];

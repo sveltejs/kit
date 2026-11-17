@@ -2,7 +2,7 @@
 /** @import { DevtoolsChannel } from 'types' */
 import fs from 'node:fs';
 import path from 'node:path';
-import { randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
+import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import { formatWithOptions, styleText } from 'node:util';
 
 const CODE_LENGTH = 6;
@@ -52,7 +52,6 @@ export function create_devtools_channel(hot, auth) {
 	const clients = new Set();
 
 	const static_tokens = new Set(auth.client_auth_tokens);
-	const issued_tokens = read_tokens(auth.storage_file);
 
 	let code = '';
 	let code_expires_at = 0;
@@ -73,7 +72,9 @@ export function create_devtools_channel(hot, auth) {
 	/** @param {unknown} token */
 	function is_trusted(token) {
 		if (!auth.client_auth) return true;
-		return typeof token === 'string' && (static_tokens.has(token) || issued_tokens.has(token));
+		if (typeof token !== 'string') return false;
+		// read on each check, since other dev servers share the file
+		return static_tokens.has(token) || read_hashes(auth.storage_file).has(hash(token));
 	}
 
 	/**
@@ -124,8 +125,7 @@ export function create_devtools_channel(hot, auth) {
 		}
 
 		const token = randomBytes(32).toString('base64url');
-		issued_tokens.add(token);
-		write_tokens(auth.storage_file, issued_tokens);
+		add_hash(auth.storage_file, hash(token));
 		rotate_code();
 
 		subscribe(client, token);
@@ -164,14 +164,20 @@ function safe_equal(a, b) {
 	return x.length === y.length && timingSafeEqual(x, y);
 }
 
+/** @param {string} token */
+function hash(token) {
+	return createHash('sha256').update(token).digest('base64url');
+}
+
 /**
+ * only hashes are stored, so a leaked file cannot be replayed
  * @param {string} file
  * @returns {Set<string>}
  */
-function read_tokens(file) {
+function read_hashes(file) {
 	try {
-		const tokens = JSON.parse(fs.readFileSync(file, 'utf-8')).tokens;
-		return new Set(Array.isArray(tokens) ? tokens : []);
+		const hashes = JSON.parse(fs.readFileSync(file, 'utf-8')).token_hashes;
+		return new Set(Array.isArray(hashes) ? hashes : []);
 	} catch {
 		return new Set();
 	}
@@ -179,9 +185,10 @@ function read_tokens(file) {
 
 /**
  * @param {string} file
- * @param {Set<string>} tokens
+ * @param {string} token_hash
  */
-function write_tokens(file, tokens) {
-	fs.mkdirSync(path.dirname(file), { recursive: true });
-	fs.writeFileSync(file, JSON.stringify({ tokens: [...tokens] }), { mode: 0o600 });
+function add_hash(file, token_hash) {
+	const hashes = read_hashes(file).add(token_hash);
+	fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+	fs.writeFileSync(file, JSON.stringify({ token_hashes: [...hashes] }), { mode: 0o600 });
 }
