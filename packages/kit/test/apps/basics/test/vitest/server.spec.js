@@ -1041,10 +1041,10 @@ describe('web workers', () => {
 describe('tracing', () => {
 	/**
 	 * @param {import('../../../../types.js').SpanTree} span
-	 * @param {string} [name]
+	 * @param {string} name
 	 * @returns {import('../../../../types.js').SpanTree | null}
 	 */
-	function find_span(span, name = 'sveltekit.resolve') {
+	function find_span(span, name) {
 		if (span.name === name) {
 			return span;
 		}
@@ -1090,7 +1090,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1180,7 +1180,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1253,7 +1253,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the redirect resolve.root span
-		const redirect_resolve_root_span = find_span(redirect_trace);
+		const redirect_resolve_root_span = find_span(redirect_trace, 'sveltekit.resolve');
 		expect(redirect_resolve_root_span).not.toBeNull();
 		expect(redirect_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1309,7 +1309,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the destination resolve.root span
-		const destination_resolve_root_span = find_span(destination_trace);
+		const destination_resolve_root_span = find_span(destination_trace, 'sveltekit.resolve');
 		expect(destination_resolve_root_span).not.toBeNull();
 		expect(destination_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1399,7 +1399,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1463,7 +1463,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1498,7 +1498,7 @@ describe('tracing', () => {
 		expect(response.status).toBe(200);
 
 		const traces = read_traces(test_id);
-		const resolve_root_span = find_span(traces[0]);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span?.children).toEqual([
 			expect.objectContaining({
@@ -1519,7 +1519,7 @@ describe('tracing', () => {
 		expect(response.status).toBe(500);
 
 		const traces = read_traces(test_id);
-		const resolve_root_span = find_span(traces[0]);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span?.children).toEqual([
 			expect.objectContaining({
