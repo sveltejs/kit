@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 3.3.1
+
+### Patch Changes
+
+- fix: read environment variables for route analysis and prerendering after all adapter Vite `config` hooks have run ([#17559](https://github.com/sveltejs/kit/pull/17559))
+
+- fix: respect a user-set `build.cssMinify` ([#17797](https://github.com/sveltejs/kit/pull/17797))
+
+- fix: don't serialize the results of remote functions awaited in server `load` functions into the page ([#17759](https://github.com/sveltejs/kit/pull/17759))
+
 ## 3.3.0
 
 ### Minor Changes
