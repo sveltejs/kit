@@ -737,7 +737,7 @@ export function form(id) {
 							return;
 						}
 
-						array = /** @type {InternalRemoteFormIssue[]} */ (result._);
+						array = /** @type {InternalRemoteFormIssue[]} */ (result._ ?? []);
 					}
 
 					if (!all && !submitted) {
