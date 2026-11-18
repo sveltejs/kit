@@ -394,6 +394,39 @@ export function plugin_compile(
 			return environment.name !== 'serviceWorker';
 		},
 
+		outputOptions: {
+			order: 'post',
+			handler(options) {
+				if (this.environment.name !== 'client' || kit.output.bundleStrategy !== 'split') return;
+
+				const code_splitting =
+					typeof options.codeSplitting === 'object' ? options.codeSplitting : {};
+				const groups = code_splitting.groups ?? [];
+
+				options.codeSplitting = {
+					...code_splitting,
+					groups: [
+						{
+							// Isolate start's static dependencies (including Vite's preload helper)
+							// so recursive groups cannot evaluate payload consumers before init().
+							name: 'sveltekit-bootstrap',
+							test: (id) =>
+								id === `${runtime_directory}/client/payload.js` ||
+								id === '\0vite/preload-helper.js',
+							priority: Math.max(0, ...groups.map((group) => group.priority ?? 0)),
+							minSize: 0,
+							minShareCount: 1,
+							minModuleSize: 0,
+							maxModuleSize: Infinity,
+							maxSize: Infinity,
+							includeDependenciesRecursively: true
+						},
+						...groups
+					]
+				};
+			}
+		},
+
 		renderChunk: {
 			// composable filters are not accepted type-wise but still work during build
 			// see https://github.com/vitejs/rolldown-vite/issues/605
