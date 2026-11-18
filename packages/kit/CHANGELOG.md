@@ -1,5 +1,25 @@
 # @sveltejs/kit
 
+## 3.4.0
+
+### Minor Changes
+
+- feat: allow adapters to disable SvelteKit's Node preview server with `vite.customPreview: true` when providing their own preview implementation ([#17750](https://github.com/sveltejs/kit/pull/17750))
+
+- feat: add `sveltekit.remote.call.file` attribute to remote function tracing spans ([#17760](https://github.com/sveltejs/kit/pull/17760))
+
+### Patch Changes
+
+- fix: strip trailing route groups when resolving routes with search parameters or fragments ([#17808](https://github.com/sveltejs/kit/pull/17808))
+
+- fix: correctly display non-ASCII characters for plain text error messages during development ([#17468](https://github.com/sveltejs/kit/pull/17468))
+
+- fix: explain missing TypeScript compiler API instead of crashing with TypeScript 7 ([#17539](https://github.com/sveltejs/kit/pull/17539))
+
+- fix: reject remote function requests that use the wrong HTTP method ([#17740](https://github.com/sveltejs/kit/pull/17740))
+
+- fix: respect `NO_COLOR` and explicit `FORCE_COLOR` settings in forked build processes ([#17618](https://github.com/sveltejs/kit/pull/17618))
+
 ## 3.3.1
 
 ### Patch Changes

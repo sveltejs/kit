@@ -1,5 +1,14 @@
 # @sveltejs/adapter-node
 
+## 6.0.5
+
+### Patch Changes
+
+- chore: build on `@sveltejs/adapter-server` ([#17308](https://github.com/sveltejs/kit/pull/17308))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.1.0
+  - @sveltejs/kit@3.4.0
+
 ## 6.0.4
 
 ### Patch Changes
