@@ -21,6 +21,7 @@ export class QueryProxy {
 	#key;
 	#payload;
 	#fn;
+	#referenced = false;
 
 	/**
 	 * @param {string} id
@@ -33,21 +34,29 @@ export class QueryProxy {
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;
+	}
 
+	#ensure_entry() {
+		const fn = this.#fn;
 		const key = this.#key;
 		const payload = this.#payload;
-		const entry = cache.ensure_entry(
+
+		return cache.ensure_entry(
 			this.#id,
-			this.#payload,
+			payload,
 			// IMPORTANT: This cannot close over `this` or it becomes impossible to
 			// garbage collect the QueryProxy and thus impossible to evict cache entries.
 			() => new Query(key, () => fn(payload))
 		);
-
-		cache.ref(this, entry, this.#id, this.#payload);
 	}
 
 	#get_cached_query() {
+		if (!this.#referenced) {
+			// an unused proxy must not hold the entry or eviction waits on garbage collection
+			cache.ref(this, this.#ensure_entry(), this.#id, this.#payload);
+			this.#referenced = true;
+		}
+
 		const cached = query_map.get(this.#id)?.get(this.#payload);
 
 		if (!cached) {
@@ -88,18 +97,9 @@ export class QueryProxy {
 
 	/** @type {Query<T>['withOverride']} */
 	withOverride(fn) {
-		const fn_ref = this.#fn;
-		const key_ref = this.#key;
-		const payload_ref = this.#payload;
 		// The override increments `proxy_count` to keep the cache entry alive until the
 		// release function is called.
-		const entry = cache.ensure_entry(
-			this.#id,
-			this.#payload,
-			// IMPORTANT: This cannot close over `this` or it becomes impossible to
-			// garbage collect the QueryProxy and thus impossible to evict cache entries.
-			() => new Query(key_ref, () => fn_ref(payload_ref))
-		);
+		const entry = this.#ensure_entry();
 
 		const deref = cache.manual_ref(entry, this.#id, this.#payload);
 
@@ -119,15 +119,15 @@ export class QueryProxy {
 
 	/** @type {Query<T>['then']} */
 	get then() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return pin_while_resolving(query_map, cache, this.#id, this.#payload, cached.then.bind(cached));
 	}
 
 	/** @type {Query<T>['catch']} */
 	get catch() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return pin_while_resolving(
 			query_map,
 			cache,
@@ -139,8 +139,8 @@ export class QueryProxy {
 
 	/** @type {Query<T>['finally']} */
 	get finally() {
-		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		const cached = this.#get_cached_query();
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return pin_while_resolving(
 			query_map,
 			cache,

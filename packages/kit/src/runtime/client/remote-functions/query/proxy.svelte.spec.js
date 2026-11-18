@@ -48,9 +48,13 @@ describe('QueryProxy', () => {
 		query_map.clear();
 	});
 
-	test('constructing a proxy populates the cache', () => {
+	test('a proxy populates the cache once it is used', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', undefined, fn);
+		const proxy = new QueryProxy('q', undefined, fn);
+
+		expect(query_map.has('q')).toBe(false);
+
+		void proxy.current;
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries).toBeDefined();
@@ -62,8 +66,8 @@ describe('QueryProxy', () => {
 
 	test('two proxies for the same (id, arg) share a single cache entry', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', { x: 1 }, fn);
-		new QueryProxy('q', { x: 1 }, fn);
+		void new QueryProxy('q', { x: 1 }, fn).current;
+		void new QueryProxy('q', { x: 1 }, fn).current;
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries.size).toBe(1);
@@ -74,8 +78,8 @@ describe('QueryProxy', () => {
 
 	test('proxies for different args produce different cache entries', () => {
 		const fn = () => Promise.resolve('value');
-		new QueryProxy('q', { x: 1 }, fn);
-		new QueryProxy('q', { x: 2 }, fn);
+		void new QueryProxy('q', { x: 1 }, fn).current;
+		void new QueryProxy('q', { x: 2 }, fn).current;
 
 		expect(query_map.get('q')?.size).toBe(2);
 	});
@@ -86,7 +90,7 @@ describe('QueryProxy', () => {
 		// Construct the proxy in a nested scope so V8's debug scope tracking can't
 		// keep it alive in the surrounding closure.
 		(() => {
-			new QueryProxy('q', { name: 'echo' }, fn);
+			void new QueryProxy('q', { name: 'echo' }, fn).current;
 		})();
 
 		expect(query_map.get('q')?.size).toBe(1);
@@ -110,6 +114,7 @@ describe('QueryProxy', () => {
 		(() => {
 			const proxy = new QueryProxy('q', 'arg', fn);
 			proxy_ref = new WeakRef(proxy);
+			void proxy.current;
 			const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 			const [entry] = /** @type {Iterable<any>} */ (entries.values());
 			query = entry.resource;
@@ -135,10 +140,14 @@ describe('QueryProxy', () => {
 		let second_ref;
 
 		(() => {
-			first_ref = new WeakRef(new QueryProxy('q', 'arg', fn));
+			const proxy = new QueryProxy('q', 'arg', fn);
+			void proxy.current;
+			first_ref = new WeakRef(proxy);
 		})();
 		(() => {
-			second_ref = new WeakRef(new QueryProxy('q', 'arg', fn));
+			const proxy = new QueryProxy('q', 'arg', fn);
+			void proxy.current;
+			second_ref = new WeakRef(proxy);
 		})();
 
 		await wait_for(() => first_ref.deref() === undefined && second_ref.deref() === undefined);
@@ -170,8 +179,7 @@ describe('QueryProxy', () => {
 		expect(query_map.has('q')).toBe(true);
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		const [entry] = /** @type {Iterable<any>} */ (entries.values());
-		// proxy_count: 1 from withOverride's manual_ref; the constructor's `ref` was
-		// dropped when the proxy was GC'd.
+		// the only ref is the withOverride manual_ref
 		expect(entry.proxy_count).toBe(1);
 
 		release?.();
