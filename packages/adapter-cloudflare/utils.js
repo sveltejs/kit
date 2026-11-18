@@ -3,7 +3,7 @@ import process from 'node:process';
 import { unstable_getVarsForDev } from 'wrangler';
 
 /**
- * @param {import('wrangler').Unstable_Config} wrangler_config
+ * @param {WorkerConfig} wrangler_config
  */
 export function validate_worker_settings(wrangler_config) {
 	if (process.env.CF_PAGES) {
@@ -19,35 +19,64 @@ export function validate_worker_settings(wrangler_config) {
 			`Cloudflare Pages is no longer supported. Remove \`pages_build_output_dir\` from ${config_path} and configure Cloudflare Workers instead. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Cloudflare-Pages`
 		);
 	}
+}
 
-	// we don't support workers sites
-	if (wrangler_config.site) {
+/**
+ * Checks if we need an explicit `nodejs_alt` flag.
+ * `nodejs_compat` already provides `node:async_hooks` and is enabled by its flag
+ * or by a compatibility date from 2026-08-04 onwards
+ * https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+ * @param {string | undefined} compatibility_date
+ * @param {string[]} compatibility_flags
+ * @returns {boolean}
+ */
+export function needs_nodejs_als(compatibility_date, compatibility_flags) {
+	const flags = new Set(compatibility_flags);
+	if (flags.has('nodejs_als') || flags.has('nodejs_compat')) return false;
+
+	return flags.has('no_nodejs_compat') || !compatibility_date || compatibility_date < '2026-08-04';
+}
+
+/**
+ * @param {WorkerConfig} wrangler_config
+ * @param {boolean} worker whether a Worker should be deployed
+ * @returns {NonNullable<WorkerConfig['assets']>['not_found_handling']}
+ */
+export function resolve_not_found_handling(wrangler_config, worker) {
+	const configured = wrangler_config.assets?.not_found_handling;
+	if (configured || worker) {
+		return configured;
+	}
+
+	// if the user isn't deploying a worker, default to serving a fallback page
+	return '404-page';
+}
+
+/**
+ * @param {string | undefined} main
+ * @param {string | undefined} config_path
+ * @param {boolean} worker whether a Worker should be deployed
+ */
+export function validate_main(main, config_path, worker) {
+	if (!main) return;
+
+	const file = config_path || 'your wrangler.jsonc file';
+
+	if (!worker) {
 		throw new Error(
-			`You must remove all \`site\` keys in ${config_path}. Consult https://svelte.dev/docs/kit/adapter-cloudflare#Migrating-from-Workers-Sites`
+			`Remove \`main\` from ${file} or set the adapter's \`worker\` option to \`true\`. No Worker is deployed when \`worker\` is \`false\``
 		);
 	}
 
-	// we need the `assets.directory` key so that the static assets are deployed
-	if ((wrangler_config.main || wrangler_config.assets) && !wrangler_config.assets?.directory) {
+	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
 		throw new Error(
-			`You must specify the \`assets.directory\` key in ${config_path}. Consult https://developers.cloudflare.com/workers/static-assets/binding/#directory`
+			`Remove \`main\` from ${file}. The adapter now sets the Worker entry automatically, so your configuration no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
 		);
 	}
 
-	// we need the `assets.binding` key so that the Worker can access the static assets
-	if (wrangler_config.main && !wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`assets.binding\` key in ${config_path} before deploying your Worker. Consult https://developers.cloudflare.com/workers/static-assets/binding/#binding`
-		);
-	}
-
-	// the user might have forgot the `main` key or should remove the `assets.binding`
-	// key to deploy static assets without a Worker
-	if (!wrangler_config.main && wrangler_config.assets?.binding) {
-		throw new Error(
-			`You must specify the \`main\` key in ${config_path} if you want to deploy a Worker alongside your static assets. Otherwise, remove the \`assets.binding\` key if you only want to deploy static assets.`
-		);
-	}
+	console.warn(
+		`Ignoring \`main\` in ${file}. The adapter sets the Worker entry automatically. Remove \`main\` to silence this warning`
+	);
 }
 
 /**

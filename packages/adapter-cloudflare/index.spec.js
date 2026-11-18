@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
 import { getPlatformProxy } from 'wrangler';
@@ -15,8 +18,21 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
+function get_plugins() {
+	const vite = /** @type {(ctx: unknown) => { plugins: import('vite').Plugin[] }} */ (
+		adapter().vite
+	);
+	const files = {
+		src: 'src',
+		routes: 'src/routes',
+		params: 'src/params',
+		hooks: { server: 'src/hooks.server', universal: 'src/hooks' }
+	};
+	return vite({ config: { files } }).plugins;
+}
+
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const plugins = get_plugins();
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -49,7 +65,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const plugins = get_plugins();
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -141,4 +157,33 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+	fs.writeFileSync(
+		path.join(root, 'wrangler.jsonc'),
+		JSON.stringify({ name: 'app', compatibility_date: '2025-01-01', env: { staging: {} } })
+	);
+	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
+
+	try {
+		const plugins = get_plugins();
+		const server = await createServer({
+			root,
+			mode: 'staging',
+			configFile: false,
+			logLevel: 'silent',
+			plugins,
+			server: { middlewareMode: true }
+		});
+
+		expect(getPlatformProxy).toHaveBeenCalledWith(
+			expect.objectContaining({ environment: 'staging' })
+		);
+
+		await server.close();
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
 });

@@ -386,8 +386,32 @@ importers:
         specifier: 'catalog:'
         version: 5.0.1(@opentelemetry/api@1.10.0)(@types/node@22.20.4)(@vitest/browser-playwright@5.0.1)(@vitest/ui@5.0.1)(jsdom@30.1.0)(vite@8.3.3)
 
+  packages/adapter-cloudflare/test/apps/assets-only:
+    devDependencies:
+      '@sveltejs/adapter-cloudflare':
+        specifier: workspace:*
+        version: link:../../..
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../../kit
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.3)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.1(@typescript-eslint/types@8.70.1)
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.3(@types/node@22.20.4)(@vitejs/devtools@0.7.6)(esbuild@0.28.2)(yaml@2.9.1)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.162.0(@cloudflare/workers-types@5.20261115.1)(@types/node@22.20.4)
+
   packages/adapter-cloudflare/test/apps/workers:
     devDependencies:
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.10.0
       '@sveltejs/adapter-cloudflare':
         specifier: workspace:*
         version: link:../../..
