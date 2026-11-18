@@ -1,8 +1,10 @@
-/** @import { Plugin } from 'vite' */
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
-import path from 'node:path';
+/** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import { needs_nodejs_als, validate_main } from './utils.js';
+
+const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
 const useful_cloudflare_plugins = new Set([
 	// resolves the plugin config that the other plugins read
@@ -13,37 +15,52 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:nodejs-compat-warnings'
 ]);
 
+const useful_cloudflare_build_plugins = new Set([
+	'vite-plugin-cloudflare:output-config',
+	'vite-plugin-cloudflare:wasm-helper',
+	'vite-plugin-cloudflare:additional-modules'
+]);
+
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
 
-const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
-
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
- * so that dev emulates workerd and the server output suits it
+ * so that dev emulates workerd and the server output suits it.
+ * It also generates the Wrangler deployment config for the build output
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
+ * @param {string[]} server_entries paths, without the file extension, to the hooks and
+ * instrumentation files. Vite scans them for dependencies along with the route files
+ * @param {boolean} worker whether a Worker is deployed
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config) {
-	const plugins = cloudflare({
-		// the plugin resolves a relative path against Vite's root but Wrangler resolves
-		// it against the working directory, which is what the rest of the adapter uses.
-		// TODO: resolve the Wrangler config against Vite's root throughout the adapter
-		configPath: config_path && path.resolve(config_path),
+export function plugin_config(config_path, set_worker_config, server_entries, worker) {
+	const cloudflare_plugins = cloudflare({
+		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
+			validate_main(config.main, config.configPath, worker);
+
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve the build-generated entry in the user's wrangler config
 			config.main = worker_entry;
+			config.assets ??= {};
+			config.assets.binding ??= 'ASSETS';
+
+			// Svelte and SvelteKit use `node:async_hooks`
+			if (needs_nodejs_als(config.compatibility_date, config.compatibility_flags)) {
+				config.compatibility_flags.push('nodejs_als');
+			}
 
 			set_worker_config(config);
 		}
 	});
 
-	const cloudflare_config_hook = plugins.find(
+	const cloudflare_config_plugin = cloudflare_plugins.find(
 		(plugin) => plugin.name === 'vite-plugin-cloudflare:config'
-	)?.config;
+	);
+	const cloudflare_config_hook = cloudflare_config_plugin?.config;
 
 	if (typeof cloudflare_config_hook !== 'function') {
 		throw new Error(
@@ -52,9 +69,17 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_dev_or_build })),
+		...cloudflare_plugins.flatMap((plugin) => {
+			if (useful_cloudflare_plugins.has(plugin.name)) {
+				return [{ ...plugin, apply: is_dev_or_build }];
+			}
+
+			if (useful_cloudflare_build_plugins.has(plugin.name)) {
+				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
+			}
+
+			return [];
+		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
@@ -75,7 +100,8 @@ export function plugin_config(config_path, set_worker_config) {
 							define: cloudflare_ssr.define,
 							resolve: {
 								noExternal: cloudflare_ssr.resolve?.noExternal,
-								// `browser` would resolve `esm-env` to `BROWSER = true` and similar
+								// `browser` is a legacy condition Cloudflare can't remove yet
+								// but has recommended us to remove it ourselves
 								conditions: cloudflare_ssr.resolve?.conditions?.filter(
 									(condition) => condition !== 'browser'
 								),
@@ -86,7 +112,7 @@ export function plugin_config(config_path, set_worker_config) {
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// points to our stand-in `main`
+								// avoid optimising the Wrangler `main` entry, which points to our build-only worker
 								entries: undefined
 							},
 							build: {
@@ -100,6 +126,61 @@ export function plugin_config(config_path, set_worker_config) {
 					}
 				};
 			}
+		},
+		{
+			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
+			apply: is_dev_or_build,
+			config: {
+				// runs after SvelteKit has configured the client's dependency optimisation
+				order: 'post',
+				handler(config) {
+					const { entries = [], exclude = [] } = config.optimizeDeps ?? {};
+
+					return {
+						environments: {
+							ssr: {
+								optimizeDeps: {
+									// Prebundle dependencies before the first request, otherwise
+									// a dependency found while handling a request reloads the
+									// module graph and can fail that request
+									entries: [
+										// Follow the route entries SvelteKit already specifies but
+										// drop the `!` pattern that excludes `+server` and `+page.server`
+										...[entries].flat().filter((entry) => !entry.startsWith('!')),
+										...server_entries.map((file) => `${file}.{js,ts}`)
+									],
+									include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env'],
+									exclude,
+									rolldownOptions: {
+										plugins: [
+											// avoid optimising modules which don't exist yet
+											{
+												name: 'rolldown-plugin-sveltekit-adapter-cloudflare-env',
+												resolveId: {
+													filter: { id: /^\$(app|env)\// },
+													handler: (id) => ({ id, external: true })
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					};
+				}
+			},
+			configEnvironment: {
+				order: 'post',
+				handler(name, config) {
+					if (name !== 'ssr') return;
+
+					// Cloudflare's Vite plugin doesn't allow external SSR deps
+					config.resolve ??= {};
+					config.resolve.external = [];
+				}
+			},
+			// lets the Cloudflare output-config Vite plugin read the resolved Vite config
+			configResolved: cloudflare_config_plugin?.configResolved
 		}
 	];
 }

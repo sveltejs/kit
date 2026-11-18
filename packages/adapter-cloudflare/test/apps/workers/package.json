@@ -5,13 +5,14 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler dev dist/index.js --config config/wrangler.jsonc",
+		"preview": "wrangler dev",
 		"generate:types": "wrangler types --config config/wrangler.jsonc",
 		"test:dev": "DEV=true playwright test",
 		"test:build": "playwright test",
 		"test": "pnpm test:dev && pnpm test:build"
 	},
 	"devDependencies": {
+		"@opentelemetry/api": "catalog:",
 		"@sveltejs/adapter-cloudflare": "workspace:*",
 		"@sveltejs/kit": "workspace:^",
 		"@sveltejs/vite-plugin-svelte": "catalog:",
