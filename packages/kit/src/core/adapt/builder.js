@@ -124,6 +124,7 @@ export function create_builder({
 			const server_assets = find_server_assets(
 				build_data,
 				route_data.filter((route) => prerender_map.get(route.id) !== true),
+				remotes,
 				vite_config.root
 			);
 			for (const file of server_assets) {
@@ -133,9 +134,14 @@ export function create_builder({
 
 			// record extensions that only exist in prerendered or client output (e.g. a favicon.ico),
 			// so that adapters can serve those files without a mime database of their own
-			for (const file of [...prerendered.paths, ...walk(path.join(build_data.out_dir, 'client'))]) {
-				const ext = path.extname(file);
-				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+			for (const directory of ['prerendered', 'client']) {
+				const dir = path.join(build_data.out_dir, directory);
+				if (!fs.existsSync(dir)) continue;
+
+				for (const file of walk(dir)) {
+					const ext = path.extname(file);
+					if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+				}
 			}
 			return mime_types;
 		},
@@ -163,6 +169,7 @@ export function create_builder({
 			return find_server_assets(
 				build_data,
 				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				remotes,
 				vite_config.root
 			);
 		},

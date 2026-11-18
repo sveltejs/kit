@@ -140,7 +140,7 @@ export class Query {
 				//   to ensure the query is properly refreshed before the navigation completes
 				// - Instead of failing on transport-level errors, we should probably do what
 				//   LiveQuery does and preserve the last known good value and retry the connection
-				if (this.#latest.indexOf(resolve) === -1) return;
+				if (!this.#latest.includes(resolve)) return;
 
 				const error = await handle_error(e, {
 					params: {},

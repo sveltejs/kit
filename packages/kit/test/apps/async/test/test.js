@@ -21,6 +21,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('body')).not.toContainText('Loading todo');
 	});
 
+	test('query can read a file imported by the remote module', async ({ page }) => {
+		await page.goto('/remote/read-file');
+		await expect(page.locator('#text')).toHaveText('Imported by a remote function 😎');
+	});
+
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
 		await page.goto('/remote/live');
 		await expect(page.locator('#first-value')).toHaveText('0');
@@ -107,6 +112,39 @@ test.describe('remote functions', () => {
 
 		// ...but the raw private query result must never appear in the serialized payload
 		expect(body).not.toContain('private-data');
+	});
+
+	test('queries awaited in server load functions are not serialized into the page', async ({
+		page,
+		request,
+		javaScriptEnabled
+	}) => {
+		const html = await (await request.get('/remote/server-load')).text();
+
+		expect(html).toContain('from server load');
+		expect(html).not.toContain('server-load-secret');
+
+		// universal loads and components re-run on hydration, so their queries are still serialized
+		expect(html).toContain('from universal load');
+		expect(html).toContain('from component');
+
+		if (!javaScriptEnabled) return;
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/server-load');
+		await expect(page.locator('#server-load')).toHaveText('from server load');
+		await expect(page.locator('#universal-load')).toHaveText('from universal load');
+		await expect(page.locator('#component')).toHaveText('from component');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('private (non-exported) query.batch functions do not share a batch', async ({ page }) => {
+		await page.goto('/remote/batch-private');
+
+		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
 	});
 
 	test('queries cannot access the route/url of the page they were called from', async ({

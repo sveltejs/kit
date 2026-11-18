@@ -1,17 +1,31 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, extname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assert, expect, test } from 'vitest';
 import { create_builder } from './builder.js';
 import { walk } from '../../utils/filesystem.js';
 
-/** @param {string} outDir */
-function create_test_builder(outDir) {
+/**
+ * @param {string} outDir
+ * @param {import('types').ManifestData['assets']} [assets]
+ */
+function create_test_builder(outDir, assets = []) {
 	return create_builder({
 		// @ts-expect-error - only fields used by these tests are provided
 		config: { outDir },
 		// @ts-expect-error - only fields used by these tests are provided
-		build_data: { app_path: '', manifest_data: { assets: [] } },
+		build_data: {
+			out_dir: join(outDir, 'output'),
+			app_path: '',
+			manifest_data: {
+				assets,
+				nodes: [],
+				hooks: { client: null, server: null, universal: null },
+				routes: [],
+				params: ''
+			},
+			server_manifest: {}
+		},
 		server_metadata: { nodes: [], routes: new Map(), remotes: new Map() },
 		route_data: [],
 		prerendered: { pages: new Map(), assets: new Map(), paths: [], redirects: new Map() },
@@ -272,4 +286,68 @@ test('instrument replaces an environment initializer', () => {
 	);
 	expect(readFileSync(join(dest, '__sveltekit_env_init.js'), 'utf8')).not.toBe('existing');
 	rmSync(dest, { recursive: true, force: true });
+});
+
+test.each([
+	{ file: 'pages/index.html', pathname: '/', type: 'text/html' },
+	{ file: 'pages/nested/index.html', pathname: '/nested/', type: 'text/html' },
+	{ file: 'pages/about.css.html', pathname: '/about.css', type: 'text/html' },
+	{ file: 'pages/redirect.html', pathname: '/redirect', type: 'text/html' },
+	{ file: 'dependencies/favicon.ico', pathname: '/favicon.ico', type: 'image/x-icon' },
+	{ file: 'data/payload.json', pathname: '/payload.json', type: 'application/json' }
+])('mimeTypes includes the generated extension of $file', ({ file, pathname, type }) => {
+	const dest = join(import.meta.dirname, 'output');
+	const builder = create_test_builder(dest);
+	builder.prerendered.paths.push(pathname);
+	const output = join(dest, 'output');
+	const prerendered = join(output, 'prerendered', file);
+	mkdirSync(join(output, 'client'), { recursive: true });
+	mkdirSync(dirname(prerendered), { recursive: true });
+	writeFileSync(prerendered, '');
+	writeFileSync(join(output, 'client', 'app.js'), '');
+	try {
+		expect(builder.mimeTypes).toEqual({ '.js': 'text/javascript', [extname(file)]: type });
+	} finally {
+		rmSync(dest, { recursive: true, force: true });
+	}
+});
+
+test('mimeTypes works without prerendered output', () => {
+	const dest = join(import.meta.dirname, 'output');
+	const builder = create_test_builder(dest);
+	mkdirSync(join(dest, 'output', 'client'), { recursive: true });
+	writeFileSync(join(dest, 'output', 'client', 'app.js'), '');
+	try {
+		expect(builder.mimeTypes).toEqual({ '.js': 'text/javascript' });
+	} finally {
+		rmSync(dest, { recursive: true, force: true });
+	}
+});
+
+test('mimeTypes preserves manifest types while scanning multiple outputs', () => {
+	const dest = join(import.meta.dirname, 'output');
+	const builder = create_test_builder(dest, [
+		{ file: 'document.html', type: 'application/xhtml+xml' }
+	]);
+	const files = [
+		'client/document.html',
+		'client/favicon.ico',
+		'prerendered/pages/index.html',
+		'prerendered/dependencies/payload.unknown',
+		'prerendered/dependencies/assets.css/extensionless'
+	];
+	try {
+		for (const file of files) {
+			const target = join(dest, 'output', file);
+			mkdirSync(dirname(target), { recursive: true });
+			writeFileSync(target, '');
+		}
+		expect(builder.mimeTypes).toEqual({
+			'.html': 'application/xhtml+xml',
+			'.ico': 'image/x-icon',
+			'.unknown': ''
+		});
+	} finally {
+		rmSync(dest, { recursive: true, force: true });
+	}
 });

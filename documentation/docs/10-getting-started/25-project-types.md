@@ -8,7 +8,7 @@ If you don't have a particular way you'd like to build your application in mind,
 
 ## Default rendering
 
-By default, when a user visits a site, SvelteKit will render the first page with [server-side rendering (SSR)](glossary#SSR) and subsequent pages with [client-side rendering (CSR)](glossary#CSR). Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages. Apps built with this hybrid rendering approach have also been called [transitional apps](https://www.youtube.com/watch?v=860d8usGC0o).
+By default, when a user visits a site, SvelteKit will render the first page with [server-side rendering (SSR)](glossary#SSR) and subsequent pages with [client-side rendering (CSR)](glossary#CSR). Using SSR for the initial render improves SEO and perceived performance of the initial page load. Client-side rendering then takes over and updates the page without having to rerender common components, which is typically faster and eliminates a flash when navigating between pages. Apps built with this hybrid rendering approach have also been called [transitional apps](https://2021.jamstackconf.com/talk/c17544108e71/transitional-apps/).
 
 ## Static site generation
 
@@ -54,7 +54,7 @@ SvelteKit has full support for [service workers](service-workers) allowing you t
 
 You can turn a [SvelteKit SPA](single-page-apps) into a mobile app with [Tauri](https://v2.tauri.app/start/frontend/sveltekit/) or [Capacitor](https://capacitorjs.com/solution/svelte). Mobile features like the camera, geolocation, and push notifications are available via plugins for both platforms.
 
-These mobile development platforms work by starting a local web server and then serving your application like a static host on your phone. You may find [`bundleStrategy: 'single'`](configuration#output) to be a helpful option to limit the number of requests made. E.g. at the time of writing, the Capacitor local server uses HTTP/1, which limits the number of concurrent connections.
+These mobile development platforms work by starting a local web server and then serving your application like a static host on your phone. You may find [`bundleStrategy: 'single'`](@sveltejs-kit-vite#output) to be a helpful option to limit the number of requests made. E.g. at the time of writing, the Capacitor local server uses HTTP/1, which limits the number of concurrent connections.
 
 ## Desktop app
 
@@ -66,4 +66,4 @@ You can build browser extensions using either [`adapter-static`](adapter-static)
 
 ## Embedded device
 
-Because of its efficient rendering, Svelte can be run on low power devices. Embedded devices like microcontrollers and TVs may limit the number of concurrent connections. In order to reduce the number of concurrent requests, you may find [`bundleStrategy: 'single'`](configuration#output) to be a helpful option in this deployment configuration.
+Because of its efficient rendering, Svelte can be run on low power devices. Embedded devices like microcontrollers and TVs may limit the number of concurrent connections. In order to reduce the number of concurrent requests, you may find [`bundleStrategy: 'single'`](@sveltejs-kit-vite#output) to be a helpful option in this deployment configuration.

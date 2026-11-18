@@ -16,6 +16,16 @@ test('$app/env/private is not dynamically importable from the client', { timeout
 	});
 });
 
+test(
+	'$app/env/private is not importable from param matchers via a dynamic import',
+	{ timeout },
+	() => {
+		expect(build('env-private-params-dynamic', env)).toContainKitDiagnostic('server_only_import', {
+			contains: ['#lib/server/allow.js', ' src/params.js imports\n  #lib/server/allow.js']
+		});
+	}
+);
+
 test('$app/env/private is not importable from client hooks outside the project root', { timeout }, () => {
 	expect(build('env-private-out-of-root-hooks', env)).toContainKitDiagnostic('server_only_import', {
 		contains: ['$app/env/private']

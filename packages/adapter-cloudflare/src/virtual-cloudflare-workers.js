@@ -1,4 +1,4 @@
-/** @import { CloudflareWorkersModule } from '@cloudflare/workers-types/experimental/index.js'; */
+/** @import { CloudflareWorkersModule, Span as CfSpan } from '@cloudflare/workers-types/experimental/index.js'; */
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 const als = new AsyncLocalStorage();
@@ -126,8 +126,13 @@ export function waitUntil() {}
 export const cache = {
 	purge() {
 		return Promise.resolve({ success: true, errors: [] });
+	},
+	invalidate() {
+		return Promise.resolve({ success: true, errors: [] });
 	}
 };
+
+/** @implements {CfSpan}  */
 class Span {
 	get isTraced() {
 		return false;
@@ -138,9 +143,19 @@ class Span {
 	setAttributes() {
 		return this;
 	}
+	setStatus() {
+		return this;
+	}
+	updateName() {
+		return this;
+	}
 	end() {}
 	recordException() {}
+	spanContext() {
+		return { traceId: '', spanId: '', traceFlags: 0 };
+	}
 }
+
 /** @type {Module['tracing']} */
 export const tracing = {
 	enterSpan(_, callback, ...args) {
@@ -153,5 +168,8 @@ export const tracing = {
 		return new Span();
 	},
 	getActiveSpan() {},
-	Span
+	Span,
+	withActiveSpan(_, callback, ...args) {
+		return callback(...args);
+	}
 };

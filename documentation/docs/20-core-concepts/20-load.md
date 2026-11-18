@@ -1,5 +1,6 @@
 ---
 title: Loading data
+tags: load
 ---
 
 Before a [`+page.svelte`](routing#page-page.svelte) component (and its containing [`+layout.svelte`](routing#layout-layout.svelte) components) can be rendered, we often need to get some data. This is done by defining `load` functions.
@@ -194,7 +195,7 @@ A `load` function is invoked at runtime, unless you [prerender](page-options#pre
 
 Both universal and server `load` functions have access to properties describing the request (`params`, `route` and `url`) and various functions (`fetch`, `setHeaders`, `parent`, `depends` and `untrack`). These are described in the following sections.
 
-Server `load` functions are called with a `ServerLoadEvent`, which inherits `clientAddress`, `cookies`, `locals`, `platform` and `request` from `RequestEvent`.
+Server `load` functions are called with a `ServerLoadEvent`, which inherits `cookies`, `getClientAddress`, `locals`, `platform` and `request` from `RequestEvent`.
 
 Universal `load` functions are called with a `LoadEvent`, which has a `data` property. If you have `load` functions in both `+page.js` and `+page.server.js` (or `+layout.js` and `+layout.server.js`), the return value of the server `load` function is the `data` property of the universal `load` function's argument.
 
@@ -706,7 +707,7 @@ A couple features of loading data have important implications for auth checks:
 There are a few possible strategies to ensure an auth check occurs before protected code.
 
 To prevent data waterfalls and preserve layout `load` caches:
-- Use [hooks](hooks) to protect multiple routes before any `load` functions run
+- Use the [`handle`](auth#Integration-points-Protecting-multiple-routes) hook to protect multiple routes, before any `load` functions run
 - Use auth guards directly in `+page.server.js` `load` functions for route specific protection
 
 Putting an auth guard in `+layout.server.js` requires all child pages to call `await parent()` before protected code. Unless every child page depends on returned data from `await parent()`, the other options will be more performant.

@@ -55,6 +55,7 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated This will be removed in the next major version
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
@@ -133,6 +134,11 @@ export interface ActionFailure<T = undefined> {
 export interface ValidationError {
 	/** The validation issues */
 	issues: StandardSchemaV1.Issue[];
+	/** Information about the remote function that failed validation */
+	remote?: {
+		name?: string;
+		file?: string;
+	};
 }
 
 type UnpackValidationError<T> =
@@ -420,6 +426,7 @@ export interface Cookies {
 
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
+ * @deprecated This will be removed in the next major version
  */
 export interface Emulator {
 	/**
@@ -699,7 +706,7 @@ export interface RequestEvent<
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
 		root: Span;
-		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 		current: Span;
 	};
 

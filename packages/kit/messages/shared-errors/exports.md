@@ -18,4 +18,4 @@ Each kind of [route file](https://svelte.dev/docs/kit/routing) supports a differ
 
 > Page options are ignored when `router.type === 'hash'` (`%source%` has %options%)
 
-With the [hash router](https://svelte.dev/docs/kit/configuration#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`.
+With the [hash router](https://svelte.dev/docs/kit/@sveltejs-kit-vite#router), your app is a single page that's rendered entirely in the browser, so [page options](https://svelte.dev/docs/kit/page-options) such as `prerender`, `ssr` and `trailingSlash` have no effect. Remove them from the file, leaving only `load`.
