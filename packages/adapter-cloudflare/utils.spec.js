@@ -252,7 +252,6 @@ test.each([
 });
 
 describe('not_found_handling', () => {
-	const routes = [{ prerender: /** @type {const} */ (true) }, { prerender: false }];
 	const spa = 'single-page-application';
 
 	test.each([
@@ -267,11 +266,10 @@ describe('not_found_handling', () => {
 		{
 			name: 'does nothing when every route is prerendered',
 			worker: false,
-			routes: [routes[0]],
 			expected: undefined
 		}
-	])('$name', ({ worker, configured, expected, routes: r = routes }) => {
+	])('$name', ({ worker, configured, expected }) => {
 		const config = /** @type {any} */ ({ assets: { not_found_handling: configured } });
-		expect(resolve_not_found_handling(r, config, worker)).toBe(expected);
+		expect(resolve_not_found_handling(config, worker)).toBe(expected);
 	});
 });

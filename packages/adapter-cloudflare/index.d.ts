@@ -19,7 +19,7 @@ export interface AdapterOptions {
 	 * Whether to build a Worker. It defaults to `true`. Set this to `false` if you only
 	 * want to deploy static assets. In that case, the adapter sets
 	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/#routing-behavior)
-	 * to `"single-page-application"`, if not already set.
+	 * to `"404-page"`, if not already set.
 	 *
 	 * @default true
 	 * @since 9.0.0

@@ -38,30 +38,24 @@ export function needs_nodejs_als(compatibility_date, compatibility_flags) {
 }
 
 /**
- * Without a Worker, a route that isn't prerendered is only reachable through the
- * fallback page that Cloudflare can serve for requests that match no asset. We turn
- * that on unless the user has already chosen how those requests are handled
- * @param {Array<{ prerender: boolean | 'auto' }>} routes
  * @param {WorkerConfig} wrangler_config
- * @param {boolean} worker whether a Worker is deployed
+ * @param {boolean} worker whether a Worker should be deployed
  * @returns {NonNullable<WorkerConfig['assets']>['not_found_handling']}
  */
-export function resolve_not_found_handling(routes, wrangler_config, worker) {
+export function resolve_not_found_handling(wrangler_config, worker) {
 	const configured = wrangler_config.assets?.not_found_handling;
-	if (configured || worker || routes.every((route) => route.prerender === true)) {
+	if (configured || worker) {
 		return configured;
 	}
 
-	return 'single-page-application';
+	// if the user isn't deploying a worker, default to serving a fallback page
+	return '404-page';
 }
 
 /**
- * The adapter generates the Worker entry, so a `main` set in the Wrangler config
- * is ignored. The old generated entry is an error because it no longer exists,
- * and so is any `main` when the user has opted out of deploying a Worker.
  * @param {string | undefined} main
  * @param {string | undefined} config_path
- * @param {boolean} worker whether a Worker is deployed
+ * @param {boolean} worker whether a Worker should be deployed
  */
 export function validate_main(main, config_path, worker) {
 	if (!main) return;
@@ -76,12 +70,12 @@ export function validate_main(main, config_path, worker) {
 
 	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
 		throw new Error(
-			`Remove \`main\` from ${file}. The adapter now generates the Worker entry, so it no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
+			`Remove \`main\` from ${file}. The adapter now sets the Worker entry automatically, so your configuration no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
 		);
 	}
 
 	console.warn(
-		`Ignoring \`main\` in ${file}. The adapter generates the Worker entry, so remove \`main\` to silence this warning`
+		`Ignoring \`main\` in ${file}. The adapter sets the Worker entry automatically. Remove \`main\` to silence this warning`
 	);
 }
 

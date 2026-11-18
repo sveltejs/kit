@@ -53,7 +53,7 @@ Preferences for the emulated `env` local bindings. See the [getPlatformProxy](ht
 
 ### worker
 
-Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/#routing-behavior) is set to `"single-page-application"`, if not already set.
+Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/#routing-behavior) is set to `"404-page"`, if not already set.
 
 ## Deployment
 

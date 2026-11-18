@@ -44,11 +44,7 @@ export default function (options = {}) {
 			}
 
 			validate_worker_settings(wrangler_config);
-			const not_found_handling = resolve_not_found_handling(
-				builder.routes,
-				wrangler_config,
-				worker
-			);
+			const not_found_handling = resolve_not_found_handling(wrangler_config, worker);
 
 			const dest = builder.getBuildDirectory('cloudflare');
 
