@@ -58,7 +58,7 @@
 		"vitest": "catalog:"
 	},
 	"peerDependencies": {
-		"@sveltejs/kit": "^3.3.0",
+		"@sveltejs/kit": "^3.4.0",
 		"wrangler": "^4.162.0"
 	}
 }
