@@ -10,6 +10,7 @@ import { notify_version } from '../client.svelte.js';
  * `$derived(await promise)` uses `track_reactivity_loss` (can warn), while
  * `$derived((await promise)())` uses `save`, whose restored reaction context
  * makes a tracked state write throw `state_unsafe_mutation`.
+ * `$.run` provides the component initialization context required by async deriveds.
  *
  * This file must not be inlined into the `.svelte.spec.js` — vite-plugin-svelte
  * compiles that file and rejects `svelte/internal` imports.
@@ -22,11 +23,14 @@ export function run(mode) {
 	let ready;
 	const cleanup = $.effect_root(() => {
 		$.render_effect(() => {
-			ready = $.async_derived(async () => {
-				const restore = await $[mode](Promise.resolve());
-				restore();
-				notify_version('<new-deployment>');
-			});
+			$.run([
+				() =>
+					(ready = $.async_derived(async () => {
+						const restore = await $[mode](Promise.resolve());
+						restore();
+						notify_version('<new-deployment>');
+					}))
+			]);
 		});
 	});
 	return { cleanup, ready };
