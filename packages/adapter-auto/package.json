@@ -40,6 +40,7 @@
 		"test:unit": "vitest run"
 	},
 	"devDependencies": {
+		"@changesets/get-release-plan": "^5.0.2",
 		"@sveltejs/kit": "workspace:^",
 		"@types/node": "catalog:",
 		"@typescript/native": "catalog:",

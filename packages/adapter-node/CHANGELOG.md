@@ -1,5 +1,21 @@
 # @sveltejs/adapter-node
 
+## 6.0.4
+
+### Patch Changes
+
+- fix: replace the port in the forwarded host with `PORT_HEADER` instead of appending a second one ([#17779](https://github.com/sveltejs/kit/pull/17779))
+- Updated dependencies:
+  - @sveltejs/kit@3.3.0
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: set `X-Accel-Buffering: no` on `text/event-stream` responses whose content type has parameters, such as `charset=utf-8` ([#17687](https://github.com/sveltejs/kit/pull/17687))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.1
+
 ## 6.0.2
 
 ### Patch Changes

@@ -7,6 +7,7 @@ import { getRequest } from '@sveltejs/kit/node';
 import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
 import {
+	resolve_not_found_handling,
 	validate_worker_settings,
 	generate_redirects,
 	append_headers,
@@ -18,6 +19,7 @@ const files = fileURLToPath(new URL('./files', import.meta.url));
 
 /** @type {typeof import('./index.js').default} */
 export default function (options = {}) {
+	const worker = options.worker ?? true;
 	// Add a random query so we can reliably string-replace the stub
 	const stub_import =
 		import.meta.resolve('./src/virtual-cloudflare-workers.js') + '?' + crypto.randomUUID();
@@ -43,6 +45,7 @@ export default function (options = {}) {
 			}
 
 			validate_worker_settings(wrangler_config);
+			const not_found_handling = resolve_not_found_handling(wrangler_config, worker);
 
 			const dest = builder.getBuildDirectory('cloudflare');
 
@@ -51,68 +54,61 @@ export default function (options = {}) {
 			const assets = `${dest}/client`;
 			fs.mkdirSync(assets, { recursive: true });
 
-			const worker_dir = `${dest}/worker`;
-			const worker_dest = `${worker_dir}/index.js`;
-			const server_dir = `${worker_dir}/server`;
-			builder.writeServer(server_dir);
-			replace_stub(server_dir, stub_import);
-			fs.rmSync(`${server_dir}/wrangler.json`);
-			if (fs.existsSync(`${server_dir}/.dev.vars`)) {
-				fs.renameSync(`${server_dir}/.dev.vars`, `${worker_dir}/.dev.vars`);
-			}
-
 			// client assets and prerendered pages
 			const assets_dest = `${assets}${builder.config.paths.base}`;
 			fs.mkdirSync(assets_dest, { recursive: true });
-			if (wrangler_config.assets?.not_found_handling === '404-page') {
-				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
-				// This file is served when a request fails to match an asset.
-				const fallback = path.join(assets_dest, '404.html');
-				if (options.fallback === 'spa') {
-					await builder.generateFallback(fallback);
-				} else {
-					fs.writeFileSync(fallback, 'Not Found');
-				}
+
+			// If no Worker script is present or the Worker fetches an asset,
+			// this file is served when a request fails to match an asset.
+			if (not_found_handling === '404-page') {
+				// generate 404.html first which can then be overridden by prerendering, if the user defined such a page.
+				await builder.generateFallback(path.join(assets, '404.html'));
 			}
 			builder.writeClient(assets_dest);
 			builder.writePrerendered(assets_dest);
-			if (wrangler_config.assets?.not_found_handling === 'single-page-application') {
-				await builder.generateFallback(path.join(assets_dest, 'index.html'));
+			if (not_found_handling === 'single-page-application') {
+				// this is served with a 200 OK
+				await builder.generateFallback(path.join(assets, 'index.html'));
 			}
 
-			// worker
-			const worker_dest_dir = path.dirname(worker_dest);
-			builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
-			builder.copy(`${files}/worker.js`, worker_dest, {
-				replace: {
-					// the paths returned by the Wrangler config might be Windows paths,
-					// so we need to convert them to POSIX paths or else the backslashes
-					// will be interpreted as escape characters and create an incorrect import path.
-					// We also need to ensure the relative imports start with ./ since Wrangler
-					// errors if a relative import looks like a package import
-					SERVER: `./${posixify(path.relative(worker_dest_dir, worker_dir))}/server.js`,
-					BASE_PATH: JSON.stringify(builder.config.paths.base),
-					APP_PATH: JSON.stringify(builder.getAppPath()),
-					MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
-					PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
-					ASSETS_BINDING: wrangler_config.assets?.binding ?? 'ASSETS'
+			const worker_dir = `${dest}/worker`;
+			if (worker) {
+				const worker_dest = `${worker_dir}/index.js`;
+				const server_dir = `${worker_dir}/server`;
+				builder.writeServer(server_dir);
+				replace_stub(server_dir, stub_import);
+				fs.rmSync(`${server_dir}/wrangler.json`);
+				if (fs.existsSync(`${server_dir}/.dev.vars`)) {
+					fs.renameSync(`${server_dir}/.dev.vars`, `${worker_dir}/.dev.vars`);
 				}
-			});
-			if (builder.hasServerInstrumentationFile()) {
-				const initializer = builder.createInstrumentationInitializer({
-					outputDirectory: worker_dest_dir,
-					serverDirectory: server_dir,
-					environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
-				});
-				builder.instrument({
-					entrypoint: worker_dest,
-					instrumentation: `${server_dir}/instrumentation.server.js`,
-					initializer,
-					module: {
-						generateText: ({ instrumentation, start, initializer }) =>
-							`import './${initializer}';\nimport './${instrumentation}';\nexport { default } from './${start}';\n`
+
+				builder.generateServerInstance(`${worker_dir}/server.js`, { serverDirectory: server_dir });
+				builder.copy(`${files}/worker.js`, worker_dest, {
+					replace: {
+						SERVER: './server.js',
+						BASE_PATH: JSON.stringify(builder.config.paths.base),
+						APP_PATH: JSON.stringify(builder.getAppPath()),
+						MANIFEST_ASSETS: `new Set(${JSON.stringify(builder.manifest.assets.map((a) => a.path))})`,
+						PRERENDERED: `new Set(${JSON.stringify(builder.prerendered.paths)})`,
+						ASSETS_BINDING: wrangler_config.assets?.binding ?? 'ASSETS'
 					}
 				});
+				if (builder.hasServerInstrumentationFile()) {
+					const initializer = builder.createInstrumentationInitializer({
+						outputDirectory: worker_dir,
+						serverDirectory: server_dir,
+						environment: `import { env } from 'cloudflare:workers';\nexport default env;\n`
+					});
+					builder.instrument({
+						entrypoint: worker_dest,
+						instrumentation: `${server_dir}/instrumentation.server.js`,
+						initializer,
+						module: {
+							generateText: ({ instrumentation, start, initializer }) =>
+								`import './${initializer}';\nimport './${instrumentation}';\nexport { default } from './${start}';\n`
+						}
+					});
+				}
 			}
 
 			// _headers
@@ -138,22 +134,29 @@ export default function (options = {}) {
 
 			fs.writeFileSync(`${assets}/.assetsignore`, generate_assetsignore(), { flag: 'a' });
 
-			// Point the Cloudflare deployment config at the final Worker and assets.
-			/** @type {WorkerConfig} */
+			// Point the Cloudflare deployment config at the final Worker and assets
+			/** @type {Record<string, any>} */
 			const output_config = JSON.parse(
 				fs.readFileSync(`${builder.getServerDirectory()}/wrangler.json`, 'utf8')
 			);
-			output_config.main = path.basename(worker_dest);
-			/** @type {NonNullable<WorkerConfig['assets']>} */ (output_config.assets).directory =
-				posixify(path.relative(worker_dir, assets));
-			fs.writeFileSync(`${worker_dir}/wrangler.json`, JSON.stringify(output_config, null, 2));
+			const config_dir = worker ? worker_dir : dest;
+			if (worker) {
+				output_config.main = 'index.js';
+			} else {
+				// Wrangler rejects an assets binding when there is no Worker to use it
+				delete output_config.main;
+				delete output_config.assets.binding;
+			}
+			output_config.assets.directory = posixify(path.relative(config_dir, assets));
+			output_config.assets.not_found_handling = not_found_handling;
+			fs.writeFileSync(`${config_dir}/wrangler.json`, JSON.stringify(output_config, null, 2));
 
 			// point Wrangler to the adapter output's deployment config
 			const deploy_config_path = path.join(vite_config.root, '.wrangler/deploy/config.json');
 			/** @type {WorkerConfig} */
 			const deploy_config = JSON.parse(fs.readFileSync(deploy_config_path, 'utf8'));
 			deploy_config.configPath = posixify(
-				path.relative(path.dirname(deploy_config_path), path.resolve(worker_dir, 'wrangler.json'))
+				path.relative(path.dirname(deploy_config_path), path.resolve(config_dir, 'wrangler.json'))
 			);
 			fs.writeFileSync(deploy_config_path, JSON.stringify(deploy_config, null, 2));
 		},
@@ -187,7 +190,12 @@ export default function (options = {}) {
 					...plugin_config(
 						options.config,
 						(config) => (wrangler_config = config),
-						get_scan_entries(config.files)
+						[
+							config.files.hooks.server,
+							config.files.hooks.universal,
+							`${config.files.src}/instrumentation.server`
+						].map(posixify),
+						worker
 					),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
@@ -213,20 +221,6 @@ export default function (options = {}) {
 			};
 		}
 	};
-}
-
-/**
- * The files that import the app's server dependencies, so that Vite can find them before the first request
- * @param {{ src: string; routes: string; params: string; hooks: { server: string; universal: string } }} files
- * @returns {string[]}
- */
-function get_scan_entries(files) {
-	const directories = new Set([files.src, files.routes, files.params].map(posixify));
-	return [
-		...Array.from(directories, (directory) => `${directory}/**/*.{js,ts,svelte}`),
-		`${posixify(files.hooks.server)}.{js,ts}`,
-		`${posixify(files.hooks.universal)}.{js,ts}`
-	];
 }
 
 /**

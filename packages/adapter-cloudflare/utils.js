@@ -29,24 +29,60 @@ export function validate_worker_settings(wrangler_config) {
 }
 
 /**
- * The adapter generates the Worker entry, so a `main` set in the Wrangler config
- * is ignored. The old generated entry is an error because it no longer exists.
+ * Checks if we need an explicit `nodejs_alt` flag.
+ * `nodejs_compat` already provides `node:async_hooks` and is enabled by its flag
+ * or by a compatibility date from 2026-08-04 onwards
+ * https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+ * @param {string | undefined} compatibility_date
+ * @param {string[]} compatibility_flags
+ * @returns {boolean}
+ */
+export function needs_nodejs_als(compatibility_date, compatibility_flags) {
+	const flags = new Set(compatibility_flags);
+	if (flags.has('nodejs_als') || flags.has('nodejs_compat')) return false;
+
+	return flags.has('no_nodejs_compat') || !compatibility_date || compatibility_date < '2026-08-04';
+}
+
+/**
+ * @param {WorkerConfig} wrangler_config
+ * @param {boolean} worker whether a Worker should be deployed
+ * @returns {NonNullable<WorkerConfig['assets']>['not_found_handling']}
+ */
+export function resolve_not_found_handling(wrangler_config, worker) {
+	const configured = wrangler_config.assets?.not_found_handling;
+	if (configured || worker) {
+		return configured;
+	}
+
+	// if the user isn't deploying a worker, default to serving a fallback page
+	return '404-page';
+}
+
+/**
  * @param {string | undefined} main
  * @param {string | undefined} config_path
+ * @param {boolean} worker whether a Worker should be deployed
  */
-export function validate_main(main, config_path) {
+export function validate_main(main, config_path, worker) {
 	if (!main) return;
 
 	const file = config_path || 'your wrangler.jsonc file';
 
+	if (!worker) {
+		throw new Error(
+			`Remove \`main\` from ${file} or set the adapter's \`worker\` option to \`true\`. No Worker is deployed when \`worker\` is \`false\``
+		);
+	}
+
 	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
 		throw new Error(
-			`Remove \`main\` from ${file}. The adapter now generates the Worker entry, so it no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
+			`Remove \`main\` from ${file}. The adapter now sets the Worker entry automatically, so your configuration no longer needs to point at \`.svelte-kit/cloudflare/_worker.js\``
 		);
 	}
 
 	console.warn(
-		`Ignoring \`main\` in ${file}. The adapter generates the Worker entry, so remove \`main\` to silence this warning`
+		`Ignoring \`main\` in ${file}. The adapter sets the Worker entry automatically. Remove \`main\` to silence this warning`
 	);
 }
 

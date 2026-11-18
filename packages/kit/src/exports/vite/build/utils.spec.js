@@ -1,5 +1,5 @@
 import { assert, describe, test } from 'vitest';
-import { create_function_as_string, generate_placeholder } from './utils.js';
+import { create_function_as_string, generate_placeholder, resolve_css_minify } from './utils.js';
 import { fix_css_urls } from '../../../utils/css.js';
 import { escape_for_interpolation } from '../../../utils/escape.js';
 
@@ -67,5 +67,28 @@ describe('dynamic URL paths in CSS', () => {
 
 		const output = eval(`(${code})('${assets_path}', '${base_path}')`);
 		assert.equal(output, expected);
+	});
+});
+
+describe('resolve_css_minify', () => {
+	test.each([
+		{ name: 'uses a user-set cssMinify', build: { cssMinify: 'esbuild' }, expected: 'esbuild' },
+		{
+			name: 'uses cssMinify: lightningcss',
+			build: { cssMinify: 'lightningcss' },
+			expected: 'lightningcss'
+		},
+		{ name: 'uses cssMinify: false', build: { cssMinify: false }, expected: false },
+		{
+			name: 'prefers cssMinify over minify',
+			build: { cssMinify: 'esbuild', minify: false },
+			expected: 'esbuild'
+		},
+		{ name: 'minifies when nothing is set', build: undefined, expected: true },
+		{ name: 'minifies when only unrelated build options are set', build: {}, expected: true },
+		{ name: 'follows minify: false', build: { minify: false }, expected: false },
+		{ name: 'follows minify: terser', build: { minify: 'terser' }, expected: true }
+	])('$name', ({ build, expected }) => {
+		assert.equal(resolve_css_minify(/** @type {any} */ (build)), expected);
 	});
 });
