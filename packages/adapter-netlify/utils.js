@@ -35,6 +35,22 @@ export function matches(a, b) {
 }
 
 /**
+ * Whether two routes can never match the same path, because they differ
+ * in a static segment before either has a dynamic one
+ * @param {RouteSegment[]} a
+ * @param {RouteSegment[]} b
+ * @returns {boolean}
+ */
+export function disjoint(a, b) {
+	for (let i = 0; i < Math.min(a.length, b.length); i += 1) {
+		if (a[i].dynamic || b[i].dynamic) return false;
+		if (a[i].content !== b[i].content) return true;
+	}
+
+	return false;
+}
+
+/**
  * @param {*} value
  * @returns {string}
  */

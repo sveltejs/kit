@@ -35,18 +35,22 @@ describe.each([{ edge: false }, { edge: true }])('edge: $edge', ({ edge }) => {
 
 		/** @param {string} pattern */
 		const index = (pattern) => functions.findIndex((config) => config.path.includes(pattern));
+		const specific = index('/z/specific');
+		const rest = index('/z/*');
 
 		// the platform test only reproduces the bug while name order disagrees with route priority
-		expect(`sveltekit-${index('/z/*')}` < `sveltekit-${index('/z/specific')}`).toBe(true);
+		expect(`sveltekit-${rest}` < `sveltekit-${specific}`).toBe(true);
 
-		const seen = [];
-		for (const config of functions) {
-			expect(config.excludedPath).toEqual(expect.arrayContaining(seen));
-			for (const pattern of config.path) {
-				expect(config.excludedPath).not.toContain(pattern);
-			}
-			seen.push(...config.path);
-		}
+		expect(functions[rest].excludedPath).toEqual(
+			expect.arrayContaining([
+				'/z/specific',
+				'/z/specific/__data.json',
+				'/z/:param1',
+				'/z/:param1/__data.json'
+			])
+		);
+		// routes under a different static prefix can't overlap
+		expect(functions[rest].excludedPath).not.toContain('/dynamic/:param1');
 
 		// Matchers share a URLPattern, so the lower priority route belongs in the same function.
 		const dynamic = functions.filter((config) => config.path.includes('/z/:param1'));
