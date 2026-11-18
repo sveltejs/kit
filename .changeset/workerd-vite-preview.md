@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-cloudflare': major
+'@sveltejs/adapter-cloudflare': minor
 ---
 
-breaking: run `vite preview` in workerd with the Cloudflare Vite plugin
+feat: run `vite preview` in workerd with the Cloudflare Vite plugin
