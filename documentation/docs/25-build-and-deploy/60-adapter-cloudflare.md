@@ -29,13 +29,13 @@ export default defineConfig({
 			adapter: adapter({
 				// See below for an explanation of these options
 				config: undefined,
-				worker: true,
+				fallback: 'plaintext',
 				platformProxy: {
 					configPath: undefined,
 					environment: undefined,
 					persist: undefined
 				},
-				fallback: 'plaintext'
+				worker: true
 			})
 		})
 	]
