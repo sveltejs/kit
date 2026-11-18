@@ -22,7 +22,8 @@ export function validate_worker_settings(wrangler_config) {
 }
 
 /**
- * `nodejs_compat` already provides `node:async_hooks`. It is enabled by its flag
+ * Checks if we need an explicit `nodejs_alt` flag.
+ * `nodejs_compat` already provides `node:async_hooks` and is enabled by its flag
  * or by a compatibility date from 2026-08-04 onwards
  * https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
  * @param {string | undefined} compatibility_date
