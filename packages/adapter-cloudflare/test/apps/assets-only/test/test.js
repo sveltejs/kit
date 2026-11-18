@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('fallback page works',async ({ page }) => {
+test('fallback page works', async ({ page }) => {
 	await page.goto('/dynamic');
 	await expect(page.locator('h1')).toHaveText('dynamic');
 });
