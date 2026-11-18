@@ -305,14 +305,23 @@ export const segment_pattern = new RegExp(
  * ); // `/blog/hello-world/something/else`
  * ```
  * @param {string} id
- * @param {Record<string, ParamValue | undefined>} params
+ * @param {Record<string, ParamValue | undefined>} [params]
  * @returns {string}
  */
 export function resolve_route(id, params) {
-	const segments = get_route_segments(id);
-	const has_id_trailing_slash = id != '/' && id.endsWith('/');
+	// Only the route portion should undergo group removal, parameter replacement and escape decoding.
+	const [route, suffix = ''] = id.split(/([?#].*)/s);
 
-	return (
+	if (route.includes('[') && !params) {
+		e.resolve_params_missing({ id });
+	}
+
+	params ??= {};
+
+	const segments = get_route_segments(route);
+	const has_trailing_slash = route.endsWith('/');
+
+	const resolved =
 		'/' +
 		segments
 			.map((segment) =>
@@ -347,9 +356,9 @@ export function resolve_route(id, params) {
 				})
 			)
 			.filter(Boolean)
-			.join('/') +
-		(has_id_trailing_slash ? '/' : '')
-	);
+			.join('/');
+
+	return resolved + (has_trailing_slash && resolved !== '/' ? '/' : '') + suffix;
 }
 
 /**

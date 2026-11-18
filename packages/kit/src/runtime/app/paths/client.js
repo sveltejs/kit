@@ -77,11 +77,7 @@ export function resolve(...args) {
 
 	if (id[0] === '/') {
 		// route ID
-		if (id.includes('[') && !params) {
-			e.resolve_params_missing({ id });
-		}
-
-		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
+		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params));
 	}
 
 	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);

@@ -34,11 +34,7 @@ export function resolve(id, params) {
 
 	if (id[0] === '/') {
 		// route ID
-		if (id.includes('[') && !params) {
-			e.resolve_params_missing({ id });
-		}
-
-		resolved = resolve_route(id, params ?? {});
+		resolved = resolve_route(id, params);
 	} else {
 		resolved = '/' + id;
 	}

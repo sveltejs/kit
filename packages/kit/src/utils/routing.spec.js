@@ -401,6 +401,20 @@ describe('exec', () => {
 
 describe('resolve_route', () => {
 	const from_params_tests = [
+		{ route: '/', params: {}, expected: '/' },
+		{ route: '/(app)', params: {}, expected: '/' },
+		{ route: '/(app)/', params: {}, expected: '/' },
+		{ route: '/(app)/(nested)', params: {}, expected: '/' },
+		{ route: '/(auth)/login', params: {}, expected: '/login' },
+		{ route: '/(auth)/login/(app)', params: {}, expected: '/login' },
+		{ route: '/(auth)/login/(app)/', params: {}, expected: '/login/' },
+		{ route: '/[[optional]]/', params: {}, expected: '/' },
+		{ route: '/[...rest]/', params: { rest: '' }, expected: '/' },
+		{
+			route: '/[x+3f]/[x+23]/[x+28]app[x+29]/(group)',
+			params: {},
+			expected: '/%3F/%23/(app)'
+		},
 		{
 			route: '/blog/[one]/[two]',
 			params: { one: 'one', two: 'two' },
@@ -524,9 +538,16 @@ describe('resolve_route', () => {
 	];
 
 	for (const { route, params, expected } of from_params_tests) {
-		test(`resolvePath generates correct path for ${route}`, () => {
-			const result = resolve_route(route, params);
-			assert.equal(result, expected);
+		test.each([
+			'',
+			'?a=1',
+			'#top',
+			'?next=/a//(group)/[one]/[x+23]/#top?',
+			'#top?next=/a//(group)/[one]/[x+23]/',
+			'?q=line\n/another-line#top'
+		])(`resolvePath generates correct path for ${route} with suffix %j`, (suffix) => {
+			const result = resolve_route(route + suffix, params);
+			assert.equal(result, expected + suffix);
 		});
 	}
 
