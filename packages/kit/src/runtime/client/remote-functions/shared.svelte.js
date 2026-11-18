@@ -8,6 +8,7 @@ import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
 import { navigating, page, notify_version } from '#app/state/client';
 import * as e from '../../../messages/client-errors.js';
+import { noop } from '../../../utils/functions.js';
 
 /** Indicates a query function, as opposed to a query instance */
 export const QUERY_FUNCTION_ID = Symbol('sveltekit.query_function_id');
@@ -181,7 +182,7 @@ export async function remote_request(url, init, refreshes) {
 			// reconnecting after a hard failure would wipe the error state and
 			// restart the stream (see commit 63a3e83 regression).
 			if (!data.l[key].e) {
-				void entry?.resource.reconnect();
+				entry?.resource.reconnect().catch(noop);
 			}
 		}
 	}
