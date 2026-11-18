@@ -71,6 +71,15 @@ describe('convert_formdata', () => {
 		array.append('name[]/form', 'second');
 		expect(convert_formdata('form', array)).toEqual({ name: ['first', 'second'] });
 	});
+	test('rejects conflicting scalar and nested field names', () => {
+		const data = new FormData();
+		data.append('a/form', 'scalar');
+		data.append('a.b/form', 'nested');
+		expect(() => convert_formdata('form', data)).toThrowKitError('form_field_array_conflict', {
+			contains: ['b']
+		});
+	});
+
 	test('normalizes type prefixes and array suffixes', () => {
 		expect(parse_form_key('form', 'n:items[]/form')).toEqual({
 			name: 'items',
@@ -973,6 +982,28 @@ describe('deep_set', () => {
 		);
 		expect(target).toEqual({ items: {} });
 	});
+	test.each(['scalar', 42, true])(
+		'scalar intermediate value %s rejects with form_field_array_conflict',
+		(value) => {
+			const target = { nested: value };
+			expect(() => deep_set(target, ['nested', 'name'], 'hello')).toThrowKitError(
+				'form_field_array_conflict',
+				{ contains: ['name'] }
+			);
+			expect(target).toEqual({ nested: value });
+		}
+	);
+
+	test('non-plain object intermediate value rejects with form_field_array_conflict', () => {
+		const file = new File(['hello'], 'hello.txt');
+		const target = { nested: file };
+		expect(() => deep_set(target, ['nested', 'name'], 'hello')).toThrowKitError(
+			'form_field_array_conflict',
+			{ contains: ['name'] }
+		);
+		expect(target).toEqual({ nested: file });
+	});
+
 	test('always creates own property', () => {
 		const target = {};
 
