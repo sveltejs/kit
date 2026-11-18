@@ -1,5 +1,15 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.3
+
+### Patch Changes
+
+- fix: apply the environment config from `@cloudflare/vite-plugin` during dev and build so that dependencies resolve the same way as in workerd and CommonJS `require` calls of Node builtins work ([#17503](https://github.com/sveltejs/kit/pull/17503))
+
+- fix: populate `process.env` with Wrangler `vars` and local `.dev.vars` secrets during `vite dev` and `vite build` ([#17559](https://github.com/sveltejs/kit/pull/17559))
+- Updated dependencies:
+  - @sveltejs/kit@3.3.1
+
 ## 8.0.2
 
 ### Patch Changes

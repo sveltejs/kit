@@ -19,6 +19,7 @@ import {
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,
+	adds_vite_devtools_dock,
 	uses_unsupported_html_hook,
 	warn_overridden_config
 } from './utils.js';
@@ -367,6 +368,8 @@ function kit({ svelte_config }) {
 				const client_hooks = resolve_entry(kit.files.hooks.client, kit.moduleExtensions);
 				if (client_hooks) allow.add(path.dirname(client_hooks));
 
+				const routes = posixify(kit.files.routes);
+
 				// dev and preview config can be shared
 				/** @type {UserConfig} */
 				const new_config = {
@@ -418,10 +421,7 @@ function kit({ svelte_config }) {
 						cors: resolve_cors(config.preview?.cors, 'preview.cors', !is_build)
 					},
 					optimizeDeps: {
-						entries: [
-							`${kit.files.routes}/**/+*.{svelte,js,ts}`,
-							`!${kit.files.routes}/**/+*server.*`
-						],
+						entries: [`${routes}/**/+*.{svelte,js,ts}`, `!${routes}/**/+*server.*`],
 						exclude: [
 							// Without this SvelteKit will be prebundled on the client, which means we end up with two versions of Redirect etc.
 							// Also see https://github.com/sveltejs/kit/issues/5952#issuecomment-1218844057
@@ -562,7 +562,10 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
+			const adds_dock = adds_vite_devtools_dock(config);
+			const unsupported_plugins = config.plugins.filter((plugin) =>
+				uses_unsupported_html_hook(plugin, adds_dock)
+			);
 			if (unsupported_plugins.length) {
 				const plugins = bullet_list(
 					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')

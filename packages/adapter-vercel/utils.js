@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+import path from 'node:path';
 import process from 'node:process';
 
 /**
@@ -145,3 +148,59 @@ function assert_is_valid_runtime(key) {
 
 // this is what to update when Vercel adds a new Node runtime or deprecates an old one! leave the rest of the code alone
 /** @typedef {typeof valid_non_node_runtimes[number] | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x' | ({} & `nodejs${number}.x`)} RuntimeKey */
+
+/** Creates a checker whose package metadata cache lasts for a single function bundle. */
+export function create_optional_peer_dependency_checker() {
+	/** @type {Map<string, Set<string>>} */
+	const cache = new Map();
+
+	/** @param {string} dir */
+	function optional_peers(dir) {
+		const cached = cache.get(dir);
+		if (cached) return cached;
+
+		let peers = new Set();
+		if (path.basename(dir) !== 'node_modules') {
+			try {
+				const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'));
+				peers = new Set(
+					Object.keys(pkg.peerDependencies ?? {}).filter(
+						(name) => pkg.peerDependenciesMeta?.[name]?.optional === true
+					)
+				);
+			} catch (error) {
+				// Only continue past a missing manifest. Unreadable/invalid metadata must
+				// not cause us to use the enclosing package's optional peers instead.
+				const parent = path.dirname(dir);
+				if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT' && parent !== dir) {
+					peers = optional_peers(parent);
+				}
+			}
+		}
+
+		cache.set(dir, peers);
+		return peers;
+	}
+
+	/**
+	 * @param {string} specifier
+	 * @param {string} importer
+	 */
+	return (specifier, importer) => {
+		if (!path.isAbsolute(importer) || path.isAbsolute(specifier)) return false;
+		const name = /^(@[^/]+\/[^/]+|[^./#][^/]*)(?:\/.*)?$/.exec(specifier)?.[1];
+		if (!name) return false;
+
+		try {
+			const real_importer = fs.realpathSync(importer);
+			if (!optional_peers(path.dirname(real_importer)).has(name)) return false;
+
+			// A peer that is installed but fails to resolve (e.g. a broken subpath
+			// or symlink) still warrants a warning. Only its absence is optional.
+			const paths = createRequire(real_importer).resolve.paths(name) ?? [];
+			return !paths.some((dir) => fs.lstatSync(path.join(dir, name), { throwIfNoEntry: false }));
+		} catch {
+			return false;
+		}
+	};
+}
