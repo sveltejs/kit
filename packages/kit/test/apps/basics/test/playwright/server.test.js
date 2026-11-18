@@ -48,6 +48,17 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
+	for (const [route, color] of [
+		['/errors/render', 'rgb(255, 0, 0)'],
+		['/errors/nested-error-page/render', 'rgb(0, 0, 255)']
+	]) {
+		test(`includes error page CSS after an SSR render error at ${route}`, async ({ page }) => {
+			const response = await page.goto(route);
+			expect(response?.status()).toBe(500);
+			await expect(page.locator('h1')).toHaveCSS('color', color);
+		});
+	}
+
 	test('returns 400 when accessing a malformed URI', async ({ page }) => {
 		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
 		if (process.env.DEV) {
