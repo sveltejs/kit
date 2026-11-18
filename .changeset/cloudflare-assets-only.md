@@ -1,5 +1,5 @@
 ---
-'@sveltejs/adapter-cloudflare': minor
+'@sveltejs/adapter-cloudflare': major
 ---
 
-feat: add an adapter `worker` option that controls if a worker is built
+breaking: use the adapter `worker` option to control if a Worker is built
