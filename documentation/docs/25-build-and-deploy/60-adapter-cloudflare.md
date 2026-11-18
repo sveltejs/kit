@@ -50,7 +50,7 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### worker
 
-Whether to deploy a Worker alongside the static assets. Set this to `false` when nothing needs to run on the server. If some routes are not prerendered, the adapter serves them with a SPA fallback page by setting [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) to `"single-page-application"`, unless you have set it yourself. Previously, this was done by leaving `main` out of the Wrangler configuration file.
+Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, a fallback page is generated and [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) is set to `"single-page-application"`, unless you have set it yourself.
 
 ### platformProxy
 
