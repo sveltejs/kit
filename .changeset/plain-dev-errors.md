@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: declare UTF-8 plain text for dev middleware fallback errors
+fix: correctly display non-ASCII characters for plain text error messages during development
