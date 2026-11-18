@@ -5,6 +5,7 @@ import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { property_key } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -254,9 +255,12 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			// Returns the key of the object whose values are required.
 			'export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];',
 
+			// a promise matches Record<string, any>, so without this async load output goes unchecked
+			'type NotThenable = { then?: string | number | boolean | bigint | symbol | null | undefined | { bind?: never; [key: string]: any } };',
+
 			// Helper type to get the correct output type for load functions. It should be passed the parent type to check what types from App.PageData are still required.
 			// If none, void is also allowed as a return type.
-			'type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>',
+			'type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any> & NotThenable>',
 
 			// null & {} == null, we need to prevent that in some situations
 			'type EnsureDefined<T> = T extends null | undefined ? {} : T;',
@@ -442,7 +446,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 		// +page.js load present -> server can return all-optional data
 		const output_data_shape =
 			node.universal || (!is_page && all_pages_have_load)
-				? 'Partial<App.PageData> & Record<string, any> | void'
+				? 'Partial<App.PageData> & Record<string, any> & NotThenable | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
 			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData, ${route_id}>;`
@@ -496,7 +500,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
-				? 'Partial<App.PageData> & Record<string, any> | void'
+				? 'Partial<App.PageData> & Record<string, any> & NotThenable | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
 			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData, ${route_id}>;`
@@ -645,7 +649,7 @@ function generate_params_type(params, outdir, config) {
 	return `{ ${params
 		.map(
 			(param) =>
-				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
+				`${property_key(param.name)}${param.optional ? '?' : ''}: ${
 					param.matcher
 						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'

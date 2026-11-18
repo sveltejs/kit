@@ -4,6 +4,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { describe, test, vi, expect } from 'vitest';
 import {
+	needs_nodejs_als,
+	resolve_not_found_handling,
 	validate_worker_settings,
 	generate_redirects,
 	append_headers,
@@ -200,5 +202,67 @@ describe('sync_process_env', () => {
 		sync_process_env(config({}));
 		expect(process.env.SYNC_A).toBe('shell');
 		delete process.env.SYNC_A;
+	});
+});
+
+describe('sync_process_env', () => {
+	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+
+	/**
+	 * @param {Record<string, unknown>} vars
+	 */
+	const config = (vars) =>
+		/** @type {import('@cloudflare/vite-plugin').WorkerConfig} */ (
+			/** @type {unknown} */ ({ configPath: path.join(dir, 'wrangler.jsonc'), vars })
+		);
+
+	test('adds variables and removes the ones that are gone', () => {
+		sync_process_env(config({ SYNC_A: 'a', SYNC_B: { json: true } }));
+		expect(process.env.SYNC_A).toBe('a');
+		expect(process.env.SYNC_B).toBe('{"json":true}');
+
+		sync_process_env(config({ SYNC_A: 'changed' }));
+		expect(process.env.SYNC_A).toBe('changed');
+		expect('SYNC_B' in process.env).toBe(false);
+
+		sync_process_env(config({}));
+		expect('SYNC_A' in process.env).toBe(false);
+	});
+
+	test('does not overwrite variables set elsewhere', () => {
+		process.env.SYNC_A = 'shell';
+		sync_process_env(config({ SYNC_A: 'wrangler' }));
+		expect(process.env.SYNC_A).toBe('shell');
+
+		sync_process_env(config({}));
+		expect(process.env.SYNC_A).toBe('shell');
+		delete process.env.SYNC_A;
+	});
+});
+
+test.each([
+	{ date: '2026-01-01', flags: [], expected: true },
+	{ date: '2026-01-01', flags: ['nodejs_als'], expected: false },
+	{ date: '2026-01-01', flags: ['nodejs_compat'], expected: false },
+	{ date: '2026-08-04', flags: [], expected: false },
+	{ date: '2026-08-04', flags: ['no_nodejs_compat'], expected: true }
+])('adds nodejs_als only when $date with $flags lacks it', ({ date, flags, expected }) => {
+	expect(needs_nodejs_als(date, flags)).toBe(expected);
+});
+
+describe('not_found_handling', () => {
+	test.each([
+		{ name: 'serves the fallback page without a Worker', worker: false, expected: '404-page' },
+		{ name: 'leaves it to the Worker', worker: true, expected: undefined },
+		{
+			name: 'keeps the configured value',
+			worker: false,
+			configured: /** @type {const} */ ('404-page'),
+			expected: '404-page'
+		}
+	])('$name', ({ worker, configured, expected }) => {
+		const config = /** @type {any} */ ({ assets: { not_found_handling: configured } });
+		expect(resolve_not_found_handling(config, worker)).toBe(expected);
 	});
 });
