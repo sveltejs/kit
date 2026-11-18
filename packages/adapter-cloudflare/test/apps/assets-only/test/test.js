@@ -9,6 +9,6 @@ test('does not deploy a worker', async ({ request }) => {
 	// a Worker would receive this request, since it isn't a navigation and doesn't
 	// match an asset, and respond with a 404 because no route matches it
 	const response = await request.get('/not/a/route');
-	expect(response.status()).toBe(200);
+	expect(response.status()).toBe(404);
 	expect(response.headers()['content-type']).toContain('text/html');
 });

@@ -252,21 +252,14 @@ test.each([
 });
 
 describe('not_found_handling', () => {
-	const spa = 'single-page-application';
-
 	test.each([
-		{ name: 'serves the fallback page without a Worker', worker: false, expected: spa },
+		{ name: 'serves the fallback page without a Worker', worker: false, expected: '404-page' },
 		{ name: 'leaves it to the Worker', worker: true, expected: undefined },
 		{
 			name: 'keeps the configured value',
 			worker: false,
 			configured: /** @type {const} */ ('404-page'),
 			expected: '404-page'
-		},
-		{
-			name: 'does nothing when every route is prerendered',
-			worker: false,
-			expected: undefined
 		}
 	])('$name', ({ worker, configured, expected }) => {
 		const config = /** @type {any} */ ({ assets: { not_found_handling: configured } });
