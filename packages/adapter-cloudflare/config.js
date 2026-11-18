@@ -100,7 +100,8 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 							define: cloudflare_ssr.define,
 							resolve: {
 								noExternal: cloudflare_ssr.resolve?.noExternal,
-								// `browser` would resolve `esm-env` to `BROWSER = true` and similar
+								// `browser` is a legacy condition Cloudflare can't remove yet
+								// but has recommended us to remove it ourselves
 								conditions: cloudflare_ssr.resolve?.conditions?.filter(
 									(condition) => condition !== 'browser'
 								),
@@ -111,7 +112,7 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// points to our stand-in `main`
+								// avoid optimising the Wrangler `main` entry, which points to our build-only worker
 								entries: undefined
 							},
 							build: {
