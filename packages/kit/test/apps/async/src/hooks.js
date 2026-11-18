@@ -7,3 +7,10 @@ export const transport = {
 		decode: ([message]) => new Foo(message)
 	}
 };
+
+/** @type {import('@sveltejs/kit/hooks').Reroute} */
+export const reroute = ({ url }) => {
+	if (url.pathname === '/remote/match/origin') {
+		return `/fork/${url.host}`;
+	}
+};
