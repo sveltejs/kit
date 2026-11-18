@@ -44,7 +44,7 @@ test.each(['https://cdn.example.com', '/assets'])(
 	'rejects paths.assets=%s when configuring the adapter',
 	(assets) => {
 		expect(() => get_vite_config(adapter(), assets)).toThrow(
-			'@sveltejs/adapter-cloudflare does not support paths.assets'
+			'@sveltejs/adapter-cloudflare does not support `paths.assets`'
 		);
 	}
 );
