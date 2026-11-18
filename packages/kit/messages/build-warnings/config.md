@@ -2,7 +2,7 @@
 
 > The `%keypath%` option is deprecated, and will be removed in a future version
 
-This option still works, but it will be removed in a future major version of SvelteKit. See the [configuration reference](https://svelte.dev/docs/kit/configuration) for the recommended alternative.
+This option still works, but it will be removed in a future major version of SvelteKit. See the [configuration reference](https://svelte.dev/docs/kit/@sveltejs-kit-vite) for the recommended alternative.
 
 ## config_option_deprecated_alias
 

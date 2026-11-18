@@ -81,7 +81,11 @@ export function get_action_location(url) {
 		}
 	}
 
-	return location.pathname + location.search;
+	// Preserve leading double slashes without producing a protocol-relative URL.
+	const pathname = location.pathname.startsWith('//')
+		? '/.' + location.pathname
+		: location.pathname;
+	return pathname + location.search;
 }
 
 /**

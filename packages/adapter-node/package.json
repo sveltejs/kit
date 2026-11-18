@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-node",
-	"version": "6.0.0-next.15",
+	"version": "6.0.4",
 	"description": "Adapter for SvelteKit apps that generates a standalone Node server",
 	"keywords": [
 		"adapter",
@@ -33,13 +33,15 @@
 		"ambient.d.ts"
 	],
 	"scripts": {
-		"prepublishOnly": "echo TODO: remove this script once .github/workflows/platform-tests-node.yml no longer invokes prepublishOnly, after version-3 is merged into main",
 		"test": "pnpm test:unit && pnpm test:build",
 		"test:unit": "vitest run",
 		"test:build": "pnpm -r --workspace-concurrency 1 --filter=\"./test/**\" test:build",
 		"check": "node node_modules/@typescript/native/bin/tsc",
 		"lint": "oxfmt --check .",
 		"format": "oxfmt --write ."
+	},
+	"dependencies": {
+		"@sveltejs/adapter-server": "workspace:^"
 	},
 	"devDependencies": {
 		"@sveltejs/kit": "workspace:^",

@@ -17,6 +17,7 @@
 	],
 	"ignorePatterns": [
 		"documentation/**/*.md",
+		"documentation/docs/+assets/messages.json",
 		"packages/*/test/**/build/**",
 		"packages/adapter-cloudflare/test/apps/workers/dist/**",
 		"packages/enhanced-img/test/Output.svelte",

@@ -91,6 +91,14 @@ export function prerender_redirect_location_missing(_values) {
 }
 
 /**
+ * Missing route file prefix. Did you mean %corrected%? at %file%
+ * @param {{ "corrected": string; "file": string }} _values
+ */
+export function route_file_prefix_missing(_values) {
+	warn('route_file_prefix_missing', `Missing route file prefix. Did you mean ${_values.corrected}? at ${_values.file}`);
+}
+
+/**
  * The following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:
 %plugins%
  * @param {{ "plugins": string }} _values

@@ -727,14 +727,21 @@ test('ignores things that look like lockfiles', () => {
 });
 
 test('only suggests a + prefix for names valid with the file extension', () => {
-	const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
 	try {
-		create('samples/missing-prefix');
+		const { nodes, routes } = create('samples/missing-prefix');
 
-		const messages = spy.mock.calls.flat().join('\n');
-		expect(messages).toContain('Did you mean +page.svelte?');
-		expect(messages).not.toContain('+error.ts');
+		expect(spy).toHaveBeenCalledTimes(1);
+		expect(spy.mock.calls[0][0]).toContainKitDiagnostic('route_file_prefix_missing', {
+			contains: ['+page.svelte', path.join(cwd, 'samples/missing-prefix/page.svelte')]
+		});
+		expect(nodes.map(simplify_node)).toEqual([
+			default_layout,
+			default_error,
+			{ component: 'samples/missing-prefix/+page.svelte' }
+		]);
+		expect(routes[0].page).toEqual({ layouts: [0], errors: [1], leaf: 2 });
 	} finally {
 		spy.mockRestore();
 	}

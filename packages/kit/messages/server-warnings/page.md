@@ -19,13 +19,13 @@ This is only checked during development.
 
 ## form_action_error_without_ssr
 
-> The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
+> The form action returned an error, but `+error.svelte` wasn't rendered because SSR is off. To get the error page with CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance
 
 Without JavaScript, a form submission loads a new page, which is where the [error page](https://svelte.dev/docs/kit/routing#error) for a failed action would appear. With [`ssr = false`](https://svelte.dev/docs/kit/page-options#ssr) that page is only rendered in the browser, which can't see the result of a submission it didn't make. Enhance the form with [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance), so that the browser submits it and receives the result. This is only checked during development.
 
 ## form_action_data_without_ssr
 
-> The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#progressive-enhancement-use-enhance
+> The form action returned a value, but it isn't available in `page.form`, because SSR is off. To handle the returned value in CSR, enhance your form with `use:enhance`. See https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance
 
 Without JavaScript, a form submission loads a new page, which would get the action's data as [`form`](https://svelte.dev/docs/kit/form-actions#Anatomy-of-an-action). With [`ssr = false`](https://svelte.dev/docs/kit/page-options#ssr) that page is only rendered in the browser, which can't see the result of a submission it didn't make, so the data is lost. Enhance the form with [`use:enhance`](https://svelte.dev/docs/kit/form-actions#Progressive-enhancement-use:enhance), so that the browser submits it and receives the result. This is only checked during development.
 
@@ -39,7 +39,7 @@ A component called `fetch` while it was rendered on the server. That request run
 
 > Removing comments in `transformPageChunk` can break Svelte's hydration
 
-Svelte adds HTML comments to server-rendered markup that it uses to hydrate the page in the browser, and the [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#Server-hooks-handle) option of `resolve` returned HTML with fewer comments than it received. If you're minifying the HTML, configure the minifier to keep comments (server-side includes such as `<!--#include ... -->` are ignored by this check). This is only checked during development.
+Svelte adds HTML comments to server-rendered markup that it uses to hydrate the page in the browser, and the [`transformPageChunk`](https://svelte.dev/docs/kit/hooks#handle) option of `resolve` returned HTML with fewer comments than it received. If you're minifying the HTML, configure the minifier to keep comments (server-side includes such as `<!--#include ... -->` are ignored by this check). This is only checked during development.
 
 ## streaming_without_csr
 

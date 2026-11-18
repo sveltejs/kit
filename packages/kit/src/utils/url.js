@@ -8,6 +8,14 @@ import * as server_errors from '../messages/server-errors.js';
  */
 export const SCHEME = /^[a-z][a-z\d+\-.]*:/i;
 
+/**
+ * Whether the string starts with a scheme (`https:`) or authority (`//example.com`)
+ * @param {string} str
+ */
+export function has_scheme_or_authority(str) {
+	return SCHEME.test(str) || str.startsWith('//');
+}
+
 const internal = new URL('a://');
 
 /**
@@ -38,7 +46,8 @@ export function is_root_relative(path) {
 export function relative_pathname(from, to) {
 	const segment = to.replace(/\/$/, '').split('/').at(-1);
 
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
+	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
+	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
 }
 
 /**

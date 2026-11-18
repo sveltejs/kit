@@ -50,22 +50,19 @@ catalog:
   # template feature which can change in a patch version
   '@changesets/changelog-github': 1.0.1
   '@fontsource/libre-barcode-128-text': ^5.3.0
-  '@opentelemetry/api': ^1.9.1
-  '@opentelemetry/sdk-node': ^0.221.0
-  '@opentelemetry/sdk-trace-node': ^2.8.0
+  '@opentelemetry/api': ^1.10.0
+  '@opentelemetry/sdk-node': ^0.301.0
+  '@opentelemetry/sdk-trace': ^3.0.0
   '@playwright/test': ^1.62.1
-  '@polka/url': ^1.0.0-next.29
   '@standard-schema/spec': ^1.1.0
   '@sveltejs/eslint-config': ^10.0.4
   '@sveltejs/vite-plugin-svelte': ^7.3.0
   '@types/connect': ^3.4.38
   '@types/estree': ^1.0.8
   '@types/node': ^22.19.19
-  '@types/semver': ^7.8.0
   eslint: ^10.8.1
   prettier: ^3.9.6
   prettier-plugin-svelte: ^4.1.1
-  semver: ^7.5.4
   sirv-cli: ^3.0.1
   svelte: ^5.57.1
   svelte-check: ^4.7.5
@@ -77,7 +74,7 @@ catalog:
   '@typescript/native': npm:typescript@^7.0.2
   valibot: ^1.4.2
   vite: ^8.2.1
-  wrangler: ^4.120.1
+  wrangler: ^4.162.0
 
   # unit test deps that should be upgraded together
   '@vitest/browser-playwright': ^5.0.1

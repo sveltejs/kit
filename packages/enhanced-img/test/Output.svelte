@@ -148,6 +148,56 @@
 	</picture>
 {/if}
 
+{#if typeof manual_image1 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{manual_image1} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={manual_image1} alt="dynamic width test" width="280" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(manual_image1.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={manual_image1.img.src} alt="dynamic width test" width="280" height={Math.round((manual_image1.img.h * 280) / manual_image1.img.w)} />
+	</picture>
+{/if}
+
+{#if typeof manual_image1 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{manual_image1} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={manual_image1} alt="dynamic height test" height="140" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(manual_image1.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={manual_image1.img.src} alt="dynamic height test" height="140" width={Math.round((manual_image1.img.w * 140) / manual_image1.img.h)} />
+	</picture>
+{/if}
+
+{#if true}{@const __img_4 = get_image(0)}
+{#if typeof __img_4 === 'string'}
+	{#if
+	import.meta.env.DEV && false}
+		{__img_4} was not enhanced. Cannot determine dimensions.
+	{:else}
+		<img src={__img_4} alt="dynamic computed width test" width="280" />
+	{/if}
+{:else}
+	<picture>
+		{#each Object.entries(__img_4.sources) as [format, srcset]}
+			<source {srcset} type={'image/' + format} />
+		{/each}
+		<img src={__img_4.img.src} alt="dynamic computed width test" width="280" height={Math.round((__img_4.img.h * 280) / __img_4.img.w)} />
+	</picture>
+{/if}
+{/if}
+
 <picture>
 	<source src="./dev.avif" />
 	<source srcset="./dev.avif 500v ./bar.avif 100v" />

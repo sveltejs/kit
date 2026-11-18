@@ -1,5 +1,31 @@
 # @sveltejs/adapter-auto
 
+## 8.0.1
+
+### Patch Changes
+
+- fix: apply the Vite config and plugins of the detected adapter ([#17572](https://github.com/sveltejs/kit/pull/17572))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.0
+
+## 8.0.0
+
+### Major Changes
+
+- breaking: require SvelteKit 3 ([#15506](https://github.com/sveltejs/kit/pull/15506))
+
+### Minor Changes
+
+- feat: add zero-config deployment support for Render ([#16850](https://github.com/sveltejs/kit/pull/16850))
+
+### Patch Changes
+
+- fix: convert resolved adapter path to a file URL before importing, so builds work on Windows ([#16618](https://github.com/sveltejs/kit/pull/16618))
+
+- fix: allow prerelease versions of SvelteKit 3 to satisfy the peer dependency range ([#16286](https://github.com/sveltejs/kit/pull/16286))
+- Updated dependencies:
+  - @sveltejs/kit@3.0.0
+
 ## 8.0.0-next.4
 
 ### Minor Changes

@@ -1,21 +1,21 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { test, expect } from 'vitest';
+import { expect, test } from 'vitest';
+import { deploy } from '../../../../../test-utils/deploy.vitest.js';
+
+const app = deploy(import.meta.dirname);
 
 test('_redirects are copied to publish directory', () => {
-	const redirects = fs.readFileSync(
-		path.resolve(import.meta.dirname, './build/_redirects'),
-		'utf-8'
-	);
+	const redirects = fs.readFileSync(path.join(app, 'build/_redirects'), 'utf-8');
 	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
 });
 
 const functions_dirs = {
-	node: path.resolve(import.meta.dirname, './.netlify/v1/functions'),
-	edge: path.resolve(import.meta.dirname, './.netlify/v1/edge-functions')
+	node: path.join(app, '.netlify/v1/functions'),
+	edge: path.join(app, '.netlify/v1/edge-functions')
 };
 
-const config_path = path.resolve(import.meta.dirname, './.netlify/v1/config.json');
+const config_path = path.join(app, '.netlify/v1/config.json');
 
 test('generates Node.js and Edge functions', () => {
 	const config = JSON.parse(fs.readFileSync(config_path, 'utf-8'));

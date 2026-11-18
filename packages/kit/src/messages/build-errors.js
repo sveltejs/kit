@@ -508,13 +508,13 @@ export function env_variables_missing(_values, options) {
 }
 
 /**
- * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis
+ * Cannot use relative URL (`%url%`) with global `fetch` — use `event.fetch` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs
  * @param {{ "url": string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function fetch_relative_url(_values, options) {
-	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#fetch-apis`, options, fetch_relative_url);
+	throw_error('fetch_relative_url', `Cannot use relative URL (\`${_values.url}\`) with global \`fetch\` — use \`event.fetch\` instead: https://svelte.dev/docs/kit/web-standards#Fetch-APIs`, options, fetch_relative_url);
 }
 
 /**
@@ -568,13 +568,13 @@ export function prerender_client_address(_values, options) {
 }
 
 /**
- * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information
+ * Cannot save `%path%` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information
  * @param {{ "path": string; "parent"?: string }} _values
  * @param {ThrowOptions} [options]
  * @returns {never}
  */
 export function prerender_directory_conflict(_values, options) {
-	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-route-conflicts for more information`), options, prerender_directory_conflict);
+	throw_error('prerender_directory_conflict', (_values?.parent !== undefined ? `Cannot save \`${_values.path}\` as \`${_values.parent}\` is already a file. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information` : `Cannot save \`${_values.path}\` as it is already a directory. See https://svelte.dev/docs/kit/page-options#prerender-Route-conflicts for more information`), options, prerender_directory_conflict);
 }
 
 /**
@@ -669,6 +669,24 @@ ${_values.routes}`, options, prerender_unseen_routes);
  */
 export function preview_build_missing(_values, options) {
 	throw_error('preview_build_missing', `Server files not found at \`${_values.dir}\`, did you run \`build\` first?`, options, preview_build_missing);
+}
+
+/**
+ * Cannot import remote module `%module%` into code that runs in the browser because it is server-only.
+
+%chain%
+
+Move the remote module outside any `server` directory, and remove any `server` segment from its filename.
+ * @param {{ "module": string; "chain": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_module_server_only(_values, options) {
+	throw_error('remote_module_server_only', `Cannot import remote module \`${_values.module}\` into code that runs in the browser because it is server-only.
+
+${_values.chain}
+
+Move the remote module outside any \`server\` directory, and remove any \`server\` segment from its filename.`, options, remote_module_server_only);
 }
 
 /**
