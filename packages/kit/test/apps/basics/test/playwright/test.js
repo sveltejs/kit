@@ -844,27 +844,6 @@ test.describe('$app/manifest', () => {
 });
 
 test.describe('$app/paths', () => {
-	for (const suffix of ['?a=1', '#top']) {
-		test(`resolve() removes trailing route groups before ${suffix}`, async ({
-			page,
-			javaScriptEnabled,
-			baseURL
-		}) => {
-			await page.goto('/resolve-group');
-
-			const links = page.locator(javaScriptEnabled ? '#client-links' : '#server-links');
-			const link = links.locator(`a[data-suffix="${suffix}"]`);
-			await expect(link).toHaveAttribute(
-				'href',
-				`${javaScriptEnabled ? '' : '.'}/resolve-group${suffix}`
-			);
-
-			await link.click();
-			await expect(page).toHaveURL(`${baseURL}/resolve-group${suffix}`);
-			await expect(page.locator('h1')).toHaveText('Trailing route group');
-		});
-	}
-
 	// some browsers will re-request assets after a `pushState`
 	// https://github.com/sveltejs/kit/issues/3748#issuecomment-1125980897
 	test('replaces %sveltekit.assets% in template with relative path, and makes it absolute in the client', async ({

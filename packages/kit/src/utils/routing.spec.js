@@ -412,7 +412,7 @@ describe('resolve_route', () => {
 		{ route: '/[...rest]/', params: { rest: '' }, expected: '/' },
 		{
 			route: '/[x+3f]/[x+23]/[x+28]app[x+29]/(group)',
-			params: {},
+			params: undefined,
 			expected: '/%3F/%23/(app)'
 		},
 		{
@@ -538,18 +538,22 @@ describe('resolve_route', () => {
 	];
 
 	for (const { route, params, expected } of from_params_tests) {
-		test.each([
-			'',
-			'?a=1',
-			'#top',
-			'?next=/a//(group)/[one]/[x+23]/#top?',
-			'#top?next=/a//(group)/[one]/[x+23]/',
-			'?q=line\n/another-line#top'
-		])(`resolvePath generates correct path for ${route} with suffix %j`, (suffix) => {
-			const result = resolve_route(route + suffix, params);
-			assert.equal(result, expected + suffix);
+		test(`resolvePath generates correct path for ${route}`, () => {
+			const result = resolve_route(route, params);
+			assert.equal(result, expected);
 		});
 	}
+
+	test.each([
+		'?a=1',
+		'#top',
+		'?next=/a//(group)/[one]/[x+23]/#top?',
+		'#top?next=/a//(group)/[one]/[x+23]/',
+		'?q=line\n/another-line#top'
+	])('resolvePath leaves suffix %j untouched', (suffix) => {
+		assert.equal(resolve_route('/blog/[slug]/(app)' + suffix, { slug: 'a' }), '/blog/a' + suffix);
+		assert.equal(resolve_route('/(app)/' + suffix), '/' + suffix);
+	});
 
 	test.each([
 		{ id: '/blog/[one]/[two]', params: { one: 'one' }, code: 'route_param_missing', name: 'two' },

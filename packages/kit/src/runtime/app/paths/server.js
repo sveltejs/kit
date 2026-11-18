@@ -33,7 +33,6 @@ export function resolve(id, params) {
 	let resolved;
 
 	if (id[0] === '/') {
-		// route ID
 		resolved = resolve_route(id, params);
 	} else {
 		resolved = '/' + id;

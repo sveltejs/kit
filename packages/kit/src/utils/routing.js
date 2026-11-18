@@ -312,12 +312,6 @@ export function resolve_route(id, params) {
 	// Only the route portion should undergo group removal, parameter replacement and escape decoding.
 	const [route, suffix = ''] = id.split(/([?#].*)/s);
 
-	if (route.includes('[') && !params) {
-		e.resolve_params_missing({ id });
-	}
-
-	params ??= {};
-
 	const segments = get_route_segments(route);
 	const has_trailing_slash = route.endsWith('/');
 
@@ -327,6 +321,8 @@ export function resolve_route(id, params) {
 			.map((segment) =>
 				segment.replace(segment_pattern, (_, escape_type, escape_code, optional, rest, name) => {
 					if (escape_type) return encode_pathname_chars(decode_escape_sequence(escape_code));
+
+					if (!params) e.resolve_params_missing({ id });
 
 					const value = params[name];
 
