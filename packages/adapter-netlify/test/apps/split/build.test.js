@@ -33,7 +33,12 @@ describe.each([{ edge: false }, { edge: true }])('edge: $edge', ({ edge }) => {
 				return JSON.parse(content.match(/(?:export const|const|var) config = (\{[\s\S]*?\});/)[1]);
 			});
 
-		expect(functions.length).toBeGreaterThan(10);
+		/** @param {string} pattern */
+		const index = (pattern) => functions.findIndex((config) => config.path.includes(pattern));
+
+		// the platform test only reproduces the bug while name order disagrees with route priority
+		expect(`sveltekit-${index('/z/*')}` < `sveltekit-${index('/z/specific')}`).toBe(true);
+
 		const seen = [];
 		for (const config of functions) {
 			expect(config.excludedPath).toEqual(expect.arrayContaining(seen));
