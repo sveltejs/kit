@@ -1,6 +1,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSRManifest } from 'types' */
 
+import { DEV } from 'esm-env';
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
@@ -192,6 +193,23 @@ export async function get_remote_function(id, manifest) {
 
 /**
  * @param {RequestEvent} event
+ * @param {string} type
+ * @param {'GET' | 'POST'} method
+ */
+function check_method(event, type, method) {
+	if (event.request.method !== method) {
+		throw new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			DEV
+				? `\`${type}\` functions must be invoked via ${method} request, not ${event.request.method}`
+				: 'Method Not Allowed'
+		);
+	}
+}
+
+/**
+ * @param {RequestEvent} event
  * @param {RequestState} state
  * @param {string} id
  */
@@ -219,13 +237,7 @@ async function handle_remote_call_internal(event, state, id) {
 
 		switch (internals.type) {
 			case 'query_live': {
-				if (event.request.method !== 'GET') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'query.live', 'GET');
 
 				const payload = /** @type {string} */ (
 					new URL(event.request.url).searchParams.get('payload')
@@ -235,13 +247,7 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'query_batch': {
-				if (event.request.method !== 'POST') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'query.batch', 'POST');
 
 				/** @type {{ payloads: string[] }} */
 				const { payloads } = await event.request.json();
@@ -254,13 +260,7 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'form': {
-				if (event.request.method !== 'POST') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`form\` functions must be invoked via POST request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'form', 'POST');
 
 				if (!is_form_content_type(event.request)) {
 					throw new SvelteKitError(
@@ -306,13 +306,7 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'command': {
-				if (event.request.method !== 'POST') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`command\` functions must be invoked via POST request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'command', 'POST');
 
 				/** @type {{ payload: string, refreshes?: string[] }} */
 				const { payload, refreshes } = await event.request.json();
@@ -328,6 +322,8 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'prerender': {
+				check_method(event, 'prerender', 'GET');
+
 				data._ = await with_request_store({ event, state }, () =>
 					fn(parse_remote_arg(additional_args))
 				);
@@ -336,6 +332,8 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'query': {
+				check_method(event, 'query', 'GET');
+
 				const payload = /** @type {string} */ (
 					// new URL(...) necessary because we're hiding the URL from the user in the event object
 					new URL(event.request.url).searchParams.get('payload')

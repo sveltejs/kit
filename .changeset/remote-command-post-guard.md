@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: reject non-POST requests to remote command endpoints before parsing their bodies
+fix: reject remote function requests that use the wrong HTTP method
