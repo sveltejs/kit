@@ -3,6 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VERSION } from '@sveltejs/kit';
 import { getRequest } from '@sveltejs/kit/node';
 import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
@@ -186,12 +187,15 @@ export default function (options = {}) {
 						configResolved(config) {
 							vite_config = config;
 
-							// TODO: remove once the minimum supported Kit version understands `customPreview`.
-							// Older versions always start the Node preview server, which
-							// boots the app outside of workerd before any request is served
-							for (const plugin of config.plugins) {
-								if (plugin.name === 'vite-plugin-sveltekit-setup') {
-									delete plugin.configurePreviewServer;
+							// TODO: remove once the minimum supported Kit version is 3.4.0.
+							// Older versions ignore `customPreview` and always start the Node preview
+							// server, which boots the app outside of workerd before any request is served
+							const [major, minor] = VERSION.split('.').map(Number);
+							if (major === 3 && minor < 4) {
+								for (const plugin of config.plugins) {
+									if (plugin.name === 'vite-plugin-sveltekit-setup') {
+										delete plugin.configurePreviewServer;
+									}
 								}
 							}
 						}
