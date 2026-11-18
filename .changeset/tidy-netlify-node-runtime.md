@@ -3,4 +3,3 @@
 ---
 
 feat: allow configuring the Node.js runtime version with the adapter's optional `nodeVersion` option
-

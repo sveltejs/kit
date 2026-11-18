@@ -7,12 +7,12 @@ const app = deploy(import.meta.dirname);
 
 test('explicit nodeVersion is included in framework and function metadata', () => {
 	const framework_config = JSON.parse(
-		fs.readFileSync(path.resolve(import.meta.dirname, '.netlify/v1/config.json'), 'utf-8')
+		fs.readFileSync(path.join(app, '.netlify/v1/config.json'), 'utf-8')
 	);
 	expect(framework_config.functions).toEqual({ nodeVersion: '24' });
 
 	const entrypoint = fs.readFileSync(
-		path.resolve(import.meta.dirname, '.netlify/v1/functions/sveltekit-render.mjs'),
+		path.join(app, '.netlify/v1/functions/sveltekit-render.mjs'),
 		'utf-8'
 	);
 	const function_config = JSON.parse(entrypoint.match(/export const config = (\{[\s\S]*?\});/)[1]);

@@ -49,8 +49,6 @@ jobs:
 
       - name: Build test app
         working-directory: ${{ env.APP }}
-        env:
-          EDGE: ${{ inputs.variant == 'split-edge' }}
         run: pnpm build
 
       # the Netlify CLI bundles the functions in the deploy job, which has no `node_modules`
