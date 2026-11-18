@@ -17,10 +17,9 @@ export interface AdapterOptions {
 
 	/**
 	 * Whether to build a Worker. It defaults to `true`. Set this to `false` if you only
-	 * want to deploy static assets. In that case, if any routes are not prerendered, the adapter defaults
-	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
-	 * to `"single-page-application"` unless you have set it yourself. With that setting,
-	 * the adapter generates a SPA fallback page.
+	 * want to deploy static assets. In that case, the adapter sets
+	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/#routing-behavior)
+	 * to `"single-page-application"`, if not already set.
 	 *
 	 * @default true
 	 * @since 9.0.0

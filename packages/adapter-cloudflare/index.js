@@ -60,16 +60,17 @@ export default function (options = {}) {
 			// client assets and prerendered pages
 			const assets_dest = `${assets}${builder.config.paths.base}`;
 			fs.mkdirSync(assets_dest, { recursive: true });
+
+			// If no Worker script is present or the Worker fetches an asset,
+			// this file is served when a request fails to match an asset.
 			if (not_found_handling === '404-page') {
-				// Cloudflare serves this file when a request matches no asset. We generate it
-				// first so that a prerendered 404 page, if the user has one, replaces it
-				await builder.generateFallback(path.join(assets_dest, '404.html'));
+				// generate 404.html first which can then be overridden by prerendering, if the user defined such a page.
+				await builder.generateFallback(path.join(assets, '404.html'));
 			}
 			builder.writeClient(assets_dest);
 			builder.writePrerendered(assets_dest);
 			if (not_found_handling === 'single-page-application') {
-				// Cloudflare serves `/index.html` for every request that matches no asset, so it
-				// has to be the fallback page even if that replaces a prerendered home page
+				// this is served with a 200 OK
 				await builder.generateFallback(path.join(assets, 'index.html'));
 			}
 

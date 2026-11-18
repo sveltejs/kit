@@ -53,7 +53,7 @@ Preferences for the emulated `env` local bindings. See the [getPlatformProxy](ht
 
 ### worker
 
-Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, a fallback page is generated and [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) is set to `"single-page-application"`, unless you have set it yourself.
+Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/#routing-behavior) is set to `"single-page-application"`, if not already set.
 
 ## Deployment
 
@@ -99,13 +99,6 @@ For testing the build, you should use [Wrangler](https://developers.cloudflare.c
 The [`_headers`](https://developers.cloudflare.com/workers/static-assets/headers/) and [`_redirects`](https://developers.cloudflare.com/workers/static-assets/redirects/) files, specific to Cloudflare, can be used for static asset responses (like images) by putting them into the project root folder.
 
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#handle) hook.
-
-## Fallback pages
-
-Cloudflare can serve a page for requests that don't match a static asset, depending on the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) setting in your Wrangler configuration file. The adapter generates that page as a [SPA fallback page](single-page-apps):
-
-- `"single-page-application"` — an `index.html` page, served with a 200 status
-- `"404-page"` — a `404.html` page, served with a 404 status
 
 ## Troubleshooting
 
