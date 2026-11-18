@@ -9,6 +9,17 @@ export interface AdapterOptions {
 	 */
 	config?: string;
 	/**
+	 * Whether to deploy a Worker alongside the static assets. Set this to `false` when
+	 * nothing needs to run on the server. If some routes are not prerendered, the adapter
+	 * serves them with a SPA fallback page by setting
+	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
+	 * to `"single-page-application"`, unless you have set it yourself.
+	 *
+	 * @default true
+	 * @since 9.0.0
+	 */
+	worker?: boolean;
+	/**
 	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
 	 * for non-matching asset requests.
 	 *

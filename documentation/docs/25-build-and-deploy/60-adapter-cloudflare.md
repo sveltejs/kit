@@ -29,6 +29,7 @@ export default defineConfig({
 			adapter: adapter({
 				// See below for an explanation of these options
 				config: undefined,
+				worker: true,
 				platformProxy: {
 					configPath: undefined,
 					environment: undefined,
@@ -46,6 +47,10 @@ export default defineConfig({
 ### config
 
 Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
+
+### worker
+
+Whether to deploy a Worker alongside the static assets. Set this to `false` when nothing needs to run on the server. If some routes are not prerendered, the adapter serves them with a SPA fallback page by setting [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) to `"single-page-application"`, unless you have set it yourself. Previously, this was done by leaving `main` out of the Wrangler configuration file.
 
 ### platformProxy
 

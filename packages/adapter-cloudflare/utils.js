@@ -22,15 +22,56 @@ export function validate_worker_settings(wrangler_config) {
 }
 
 /**
+ * `nodejs_compat` already provides `node:async_hooks`. It is enabled by its flag
+ * or by a compatibility date from 2026-08-04 onwards
+ * https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+ * @param {string | undefined} compatibility_date
+ * @param {string[]} compatibility_flags
+ * @returns {boolean}
+ */
+export function needs_nodejs_als(compatibility_date, compatibility_flags) {
+	const flags = new Set(compatibility_flags);
+	if (flags.has('nodejs_als') || flags.has('nodejs_compat')) return false;
+
+	return flags.has('no_nodejs_compat') || !compatibility_date || compatibility_date < '2026-08-04';
+}
+
+/**
+ * Without a Worker, a route that isn't prerendered is only reachable through the
+ * fallback page that Cloudflare can serve for requests that match no asset. We turn
+ * that on unless the user has already chosen how those requests are handled
+ * @param {Array<{ prerender: boolean | 'auto' }>} routes
+ * @param {WorkerConfig} wrangler_config
+ * @param {boolean} worker whether a Worker is deployed
+ * @returns {NonNullable<WorkerConfig['assets']>['not_found_handling']}
+ */
+export function resolve_not_found_handling(routes, wrangler_config, worker) {
+	const configured = wrangler_config.assets?.not_found_handling;
+	if (configured || worker || routes.every((route) => route.prerender === true)) {
+		return configured;
+	}
+
+	return 'single-page-application';
+}
+
+/**
  * The adapter generates the Worker entry, so a `main` set in the Wrangler config
- * is ignored. The old generated entry is an error because it no longer exists.
+ * is ignored. The old generated entry is an error because it no longer exists,
+ * and so is any `main` when the user has opted out of deploying a Worker.
  * @param {string | undefined} main
  * @param {string | undefined} config_path
+ * @param {boolean} worker whether a Worker is deployed
  */
-export function validate_main(main, config_path) {
+export function validate_main(main, config_path, worker) {
 	if (!main) return;
 
 	const file = config_path || 'your wrangler.jsonc file';
+
+	if (!worker) {
+		throw new Error(
+			`Remove \`main\` from ${file} or set the adapter's \`worker\` option to \`true\`. No Worker is deployed when \`worker\` is \`false\``
+		);
+	}
 
 	if (main.replaceAll('\\', '/').includes('.svelte-kit/cloudflare')) {
 		throw new Error(

@@ -30,7 +30,7 @@ test('selects Wrangler configuration and named environments from Vite env files'
 				mode: 'production',
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config(undefined, set_worker_config)
+				plugins: plugin_config(undefined, set_worker_config, [], true)
 			},
 			'build'
 		);
@@ -52,7 +52,7 @@ test('resolves a relative wrangler config path against the Vite root', async () 
 				root: path.resolve('test/apps/workers'),
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config('config/wrangler.jsonc', () => {})
+				plugins: plugin_config('config/wrangler.jsonc', () => {}, [], true)
 			},
 			'build'
 		)
@@ -60,9 +60,10 @@ test('resolves a relative wrangler config path against the Vite root', async () 
 });
 
 test.each([
-	['.svelte-kit/cloudflare/_worker.js', 'throws'],
-	['src/worker.js', 'warns']
-])('validates `main` %s in the Wrangler config', async (main, outcome) => {
+	['.svelte-kit/cloudflare/_worker.js', 'throws', true],
+	['src/worker.js', 'warns', true],
+	['src/worker.js', 'throws', false]
+])('validates `main` %s in the Wrangler config (%s, worker: %s)', async (main, outcome, worker) => {
 	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-main-'));
 	const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 	try {
@@ -75,7 +76,7 @@ test.each([
 				root,
 				configFile: false,
 				logLevel: 'silent',
-				plugins: plugin_config(undefined, () => {})
+				plugins: plugin_config(undefined, () => {}, [], worker)
 			},
 			'build'
 		);

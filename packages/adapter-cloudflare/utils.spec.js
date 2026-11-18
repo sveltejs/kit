@@ -4,6 +4,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { describe, test, vi, expect } from 'vitest';
 import {
+	needs_nodejs_als,
+	resolve_not_found_handling,
 	validate_worker_settings,
 	generate_redirects,
 	append_headers,
@@ -236,5 +238,40 @@ describe('sync_process_env', () => {
 		sync_process_env(config({}));
 		expect(process.env.SYNC_A).toBe('shell');
 		delete process.env.SYNC_A;
+	});
+});
+
+test.each([
+	{ date: '2026-01-01', flags: [], expected: true },
+	{ date: '2026-01-01', flags: ['nodejs_als'], expected: false },
+	{ date: '2026-01-01', flags: ['nodejs_compat'], expected: false },
+	{ date: '2026-08-04', flags: [], expected: false },
+	{ date: '2026-08-04', flags: ['no_nodejs_compat'], expected: true }
+])('adds nodejs_als only when $date with $flags lacks it', ({ date, flags, expected }) => {
+	expect(needs_nodejs_als(date, flags)).toBe(expected);
+});
+
+describe('not_found_handling', () => {
+	const routes = [{ prerender: /** @type {const} */ (true) }, { prerender: false }];
+	const spa = 'single-page-application';
+
+	test.each([
+		{ name: 'serves the fallback page without a Worker', worker: false, expected: spa },
+		{ name: 'leaves it to the Worker', worker: true, expected: undefined },
+		{
+			name: 'keeps the configured value',
+			worker: false,
+			configured: /** @type {const} */ ('404-page'),
+			expected: '404-page'
+		},
+		{
+			name: 'does nothing when every route is prerendered',
+			worker: false,
+			routes: [routes[0]],
+			expected: undefined
+		}
+	])('$name', ({ worker, configured, expected, routes: r = routes }) => {
+		const config = /** @type {any} */ ({ assets: { not_found_handling: configured } });
+		expect(resolve_not_found_handling(r, config, worker)).toBe(expected);
 	});
 });

@@ -2,7 +2,7 @@
 /** @import { Plugin } from 'vite' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
-import { validate_main } from './utils.js';
+import { needs_nodejs_als, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -30,15 +30,17 @@ export const is_dev_or_build = (_config, env) => !env.isPreview;
  * It also generates the Wrangler deployment config for the build output
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
- * @param {string[]} [scan_entries] the files Vite scans for the SSR environment's dependencies
+ * @param {string[]} server_entries paths, without the file extension, to the hooks and
+ * instrumentation files. Vite scans them for dependencies along with the route files
+ * @param {boolean} worker whether a Worker is deployed
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config, scan_entries) {
+export function plugin_config(config_path, set_worker_config, server_entries, worker) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
-			validate_main(config.main, config.configPath);
+			validate_main(config.main, config.configPath, worker);
 
 			// the plugin requires `main` to be populated, so we set it to avoid it
 			// trying to resolve the build-generated entry in the user's wrangler config
@@ -47,7 +49,7 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 			config.assets.binding ??= 'ASSETS';
 
 			// Svelte and SvelteKit use `node:async_hooks`
-			if (!config.compatibility_flags.includes('nodejs_als')) {
+			if (needs_nodejs_als(config.compatibility_date, config.compatibility_flags)) {
 				config.compatibility_flags.push('nodejs_als');
 			}
 
@@ -109,31 +111,8 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 							},
 							optimizeDeps: {
 								...cloudflare_ssr.optimizeDeps,
-								// the plugin's entry is our stand-in `main`, so we scan the app instead.
-								// Otherwise, dependencies found during the first request reload the module
-								// graph and fail that request
-								entries: scan_entries,
-								include: [
-									...(cloudflare_ssr.optimizeDeps?.include ?? []),
-									'@sveltejs/kit > cookie',
-									'@sveltejs/kit > devalue',
-									'@sveltejs/kit > esm-env'
-								],
-								rolldownOptions: {
-									...cloudflare_ssr.optimizeDeps?.rolldownOptions,
-									plugins: [
-										cloudflare_ssr.optimizeDeps?.rolldownOptions?.plugins,
-										{
-											// the scan would otherwise follow these into SvelteKit's generated modules,
-											// which only exist in the dev server's module graph
-											name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
-											resolveId: {
-												filter: { id: /^\$(app|env)\// },
-												handler: (id) => ({ id, external: true })
-											}
-										}
-									]
-								}
+								// points to our stand-in `main`
+								entries: undefined
 							},
 							build: {
 								target: cloudflare_ssr.build?.target,
@@ -150,6 +129,56 @@ export function plugin_config(config_path, set_worker_config, scan_entries) {
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-config',
 			apply: is_dev_or_build,
+			config: {
+				// runs after SvelteKit has configured the client's dependency optimisation
+				order: 'post',
+				handler(config) {
+					const { entries = [], exclude = [] } = config.optimizeDeps ?? {};
+
+					// The SSR environment prebundles dependencies too, so we find them before the
+					// first request. Otherwise, a dependency found while handling a request
+					// reloads the module graph and can fail that request
+					return {
+						environments: {
+							ssr: {
+								optimizeDeps: {
+									entries: [
+										// SvelteKit's entries are the route files, followed by a `!` pattern that
+										// removes `+server` and `+page.server` files because the client never
+										// loads them. We do load them here, so we drop that pattern
+										...[entries].flat().filter((entry) => !entry.startsWith('!')),
+										...server_entries.map((file) => `${file}.{js,ts}`)
+									],
+									// These are the dependencies of SvelteKit's server runtime, which the scan
+									// can't find. We list them instead of copying `optimizeDeps.include`
+									// because that is meant for the client. If the user has added a package
+									// there that only has a `browser` export, the dev server fails to start
+									// when it tries to resolve that package for the SSR environment
+									include: [
+										'@sveltejs/kit > cookie',
+										'@sveltejs/kit > devalue',
+										'@sveltejs/kit > esm-env'
+									],
+									exclude,
+									rolldownOptions: {
+										plugins: [
+											{
+												// the scan would otherwise follow these into SvelteKit's generated
+												// modules, which don't exist yet the first time the dev server starts
+												name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
+												resolveId: {
+													filter: { id: /^\$(app|env)\// },
+													handler: (id) => ({ id, external: true })
+												}
+											}
+										]
+									}
+								}
+							}
+						}
+					};
+				}
+			},
 			configEnvironment: {
 				order: 'post',
 				handler(name, config) {
