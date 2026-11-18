@@ -309,8 +309,11 @@ export const segment_pattern = new RegExp(
  * @returns {string}
  */
 export function resolve_route(id, params) {
-	const segments = get_route_segments(id);
-	const has_id_trailing_slash = id != '/' && id.endsWith('/');
+	const search_or_hash_index = id.search(/[?#]/);
+	const route_id = search_or_hash_index === -1 ? id : id.slice(0, search_or_hash_index);
+	const search_or_hash = search_or_hash_index === -1 ? '' : id.slice(search_or_hash_index);
+	const segments = get_route_segments(route_id);
+	const has_id_trailing_slash = route_id != '/' && route_id.endsWith('/');
 
 	return (
 		'/' +
@@ -348,7 +351,8 @@ export function resolve_route(id, params) {
 			)
 			.filter(Boolean)
 			.join('/') +
-		(has_id_trailing_slash ? '/' : '')
+		(has_id_trailing_slash ? '/' : '') +
+		search_or_hash
 	);
 }
 

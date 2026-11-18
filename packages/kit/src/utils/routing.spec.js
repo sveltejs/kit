@@ -531,6 +531,15 @@ describe('resolve_route', () => {
 	}
 
 	test.each([
+		{ id: '/(app)?a=1', expected: '/?a=1' },
+		{ id: '/(app)#top', expected: '/#top' },
+		{ id: '/(app)/login?next=home', expected: '/login?next=home' },
+		{ id: '/blog/[slug]?tab=posts', params: { slug: 'hello' }, expected: '/blog/hello?tab=posts' }
+	])('preserves search and hash suffixes while resolving $id', ({ id, params = {}, expected }) => {
+		assert.equal(resolve_route(id, params), expected);
+	});
+
+	test.each([
 		{ id: '/blog/[one]/[two]', params: { one: 'one' }, code: 'route_param_missing', name: 'two' },
 		{ id: '/blog/[page-slug]', params: {}, code: 'route_param_missing', name: 'page-slug' },
 		{
