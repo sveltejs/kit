@@ -8,7 +8,6 @@ const config: UserConfig = {
 	},
 	plugins: [
 		sveltekit({
-			files: { params: 'src/params.js' },
 			adapter: adapter({ split: true, edge: process.env.EDGE === 'true' }),
 			compilerOptions: { experimental: { async: true } },
 			experimental: {
