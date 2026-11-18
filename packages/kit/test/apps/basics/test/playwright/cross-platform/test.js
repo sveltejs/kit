@@ -1,6 +1,6 @@
 import process from 'node:process';
-import { expect } from '@playwright/test';
 import { test } from '../../../../../utils.js';
+import { expect } from '../../../../../playwright-matchers.js';
 
 /** @typedef {import('@playwright/test').Response} Response */
 
@@ -219,10 +219,13 @@ test.describe('Shadowed pages', () => {
 			await clicknav('[href="/shadowed/serialization"]');
 
 			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Data returned from `load` while rendering /shadowed/serialization is not serializable: Cannot stringify arbitrary non-POJOs (data.nope).' +
-					' If you need to serialize/deserialize custom types, use transport hooks: https://svelte.dev/docs/kit/hooks#transport. (500 Internal Error)"'
+			const message = /** @type {string} */ (await page.textContent('#message'));
+			expect(message).toMatch(
+				/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 			);
+			expect(message).toContainKitDiagnostic('load_not_serializable', {
+				contains: ['/shadowed/serialization', 'Cannot stringify arbitrary non-POJOs (`data.nope`)']
+			});
 		});
 	}
 });
@@ -265,9 +268,9 @@ test.describe('Errors', () => {
 				? "related to route '/errors/invalid-load-response'"
 				: 'in src/routes/errors/invalid-load-response/+page.js';
 
-			expect(await page.textContent('#message')).toBe(
-				`This is your custom error page saying: "a load function ${details} returned an array, but must return a plain object at the top level (i.e. \`return {...}\`) (500 Internal Error)"`
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('load_invalid_response', {
+				contains: [details, 'an array']
+			});
 		});
 
 		test('errors on invalid server load function response', async ({
@@ -284,9 +287,9 @@ test.describe('Errors', () => {
 
 			expect(await page.textContent('footer')).toBe('Custom layout');
 
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "a load function in src/routes/errors/invalid-server-load-response/+page.server.js returned an array, but must return a plain object at the top level (i.e. `return {...}`) (500 Internal Error)"'
-			);
+			expect(await page.textContent('#message')).toContainKitDiagnostic('load_invalid_response', {
+				contains: ['in src/routes/errors/invalid-server-load-response/+page.server.js', 'an array']
+			});
 		});
 	}
 
@@ -440,9 +443,11 @@ test.describe('Errors', () => {
 		await page.goto('/prerendering/mutative-endpoint');
 		expect(await page.textContent('h1')).toBe('500');
 
-		expect(await page.textContent('#message')).toBe(
-			'This is your custom error page saying: "Cannot prerender pages with actions (500 Internal Error)"'
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+		expect(message).toContainKitDiagnostic('prerender_actions');
 	});
 
 	test('page endpoint GET thrown error message is preserved', async ({
@@ -569,8 +574,13 @@ test.describe('Redirects', () => {
 			await page.waitForSelector('#message');
 			expect(page.url()).toBe(`${baseURL}/redirect/loopy/a`);
 			expect(await page.textContent('h1')).toBe('500');
-			expect(await page.textContent('#message')).toBe(
-				'This is your custom error page saying: "Redirect loop (500 Internal Error)"'
+			const message = /** @type {string} */ (await page.textContent('#message'));
+			expect(message).toMatch(
+				/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
+			);
+			expect(message).toContainKitDiagnostic(
+				'redirect_loop',
+				process.env.DEV ? { contains: [`${baseURL}/redirect/loopy/`] } : { url_only: true }
 			);
 		} else {
 			// there's not a lot we can do to handle server-side redirect loops
@@ -593,20 +603,32 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/a"]');
 
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/a`);
 		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
+
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+
+		if (process.env.DEV) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', {
+				contains: ['undefined is invalid']
+			});
+		} else if (!javaScriptEnabled) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
+		} else {
+			expect(message).toContainKitDiagnostic('redirect_loop', { url_only: true });
+		}
 
 		if (!javaScriptEnabled) {
 			// handleError is not invoked for client-side navigation
 			const { kind, error } = read_errors('/redirect/missing-status/a');
 			expect(kind).toBe('unknown');
-			const lines = error.stack.split('\n');
-			expect(lines[0]).toBe(`Error: ${message}`);
+			expect(error.name).toBe(process.env.DEV ? 'SvelteKit error' : 'Error');
+			expect(String(error.message)).toContainKitDiagnostic('invalid_redirect_status', {
+				url_only: !process.env.DEV
+			});
 		}
 	});
 
@@ -615,13 +637,23 @@ test.describe('Redirects', () => {
 
 		await clicknav('[href="/redirect/missing-status/b"]');
 
-		const message = process.env.DEV || !javaScriptEnabled ? 'Invalid status code' : 'Redirect loop';
-
 		expect(page.url()).toBe(`${baseURL}/redirect/missing-status/b`);
 		expect(await page.textContent('h1')).toBe('500');
-		expect(await page.textContent('#message')).toBe(
-			`This is your custom error page saying: "${message} (500 Internal Error)"`
+
+		const message = /** @type {string} */ (await page.textContent('#message'));
+		expect(message).toMatch(
+			/^This is your custom error page saying: "[^]+ \(500 Internal Error\)"$/
 		);
+
+		if (process.env.DEV) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', {
+				contains: ['555 is invalid']
+			});
+		} else if (!javaScriptEnabled) {
+			expect(message).toContainKitDiagnostic('invalid_redirect_status', { url_only: true });
+		} else {
+			expect(message).toContainKitDiagnostic('redirect_loop', { url_only: true });
+		}
 	});
 
 	test('redirect-on-load', async ({ baseURL, page, javaScriptEnabled }) => {
@@ -1152,6 +1184,7 @@ test.describe('$app/server', () => {
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
 		const styles = await page.textContent('[data-testid="styles"]');
+		const query = await page.textContent('[data-testid="query"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
@@ -1159,6 +1192,7 @@ test.describe('$app/server', () => {
 		// the emoji is there to check that base64 decoding works correctly
 		expect(auto?.trim()).toBe('Imported without ?url 😎');
 		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(query?.trim()).toBe('Imported with a query 😎');
 		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
 		expect(external_glob?.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
@@ -1167,5 +1201,10 @@ test.describe('$app/server', () => {
 
 		// check that paths in .css files are relative
 		expect(styles).toContain('url(.');
+	});
+
+	test('can read a file imported through a dynamic import', async ({ page }) => {
+		await page.goto('/read-file/dynamic-import');
+		await expect(page.getByTestId('text')).toHaveText('Imported through a dynamic import 😎');
 	});
 });

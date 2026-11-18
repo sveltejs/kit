@@ -1,11 +1,7 @@
-/** @import { IncomingMessage, ServerResponse, IncomingHttpHeaders } from 'node:http' */
-/** @import { RequestHandler } from 'sirv' */
-import fs from 'node:fs';
-import path, { extname } from 'node:path';
+/** @import { IncomingHttpHeaders } from 'node:http' */
 import process from 'node:process';
-import sirv from 'sirv';
-import { parse as polka_url_parser } from '@polka/url';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
+import { forwardedAddress } from '@sveltejs/adapter-server/runtime';
 import {
 	server,
 	dir,
@@ -13,15 +9,25 @@ import {
 	base,
 	app_path,
 	origin,
-	precompress,
-	uncompressed_extensions,
-	prerendered,
-	mime_types
+	mime_types,
+	assets,
+	prerendered_assets
 } from '#@sveltejs/adapter-node';
 import { env } from './env.js';
-import { parse_as_bytes } from './utils.js';
+import { parse_as_bytes, parse_origin } from './utils.js';
+import { create_file_map, serve_static } from './static.js';
 
-/** @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware */
+/** @import { Middleware } from './static.js' */
+
+const env_origin = env('ORIGIN', undefined);
+
+if (origin && env_origin !== undefined) {
+	console.warn(
+		`${env_prefix}ORIGIN is ignored because the SvelteKit configuration \`paths.origin\` setting was set to ${origin}`
+	);
+}
+
+const public_origin = origin || parse_origin(env_origin);
 
 const xff_depth = parseInt(env('XFF_DEPTH', '1'));
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
@@ -44,83 +50,28 @@ await server.init({
 	read: (file) => createReadableStream(`${asset_dir}/${file}`)
 });
 
-/**
- * @param {string} path
- * @param {boolean} client
- */
-function serve(path, client = false) {
-	return fs.existsSync(path)
-		? sirv(path, {
-				etag: true,
-				gzip: precompress,
-				brotli: precompress,
-				setHeaders: (res, pathname) => {
-					// `sirv` sets `Vary` from its options rather than from the file it resolved
-					if (precompress && uncompressed_extensions.has(extname(pathname))) {
-						res.removeHeader('vary');
-					}
+/** @type {Middleware} */
+const ssr = async (req, res, next) => {
+	try {
+		await render(req, res, next);
+	} catch (error) {
+		console.error(error);
 
-					// `sirv` uses its own bundled `mrmime`, which the manifest's added types never reach
-					let type = mime_types[pathname.slice(pathname.lastIndexOf('.'))];
-					if (type === 'text/html') type += ';charset=utf-8';
-					if (type) res.setHeader('content-type', type);
-
-					// only apply to build directory, not e.g. version.json
-					if (client && pathname.startsWith(`/${app_path}/immutable/`) && res.statusCode === 200) {
-						res.setHeader('cache-control', 'public,max-age=31536000,immutable');
-					}
-				}
-			})
-		: undefined;
-}
-
-/**
- * Relative reference from `from` to `to`, which must differ only by a trailing slash.
- * Keep in sync with the copy in `packages/kit/src/utils/url.js`
- * @param {string} from
- * @param {string} to
- * @returns {string}
- */
-function relative_pathname(from, to) {
-	const segment = to.replace(/\/$/, '').split('/').at(-1);
-
-	return from.endsWith('/') ? `../${segment}` : `${segment}/`;
-}
-
-// required because the static file server ignores trailing slashes
-/** @returns {Middleware} */
-function serve_prerendered() {
-	const handler = serve(path.join(dir, 'prerendered'));
-
-	return (req, res, next) => {
-		let { pathname, search, query } = polka_url_parser(req);
-
-		try {
-			pathname = decodeURIComponent(pathname);
-		} catch {
-			// ignore invalid URI
+		if (res.headersSent) {
+			res.destroy();
+			return;
 		}
 
-		if (prerendered.has(pathname)) {
-			return handler?.(req, res, next);
-		}
-
-		// remove or add trailing slash as appropriate
-		const inverted = pathname.at(-1) === '/' ? pathname.slice(0, -1) : pathname + '/';
-		if (prerendered.has(inverted)) {
-			const location = relative_pathname(pathname, inverted) + (query ? search : '');
-			res.writeHead(308, { location }).end();
-		} else {
-			void next();
-		}
-	};
-}
+		res.getHeaderNames().forEach((name) => res.removeHeader(name));
+		res.writeHead(500).end('Internal Server Error');
+	}
+};
 
 /** @type {Middleware} */
-const ssr = async (req, res) => {
+const render = async (req, res) => {
 	/** @type {Request} */
 	let request;
-	let request_origin = origin;
+	let request_origin = public_origin;
 
 	if (!request_origin) {
 		try {
@@ -152,34 +103,12 @@ const ssr = async (req, res) => {
 		platform: { req },
 		getClientAddress: () => {
 			if (address_header) {
-				if (!(address_header in req.headers)) {
-					throw new Error(
-						`Address header was specified with ${
-							env_prefix + 'ADDRESS_HEADER'
-						}=${address_header} but is absent from request`
-					);
-				}
-
-				const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-				if (address_header === 'x-forwarded-for') {
-					const addresses = value.split(',');
-
-					if (xff_depth < 1) {
-						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
-					}
-
-					if (xff_depth > addresses.length) {
-						throw new Error(
-							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-								addresses.length
-							} addresses`
-						);
-					}
-					return addresses[addresses.length - xff_depth].trim();
-				}
-
-				return value;
+				return forwardedAddress({
+					header: address_header,
+					value: /** @type {string | undefined} */ (req.headers[address_header]),
+					depth: xff_depth,
+					envPrefix: env_prefix
+				});
 			}
 
 			return (
@@ -197,32 +126,14 @@ const ssr = async (req, res) => {
 	// `cache-control`), which breaks streaming responses like server-sent events.
 	// `X-Accel-Buffering: no` opts out of that buffering and is a no-op on proxies
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
-	if (response.headers.get('content-type') === 'text/event-stream') {
-		response.headers.set('x-accel-buffering', 'no');
+	// The header is set on the Node response rather than the `Response` object,
+	// whose headers may be immutable (e.g. when returned from `fetch`)
+	if (response.headers.get('content-type')?.startsWith('text/event-stream')) {
+		res.setHeader('x-accel-buffering', 'no');
 	}
 
 	setResponse(res, response);
 };
-
-/** @param {Middleware[]} handlers */
-function sequence(handlers) {
-	/** @type {Middleware} */
-	return (req, res, next) => {
-		/**
-		 * @param {number} i
-		 * @returns {ReturnType<Middleware>}
-		 */
-		function handle(i) {
-			if (i < handlers.length) {
-				return handlers[i](req, res, () => handle(i + 1));
-			} else {
-				return next();
-			}
-		}
-
-		return handle(0);
-	};
-}
 
 /**
  * @param {string} name
@@ -274,10 +185,14 @@ function get_origin(headers) {
 		);
 	}
 
-	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
+	// a proxy on a non-standard port can forward a host that already includes the port
+	// (e.g. `example.com:8443`), so replace it rather than appending a second one
+	return port ? `${protocol}://${host.replace(/:\d*$/, '')}:${port}` : `${protocol}://${host}`;
 }
 
-export const handler = sequence(
-	/** @type {(RequestHandler | Middleware)[]} */
-	([serve(path.join(dir, 'client'), true), serve_prerendered(), ssr].filter(Boolean))
+const serve = serve_static(
+	create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })
 );
+
+/** @type {Middleware} */
+export const handler = (req, res, next) => serve(req, res, () => ssr(req, res, next));

@@ -1,8 +1,8 @@
-import { DEV } from 'esm-env';
 // we use the export subpath to conditionally import the client/server `get_origin`
 // so that `node:async_hooks` isn't pulled into the client build
 import { get_origin } from '#internal';
 import { matches_external_allowlist_entry } from '../utils/url.js';
+import * as e from '../messages/shared-errors.js';
 
 // See https://datatracker.ietf.org/doc/html/rfc2606 - no domains under the .invalid TLD can be registered
 const REDIRECT_BASE = 'https://sveltekit-redirect.invalid';
@@ -45,22 +45,12 @@ export function validate_redirect_location(location, options) {
 	const external = options?.external;
 
 	if (!external) {
-		throw new Error(
-			DEV
-				? `Cannot redirect to external URL ${JSON.stringify(location)}. ` +
-						'To redirect to an external URL, pass `{ external: true }` or an allowlist of permitted origins as the third argument to `redirect`'
-				: 'Cannot redirect to external URL unless explicitly allowed'
-		);
+		e.redirect_external_not_allowed({ location: JSON.stringify(location) });
 	}
 
 	if (external === true) {
 		if (is_javascript_location(location)) {
-			throw new Error(
-				DEV
-					? `Cannot redirect to ${JSON.stringify(location)} with \`{ external: true }\`. ` +
-							'The `javascript:` and `data:` protocols must be explicitly listed in the `external` allowlist'
-					: 'Cannot redirect to external URL unless explicitly allowed'
-			);
+			e.redirect_external_javascript({ location: JSON.stringify(location) });
 		}
 
 		return;
@@ -68,19 +58,11 @@ export function validate_redirect_location(location, options) {
 
 	if (Array.isArray(external)) {
 		if (!external.some((allowed) => matches_external_allowlist_entry(location, allowed))) {
-			throw new Error(
-				DEV
-					? `Cannot redirect to ${JSON.stringify(location)}: URL origin is not included in the \`external\` allowlist`
-					: 'Cannot redirect to external URL unless explicitly allowed'
-			);
+			e.redirect_external_not_in_allowlist({ location: JSON.stringify(location) });
 		}
 
 		return;
 	}
 
-	throw new Error(
-		DEV
-			? '`redirect` options.external must be `true` or an array of allowed origins'
-			: 'Invalid redirect options.external value'
-	);
+	e.redirect_external_option_invalid();
 }

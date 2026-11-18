@@ -2,6 +2,7 @@ import { DEV } from 'esm-env';
 import { hash_request } from '../../utils/hash.js';
 import { base64_decode } from '../utils.js';
 import { fetch_cache_url } from '../shared.js';
+import * as w from '../../messages/client-warnings.js';
 
 let loading = 0;
 
@@ -52,9 +53,7 @@ if (DEV) {
 		const used_kit_fetch = init?.__sveltekit_fetch__;
 
 		if (in_load_heuristic && !used_kit_fetch) {
-			console.warn(
-				`Loading ${url} using \`window.fetch\`. For best results, use the \`fetch\` that is passed to your \`load\` function: https://svelte.dev/docs/kit/load#making-fetch-requests`
-			);
+			w.window_fetch_in_load({ url });
 		}
 
 		const method = input instanceof Request ? input.method : init?.method || 'GET';

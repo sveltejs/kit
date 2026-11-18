@@ -1,18 +1,15 @@
-<script lang="ts">
-	import { myform as _myform } from './form.remote.ts';
-	import { schema } from './schema.ts';
-
-	const uid = $props.id();
-	const myform = _myform.for(uid);
+<script>
+	import { myform } from './form.remote.ts';
 </script>
 
-<form {...myform.preflight(schema)} onchange={() => myform.validate()}>
-	<select {...myform.fields.picked.as('select')}>
-		<option value="">-- pick --</option>
-		<option value="a">A</option>
-		<option value="b">B</option>
+<form {...myform}>
+	<input {...myform.fields.message.as('text')} />
+
+	<select {...myform.fields.number.as('select')}>
+		<option>one</option>
+		<option>two</option>
+		<option>three</option>
 	</select>
 
-	<input {...myform.fields.text.as('text')} />
 	<button>submit</button>
 </form>

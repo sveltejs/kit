@@ -8,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import { createReadableStream, getRequest, setResponse } from '@sveltejs/kit/node';
 import { createServer, loadEnv } from 'vite';
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'vitest';
+import { hash_bytes } from '../../../../../src/runtime/server/page/hash_bytes.js';
 import * as records from '../../../../records.js';
 
 // the server half of the old no-js Playwright project, against the built server directly or,
@@ -133,6 +134,38 @@ describe('Caching', () => {
 	test('caches pages', async () => {
 		const response = await get('/caching');
 		expect(response.headers.get('cache-control')).toBe('public, max-age=30');
+	});
+
+	test('pages get an etag of their HTML and answer 304 when it matches', async () => {
+		// this page has non-ASCII text, so its byte length differs from its string length
+		const response = await get('/encoded');
+		const bytes = new Uint8Array(await response.arrayBuffer());
+		expect(bytes.length).toBeGreaterThan(new TextDecoder().decode(bytes).length);
+		expect(response.headers.get('content-length')).toBe(String(bytes.length));
+
+		const etag = /** @type {string} */ (response.headers.get('etag'));
+		expect(etag).toBe(`"${hash_bytes(bytes)}"`);
+
+		const revalidated = await get('/encoded', { headers: { 'if-none-match': etag } });
+		expect(revalidated.status).toBe(304);
+		expect(revalidated.headers.get('etag')).toBe(etag);
+	});
+
+	test('keeps an etag set with setHeaders and answers 304 when it matches', async () => {
+		const response = await get('/caching/etag');
+		expect(response.status).toBe(200);
+		expect(response.headers.get('etag')).toBe('"custom"');
+
+		const revalidated = await get('/caching/etag', { headers: { 'if-none-match': '"custom"' } });
+		expect(revalidated.status).toBe(304);
+		expect(revalidated.headers.get('etag')).toBe('"custom"');
+	});
+
+	test('does not add an etag to no-store pages', async () => {
+		const response = await get('/caching/no-store');
+		expect(response.status).toBe(200);
+		expect(response.headers.get('cache-control')).toBe('private, no-store');
+		expect(response.headers.get('etag')).toBeNull();
 	});
 });
 
@@ -455,9 +488,11 @@ describe('Errors', () => {
 		const response = await get('/errors/invalid-route-response');
 
 		expect(response.status).toBe(500);
-		expect(await response.text()).toMatch(
-			'Invalid response from route /errors/invalid-route-response: handler should return a Response object'
-		);
+		const { message } = await response.json();
+		// server errors keep their full text in production
+		expect(message).toContainKitDiagnostic('endpoint_invalid_response', {
+			contains: ['/errors/invalid-route-response']
+		});
 	});
 
 	test('unhandled http method', async () => {
@@ -676,9 +711,10 @@ describe('Errors', () => {
 		expect(data.nodes[0].type).toBe('data');
 		expect(data.nodes[0].data).toContain('rootlayout');
 
+		// a data request without the invalidation parameter still gets a data response
 		const page_response = await get('/this-route-does-not-exist/__data.json');
 		expect(page_response.status).toBe(404);
-		expect(page_response.headers.get('content-type')).toContain('text/html');
+		expect(page_response.headers.get('content-type')).toContain('application/json');
 
 		// a single-node request that invalidates nothing is not an error-page data request
 		const crafted_response = await get(
@@ -936,6 +972,16 @@ describe('reroute', () => {
 		const response = await get('/reroute/error-handling/server-error');
 		expect(response.status).toBe(500);
 	});
+
+	test('Returns a 400 response if reroute rewrites a malformed pathname', async () => {
+		const response = await get('/%c0%ae/reroute/malformed');
+		if (dev) {
+			// Vite rejects malformed URIs before they reach SvelteKit
+			expect(response.status).toBeGreaterThanOrEqual(400);
+		} else {
+			expect(response.status).toBe(400);
+		}
+	});
 });
 
 describe('init', () => {
@@ -995,14 +1041,15 @@ describe('web workers', () => {
 describe('tracing', () => {
 	/**
 	 * @param {import('../../../../types.js').SpanTree} span
+	 * @param {string} name
 	 * @returns {import('../../../../types.js').SpanTree | null}
 	 */
-	function find_resolve_root_span(span) {
-		if (span.name === 'sveltekit.resolve') {
+	function find_span(span, name) {
+		if (span.name === name) {
 			return span;
 		}
 		for (const child of span.children || []) {
-			const found = find_resolve_root_span(child);
+			const found = find_span(child, name);
 			if (found) return found;
 		}
 		return null;
@@ -1043,7 +1090,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1133,7 +1180,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1206,7 +1253,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the redirect resolve.root span
-		const redirect_resolve_root_span = find_resolve_root_span(redirect_trace);
+		const redirect_resolve_root_span = find_span(redirect_trace, 'sveltekit.resolve');
 		expect(redirect_resolve_root_span).not.toBeNull();
 		expect(redirect_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1262,7 +1309,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the destination resolve.root span
-		const destination_resolve_root_span = find_resolve_root_span(destination_trace);
+		const destination_resolve_root_span = find_span(destination_trace, 'sveltekit.resolve');
 		expect(destination_resolve_root_span).not.toBeNull();
 		expect(destination_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1352,7 +1399,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1416,7 +1463,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1443,6 +1490,82 @@ describe('tracing', () => {
 				})
 			])
 		});
+	});
+
+	test('correct spans are created for a +server handler', async () => {
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/tracing/endpoint?test_id=${test_id}`);
+		expect(response.status).toBe(200);
+
+		const traces = read_traces(test_id);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span?.children).toEqual([
+			expect.objectContaining({
+				name: 'sveltekit.endpoint',
+				status: { code: 0 },
+				attributes: {
+					'http.route': '/tracing/endpoint',
+					'http.method': 'GET',
+					'custom.attribute': 'endpoint'
+				}
+			})
+		]);
+	});
+
+	test('correct spans are created for an Error thrown by a +server handler', async () => {
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/tracing/endpoint-error?test_id=${test_id}`);
+		expect(response.status).toBe(500);
+
+		const traces = read_traces(test_id);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
+		expect(resolve_root_span).not.toBeNull();
+		expect(resolve_root_span?.children).toEqual([
+			expect.objectContaining({
+				name: 'sveltekit.endpoint',
+				status: { code: 2, message: 'Regular error from tracing endpoint test' },
+				attributes: expect.objectContaining({
+					'http.route': '/tracing/endpoint-error',
+					'sveltekit.endpoint.result.type': 'unknown_error'
+				})
+			})
+		]);
+	});
+
+	test('correct spans are created for a remote function call', async () => {
+		/**
+		 * same as `hash` in `src/utils/hash.js`, which can't be imported here
+		 * @param {string} value
+		 */
+		function hash(value) {
+			let h = 5381;
+			let i = value.length;
+			while (i) h = (h * 33) ^ value.charCodeAt(--i);
+			return (h >>> 0).toString(36);
+		}
+
+		// in dev, remote modules are only registered once something on the server imports them
+		expect((await get('/tracing/remote')).status).toBe(200);
+
+		const file = 'src/routes/tracing/remote/data.remote.js';
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/_app/remote/${hash(file)}/get_message?test_id=${test_id}`);
+		expect(response.status).toBe(200);
+
+		const traces = read_traces(test_id);
+		const remote_span = find_span(traces[0], 'sveltekit.remote.call');
+		expect(remote_span).toEqual(
+			expect.objectContaining({
+				status: { code: 0 },
+				attributes: {
+					'sveltekit.remote.call.id': `${hash(file)}/get_message`,
+					'sveltekit.remote.call.type': 'query',
+					'sveltekit.remote.call.name': 'get_message',
+					'sveltekit.remote.call.file': file
+				}
+			})
+		);
 	});
 });
 

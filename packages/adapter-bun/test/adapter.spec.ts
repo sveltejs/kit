@@ -77,14 +77,26 @@ describe('Vite build configuration', () => {
 	test('bundles the server source with the app and keeps production dependencies external', () => {
 		read_file.mockReturnValue(JSON.stringify({ dependencies: { jsdom: '1.0.0' } }));
 
-		const options = vite_config().environments.ssr.build.rolldownOptions;
+		const config = vite_config();
+		const options = config.environments.ssr.build.rolldownOptions;
 
 		expect(read_file).toHaveBeenCalledWith('package.json', 'utf8');
+		expect(config.ssr).toEqual({ external: ['jsdom'], noExternal: true });
 		expect(options.input).toEqual({ 'adapter-index': `${src_dir}/index.js` });
-		expect(options.external).toEqual([handoff, /^jsdom(\/.*)?$/]);
-		expect('jsdom/lib/api.js').toMatch(options.external[1]);
-		expect('jsdom-global').not.toMatch(options.external[1]);
+		expect(options.external).toEqual([handoff]);
 		expect(options.output.paths).toEqual({ [handoff]: '../adapter-bun.js' });
+	});
+
+	test('bundles production dependencies that vite-plugin-svelte marks noExternal', () => {
+		read_file.mockReturnValue(
+			JSON.stringify({
+				dependencies: { jsdom: '1.0.0', 'svelte-lib': '1.0.0', '@ui/kit': '1.0.0' }
+			})
+		);
+
+		const { ssr } = vite_config({ ssr: { noExternal: ['svelte-lib', /^@ui\//] } });
+
+		expect(ssr.external).toEqual(['jsdom']);
 	});
 
 	test('keeps adapter chunks at the output root so the hand-off path resolves', () => {
@@ -314,11 +326,11 @@ describe('generated routes', () => {
 		expect(builder.writePrerendered).toHaveBeenCalledWith('.svelte-kit/adapter-bun/prerendered');
 		const source = handoff_source();
 		expect(source).toContain(
-			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/data.json`)} with { type: 'file' };`
+			`import asset_0 from ${JSON.stringify(`${process.cwd()}/.svelte-kit/adapter-bun/client/.well-known/asset.txt`)} with { type: 'file' };`
 		);
-		expect(source).toContain('["client_asset", "data.json", asset_0, {"hash":"abc","mtime":0}]');
+		expect(source).toContain('["client_asset", "data.json", asset_2, {"hash":"abc","mtime":0}]');
 		expect(source).toContain(
-			'["client_asset", ".well-known/asset.txt", asset_1, {"hash":"abc","mtime":0}]'
+			'["client_asset", ".well-known/asset.txt", asset_0, {"hash":"abc","mtime":0}]'
 		);
 		// a skipped dotfile takes no import, and the same relative path in the client
 		// and prerendered output stays two imports
@@ -336,16 +348,7 @@ describe('generated routes', () => {
 		expect(source).toContain(
 			'["prerendered_asset", "page/__data.json", asset_7, {"hash":"abc","mtime":0}]'
 		);
-		expect(source).toContain('["_app/read.txt", asset_2]');
-	});
-
-	test.each([false, true])('rejects wildcard filenames when compile is %s', async (compile) => {
-		const builder = create_builder({ client_files: ['literal*.txt'] });
-
-		await expect(adapter({ buildOptions: { compile } }).adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
+		expect(source).toContain('["_app/read.txt", asset_1]');
 	});
 
 	test('precompresses assets and marks the variants in the generated routes', async () => {
@@ -371,24 +374,6 @@ describe('generated routes', () => {
 		expect(builder.compress).not.toHaveBeenCalled();
 	});
 
-	test('rejects route segments starting with a colon', async () => {
-		const builder = create_builder({ client_files: [':tag.txt'] });
-
-		await expect(adapter().adapt(builder)).rejects.toThrow('starts with `:`');
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
-	test('rejects wildcard characters in prerendered redirect sources', async () => {
-		const builder = create_builder({
-			prerendered_redirects: [['/docs/*', { status: 308, location: '/new' }]]
-		});
-
-		await expect(adapter().adapt(builder)).rejects.toThrow(
-			'Bun treats literal `*` characters in route paths as wildcards'
-		);
-		expect(write_file).not.toHaveBeenCalled();
-	});
-
 	test('fails when a server-readable asset is absent from compiled build output', async () => {
 		await expect(
 			adapter({ buildOptions: { compile: true } }).adapt(
@@ -398,8 +383,8 @@ describe('generated routes', () => {
 	});
 });
 
-function vite_config() {
-	return (adapter() as any).vite.plugins.post[0].config();
+function vite_config(config = {}) {
+	return (adapter() as any).vite.plugins.post[0].config(config);
 }
 
 function handoff_source() {

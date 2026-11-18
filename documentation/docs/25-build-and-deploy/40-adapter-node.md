@@ -38,6 +38,8 @@ node build
 
 Development dependencies will be bundled into your app using [Rolldown](https://rolldown.rs/). To control whether a given package is bundled or externalised, place it in `devDependencies` or `dependencies` respectively in your `package.json`.
 
+Client assets and prerendered output are served from a list of files recorded during the build.
+
 ### Compressing responses
 
 You will typically want to compress responses coming from the server. If you're already deploying your server behind a reverse proxy for SSL or load balancing, it typically results in better performance to also handle compression at that layer since Node.js is single-threaded.
@@ -72,7 +74,7 @@ SOCKET_PATH=/tmp/socket node build
 
 HTTP doesn't give SvelteKit a reliable way to know the URL that is currently being requested. By default, SvelteKit will derive the origin from the request's `host` header (and the `https` protocol, if no `PROTOCOL_HEADER` is set).
 
-If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`paths.origin`](configuration#paths) option in your `vite.config.js`:
+If your app is served from an origin that isn't known at request time — for example because it's behind a reverse proxy that doesn't pass the `host` header, or because you want to use a canonical origin for CSRF checks that differs from the request's host — you can set the [`paths.origin`](@sveltejs-kit-vite#paths) option in your `vite.config.js`:
 
 ```js
 // @errors: 2307
@@ -86,14 +88,20 @@ export default defineConfig({
 		sveltekit({
 			adapter: adapter(),
 			paths: {
-				origin: process.env.ORIGIN
+				origin: 'https://my.site'
 			}
 		})
 	]
 });
 ```
 
-When `paths.origin` is not set (the default), `adapter-node` derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
+When `paths.origin` is not set (the default), `adapter-node` uses a set `ORIGIN` environment variable at runtime:
+
+```sh
+ORIGIN=https://my.site node build
+```
+
+Otherwise, it derives the origin from the request — using the `host` header (and `PROTOCOL_HEADER`/`PORT_HEADER` if set) — and sets `request.url` accordingly. Otherwise, the configured value is used as the trusted self-origin for CSRF checks on form submissions and remote function calls, and as the value of `url.origin` during prerendering.
 
 Alternatively, you can specify headers that tell SvelteKit about the request protocol and host, from which it can construct the origin URL:
 
@@ -107,7 +115,7 @@ PROTOCOL_HEADER=x-forwarded-proto HOST_HEADER=x-forwarded-host node build
 
 If `adapter-node` can't correctly determine the URL of your deployment, you may experience this error when using [form actions](form-actions):
 
-> [!NOTE] Cross-site POST form submissions are forbidden
+> Cross-site POST form submissions are forbidden
 
 ### `ADDRESS_HEADER` and `XFF_DEPTH`
 
@@ -182,7 +190,7 @@ The directory to build the server to. It defaults to `build` — i.e. `node buil
 
 ### precompress
 
-Enables precompressing using gzip and brotli for assets and prerendered pages. It defaults to `true`.
+Generates `.br` and `.gz` variants of client and prerendered assets during the build. The server negotiates `Accept-Encoding` per request, preferring brotli over gzip, and each variant carries its own ETag. It defaults to `true`.
 
 ### envPrefix
 

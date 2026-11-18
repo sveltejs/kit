@@ -16,8 +16,7 @@ export async function GET({ request, setHeaders, cookies }) {
 export function POST({ cookies }) {
 	cookies.set(
 		'fetch-cache-control-headers-diff',
-		String(+(cookies.get('fetch-cache-control-headers-diff') ?? 0) + 1),
-		{ path: '/' }
+		String(+(cookies.get('fetch-cache-control-headers-diff') ?? 0) + 1)
 	);
 
 	return new Response();

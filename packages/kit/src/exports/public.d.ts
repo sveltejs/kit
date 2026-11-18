@@ -55,6 +55,7 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated This will be removed in the next major version
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
@@ -65,6 +66,15 @@ export interface Adapter {
 }
 
 export interface AdapterViteConfig {
+	/**
+	 * By default, SvelteKit creates a Node preview server to serve the build
+	 * output during `vite preview`. Set this option to `true` when the adapter
+	 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+	 * previewing the build output on its own.
+	 * @default false
+	 * @since 3.4.0
+	 */
+	customPreview?: boolean;
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
@@ -133,6 +143,11 @@ export interface ActionFailure<T = undefined> {
 export interface ValidationError {
 	/** The validation issues */
 	issues: StandardSchemaV1.Issue[];
+	/** Information about the remote function that failed validation */
+	remote?: {
+		name?: string;
+		file?: string;
+	};
 }
 
 type UnpackValidationError<T> =
@@ -368,7 +383,7 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
+	set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -379,7 +394,7 @@ export interface Cookies {
 	 * @param name the name of the cookie
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	delete: (name: string, opts: import('cookie').SerializeOptions) => void;
+	delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
 
 	/**
 	 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
@@ -394,7 +409,7 @@ export interface Cookies {
 	 *
 	 * 	for (const str of response.headers.getSetCookie()) {
 	 * 		const { name, value, ...options } = cookies.parse(str);
-	 * 		cookies.set(name, value, { ...options, path: '/' });
+	 * 		cookies.set(name, value, options);
 	 * 	}
 	 *
 	 * 	// ...
@@ -415,11 +430,12 @@ export interface Cookies {
 	 * @param value the cookie value
 	 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 	 */
-	serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
+	serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
 }
 
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
+ * @deprecated This will be removed in the next major version
  */
 export interface Emulator {
 	/**
@@ -699,7 +715,7 @@ export interface RequestEvent<
 		enabled: boolean;
 		/** The root span for the request. This span is named `sveltekit.handle.root`. */
 		root: Span;
-		/** The span associated with the current `handle` hook, `load` function, or form action. */
+		/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 		current: Span;
 	};
 

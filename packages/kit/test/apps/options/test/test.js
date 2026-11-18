@@ -1,10 +1,10 @@
 import process from 'node:process';
 import { expect } from '@playwright/test';
-import { test } from '../../../utils.js';
+import { test, variant } from '../../../utils.js';
 
 test.describe.configure({ mode: 'parallel' });
 
-test.skip(!!process.env.PATHS_ASSETS || process.env.PATHS_RELATIVE === 'false');
+test.skip(variant === 'paths-assets' || variant === 'paths-absolute');
 
 test.describe('CSP', () => {
 	test('blocks script from external site', async ({ page, start_server }) => {
@@ -60,6 +60,29 @@ test.describe('CSP', () => {
 		expect(hydratable_script_match?.[1]).toBe(nonce);
 	});
 
+	test('does not add an etag to a page with a nonce in it', async ({ request }) => {
+		const response = await request.get('/path-base/csp-hydratable');
+		const html = await response.text();
+
+		const nonce = response.headers()['content-security-policy'].match(/'nonce-([^']+)'/)?.[1];
+		expect(nonce).toBeDefined();
+		expect(html).toContain(`nonce="${nonce}"`);
+
+		// the nonce makes every response different, so an etag could never match
+		expect(response.headers()['etag']).toBeUndefined();
+	});
+
+	test('adds an etag to a page with no nonce in it', async ({ request }) => {
+		const response = await request.get('/path-base/csp-no-csr');
+		const html = await response.text();
+
+		// nothing on this page needs the nonce, so every response is the same
+		expect(response.headers()['content-security-policy']).toBeDefined();
+		expect(html).not.toContain('nonce=');
+
+		expect(response.headers()['etag']).toBeDefined();
+	});
+
 	test('require-trusted-types-for', async ({ page, javaScriptEnabled }) => {
 		test.skip(!javaScriptEnabled, 'trusted types only affects scripts');
 
@@ -109,7 +132,7 @@ test.describe('trailingSlash', () => {
 		// we can't use Playwright's `request` here, because it resolves redirects
 		const response = await fetch(`${baseURL}/path-base/slash`, { redirect: 'manual' });
 		expect(response.status).toBe(308);
-		expect(response.headers.get('location')).toBe('slash/');
+		expect(response.headers.get('location')).toBe('./slash/');
 
 		await page.goto('/path-base/slash');
 
@@ -119,6 +142,20 @@ test.describe('trailingSlash', () => {
 		await clicknav('[data-testid="child"]');
 		expect(page.url()).toBe(`${baseURL}/path-base/slash/child/`);
 		expect(await page.textContent('h2')).toBe('/path-base/slash/child/');
+	});
+
+	test('keeps scheme-like segments on the original origin', async ({ baseURL }) => {
+		for (const segment of ['http:example.com', 'https:example.com']) {
+			const url = new URL(`/path-base/slash/${segment}?ref=test`, baseURL);
+			const response = await fetch(url, { redirect: 'manual' });
+			const location = response.headers.get('location');
+			expect(response.status).toBe(308);
+			const target = new URL(/** @type {string} */ (location), url);
+			expect(target.origin).toBe(url.origin);
+			expect(target.pathname).toBe(`${url.pathname}/`);
+			expect(target.search).toBe(url.search);
+			expect(location).toBe(`./${segment}/?ref=test`);
+		}
 	});
 
 	test('removes trailing slash on endpoint', async ({ baseURL, request }) => {

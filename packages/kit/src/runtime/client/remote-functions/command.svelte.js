@@ -1,6 +1,8 @@
 /** @import { RemoteCommand, RemoteQueryUpdate } from '$app/server' */
 import { app_dir, base } from '#app/paths';
 import { stringify_command_arg } from '../../shared.js';
+import * as e from '../../../messages/client-errors.js';
+import * as w from '../../../messages/client-warnings.js';
 import {
 	get_remote_request_headers,
 	categorize_updates,
@@ -64,9 +66,7 @@ export function command(id) {
 						);
 
 						if (response.redirect) {
-							throw new Error(
-								'Redirects are not allowed in commands. Return a result instead and use goto on the client'
-							);
+							e.remote_command_redirect();
 						}
 
 						fail_unhandled_refreshes(refreshes);
@@ -84,9 +84,7 @@ export function command(id) {
 		let updates_called = false;
 		promise.updates = (...args) => {
 			if (updates_called) {
-				console.warn(
-					'Updates can only be sent once per command invocation. Ignoring additional updates.'
-				);
+				w.remote_updates_repeated({ invocation: 'command invocation' });
 				return promise;
 			}
 			updates_called = true;

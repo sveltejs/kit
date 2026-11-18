@@ -5,6 +5,9 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 /** @param {string} specifier */
 const mock = (specifier) => fileURLToPath(new URL(`./test/mocks/${specifier}.js`, import.meta.url));
 
+// registers custom matchers such as `toThrowKitError` in every spec
+const setupFiles = [fileURLToPath(new URL('./test/matchers.js', import.meta.url))];
+
 const exclude = [
 	'**/node_modules/**',
 	'**/.svelte-kit/**',
@@ -39,20 +42,10 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 			{
 				test: {
 					name: 'kit-server-dev',
+					setupFiles,
 					environment: 'node',
 					include: ['src/**/*.spec.js'],
 					exclude: [...exclude, 'src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js']
-				}
-			},
-			{
-				test: {
-					name: 'kit-server-build',
-					environment: 'node',
-					env: {
-						DEV: 'true'
-					},
-					include: ['src/runtime/server/page/csp.spec.js', 'src/runtime/server/cookie.spec.js'],
-					exclude: [...exclude, 'src/**/*.svelte.spec.js']
 				}
 			},
 			{
@@ -61,6 +54,7 @@ export default /** @satisfies {import('vitest/config').ViteUserConfig} */ ({
 				},
 				test: {
 					name: 'kit-client-runtime',
+					setupFiles,
 					environment: 'jsdom',
 					include: ['src/**/*.svelte.spec.js', 'src/runtime/client/**/*.spec.js'],
 					exclude,

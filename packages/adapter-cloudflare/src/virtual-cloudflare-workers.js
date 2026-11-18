@@ -1,3 +1,4 @@
+/** @import { CloudflareWorkersModule, Span as CfSpan } from '@cloudflare/workers-types/experimental/index.js'; */
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 const als = new AsyncLocalStorage();
@@ -5,10 +6,10 @@ const als = new AsyncLocalStorage();
 const proxy = globalThis.__sveltekit_cloudflare_platform;
 
 function get_current_env() {
-	return als.getStore() ?? proxy.env;
+	return als.getStore() ?? proxy?.env;
 }
 
-/** @typedef {typeof import('@cloudflare/workers-types').CloudflareWorkersModule} Module */
+/** @typedef {typeof CloudflareWorkersModule} Module */
 
 export const env = new Proxy(
 	{},
@@ -125,8 +126,13 @@ export function waitUntil() {}
 export const cache = {
 	purge() {
 		return Promise.resolve({ success: true, errors: [] });
+	},
+	invalidate() {
+		return Promise.resolve({ success: true, errors: [] });
 	}
 };
+
+/** @implements {CfSpan}  */
 class Span {
 	get isTraced() {
 		return false;
@@ -137,8 +143,19 @@ class Span {
 	setAttributes() {
 		return this;
 	}
+	setStatus() {
+		return this;
+	}
+	updateName() {
+		return this;
+	}
 	end() {}
+	recordException() {}
+	spanContext() {
+		return { traceId: '', spanId: '', traceFlags: 0 };
+	}
 }
+
 /** @type {Module['tracing']} */
 export const tracing = {
 	enterSpan(_, callback, ...args) {
@@ -150,5 +167,9 @@ export const tracing = {
 	startSpan(_) {
 		return new Span();
 	},
-	Span
+	getActiveSpan() {},
+	Span,
+	withActiveSpan(_, callback, ...args) {
+		return callback(...args);
+	}
 };

@@ -42,6 +42,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering.
+		 * @deprecated This will be removed in the next major version
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
@@ -52,6 +53,15 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface AdapterViteConfig {
+		/**
+		 * By default, SvelteKit creates a Node preview server to serve the build
+		 * output during `vite preview`. Set this option to `true` when the adapter
+		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+		 * previewing the build output on its own.
+		 * @default false
+		 * @since 3.4.0
+		 */
+		customPreview?: boolean;
 		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
@@ -120,6 +130,11 @@ declare module '@sveltejs/kit' {
 	export interface ValidationError {
 		/** The validation issues */
 		issues: StandardSchemaV1.Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	}
 
 	type UnpackValidationError<T> =
@@ -352,7 +367,7 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		set: (name: string, value: string, opts: import('cookie').SerializeOptions) => void;
+		set: (name: string, value: string, opts?: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Deletes a cookie by setting its value to an empty string and setting the expiry date in the past.
@@ -363,7 +378,7 @@ declare module '@sveltejs/kit' {
 		 * @param name the name of the cookie
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		delete: (name: string, opts: import('cookie').SerializeOptions) => void;
+		delete: (name: string, opts?: import('cookie').SerializeOptions) => void;
 
 		/**
 		 * Parses a single `Set-Cookie` header. This allows you to apply cookies received from an external source:
@@ -378,7 +393,7 @@ declare module '@sveltejs/kit' {
 		 *
 		 * 	for (const str of response.headers.getSetCookie()) {
 		 * 		const { name, value, ...options } = cookies.parse(str);
-		 * 		cookies.set(name, value, { ...options, path: '/' });
+		 * 		cookies.set(name, value, options);
 		 * 	}
 		 *
 		 * 	// ...
@@ -399,11 +414,12 @@ declare module '@sveltejs/kit' {
 		 * @param value the cookie value
 		 * @param opts the options passed to `cookie.stringifySetCookie` with the SvelteKit defaults described above. See documentation [here](https://github.com/jshttp/cookie?tab=readme-ov-file#cookiestringifysetcookiesetcookieobj-options)
 		 */
-		serialize: (name: string, value: string, opts: import('cookie').SerializeOptions) => string;
+		serialize: (name: string, value: string, opts?: import('cookie').SerializeOptions) => string;
 	}
 
 	/**
 	 * A collection of functions that influence the environment during dev, build and prerendering
+	 * @deprecated This will be removed in the next major version
 	 */
 	export interface Emulator {
 		/**
@@ -683,7 +699,7 @@ declare module '@sveltejs/kit' {
 			enabled: boolean;
 			/** The root span for the request. This span is named `sveltekit.handle.root`. */
 			root: Span;
-			/** The span associated with the current `handle` hook, `load` function, or form action. */
+			/** The span associated with the current `handle` hook, `load` function, form action, or `+server` handler. */
 			current: Span;
 		};
 
@@ -970,9 +986,12 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	type ValidatedConfig = RecursiveRequired<
+		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+	> & {
 		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
+		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
@@ -1018,9 +1037,9 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an error thrown by {@link error}.
 	 * @param status The status to filter for.
 	 * */
-	export function isHttpError<T extends number>(e: unknown, status?: T): e is (HttpError & {
+	export function isHttpError<T extends number>(e: unknown, status?: T): e is HttpError & {
 		status: T extends undefined ? never : T;
-	});
+	};
 	/**
 	 * Redirect a request. When called during request handling, SvelteKit will return a redirect response.
 	 * Make sure you're not catching the thrown redirect, which would prevent SvelteKit from handling it.
@@ -1075,7 +1094,7 @@ declare module '@sveltejs/kit' {
 	 * Checks whether this is an action failure thrown by {@link fail}.
 	 * @param e The object to check.
 	 * */
-	export function isActionFailure(e: unknown): e is ActionFailure;
+	export function isActionFailure(e: unknown): e is ActionFailure<undefined>;
 	/**
 	 * Use this to throw a validation error to imperatively fail form validation.
 	 * Can be used in combination with `issue` passed to form actions to create field-specific issues.
@@ -1257,6 +1276,11 @@ declare module '@sveltejs/kit/hooks' {
 		kind: 'validation';
 		error: { status: number; message: string };
 		issues: Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	};
 
 	/**
@@ -1275,6 +1299,8 @@ declare module '@sveltejs/kit/hooks' {
 					error: CaughtErrorMap[Kind];
 					/** Only present for validation errors */
 					issues?: undefined;
+					/** Only present for validation errors */
+					remote?: undefined;
 				};
 		  }[keyof CaughtErrorMap]
 		| ValidationCaughtError<Issue>;
@@ -2100,7 +2126,7 @@ declare module '@sveltejs/kit/vite' {
 		 */
 		tracing?: {
 			/**
-			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
+			 * Enables server-side [OpenTelemetry](https://opentelemetry.io/) span emission for SvelteKit operations including the [`handle` hook](https://svelte.dev/docs/kit/hooks#handle), [`load` functions](https://svelte.dev/docs/kit/load), [form actions](https://svelte.dev/docs/kit/form-actions), [`+server` handlers](https://svelte.dev/docs/kit/routing#server), and [remote functions](https://svelte.dev/docs/kit/remote-functions). Tracing — and more significantly, observability instrumentation — can have a nontrivial overhead, so consider whether you really need it, or if it might be more appropriate to turn it on in development and preview environments only.
 			 * @default false
 			 */
 			server?: boolean;
@@ -2115,7 +2141,6 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
-			 * @default (config) => config
 			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
@@ -2233,7 +2258,12 @@ declare module '@sveltejs/kit/vite' {
 	// SOFTWARE.
 
 	namespace Csp {
-		type ActionSource = 'strict-dynamic' | 'report-sample';
+		type ActionSource =
+			| 'strict-dynamic'
+			| 'report-sample'
+			| 'report-sha256'
+			| 'report-sha384'
+			| 'report-sha512';
 		type BaseSource =
 			| 'self'
 			| 'unsafe-eval'
@@ -2643,6 +2673,11 @@ declare module '$app/navigation' {
 		type: 'enter';
 
 		/**
+		 * The app has just started, so there is no page it navigated from
+		 */
+		from: null;
+
+		/**
 		 * In case of a history back/forward navigation, the number of steps to go back/forward
 		 */
 		delta?: undefined;
@@ -2804,7 +2839,7 @@ declare module '$app/navigation' {
 	 * `goto` is intended for navigations to routes that belong to the app, and will reject if a route cannot be resolved.
 	 * For external URLs, use `window.location = url` to perform a full-page navigation instead of calling `goto(url)`.
 	 *
-	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/configuration#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
+	 * @param url Where to navigate to. Note that if you've set [`config.paths.base`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) and the URL is root-relative, you need to prepend the base path if you want to navigate within the app.
 	 * @param opts Options related to the navigation
 	 * */
 	export function goto(url: string | URL, opts?: GotoOptions): Promise<void>;
@@ -2868,7 +2903,7 @@ declare module '$app/navigation' {
 	 * Typically, you might call this to speed up subsequent navigation.
 	 *
 	 * Takes a route ID such as `/about` or `/blog/[slug]`. Unlike pathnames, route IDs
-	 * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/configuration#paths).
+	 * are never prefixed with the app's [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths).
 	 * If you have a pathname rather than a route ID, you can convert it with
 	 * [`match`](https://svelte.dev/docs/kit/$app-paths#match) from `$app/paths`:
 	 *
@@ -2905,7 +2940,7 @@ declare module '$app/navigation' {
 declare module '$app/paths' {
 	import type { AssetPath, RouteIdWithSearchOrHash, PathnameWithSearchOrHash, ResolvedPathname, RouteId, RouteParams } from '$app/types';
 	/**
-	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/configuration#paths) if configured, or otherwise by prefixing it with the base path.
+	 * Resolve the URL of an asset in your `static` directory, by prefixing it with [`config.paths.assets`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths) if configured, or otherwise by prefixing it with the base path.
 	 *
 	 * During server rendering, the base path is relative and depends on the page currently being rendered.
 	 *
@@ -3944,7 +3979,7 @@ declare module '$app/state' {
 		complete: null;
 	};
 	/**
-	 * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/configuration#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
+	 * A read-only reactive value that's initially `false`. SvelteKit checks for new versions on data, remote, and form action responses (via the `x-sveltekit-version` header), when the tab regains focus or becomes visible, and on a poll interval (see [`version.pollInterval`](https://svelte.dev/docs/kit/@sveltejs-kit-vite#version)). `updated.current` is set to `true` when a new version is detected. `updated.check()` will force an immediate check, regardless of polling.
 	 * */
 	export const updated: {
 		get current(): boolean;
@@ -4019,17 +4054,17 @@ declare namespace App {
 declare module '$app/manifest' {
 	/**
 	 * An array of `{ path: string }` objects representing the files generated by Vite.
-	 * The path is relative to the [base path](https://svelte.dev/docs/kit/configuration#paths), and is intended for use with `cache.add(...)` inside a [service worker](https://svelte.dev/docs/kit/service-workers).
+	 * The path is relative to the [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths), and is intended for use with `cache.add(...)` inside a [service worker](https://svelte.dev/docs/kit/service-workers).
 	 * During development, this is an empty array.
 	 */
 	export const immutable: Array<{ path: string }>;
 	/**
 	 * An array of `{ path: AssetPath }` objects representing the files in your `static` directory, or whatever directory is specified by `config.files.assets`.
-	 * The path is relative to the [base path](https://svelte.dev/docs/kit/configuration#paths), and can be used with [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset).
+	 * The path is relative to the [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths), and can be used with [`asset(...)`](https://svelte.dev/docs/kit/$app-paths#asset).
 	 */
 	export const assets: Array<{ path: import('$app/types').AssetPath }>;
 	/**
-	 * An array of `{ path: Path }` objects representing prerendered pages and endpoints, relative to the [base path](https://svelte.dev/docs/kit/configuration#paths).
+	 * An array of `{ path: Path }` objects representing prerendered pages and endpoints, relative to the [base path](https://svelte.dev/docs/kit/@sveltejs-kit-vite#paths).
 	 * During development, this is an empty array.
 	 */
 	export const prerendered: Array<{ path: import('$app/types').Path }>;

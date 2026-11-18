@@ -41,7 +41,7 @@ async function do_build(options, analyse_code) {
 	const files = scan(input, extensions);
 
 	if (options.types) {
-		await emit_dts(input, temp, output, options.cwd, alias, files, tsconfig);
+		await emit_dts(input, temp, output, alias, files, tsconfig);
 	}
 
 	/** @type {Map<string, import('typescript').CompilerOptions>} */
@@ -132,11 +132,14 @@ export async function watch(options) {
 			for (const { file, type } of events) {
 				if (type === 'unlink') {
 					for (const candidate of [
-						file.name,
+						file.dest,
 						`${file.base}.d.ts`,
 						`${file.base}.d.mts`,
 						`${file.base}.d.cts`
 					]) {
+						// if foo.ts was renamed to foo.js, avoid deleting the transformed file with the same name
+						if (files.some((current) => current.dest === candidate)) continue;
+
 						const resolved = path.join(output, candidate);
 
 						if (fs.existsSync(resolved)) {
@@ -173,7 +176,7 @@ export async function watch(options) {
 
 			if (!errored && options.types) {
 				try {
-					await emit_dts(input, output, output, options.cwd, alias, files, tsconfig);
+					await emit_dts(input, output, output, alias, files, tsconfig);
 					console.log('Updated .d.ts files');
 				} catch (e) {
 					errored = true;

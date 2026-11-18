@@ -9,7 +9,7 @@ import { styleText } from 'node:util';
 import { code, include } from '@rolldown/pluginutils';
 import { build_server_nodes } from './build_server.js';
 import { treeshake_prerendered_remotes } from './remote.js';
-import { find_deps, resolve_symlinks } from './utils.js';
+import { find_deps, resolve_css_minify, resolve_symlinks } from './utils.js';
 import { warn_overridden_config } from '../utils.js';
 import { adapt } from '../../../core/adapt/index.js';
 import { generate_manifest } from '../../../core/generate_manifest/index.js';
@@ -22,9 +22,11 @@ import { write_client_manifest } from '../../../core/sync/write_client_manifest.
 import { logger, runtime_directory } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../utils/params.js';
+import { load_and_validate_params } from '../../../core/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
+import * as e from '../../../messages/build-errors.js';
+import * as w from '../../../messages/build-warnings.js';
 import { s } from '../../../utils/misc.js';
 
 /**
@@ -107,7 +109,7 @@ export function plugin_compile(
 		config: {
 			// avoids overwriting the base setting that's also set by Vitest
 			order: 'pre',
-			handler(config, config_env) {
+			handler(config) {
 				let kit_global;
 				let sourcemapIgnoreList;
 
@@ -125,8 +127,6 @@ export function plugin_compile(
 
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
-
-				env = vite.loadEnv(config_env.mode, kit.env.dir, '');
 
 				/** @type {Record<string, string>} */
 				const server_input = {
@@ -187,7 +187,10 @@ export function plugin_compile(
 				);
 				if (server_instrumentation) {
 					if (kit.adapter && !kit.adapter.supports?.instrumentation?.()) {
-						throw new Error(`${server_instrumentation} is unsupported in ${kit.adapter.name}.`);
+						e.adapter_instrumentation_unsupported({
+							file: server_instrumentation,
+							adapter: kit.adapter.name
+						});
 					}
 					server_input['instrumentation.server'] = server_instrumentation;
 				}
@@ -232,13 +235,12 @@ export function plugin_compile(
 					base: relative ? './' : base,
 					build: {
 						cssCodeSplit: !inline,
-						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						cssMinify: resolve_css_minify(initial_config.build),
 						manifest: true,
 						rolldownOptions: {
 							output: {
 								name: `${global_name}.app`,
 								assetFileNames: `${app_immutable}/assets/[name].[hash][extname]`,
-								hoistTransitiveImports: false,
 								sourcemapIgnoreList
 							},
 							preserveEntrySignatures: 'strict',
@@ -269,8 +271,7 @@ export function plugin_compile(
 							output: {
 								entryFileNames: `${app_immutable}/workers/[name]-[hash].js`,
 								chunkFileNames: `${app_immutable}/workers/chunks/[hash].js`,
-								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`,
-								hoistTransitiveImports: false
+								assetFileNames: `${app_immutable}/workers/assets/[name]-[hash][extname]`
 							}
 						}
 					},
@@ -385,6 +386,8 @@ export function plugin_compile(
 
 		configResolved(resolved_config) {
 			vite_config = resolved_config;
+			// read after the `config` hooks so that plugins (e.g. adapters) can populate `process.env`
+			env = vite.loadEnv(resolved_config.mode, kit.env.dir, '');
 		},
 
 		applyToEnvironment(environment) {
@@ -534,9 +537,7 @@ export function plugin_compile(
 					kit.csp.directives['require-trusted-types-for']?.includes('script') &&
 					!kit.csp.directives['trusted-types']?.includes('svelte-trusted-html')
 				) {
-					throw new Error(
-						"The `csp.directives['trusted-types']` option must include 'svelte-trusted-html' unless all pages have `csr: false`"
-					);
+					e.config_csp_trusted_html_missing();
 				}
 
 				if (skip_client_build) {
@@ -918,12 +919,7 @@ export function plugin_compile(
 							explicit_env_config
 						);
 					} else {
-						log.warn('\nNo adapter specified');
-
-						const link = styleText(['bold', 'cyan'], 'https://svelte.dev/docs/kit/adapters');
-						console.log(
-							`See ${link} to learn how to configure your app to run on the platform of your choosing`
-						);
+						w.adapter_missing();
 					}
 				};
 				set_finalise(finalise);
