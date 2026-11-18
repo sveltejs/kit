@@ -75,7 +75,7 @@ export default function (options = {}) {
 			if (not_found_handling === 'single-page-application') {
 				// Cloudflare serves `/index.html` for every request that matches no asset, so it
 				// has to be the fallback page even if that replaces a prerendered home page
-				await builder.generateFallback(path.join(assets_dest, 'index.html'));
+				await builder.generateFallback(path.join(assets, 'index.html'));
 			}
 
 			const worker_dir = `${dest}/worker`;
