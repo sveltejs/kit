@@ -1,5 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '../../../index.js';
+import adapter from '@sveltejs/adapter-static';
 
 /** @type {import('vite').UserConfig} */
 const config = {

@@ -18,6 +18,8 @@ import { dedent, write } from '../sync/utils.js';
 import { find_server_assets } from '../generate_manifest/find_server_assets.js';
 import { create_exported_declarations } from '../env.js';
 import { handle_issues, validate } from '../../exports/internal/env.js';
+import * as e from '../../messages/build-errors.js';
+import * as w from '../../messages/build-warnings.js';
 import { get_mime_lookup } from '../utils.js';
 import { lookup as mime_lookup } from '../../utils/mime.js';
 
@@ -122,6 +124,7 @@ export function create_builder({
 			const server_assets = find_server_assets(
 				build_data,
 				route_data.filter((route) => prerender_map.get(route.id) !== true),
+				remotes,
 				vite_config.root
 			);
 			for (const file of server_assets) {
@@ -129,10 +132,16 @@ export function create_builder({
 				mime_types[ext] ??= mime_lookup(ext) || '';
 			}
 
-			// record extensions that only exist in prerendered output, e.g. a prerendered favicon.ico
-			for (const pathname of prerendered.paths) {
-				const ext = path.extname(pathname);
-				if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+			// record extensions that only exist in prerendered or client output (e.g. a favicon.ico),
+			// so that adapters can serve those files without a mime database of their own
+			for (const directory of ['prerendered', 'client']) {
+				const dir = path.join(build_data.out_dir, directory);
+				if (!fs.existsSync(dir)) continue;
+
+				for (const file of walk(dir)) {
+					const ext = path.extname(file);
+					if (ext) mime_types[ext] ??= mime_lookup(ext) || '';
+				}
 			}
 			return mime_types;
 		},
@@ -160,6 +169,7 @@ export function create_builder({
 			return find_server_assets(
 				build_data,
 				route_data.map((route) => /** @type {import('types').RouteData} */ (lookup.get(route))),
+				remotes,
 				vite_config.root
 			);
 		},
@@ -177,9 +187,7 @@ export function create_builder({
 			});
 
 			if (fs.existsSync(dest)) {
-				log.warn(
-					`\nOverwriting ${dest} with fallback page. Consider using a different name for the fallback.\n`
-				);
+				w.adapter_fallback_overwrites({ file: dest });
 			}
 
 			write(dest, fallback);
@@ -211,9 +219,7 @@ export function create_builder({
 		},
 
 		generateManifest() {
-			throw new Error(
-				'The `generateManifest` adapter API has been removed — use `generateServerInstance` or `builder.manifest` instead. You may need to update your adapter'
-			);
+			e.adapter_generate_manifest_removed();
 		},
 
 		generateServerInstance(dest, { routes: subset, serverDirectory } = {}) {
@@ -315,19 +321,19 @@ export function create_builder({
 			}
 		}) {
 			if (!fs.existsSync(instrumentation)) {
-				throw new Error(
-					`Instrumentation file ${instrumentation} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({
+					kind: 'Instrumentation file',
+					file: instrumentation
+				});
 			}
 			if (!fs.existsSync(entrypoint)) {
-				throw new Error(
-					`Entrypoint file ${entrypoint} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({ kind: 'Entrypoint file', file: entrypoint });
 			}
 			if (!fs.existsSync(initializer)) {
-				throw new Error(
-					`Instrumentation initializer ${initializer} not found. This is probably a bug in your adapter.`
-				);
+				e.adapter_instrumentation_file_missing({
+					kind: 'Instrumentation initializer',
+					file: initializer
+				});
 			}
 
 			copy(entrypoint, start);

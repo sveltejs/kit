@@ -4,9 +4,13 @@ import { respond as handle } from './respond.js';
 import { create_request_state } from './state.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { set_hooks, fix_stack_trace } from './internal.js';
+import { restore, save } from './dev.js';
 import { init_tracing } from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
+import { capture_error } from '../../messages/internal/server.js';
+import * as e from '../../messages/server-errors.js';
+import { default_handle_error } from './errors.js';
 
 /** @type {Promise<any>} */
 let init_promise;
@@ -19,28 +23,34 @@ let init_promise;
  */
 const decoded_responses = new WeakMap();
 
+const unwrapped_fetch_key = Symbol.for('sveltekit.unwrapped_fetch');
+
 if (DEV) {
-	const fetch = globalThis.fetch;
+	// `instance.js` is re-evaluated on every server reload in dev. Reuse the
+	// `fetch` from before the first wrapper, otherwise each reload stacks
+	// another wrapper and retains the previous reload's module scope
+	const fetch = restore(unwrapped_fetch_key) ?? globalThis.fetch;
 
 	/**
 	 * @param {RequestInfo | URL} info
 	 * @param {RequestInit} [init]
 	 */
-	globalThis.fetch = async (info, init) => {
+	const wrapped_fetch = async (info, init) => {
 		const response = await fetch(info, init);
 		const encoding = response.headers.get('content-encoding');
 
 		if (encoding) {
 			decoded_responses.set(
 				response,
-				new Error(
-					`Cannot return \`fetch(...)\` directly from a handler if the response has a \`Content-Encoding: ${encoding}\` header. The body has already been decoded`
-				)
+				capture_error(() => e.fetch_response_decoded({ encoding }))
 			);
 		}
 
 		return response;
 	};
+
+	save(unwrapped_fetch_key, fetch);
+	globalThis.fetch = wrapped_fetch;
 }
 
 /**
@@ -55,31 +65,7 @@ export async function init() {
 
 			set_hooks({
 				handle: module.handle || (({ event, resolve }) => resolve(event)),
-				handleError:
-					module.handleError ||
-					(({ kind, error, issues }) => {
-						if (kind === 'validation') {
-							console.error('Remote function schema validation failed:', issues);
-							return;
-						}
-
-						if (kind !== 'unknown') {
-							// don't log stack traces for 404s etc, it's all internal gubbins
-							return;
-						}
-
-						let e = error;
-						while (e instanceof Error) {
-							if (e.stack) {
-								console.error(e.stack);
-							}
-							e = e.cause;
-						}
-
-						if (e) {
-							console.error(String(e));
-						}
-					}),
+				handleError: module.handleError || default_handle_error,
 				handleFetch: module.handleFetch || (({ request, fetch }) => fetch(request)),
 				reroute: module.reroute || noop
 			});

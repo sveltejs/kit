@@ -8,14 +8,13 @@ import {
 	deep_set,
 	normalize_issue,
 	flatten_issues,
-	parse_form_key
+	parse_form_key,
+	group_formdata
 } from '../../../form-utils.js';
 import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
 import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
-
-const incorrect_fail_message =
-	'`fail(...)` is for form actions. A remote `form` handler should call `invalid(...)` instead. See https://svelte.dev/docs/kit/remote-functions#form-Programmatic-validation';
+import * as e from '../../../../messages/server-errors.js';
 
 /**
  * Creates a form object that can be spread onto a `<form>` element.
@@ -124,15 +123,15 @@ export function form(validate_or_fn, maybe_fn) {
 						);
 
 						if (DEV && output.result instanceof ActionFailure) {
-							throw new Error(incorrect_fail_message);
+							e.remote_form_fail();
 						}
-					} catch (e) {
-						if (e instanceof ValidationError) {
-							handle_issues(output, e.issues, form_data, __.id);
-						} else if (DEV && e instanceof ActionFailure) {
-							throw new Error(incorrect_fail_message, { cause: e });
+					} catch (error) {
+						if (error instanceof ValidationError) {
+							handle_issues(output, error.issues, form_data, __.id);
+						} else if (DEV && error instanceof ActionFailure) {
+							e.remote_form_fail(undefined, { cause: error });
 						} else {
-							throw e;
+							throw error;
 						}
 					}
 				}
@@ -227,13 +226,13 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, 'validate', {
 			value: () => {
-				throw new Error('Cannot call validate() on the server');
+				e.server_api_unavailable({ name: 'form.validate()' });
 			}
 		});
 
 		Object.defineProperty(instance, 'submit', {
 			value: () => {
-				throw new Error('Cannot call submit() on the server');
+				e.server_api_unavailable({ name: 'form.submit()' });
 			}
 		});
 
@@ -286,14 +285,14 @@ function handle_issues(output, issues, form_data, form_id) {
 	if (form_data) {
 		output.input = {};
 
-		for (const field_name of form_data.keys()) {
+		for (const [field_name, entries] of group_formdata(form_data)) {
 			const field = parse_form_key(form_id, field_name);
 			const path = split_path(field.name);
 
 			// redact sensitive fields
 			if (path.some((part) => part.startsWith('_'))) continue;
 
-			const values = form_data.getAll(field_name).filter((value) => typeof value === 'string');
+			const values = entries.filter((value) => typeof value === 'string');
 
 			deep_set(
 				/** @type {Record<string, any>} */ (output.input),

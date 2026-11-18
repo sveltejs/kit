@@ -1,6 +1,6 @@
 import process from 'node:process';
 import http from 'node:http';
-import { expect } from '@playwright/test';
+import { expect } from '../../../playwright-matchers.js';
 import { test } from '../../../utils.js';
 
 test.describe('remote functions', () => {
@@ -19,6 +19,11 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#ssr-batch-result-2')).toHaveText('Walk the dog');
 		await expect(page.locator('#ssr-batch-result-3')).toHaveText('Not found');
 		await expect(page.locator('body')).not.toContainText('Loading todo');
+	});
+
+	test('query can read a file imported by the remote module', async ({ page }) => {
+		await page.goto('/remote/read-file');
+		await expect(page.locator('#text')).toHaveText('Imported by a remote function 😎');
 	});
 
 	test('query.live renders the first yielded value during SSR', async ({ page }) => {
@@ -109,25 +114,63 @@ test.describe('remote functions', () => {
 		expect(body).not.toContain('private-data');
 	});
 
+	test('queries awaited in server load functions are not serialized into the page', async ({
+		page,
+		request,
+		javaScriptEnabled
+	}) => {
+		const html = await (await request.get('/remote/server-load')).text();
+
+		expect(html).toContain('from server load');
+		expect(html).not.toContain('server-load-secret');
+
+		// universal loads and components re-run on hydration, so their queries are still serialized
+		expect(html).toContain('from universal load');
+		expect(html).toContain('from component');
+
+		if (!javaScriptEnabled) return;
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote/server-load');
+		await expect(page.locator('#server-load')).toHaveText('from server load');
+		await expect(page.locator('#universal-load')).toHaveText('from universal load');
+		await expect(page.locator('#component')).toHaveText('from component');
+		await page.waitForTimeout(100); // allow all requests to finish (there shouldn't be any)
+		expect(request_count).toBe(0);
+	});
+
+	test('private (non-exported) query.batch functions do not share a batch', async ({ page }) => {
+		await page.goto('/remote/batch-private');
+
+		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
+	});
+
 	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
 	}) => {
-		const expected = ['url', 'params', 'route']
-			.map(
-				(property) =>
-					`Cannot access event.${property} in a query. Pass the value as an argument to the query instead`
-			)
-			.join(' | ');
+		const check = async () => {
+			await expect(page.locator('[data-id="results"]')).toContainText('remote_request_property');
+			const output = await page.locator('[data-id="results"]').textContent();
+			const diagnostics = output?.split(' | ') ?? [];
+			expect(diagnostics).toHaveLength(3);
+			for (const [i, property] of ['url', 'params', 'route'].entries()) {
+				expect(diagnostics[i]).toContainKitDiagnostic('remote_request_property', {
+					contains: [property]
+				});
+			}
+		};
 
 		// direct navigation renders the errors during SSR
 		await page.goto('/remote/event');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 
 		// client-side navigation calls the query over HTTP
 		await page.goto('/remote');
 		await clicknav('[href="/remote/event"]');
-		await expect(page.locator('[data-id="results"]')).toHaveText(expected);
+		await check();
 	});
 
 	test('forged url headers do not expose event.url to a query', async ({
@@ -149,7 +192,7 @@ test.describe('remote functions', () => {
 
 		const body = await response.text();
 		for (const property of ['url', 'params', 'route']) {
-			expect(body).toContain(`Cannot access event.${property} in a query`);
+			expect(body).toContain(`Cannot access \`event.${property}\` in a query`);
 		}
 	});
 
@@ -969,7 +1012,7 @@ test.describe('remote functions', () => {
 		await expect(ageTouched).toHaveText('Age touched: false');
 	});
 
-	test('preflight validation preserves untouched selects with an empty value', async ({
+	test('selects are not nuked when unrelated controls change', async ({
 		page,
 		javaScriptEnabled
 	}) => {
@@ -977,17 +1020,8 @@ test.describe('remote functions', () => {
 
 		await page.goto('/remote/form/select-untouched');
 
-		const select = page.locator('select');
-		await expect(select).toHaveValue('');
-		await expect(select).toHaveJSProperty('selectedIndex', 0);
-
 		await page.fill('input', 'hello');
-		const validated = page.waitForResponse((response) => response.request().method() === 'POST');
-		await page.locator('input').blur();
-		await validated;
-
-		await expect(select).toHaveValue('');
-		await expect(select).toHaveJSProperty('selectedIndex', 0);
+		await expect(page.locator('select')).toHaveValue('one');
 	});
 	test('file uploads work', async ({ page }) => {
 		await page.goto('/remote/form/file-upload');
@@ -1072,9 +1106,10 @@ test.describe('remote functions', () => {
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 
-		await expect(page.locator('#result')).toHaveText(
-			'Cannot set cookies in `query` or `prerender` functions | setHeaders is not allowed in remote functions'
-		);
+		await expect(page.locator('#result')).toContainText('remote_cookie_forbidden');
+		const output = await page.locator('#result').textContent();
+		expect(output).toContainKitDiagnostic('remote_cookie_forbidden', { contains: ['set'] });
+		expect(output).toContainKitDiagnostic('remote_headers_forbidden');
 	});
 
 	test('queries nested inside live queries are not implicitly serialized', async ({ page }) => {

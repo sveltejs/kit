@@ -17,7 +17,7 @@ jobs:
         with:
           persist-credentials: false
       # the audit reads the lockfile; nothing needs installing
-      - uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+      - uses: pnpm/setup@731dfb6463bbd11c11fd0ee11fe00ed0e36d48a1 # v3.2.0
         with:
           install: false
       # check prod dependencies as these would affect users

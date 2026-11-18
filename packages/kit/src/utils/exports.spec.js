@@ -1,4 +1,4 @@
-import { assert, test } from 'vitest';
+import { expect, test } from 'vitest';
 import {
 	validate_layout_exports,
 	validate_layout_server_exports,
@@ -7,182 +7,92 @@ import {
 	validate_server_exports
 } from './exports.js';
 
-/**
- * @param {() => void} fn
- * @param {string} message
- */
-function check_error(fn, message) {
-	let error;
+const layout_exports = {
+	load: () => {},
+	prerender: false,
+	csr: false,
+	ssr: false,
+	trailingSlash: false,
+	config: {}
+};
 
-	try {
-		fn();
-	} catch (e) {
-		error = /** @type {Error} */ (e);
-	}
+const layout_names = 'load, prerender, csr, ssr, trailingSlash, config';
 
-	assert.equal(error?.message, message);
-}
+const validators = {
+	'+layout.js': validate_layout_exports,
+	'+page.js': validate_page_exports,
+	'+layout.server.js': validate_layout_server_exports,
+	'+page.server.js': validate_page_server_exports,
+	'+server.js': validate_server_exports
+};
 
-test('validates +layout.js', () => {
-	validate_layout_exports({
-		load: () => {},
-		prerender: false,
-		csr: false,
-		ssr: false,
-		trailingSlash: false,
-		config: {}
-	});
+/** @typedef {keyof typeof validators} RouteFile */
 
-	validate_layout_exports({
-		_unknown: () => {}
-	});
+test.each(
+	/** @type {Array<{ route_file: RouteFile, module: Record<string, any> }>} */ ([
+		{ route_file: '+layout.js', module: layout_exports },
+		{ route_file: '+page.js', module: { ...layout_exports, entries: () => {} } },
+		{ route_file: '+layout.server.js', module: layout_exports },
+		{
+			route_file: '+page.server.js',
+			module: { ...layout_exports, actions: {}, entries: () => {} }
+		},
+		{ route_file: '+server.js', module: { GET: () => {}, QUERY: () => {} } }
+	])
+)('$route_file accepts its exports, and anything with a _ prefix', ({ route_file, module }) => {
+	const validate = validators[route_file];
 
-	check_error(() => {
-		validate_layout_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
-
-	check_error(() => {
-		validate_layout_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
-
-	check_error(() => {
-		validate_layout_exports({
-			GET: {}
-		});
-	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
+	expect(() => validate(module)).not.toThrow();
+	expect(() => validate({ _unknown: () => {} })).not.toThrow();
 });
 
-test('validates +page.js', () => {
-	validate_page_exports({
-		load: () => {},
-		prerender: false,
-		csr: false,
-		ssr: false,
-		trailingSlash: false,
-		config: {},
-		entries: () => {}
+// unknown exports list the valid ones
+test.each(
+	/** @type {Array<{ route_file: RouteFile, exports: string }>} */ ([
+		{ route_file: '+layout.js', exports: layout_names },
+		{ route_file: '+page.js', exports: `${layout_names}, entries` },
+		{ route_file: '+layout.server.js', exports: layout_names },
+		{ route_file: '+page.server.js', exports: `${layout_names}, actions, entries` },
+		{
+			route_file: '+server.js',
+			exports:
+				'GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, QUERY, fallback, prerender, trailingSlash, config, entries'
+		}
+	])
+)('$route_file rejects an unknown export', ({ route_file, exports }) => {
+	expect(() => validators[route_file]({ answer: 42 })).toThrowKitError('invalid_export', {
+		contains: ['`answer`', exports]
 	});
-
-	validate_page_exports({
-		_unknown: () => {}
-	});
-
-	check_error(() => {
-		validate_page_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, entries, or anything with a '_' prefix)");
-
-	check_error(() => {
-		validate_page_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
-
-	check_error(() => {
-		validate_page_exports({
-			GET: {}
-		});
-	}, "Invalid export 'GET' ('GET' is a valid export in +server.js)");
 });
 
-test('validates +layout.server.js', () => {
-	validate_layout_server_exports({
-		load: () => {},
-		prerender: false,
-		csr: false,
-		ssr: false,
-		trailingSlash: false,
-		config: {}
-	});
-
-	validate_layout_server_exports({
-		_unknown: () => {}
-	});
-
-	check_error(() => {
-		validate_layout_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, or anything with a '_' prefix)");
-
-	check_error(() => {
-		validate_layout_exports(
-			{
-				actions: {}
-			},
-			'src/routes/foo/+page.ts'
-		);
-	}, "Invalid export 'actions' in src/routes/foo/+page.ts ('actions' is a valid export in +page.server.ts)");
-
-	check_error(() => {
-		validate_layout_server_exports({
-			POST: {}
-		});
-	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
-});
-
-test('validates +page.server.js', () => {
-	validate_page_server_exports({
-		load: () => {},
-		prerender: false,
-		csr: false,
-		ssr: false,
-		trailingSlash: false,
-		config: {},
-		actions: {},
-		entries: () => {}
-	});
-
-	validate_page_server_exports({
-		_unknown: () => {}
-	});
-
-	check_error(() => {
-		validate_page_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are load, prerender, csr, ssr, trailingSlash, config, actions, entries, or anything with a '_' prefix)");
-
-	check_error(() => {
-		validate_page_server_exports({
-			POST: {}
-		});
-	}, "Invalid export 'POST' ('POST' is a valid export in +server.js)");
-});
-
-test('validates +server.js', () => {
-	validate_server_exports({
-		GET: () => {}
-	});
-
-	validate_server_exports({
-		QUERY: () => {}
-	});
-
-	validate_server_exports({
-		_unknown: () => {}
-	});
-
-	check_error(() => {
-		validate_server_exports({
-			answer: 42
-		});
-	}, "Invalid export 'answer' (valid exports are GET, POST, PATCH, PUT, DELETE, OPTIONS, HEAD, QUERY, fallback, prerender, trailingSlash, config, entries, or anything with a '_' prefix)");
-
-	check_error(() => {
-		validate_server_exports({
-			csr: false
-		});
-	}, "Invalid export 'csr' ('csr' is a valid export in +layout.js, +page.js, +layout.server.js or +page.server.js)");
+// exports that are valid in other route files list those files, using the extension of the file
+test.each(
+	/** @type {Array<{ route_file: RouteFile, key: string, file?: string, locations: string }>} */ ([
+		{
+			route_file: '+layout.js',
+			key: 'actions',
+			file: 'src/routes/foo/+page.ts',
+			locations: '+page.server.ts'
+		},
+		{ route_file: '+layout.js', key: 'GET', locations: '+server.js' },
+		{
+			route_file: '+page.js',
+			key: 'actions',
+			file: 'src/routes/foo/+page.ts',
+			locations: '+page.server.ts'
+		},
+		{ route_file: '+page.js', key: 'GET', locations: '+server.js' },
+		{ route_file: '+layout.server.js', key: 'POST', locations: '+server.js' },
+		{ route_file: '+page.server.js', key: 'POST', locations: '+server.js' },
+		{
+			route_file: '+server.js',
+			key: 'csr',
+			locations: '+layout.js, +page.js, +layout.server.js or +page.server.js'
+		}
+	])
+)('$route_file rejects $key, which is valid elsewhere', ({ route_file, key, file, locations }) => {
+	expect(() => validators[route_file]({ [key]: {} }, file)).toThrowKitError(
+		'invalid_export_location',
+		{ contains: [`\`${key}\``, locations, ...(file ? [file] : [])] }
+	);
 });

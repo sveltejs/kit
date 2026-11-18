@@ -4,6 +4,7 @@ import * as storage from './session-storage.js';
 import { NAVIGATION_SNAPSHOT_KEY } from './constants.js';
 import { hash } from '../../utils/hash.js';
 import { parse, stringify } from '#app/internal/transport';
+import * as e from '../../messages/client-errors.js';
 
 /**
  * @typedef {{ id: string; capture: () => any; restore: (value: any) => void; reset?: () => void }} SnapshotRegistration
@@ -86,7 +87,7 @@ function callsite_id(stack) {
 	const frame = frames[1]?.replace(/\?[^)\s]*(?=:\d+:\d+\)?$)/, '');
 
 	if (!frame) {
-		throw new Error('Could not generate a snapshot id from the stack trace. Pass an `id` instead.');
+		e.snapshot_id_missing();
 	}
 
 	return hash(frame);
@@ -121,11 +122,7 @@ export function snapshot(options) {
 
 	onMount(() => {
 		if (DEV && Array.from(snapshot_registrations).some((existing) => existing.id === id)) {
-			throw new Error(
-				options.id === undefined
-					? 'snapshot() was called multiple times from the same call site. Pass a unique `id` to distinguish the instances.'
-					: `A snapshot with id "${options.id}" is already registered. Pass a unique \`id\`.`
-			);
+			e.snapshot_duplicate_id(options.id === undefined ? undefined : { id: options.id });
 		}
 
 		const index = get_idle_history_index();

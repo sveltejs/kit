@@ -24,8 +24,12 @@ const config = {
 			},
 			prerender: {
 				handleHttpError: 'warn',
-				handleMissingId: ({ id }) => {
-					writeFileSync('./missing_ids/index.jsonl', JSON.stringify(id) + ',', 'utf-8');
+				handleMissingId: ({ id, message }) => {
+					writeFileSync(
+						'./missing_ids/index.jsonl',
+						JSON.stringify({ id, message }) + ',',
+						'utf-8'
+					);
 				}
 			}
 		})
@@ -43,7 +47,8 @@ const config = {
 
 	test: {
 		name: 'kit-prerendering-basics',
-		globalSetup: path.join(import.meta.dirname, 'globalSetup.js')
+		globalSetup: path.join(import.meta.dirname, 'globalSetup.js'),
+		setupFiles: [path.join(import.meta.dirname, '../../matchers.js')]
 	}
 };
 

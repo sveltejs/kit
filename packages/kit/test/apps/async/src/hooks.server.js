@@ -9,7 +9,6 @@ export async function handle({ event, resolve }) {
 	// against the same server clobber each other's state and flake.
 	if (!event.cookies.get('session')) {
 		event.cookies.set('session', crypto.randomUUID(), {
-			path: '/',
 			httpOnly: true,
 			sameSite: 'lax'
 		});

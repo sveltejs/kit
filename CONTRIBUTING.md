@@ -1,5 +1,9 @@
 # SvelteKit Contributing Guide
 
+## Security policy
+
+See https://github.com/sveltejs/kit/security/policy.
+
 ## Preparing
 
 This is a monorepo, meaning the repo holds multiple packages. It requires the use of [pnpm](https://pnpm.io/). You can [install pnpm](https://pnpm.io/installation) with:
@@ -100,6 +104,8 @@ KIT_E2E_WORKERS=undefined
 KIT_E2E_RETRIES=2 pnpm test:kit
 ```
 
+`KIT_E2E_VARIANT` selects one of the server configuration variants a test app declares in its `playwright.config.js`, e.g. `KIT_E2E_VARIANT=async pnpm -F test-basics pw:dev`.
+
 ## Working on Vite and other dependencies
 
 If you would like to test local changes to Vite or another dependency, you can build it and then use [`pnpm.overrides`](https://pnpm.io/package_json#pnpmoverrides). Please note that `pnpm.overrides` must be specified in the root `package.json` and you must first list the package as a dependency in the root `package.json`:
@@ -150,6 +156,10 @@ For changes to be reflected in package changelogs, run `pnpm changeset` and foll
 ### Type changes
 
 If your PR changes the generated types of SvelteKit, run `pnpm generate:types` inside `packages/kit` and commit the new output (don't format it — `packages/kit/types` is excluded from oxfmt). Review the changes carefully to ensure there are no unwanted changes. If you don't commit type changes, CI will fail.
+
+### Diagnostic messages
+
+Some SvelteKit error messages are written as Markdown in `packages/kit/messages/<context>-<severity>/*.md`. Each entry has a `## code` heading, a blockquoted message that can use `%name%` placeholders, and an explanation. `scripts/process-messages/index.js` turns each category into helpers in `packages/kit/src/messages/<context>-<severity>.js`, using the matching template in `scripts/process-messages/templates`. After you edit a message, run `pnpm generate:messages` inside `packages/kit` and commit the generated file. Never edit it by hand. `prepublishOnly` runs this step as well, so CI fails if the output is out of date.
 
 ## Releases
 

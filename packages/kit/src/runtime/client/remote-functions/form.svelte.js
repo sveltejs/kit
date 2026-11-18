@@ -3,6 +3,8 @@
 /** @import { InternalRemoteFormIssue } from 'types' */
 import { app_dir, base } from '#app/paths';
 import { DEV } from 'esm-env';
+import * as e from '../../../messages/client-errors.js';
+import * as w from '../../../messages/client-warnings.js';
 
 import {
 	query_responses,
@@ -113,23 +115,9 @@ export function form(id) {
 		let input = $state(initial?.input ?? {});
 
 		/** @type {InternalRemoteFormIssue[]} */
-		let raw_issues = initial?.issues ?? [];
+		let raw_issues = $state.raw(initial?.issues ?? []);
 
-		const issues = $state(flatten_issues(raw_issues));
-
-		/** @param {InternalRemoteFormIssue[]} next */
-		function update_issues(next) {
-			raw_issues = next;
-			const flattened = flatten_issues(raw_issues);
-
-			for (const key in issues) {
-				if (!(key in flattened)) delete issues[key];
-			}
-
-			for (const key in flattened) {
-				issues[key] = flattened[key];
-			}
-		}
+		const issues = $derived(flatten_issues(raw_issues));
 
 		/** @type {any} */
 		let result = $state.raw(initial?.result);
@@ -185,7 +173,6 @@ export function form(id) {
 				}
 
 				if (unread_issues.length > 0) {
-					const message = `Form submission had invalid data, but the validation issues were ignored:`;
 					const summary = unread_issues
 						.map((issue) =>
 							issue.path.length === 0
@@ -193,9 +180,7 @@ export function form(id) {
 								: `  - ${issue.path.join('.')} (${issue.message})`
 						)
 						.join('\n');
-					const suggestion = `Make sure you provide actionable feedback to users, using e.g. \`myForm.fields.myField.issues()\` or \`myForm.fields.allIssues()\``;
-
-					console.warn(`${message}\n\n${summary}\n\n${suggestion}`);
+					w.remote_form_issues_ignored({ issues: summary }, { element: element ?? undefined });
 				}
 
 				unread_issues = null;
@@ -272,9 +257,7 @@ export function form(id) {
 								refreshes
 							);
 
-							const { issues = [], result: next_result } = response._ ?? {};
-							update_issues(issues);
-							result = next_result;
+							({ issues: raw_issues = [], result } = response._ ?? {});
 
 							// if the developer took control of updates via `.updates(...)` (even with
 							// no arguments), or the server performed explicit refreshes, don't invalidateAll
@@ -304,7 +287,7 @@ export function form(id) {
 							return succeeded;
 						} catch (e) {
 							result = undefined;
-							update_issues([]);
+							raw_issues = [];
 							throw e;
 						} finally {
 							overrides?.forEach((fn) => fn());
@@ -324,9 +307,7 @@ export function form(id) {
 			let updates_called = false;
 			promise.updates = (...args) => {
 				if (updates_called) {
-					console.warn(
-						'Updates can only be sent once per form submission. Ignoring additional updates.'
-					);
+					w.remote_updates_repeated({ invocation: 'form submission' });
 					return promise;
 				}
 				updates_called = true;
@@ -377,12 +358,10 @@ export function form(id) {
 			const validated = await schema?.['~standard'].validate(data);
 
 			if (validated?.issues) {
-				update_issues(
-					merge_with_server_issues(
-						form_data,
-						raw_issues,
-						validated.issues.map((issue) => normalize_issue(issue, false))
-					)
+				raw_issues = merge_with_server_issues(
+					form_data,
+					raw_issues,
+					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
 
 				if (DEV) {
@@ -394,7 +373,7 @@ export function form(id) {
 
 			// Preflight passed - clear stale client-side preflight issues
 			if (preflight_schema) {
-				update_issues(raw_issues.filter((issue) => issue.server));
+				raw_issues = raw_issues.filter((issue) => issue.server);
 			}
 
 			return true;
@@ -410,13 +389,7 @@ export function form(id) {
 
 		instance[createAttachmentKey()] = (/** @type {HTMLFormElement} */ form) => {
 			if (element) {
-				let message = `A form object can only be attached to a single \`<form>\` element`;
-				if (DEV && !key) {
-					const name = id.split('/').pop();
-					message += `. To create multiple instances, use \`${name}.for(key)\``;
-				}
-
-				throw new Error(message);
+				e.remote_form_multiple_elements();
 			}
 
 			element = form;
@@ -511,11 +484,11 @@ export function form(id) {
 				}
 			};
 
-			/** @param {Event} e */
-			const handle_input = (e) => {
+			/** @param {Event} event */
+			const handle_input = (event) => {
 				// strictly speaking it can be an HTMLTextAreaElement or HTMLSelectElement
 				// but that makes the types unnecessarily awkward
-				const element = /** @type {HTMLInputElement} */ (e.target);
+				const element = /** @type {HTMLInputElement} */ (event.target);
 
 				const name = element.name;
 				if (!name) return;
@@ -538,11 +511,9 @@ export function form(id) {
 						);
 
 						if (DEV) {
-							for (const e of elements) {
-								if ((e.type === 'file') !== is_file) {
-									throw new Error(
-										`Cannot mix and match file and non-file inputs under the same name ("${element.name}")`
-									);
+							for (const input of elements) {
+								if ((input.type === 'file') !== is_file) {
+									e.remote_form_mixed_inputs({ name: element.name });
 								}
 							}
 						}
@@ -558,9 +529,7 @@ export function form(id) {
 					set_nested_value(input, field, is_file ? value : coerce_form_value(field.type, value));
 				} else if (is_file) {
 					if (DEV && element.multiple) {
-						throw new Error(
-							`Can only use the \`multiple\` attribute when \`name\` includes a \`[]\` suffix — consider changing "${name}" to "${name}[]"`
-						);
+						e.remote_form_multiple_files({ name });
 					}
 
 					const file = /** @type {HTMLInputElement & { files: FileList }} */ (element).files[0];
@@ -590,7 +559,7 @@ export function form(id) {
 				await tick();
 
 				input = convert_formdata(action_id_without_key, new FormData(form));
-				update_issues([]);
+				raw_issues = [];
 				touched = {};
 				dirty = {};
 				can_validate = {};
@@ -634,7 +603,7 @@ export function form(id) {
 			submit: {
 				value: () => {
 					if (!element) {
-						throw new Error('Cannot call submit() before the form is attached');
+						e.remote_form_not_attached();
 					}
 
 					const default_submitter = /** @type {HTMLElement | undefined} */ (
@@ -777,9 +746,9 @@ export function form(id) {
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					update_issues(
-						is_server_validation ? array : merge_with_server_issues(form_data, raw_issues, array)
-					);
+					raw_issues = is_server_validation
+						? array
+						: merge_with_server_issues(form_data, raw_issues, array);
 				}
 			},
 			enhance: {
@@ -805,19 +774,19 @@ export function form(id) {
 
 			try {
 				$effect.pre(() => {
+					entry.count += 1;
+					instances.set(key, entry);
+
 					return () => {
 						entry.count--;
 
 						void tick().then(() => {
-							if (entry.count === 0) {
+							if (entry.count === 0 && instances.get(key) === entry) {
 								instances.delete(key);
 							}
 						});
 					};
 				});
-
-				entry.count += 1;
-				instances.set(key, entry);
 			} catch {
 				// not in an effect context
 			}
@@ -847,18 +816,14 @@ function clone(element) {
 function validate_form_data(form_data, enctype) {
 	for (const key of form_data.keys()) {
 		if (/^\$[.[]?/.test(key)) {
-			throw new Error(
-				'`$` is used to collect all FormData validation issues and cannot be used as the `name` of a form control'
-			);
+			e.remote_form_reserved_field();
 		}
 	}
 
 	if (enctype !== 'multipart/form-data') {
 		for (const value of form_data.values()) {
 			if (value instanceof File) {
-				throw new Error(
-					'Your form contains <input type="file"> fields, but is missing the necessary `enctype="multipart/form-data"` attribute. This will lead to inconsistent behavior between enhanced and native forms. For more details, see https://github.com/sveltejs/kit/issues/9819.'
-				);
+				e.enhance_file_without_enctype();
 			}
 		}
 	}

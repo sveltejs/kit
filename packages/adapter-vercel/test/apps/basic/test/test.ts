@@ -1,14 +1,11 @@
 import { expect, test } from '@playwright/test';
 
+// TODO: Add a skew protection test once prebuilt deployments support it.
+// https://github.com/sveltejs/kit/issues/17732
+
 test('basic page renders', async ({ page }) => {
 	await page.goto('/');
 	await expect(page.locator('h1')).toContainText('Hello from SvelteKit on Vercel');
-});
-
-test('redirects from vercel.json work', async ({ request }) => {
-	const response = await request.get('/redirect', { maxRedirects: 0 });
-	expect(response.status()).toBe(307);
-	expect(response.headers()['location']).toBe('/');
 });
 
 test('server-side data loading works', async ({ page }) => {

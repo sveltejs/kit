@@ -1,9 +1,11 @@
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
-import { clarify_devalue_error, serialize_uses } from '../utils.js';
+import { serialize_uses, throw_devalue_error } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import { encoders } from '#app/internal/transport';
+import { capture_error } from '../../../messages/internal/server.js';
+import * as e from '../../../messages/server-errors.js';
 
 /**
  * If the serialized data contains promises, `chunks` will be an
@@ -41,13 +43,16 @@ export function server_data_serializer(event, state) {
 							let str;
 							try {
 								str = devalue.uneval(error ? [, error] : [data], replacer);
-							} catch (e) {
+							} catch (serialization_error) {
 								error = await handle_error_and_jsonify(
 									event,
 									state,
-									new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
-										cause: e
-									})
+									capture_error(() =>
+										e.load_promise_not_serializable(
+											{ id: /** @type {string} */ (event.route.id) },
+											{ cause: serialization_error }
+										)
+									)
 								);
 								str = devalue.uneval([, error], replacer);
 							}
@@ -92,10 +97,9 @@ export function server_data_serializer(event, state) {
 				if (node.slash) payload.slash = node.slash;
 
 				strings[i] = devalue.uneval(payload, get_replacer(i));
-			} catch (e) {
-				// @ts-expect-error
-				e.path = e.path.slice(1);
-				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)), { cause: e });
+			} catch (/** @type {any} */ error) {
+				error.path = error.path.slice(1);
+				throw_devalue_error(event, error);
 			}
 		},
 
@@ -147,9 +151,9 @@ export function server_data_serializer_json(event, state) {
 
 			const promise = thing
 				.catch(
-					/** @param {any} e */ async (e) => {
+					/** @param {any} error */ async (error) => {
 						key = 'error';
-						return handle_error_and_jsonify(event, state, /** @type {any} */ (e));
+						return handle_error_and_jsonify(event, state, error);
 					}
 				)
 				.then(
@@ -158,13 +162,16 @@ export function server_data_serializer_json(event, state) {
 						let str;
 						try {
 							str = devalue.stringify(value, reducers);
-						} catch (e) {
+						} catch (serialization_error) {
 							const error = await handle_error_and_jsonify(
 								event,
 								state,
-								new Error(`Failed to serialize promise while rendering ${event.route.id}`, {
-									cause: e
-								})
+								capture_error(() =>
+									e.load_promise_not_serializable(
+										{ id: /** @type {string} */ (event.route.id) },
+										{ cause: serialization_error }
+									)
+								)
 							);
 
 							key = 'error';
@@ -200,10 +207,9 @@ export function server_data_serializer_json(event, state) {
 					`{"type":"data","data":${devalue.stringify(node.data, reducers)},"uses":${JSON.stringify(
 						serialize_uses(node)
 					)}${node.slash ? `,"slash":${JSON.stringify(node.slash)}` : ''}}`;
-			} catch (e) {
-				// @ts-expect-error
-				e.path = 'data' + e.path;
-				throw new Error(clarify_devalue_error(event, /** @type {any} */ (e)), { cause: e });
+			} catch (/** @type {any} */ error) {
+				error.path = 'data' + error.path;
+				throw_devalue_error(event, error);
 			}
 		},
 
