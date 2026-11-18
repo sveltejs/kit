@@ -5,6 +5,64 @@ import { test } from '../../../utils.js';
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe('remote functions', () => {
+	for (const type of ['command', 'query', 'live_query', 'batch_query', 'prerendered_query']) {
+		test(`malformed remote argument is a framework error (${type})`, async ({ page }) => {
+			const name =
+				type === 'batch_query'
+					? 'validated_batch_query_with_validation'
+					: `validated_${type}_with_arg`;
+			await page.route(new RegExp(`/${name}(?:[/?]|$)`), (route) => {
+				const request = route.request();
+				const url = new URL(request.url());
+				const payload = type === 'command' ? '{"name":"a"}' : '[{"name":1},"a"]';
+				let postData;
+				if (type === 'command') postData = JSON.stringify({ payload });
+				else if (type === 'batch_query') postData = JSON.stringify({ payloads: [payload] });
+				else if (type === 'prerendered_query') {
+					url.pathname = url.pathname.slice(0, url.pathname.lastIndexOf('/') + 1) + payload;
+				} else url.searchParams.set('payload', payload);
+				return route.continue({
+					url: url.href,
+					postData,
+					headers: { ...request.headers(), 'x-test-error-kind': 'true' }
+				});
+			});
+			await page.goto('/remote/validation');
+			const response = page.waitForResponse((r) => r.url().includes(`/${name}`));
+			await page.getByRole('button', { name: 'valid', exact: true }).click();
+			expect(await (await response).json()).toEqual({
+				type: 'error',
+				error: { status: 400, message: 'framework' }
+			});
+		});
+	}
+
+	for (const type of ['command', 'batch_query']) {
+		for (const body of ['not json', 'null', '[]', '1']) {
+			test(`malformed remote JSON body is a framework error (${type}, ${body})`, async ({
+				page
+			}) => {
+				const name =
+					type === 'batch_query'
+						? 'validated_batch_query_with_validation'
+						: `validated_${type}_with_arg`;
+				await page.route(new RegExp(`/${name}(?:[/?]|$)`), (route) =>
+					route.continue({
+						postData: body,
+						headers: { ...route.request().headers(), 'x-test-error-kind': 'true' }
+					})
+				);
+				await page.goto('/remote/validation');
+				const response = page.waitForResponse((r) => r.url().includes(`/${name}`));
+				await page.getByRole('button', { name: 'valid', exact: true }).click();
+				expect(await (await response).json()).toEqual({
+					type: 'error',
+					error: { status: 400, message: 'framework' }
+				});
+			});
+		}
+	}
+
 	test('preloading data works when the page component and server load both import a remote function', async ({
 		page,
 		clicknav
