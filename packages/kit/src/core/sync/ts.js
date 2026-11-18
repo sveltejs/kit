@@ -9,8 +9,7 @@ try {
 	// TypeScript is an optional peer dependency.
 }
 
-// TypeScript 7 imports successfully, but no longer provides the JavaScript compiler API.
-// Keep this outside the catch so an incompatible installation is not treated as an absent one.
+// TypeScript 7 does not provide the JavaScript compiler API yet
 if (ts && typeof ts.createSourceFile !== 'function') {
 	e.typescript_compiler_api_missing({ version: ts.version }, { stackless: true });
 }
