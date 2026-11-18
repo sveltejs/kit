@@ -48,19 +48,19 @@ export default defineConfig({
 
 Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
 
-### worker
-
-Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, a fallback page is generated and [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) is set to `"single-page-application"`, unless you have set it yourself.
-
-### platformProxy
-
-Preferences for the emulated `env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
-
 ### fallback
 
 Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
 
 For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
+
+### platformProxy
+
+Preferences for the emulated `env` local bindings. See the [getPlatformProxy](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
+
+### worker
+
+Whether to build a Worker. It defaults to `true`. Set this to `false` if you only want to deploy static assets. In that case, a fallback page is generated and [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) is set to `"single-page-application"`, unless you have set it yourself.
 
 ## Deployment
 

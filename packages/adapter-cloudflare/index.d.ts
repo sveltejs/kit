@@ -8,17 +8,7 @@ export interface AdapterOptions {
 	 * Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/).
 	 */
 	config?: string;
-	/**
-	 * Whether to build a Worker. It defaults to `true`. Set this to `false` if you only
-	 * want to deploy static assets. In that case, if any routes are not prerendered, the adapter defaults
-	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
-	 * to `"single-page-application"` unless you have set it yourself. With that setting,
-	 * the adapter generates a SPA fallback page.
-	 *
-	 * @default true
-	 * @since 9.0.0
-	 */
-	worker?: boolean;
+
 	/**
 	 * Whether to render a plaintext 404.html page or a rendered SPA fallback page
 	 * for non-matching asset requests.
@@ -40,4 +30,16 @@ export interface AdapterOptions {
 	 * during development and preview.
 	 */
 	platformProxy?: GetPlatformProxyOptions;
+
+	/**
+	 * Whether to build a Worker. It defaults to `true`. Set this to `false` if you only
+	 * want to deploy static assets. In that case, if any routes are not prerendered, the adapter defaults
+	 * [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling)
+	 * to `"single-page-application"` unless you have set it yourself. With that setting,
+	 * the adapter generates a SPA fallback page.
+	 *
+	 * @default true
+	 * @since 9.0.0
+	 */
+	worker?: boolean;
 }
