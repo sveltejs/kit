@@ -98,6 +98,29 @@ describe('matches', () => {
 		).toBe(false);
 	});
 
+	test('rest with following segments matches a shorter fallback route', () => {
+		const route = [rest_segment('[...rest=nonempty]'), static_segment('page')];
+		const fallback = [dynamic_segment('[slug]')];
+		expect(matches(route, fallback)).toBe(true);
+		expect(matches(fallback, route)).toBe(true);
+	});
+
+	test('rest with following segments still requires the static suffix', () => {
+		const route = [rest_segment('[...rest]'), static_segment('page')];
+		const other = [static_segment('other')];
+		expect(matches(route, other)).toBe(false);
+		expect(matches(other, route)).toBe(false);
+	});
+
+	test('multiple trailing rest parameters can all be empty', () => {
+		const route = [static_segment('page'), rest_segment('[...first]'), rest_segment('[...second]')];
+		const fallback = [dynamic_segment('[slug]')];
+		expect(matches(route, fallback)).toBe(true);
+		expect(matches(fallback, route)).toBe(true);
+		expect(matches(route.slice(1), [])).toBe(true);
+		expect(matches([], route.slice(1))).toBe(true);
+	});
+
 	test('a has trailing rest and b is shorter', () => {
 		expect(matches([rest_segment('[...rest]')], [static_segment('blog')])).toBe(true);
 	});
