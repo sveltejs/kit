@@ -3,6 +3,7 @@
 /** Per-request caches and context flags — never carried into a fork. */
 function transient_fields() {
 	return {
+		headers: {},
 		remote: {
 			data: null,
 			explicit: null,
@@ -17,7 +18,8 @@ function transient_fields() {
 		is_in_remote_form_or_command: false,
 		is_in_remote_query: false,
 		is_in_remote_prerender: false,
-		is_in_render: false
+		is_in_render: false,
+		is_in_server_load: false
 	};
 }
 

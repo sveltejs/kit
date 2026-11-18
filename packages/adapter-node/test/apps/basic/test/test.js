@@ -33,6 +33,14 @@ test('sets X-Accel-Buffering header on text/event-stream responses', async ({ re
 	expect(response.headers()['x-accel-buffering']).toBe('no');
 });
 
+test('sets X-Accel-Buffering header on text/event-stream responses with parameters', async ({
+	request
+}) => {
+	const response = await request.get('/event-stream/charset');
+	expect(response.headers()['content-type']).toBe('text/event-stream; charset=utf-8');
+	expect(response.headers()['x-accel-buffering']).toBe('no');
+});
+
 test('sets X-Accel-Buffering header on text/event-stream responses with immutable headers', async ({
 	request
 }) => {

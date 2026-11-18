@@ -487,6 +487,8 @@ export interface SSRManifest {
 	 */
 	mime_types: Record<string, string>;
 	client: BuildData['client'];
+	/** Whether to add the Vite DevTools dock to pages, only set in dev */
+	vite_devtools?: boolean;
 	nodes: SSRNodeLoader[];
 	/**
 	 * hashed filename -> import to that file
@@ -745,6 +747,10 @@ export interface RequestState {
 	 */
 	rerouted_url: string | null;
 	/**
+	 * Headers set with `setHeaders`, keyed by their lowercase name. They are applied to the response once `resolve` returns.
+	 */
+	readonly headers: Record<string, string>;
+	/**
 	 * Allows us to prevent `event.fetch` from making infinitely looping internal requests.
 	 */
 	readonly depth: number;
@@ -800,6 +806,7 @@ export interface RequestState {
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
+	readonly is_in_server_load: boolean;
 }
 
 export interface RequestStore {
