@@ -104,6 +104,26 @@ https://svelte.dev/e/kit/server_only_import`);
 test.describe('Vite', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
+	test('reports newly added static asset conflicts and recovers when removed', async ({ page }) => {
+		await page.goto('/');
+
+		const asset = path.join(import.meta.dirname, '../static/optimize-deps');
+		const message = page.locator('vite-error-overlay .message-body');
+
+		try {
+			fs.writeFileSync(asset, 'static file');
+			await expect(message).toBeVisible();
+			expect(await message.innerText()).toContainKitDiagnostic('route_static_asset_conflict', {
+				contains: ['/optimize-deps', 'static/optimize-deps']
+			});
+		} finally {
+			fs.rmSync(asset, { force: true });
+		}
+
+		await expect(page.locator('vite-error-overlay')).toHaveCount(0);
+		await expect(page.getByText('hello world!')).toBeVisible();
+	});
+
 	test('optimizes +page.svelte dependencies', async ({ page }) => {
 		await page.goto('/');
 		await page.getByText('hello world!').waitFor();
