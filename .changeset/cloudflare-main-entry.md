@@ -2,4 +2,4 @@
 '@sveltejs/adapter-cloudflare': major
 ---
 
-breaking: override the Wrangler config `main` setting
+breaking: set the Wrangler config `main` setting automatically
