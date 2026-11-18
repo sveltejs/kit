@@ -139,6 +139,13 @@ export default function (opts = {}) {
 				return;
 			}
 
+			// the bundler would reuse the directory listings the analyse and prerender workers cached
+			// before adapt wrote these files, the runtime resolver re-reads a directory after a miss
+			// (https://github.com/oven-sh/bun/pull/38212)
+			// TODO remove once engines.bun requires a release with that fix
+			Bun.resolveSync('./server.js', path.resolve(server));
+			Bun.resolveSync('./adapter-bun.js', path.dirname(handoff_file));
+
 			const result = await Bun.build({
 				...buildOptions,
 				sourcemap: buildOptions.sourcemap ?? 'external',
