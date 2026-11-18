@@ -3359,7 +3359,11 @@ function _start_router() {
 			const previous_navigation_index = current_navigation_index;
 			const previous_reset_index = current_reset_index;
 			// webkit scrolls to the fragment before popstate but fires the scroll event after
-			capture_scroll(previous_history_index, location.hash && !app.hash ? last_scroll : undefined);
+			capture_scroll(
+				previous_history_index,
+				// `location.hash` is empty for a bare `#`, which scrolls to the top
+				location.href.includes('#') && !app.hash ? last_scroll : undefined
+			);
 			if (!shallow) capture_snapshot(previous_navigation_index);
 			capture_navigation_snapshot(previous_history_index);
 			current_history_index = history_index;
