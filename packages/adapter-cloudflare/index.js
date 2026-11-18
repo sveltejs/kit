@@ -61,14 +61,9 @@ export default function (options = {}) {
 			const assets_dest = `${assets}${builder.config.paths.base}`;
 			fs.mkdirSync(assets_dest, { recursive: true });
 			if (not_found_handling === '404-page') {
-				// generate plaintext 404.html first which can then be overridden by prerendering, if the user defined such a page.
-				// This file is served when a request fails to match an asset.
-				const fallback = path.join(assets_dest, '404.html');
-				if (options.fallback === 'spa') {
-					await builder.generateFallback(fallback);
-				} else {
-					fs.writeFileSync(fallback, 'Not Found');
-				}
+				// Cloudflare serves this file when a request matches no asset. We generate it
+				// first so that a prerendered 404 page, if the user has one, replaces it
+				await builder.generateFallback(path.join(assets_dest, '404.html'));
 			}
 			builder.writeClient(assets_dest);
 			builder.writePrerendered(assets_dest);

@@ -29,7 +29,6 @@ export default defineConfig({
 			adapter: adapter({
 				// See below for an explanation of these options
 				config: undefined,
-				fallback: 'plaintext',
 				platformProxy: {
 					configPath: undefined,
 					environment: undefined,
@@ -47,12 +46,6 @@ export default defineConfig({
 ### config
 
 Path to your [Wrangler configuration file](https://developers.cloudflare.com/workers/wrangler/configuration/). If you would like to use a Wrangler configuration filename other than `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` you can specify it using this option.
-
-### fallback
-
-Whether to render a plaintext 404.html page or a rendered SPA fallback page for non-matching asset requests.
-
-For Cloudflare Workers, the default behaviour is to return a null-body 404-status response for non-matching assets requests. However, if the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) Wrangler configuration setting is set to `"404-page"`, this page will be served if a request fails to match an asset. If `assets.not_found_handling` is set to `"single-page-application"`, the adapter will render a SPA fallback `index.html` page regardless of the `fallback` option specified.
 
 ### platformProxy
 
@@ -106,6 +99,13 @@ For testing the build, you should use [Wrangler](https://developers.cloudflare.c
 The [`_headers`](https://developers.cloudflare.com/workers/static-assets/headers/) and [`_redirects`](https://developers.cloudflare.com/workers/static-assets/redirects/) files, specific to Cloudflare, can be used for static asset responses (like images) by putting them into the project root folder.
 
 However, they will have no effect on responses dynamically rendered by SvelteKit, which should return custom headers or redirect responses from [server endpoints](routing#server) or with the [`handle`](hooks#handle) hook.
+
+## Fallback pages
+
+Cloudflare can serve a page for requests that don't match a static asset, depending on the [`assets.not_found_handling`](https://developers.cloudflare.com/workers/static-assets/routing/#2-not_found_handling) setting in your Wrangler configuration file. The adapter generates that page as a [SPA fallback page](single-page-apps):
+
+- `"single-page-application"` — an `index.html` page, served with a 200 status
+- `"404-page"` — a `404.html` page, served with a 404 status
 
 ## Troubleshooting
 
