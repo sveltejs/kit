@@ -278,7 +278,6 @@ test.describe('remote function mutations', () => {
 		);
 	});
 
-
 	test('command returns correct sum but does not refresh data by default', async ({ page }) => {
 		await page.goto('/remote');
 		await expect(page.locator('#count-result')).toHaveText('0 / 0 (false)');
