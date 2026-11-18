@@ -3398,7 +3398,11 @@ function _start_router() {
 
 				update_url(url);
 
-				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				if (reset && scroll) {
+					scrollTo(scroll.x, scroll.y);
+					// the scroll event for this never fires if another traversal lands in the same frame
+					last_scroll = scroll_state();
+				}
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				// the token above aborted any in-flight navigation, and nothing else will clear it
 				is_navigating = false;
