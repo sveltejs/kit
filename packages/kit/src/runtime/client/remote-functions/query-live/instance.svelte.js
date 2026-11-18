@@ -181,7 +181,7 @@ export class LiveQuery {
 					break;
 				}
 
-				if (error instanceof HttpError) {
+				if (error instanceof HttpError && !is_gateway_error(error)) {
 					// Server or client intentionally produced an error. Surface it and stop.
 					await this.#fail(error);
 					break;
@@ -424,4 +424,15 @@ export class LiveQuery {
 	get [Symbol.toStringTag]() {
 		return 'LiveQuery';
 	}
+}
+
+/**
+ * A 502, 503 or 504 is most likely a proxy or load balancer answering while the server
+ * restarts or is being deployed. It says nothing about the query, so it's retried like
+ * a dropped connection. An error the remote function itself threw has a SvelteKit error
+ * body, arrives as a `HandledHttpError`, and still stops the query.
+ * @param {HttpError} error
+ */
+function is_gateway_error(error) {
+	return !(error instanceof HandledHttpError) && error.status >= 502 && error.status <= 504;
 }
