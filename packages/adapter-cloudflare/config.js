@@ -136,36 +136,25 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 				handler(config) {
 					const { entries = [], exclude = [] } = config.optimizeDeps ?? {};
 
-					// The SSR environment prebundles dependencies too, so we find them before the
-					// first request. Otherwise, a dependency found while handling a request
-					// reloads the module graph and can fail that request
 					return {
 						environments: {
 							ssr: {
 								optimizeDeps: {
+									// Prebundle dependencies before the first request, otherwise
+									// a dependency found while handling a request reloads the
+									// module graph and can fail that request
 									entries: [
-										// SvelteKit's entries are the route files, followed by a `!` pattern that
-										// removes `+server` and `+page.server` files because the client never
-										// loads them. We do load them here, so we drop that pattern
+										// Follow the route entries SvelteKit already specifies but
+										// drop the `!` pattern that excludes `+server` and `+page.server`
 										...[entries].flat().filter((entry) => !entry.startsWith('!')),
 										...server_entries.map((file) => `${file}.{js,ts}`)
 									],
-									// These are the dependencies of SvelteKit's server runtime, which the scan
-									// can't find. We list them instead of copying `optimizeDeps.include`
-									// because that is meant for the client. If the user has added a package
-									// there that only has a `browser` export, the dev server fails to start
-									// when it tries to resolve that package for the SSR environment
-									include: [
-										'@sveltejs/kit > cookie',
-										'@sveltejs/kit > devalue',
-										'@sveltejs/kit > esm-env'
-									],
+									include: ['@sveltejs/kit > devalue', '@sveltejs/kit > esm-env'],
 									exclude,
 									rolldownOptions: {
 										plugins: [
+											// avoid optimising modules which don't exist yet
 											{
-												// the scan would otherwise follow these into SvelteKit's generated
-												// modules, which don't exist yet the first time the dev server starts
 												name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
 												resolveId: {
 													filter: { id: /^\$(app|env)\// },
