@@ -783,6 +783,84 @@ function form_tests() {
 }
 form_tests();
 
+function form_array_value_tests() {
+	const f = form(
+		null as any as StandardSchemaV1<{
+			randomStuff: Array<{ name: string; rating: number }>;
+			strings: string[];
+			numbers: number[];
+			files: File[];
+			optional?: Array<{ name: string }>;
+			nested: { items: Array<{ rating: number }> };
+			tuple: [{ name: string }, number];
+		}>,
+		() => {}
+	);
+
+	// The array itself can be absent, not just its elements.
+	f.fields.randomStuff.value() satisfies
+		| Array<{ name?: string; rating?: number } | undefined>
+		| undefined;
+	const absent: ReturnType<typeof f.fields.randomStuff.value> = undefined;
+	absent;
+	// @ts-expect-error — the array itself can be absent
+	f.fields.randomStuff.value().length;
+	f.fields.randomStuff[f.fields.randomStuff.value()?.length ?? 0].set({ name: '', rating: 5 });
+
+	// Setting partial items and clearing the entire array are both supported.
+	f.fields.randomStuff.set([{ name: 'a' }, { rating: 5 }, {}]);
+	f.fields.randomStuff.set(undefined);
+	f.fields.randomStuff.set([]) satisfies
+		| Array<{ name?: string; rating?: number } | undefined>
+		| undefined;
+	// @ts-expect-error — property types are preserved
+	f.fields.randomStuff.set([{ rating: '5' }]);
+
+	// Scalar arrays can be missing too, and indexed fields can still be cleared.
+	f.fields.strings.value() satisfies Array<string | undefined> | undefined;
+	f.fields.numbers.value() satisfies Array<number | undefined> | undefined;
+	f.fields.files.value() satisfies Array<File | undefined> | undefined;
+	f.fields.strings.set(undefined);
+	f.fields.numbers.set(undefined);
+	f.fields.files.set(undefined);
+	f.fields.numbers[0].set(undefined);
+	f.fields.numbers.set([undefined]);
+	f.fields.strings.set([undefined]);
+	f.fields.files.set([undefined]);
+	for (const number of f.fields.numbers.value() ?? []) {
+		// @ts-expect-error — a cleared numeric input is undefined
+		number.toFixed();
+	}
+
+	// Setting an indexed field can create a sparse array.
+	f.fields.randomStuff[1].name.set('second');
+	for (const item of f.fields.randomStuff.value() ?? []) {
+		// @ts-expect-error — sparse elements can be undefined
+		item.name;
+	}
+
+	// Optional fields and arrays nested in objects use the same value type.
+	f.fields.optional.value() satisfies Array<{ name?: string } | undefined> | undefined;
+	f.fields.optional.set(undefined);
+	f.fields.nested.items.value() satisfies Array<{ rating?: number } | undefined> | undefined;
+	f.fields.set({ nested: { items: [{}, { rating: 5 }] } });
+	f.fields.set({ randomStuff: undefined, nested: { items: undefined } });
+	f.fields.value().randomStuff satisfies
+		| Array<{ name?: string; rating?: number } | undefined>
+		| undefined;
+	f.fields.value().nested?.items satisfies Array<{ rating?: number } | undefined> | undefined;
+
+	// Preserve tuple positions and partial initialization while allowing an absent tuple.
+	f.fields.tuple.value() satisfies [{ name?: string }?, number?] | undefined;
+	f.fields.tuple.set([]);
+	f.fields.tuple.set([{}]);
+	f.fields.tuple.set([{}, 5]);
+	f.fields.tuple.set(undefined);
+	// @ts-expect-error
+	f.fields.tuple.set([{}, '5']);
+}
+form_array_value_tests();
+
 function boolean_tests() {
 	const q = query(() => 'Hello world');
 	const result = q();
