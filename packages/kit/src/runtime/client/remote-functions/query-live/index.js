@@ -3,6 +3,7 @@ import { live_query_map } from '../../client.js';
 import { QUERY_FUNCTION_ID } from '../shared.svelte.js';
 import { DEV } from 'esm-env';
 import { LiveQueryProxy } from './proxy.js';
+import { noop } from '../../../../utils/functions.js';
 
 export { LiveQueryProxy };
 
@@ -17,7 +18,7 @@ export function query_live(id) {
 
 		if (entries) {
 			for (const { resource } of entries.values()) {
-				void resource.reconnect();
+				void resource.reconnect().catch(noop);
 			}
 		}
 	}
