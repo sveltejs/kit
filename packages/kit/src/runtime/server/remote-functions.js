@@ -1,7 +1,6 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteFormInternals, RemoteFunctionData, RemoteFunctionResponse, RemoteInternals, RequestState, ServerActionResult, SSRManifest } from 'types' */
 
-import { DEV } from 'esm-env';
 import { error } from '@sveltejs/kit';
 import { Redirect, SvelteKitError } from '@sveltejs/kit/internal';
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
@@ -201,9 +200,7 @@ function check_method(event, type, method) {
 		throw new SvelteKitError(
 			405,
 			'Method Not Allowed',
-			DEV
-				? `\`${type}\` functions must be invoked via ${method} request, not ${event.request.method}`
-				: 'Method Not Allowed'
+			`\`${type}\` functions must be invoked via ${method} request, not ${event.request.method}`
 		);
 	}
 }
