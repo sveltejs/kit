@@ -155,7 +155,7 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 										plugins: [
 											// avoid optimising modules which don't exist yet
 											{
-												name: 'vite-plugin-sveltekit-adapter-cloudflare-scan-kit-modules',
+												name: 'rolldown-plugin-sveltekit-adapter-cloudflare-env',
 												resolveId: {
 													filter: { id: /^\$(app|env)\// },
 													handler: (id) => ({ id, external: true })
