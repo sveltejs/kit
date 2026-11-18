@@ -53,6 +53,16 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('lib says client');
 	});
 
+	test('hydrated data from package remote functions is reused', async ({ page }) => {
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.goto('/remote-lib');
+		await expect(page.locator('h1')).toHaveText('lib says hello');
+		await page.waitForTimeout(100); // allow all requests to finish
+		expect(request_count).toBe(0);
+	});
+
 	test('packages can contain ordinary remote.js files', async ({ page }) => {
 		await page.goto('/plain-lib');
 		await expect(page.locator('p')).toHaveText('key set for https://example.com/jwks');

@@ -20,7 +20,12 @@ import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
+import {
+	adds_vite_devtools_dock,
+	is_chrome_devtools_request,
+	is_remote_module,
+	not_found
+} from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
@@ -98,6 +103,8 @@ export async function dev(
 		}
 	}
 
+	const vite_devtools = adds_vite_devtools_dock(vite_dev_server.config);
+
 	/** @param {boolean} [validate_params] */
 	async function update_manifest(validate_params = true) {
 		try {
@@ -142,6 +149,7 @@ export async function dev(
 			root,
 			get_remotes
 		);
+		manifest.vite_devtools = vite_devtools;
 	}
 
 	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
@@ -450,12 +458,18 @@ export async function dev(
 
 				if (rendered.status === 404) {
 					// @ts-expect-error
-					serve_static_middleware.handle(req, res, () => {
-						log_dev_response(rendered.status, format_response(rendered.status, request));
+					serve_static_middleware.handle(req, res, async () => {
+						log_dev_response(
+							rendered.status,
+							await format_response(rendered.status, request, manifest)
+						);
 						(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 					});
 				} else {
-					log_dev_response(rendered.status, format_response(rendered.status, request));
+					log_dev_response(
+						rendered.status,
+						await format_response(rendered.status, request, manifest)
+					);
 					(svelte_config.adapter?.vite?.setResponse ?? setResponse)(res, rendered);
 				}
 			} catch (e) {

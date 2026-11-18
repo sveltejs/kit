@@ -5,6 +5,7 @@ import { walk, resolve_entry } from '../../../utils/filesystem.js';
 import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
+import { property_key } from '../utils.js';
 import { is_page_route } from '../create_manifest_data/index.js';
 const remove_relative_parent_traversals = (/** @type {string} */ path) =>
 	path.replace(/\.\.\//g, '');
@@ -25,6 +26,28 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *
  *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
  */
+
+/**
+ * Recursively remove empty directories under `root`, leaving `root` itself.
+ * @param {string} dir
+ * @param {string} root
+ */
+function remove_empty_directories(dir, root = dir) {
+	if (!fs.existsSync(dir)) return;
+
+	for (const name of fs.readdirSync(dir)) {
+		const child = path.join(dir, name);
+		if (fs.statSync(child).isDirectory()) {
+			remove_empty_directories(child, root);
+		}
+	}
+
+	if (path.resolve(dir) === path.resolve(root)) return;
+
+	if (fs.readdirSync(dir).length === 0) {
+		fs.rmdirSync(dir);
+	}
+}
 
 /**
  * Creates types for the whole manifest
@@ -52,6 +75,8 @@ export function write_all_types(config, manifest_data, root) {
 				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
 			}
 		}
+		// Stale files are removed above; empty route directories are left behind.
+		remove_empty_directories(types_dir);
 	}
 
 	// Read/write meta data on each invocation, not once per node process,
@@ -127,6 +152,13 @@ export function write_all_types(config, manifest_data, root) {
 			update_types(config, routes_map, route, root, to_delete);
 			meta_data[route.id] = input_files;
 		}
+	}
+
+	// Remove entries for routes that no longer exist so the file does not
+	// accumulate stale keys after routes are deleted.
+	const current_route_ids = new Set(manifest_data.routes.map((route) => route.id));
+	for (const id of Object.keys(meta_data)) {
+		if (!current_route_ids.has(id)) delete meta_data[id];
 	}
 
 	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
@@ -223,9 +255,12 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			// Returns the key of the object whose values are required.
 			'export type RequiredKeys<T> = { [K in keyof T]-?: {} extends { [P in K]: T[K] } ? never : K; }[keyof T];',
 
+			// a promise matches Record<string, any>, so without this async load output goes unchecked
+			'type NotThenable = { then?: string | number | boolean | bigint | symbol | null | undefined | { bind?: never; [key: string]: any } };',
+
 			// Helper type to get the correct output type for load functions. It should be passed the parent type to check what types from App.PageData are still required.
 			// If none, void is also allowed as a return type.
-			'type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any>>',
+			'type OutputDataShape<T> = MaybeWithVoid<Omit<App.PageData, RequiredKeys<T>> & Partial<Pick<App.PageData, keyof T & keyof App.PageData>> & Record<string, any> & NotThenable>',
 
 			// null & {} == null, we need to prevent that in some situations
 			'type EnsureDefined<T> = T extends null | undefined ? {} : T;',
@@ -411,7 +446,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 		// +page.js load present -> server can return all-optional data
 		const output_data_shape =
 			node.universal || (!is_page && all_pages_have_load)
-				? 'Partial<App.PageData> & Record<string, any> | void'
+				? 'Partial<App.PageData> & Record<string, any> & NotThenable | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
 			`export type ${prefix}ServerLoad<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.ServerLoad<${params}, ${parent_type}, OutputData, ${route_id}>;`
@@ -465,7 +500,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 		const output_data_shape =
 			!is_page && all_pages_have_load
-				? 'Partial<App.PageData> & Record<string, any> | void'
+				? 'Partial<App.PageData> & Record<string, any> & NotThenable | void'
 				: `OutputDataShape<${parent_type}>`;
 		exports.push(
 			`export type ${prefix}Load<OutputData extends ${output_data_shape} = ${output_data_shape}> = Kit.Load<${params}, ${prefix}ServerData, ${parent_type}, OutputData, ${route_id}>;`
@@ -614,7 +649,7 @@ function generate_params_type(params, outdir, config) {
 	return `{ ${params
 		.map(
 			(param) =>
-				`${/^\w+$/.test(param.name) ? param.name : `'${param.name}'`}${param.optional ? '?' : ''}: ${
+				`${property_key(param.name)}${param.optional ? '?' : ''}: ${
 					param.matcher
 						? `MatcherParam<(typeof import('${params_import}').params)[${JSON.stringify(param.matcher)}]>`
 						: 'string'

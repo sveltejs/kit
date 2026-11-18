@@ -5,7 +5,7 @@ import { fetch_cache_url, validate_depends, validate_load_response } from '../..
 import { with_request_store, merge_tracing, record_span } from '@sveltejs/kit/internal/server';
 import { base64_encode } from '../../utils.js';
 import { NULL_BODY_STATUS } from '../constants.js';
-import { get_node_type } from '../utils.js';
+import { get_node_type, is_prerendering } from '../utils.js';
 import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
 
@@ -71,11 +71,14 @@ export async function load_server_data({ event, state, node, parent }) {
 		}
 	);
 
-	if (state.prerendering || state.prerender_default === true) {
+	if (is_prerendering(state)) {
 		disable_search(url);
 	}
 
 	let done = false;
+
+	// remote functions awaited in a server load are not serialized into the page
+	const load_state = { ...state, is_in_server_load: true };
 
 	const result = await record_span({
 		name: 'sveltekit.load',
@@ -87,7 +90,7 @@ export async function load_server_data({ event, state, node, parent }) {
 		},
 		fn: async (current) => {
 			const traced_event = merge_tracing(event, current);
-			const result = await with_request_store({ event: traced_event, state }, () =>
+			const result = await with_request_store({ event: traced_event, state: load_state }, () =>
 				load.call(null, {
 					...traced_event,
 					fetch: (info, init) => {

@@ -1,0 +1,54 @@
+{
+	"name": "@sveltejs/adapter-server",
+	"version": "0.0.0",
+	"description": "Building blocks for SvelteKit adapters that generate a standalone server",
+	"keywords": [
+		"adapter",
+		"deploy",
+		"hosting",
+		"svelte",
+		"sveltekit"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/sveltejs/kit.git",
+		"directory": "packages/adapter-server"
+	},
+	"license": "MIT",
+	"homepage": "https://svelte.dev",
+	"type": "module",
+	"exports": {
+		".": {
+			"types": "./index.d.ts",
+			"import": "./index.js"
+		},
+		"./runtime": {
+			"types": "./runtime.d.ts",
+			"import": "./runtime.js"
+		},
+		"./package.json": "./package.json"
+	},
+	"types": "index.d.ts",
+	"files": [
+		"index.js",
+		"index.d.ts",
+		"runtime.js",
+		"runtime.d.ts"
+	],
+	"scripts": {
+		"test": "pnpm test:unit",
+		"test:unit": "vitest run",
+		"check": "node node_modules/@typescript/native/bin/tsc",
+		"lint": "oxfmt --check .",
+		"format": "oxfmt --write ."
+	},
+	"devDependencies": {
+		"@types/node": "catalog:",
+		"@typescript/native": "catalog:",
+		"vite": "catalog:",
+		"vitest": "catalog:"
+	},
+	"peerDependencies": {
+		"vite": "^8.0.12"
+	}
+}
