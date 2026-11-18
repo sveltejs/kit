@@ -76,7 +76,6 @@ export function resolve(...args) {
 	}
 
 	if (id[0] === '/') {
-		// route ID
 		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params));
 	}
 
