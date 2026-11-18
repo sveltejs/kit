@@ -185,6 +185,15 @@ export default function (options = {}) {
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
 						configResolved(config) {
 							vite_config = config;
+
+							// TODO: remove once the minimum supported Kit version understands `customPreview`.
+							// Older versions always start the Node preview server, which
+							// boots the app outside of workerd before any request is served
+							for (const plugin of config.plugins) {
+								if (plugin.name === 'vite-plugin-sveltekit-setup') {
+									delete plugin.configurePreviewServer;
+								}
+							}
 						}
 					},
 					...plugin_config(
