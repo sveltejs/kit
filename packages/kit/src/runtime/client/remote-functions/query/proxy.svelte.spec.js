@@ -54,7 +54,7 @@ describe('QueryProxy', () => {
 
 		expect(query_map.has('q')).toBe(false);
 
-		void proxy.current;
+		void proxy.then;
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries).toBeDefined();
@@ -66,8 +66,8 @@ describe('QueryProxy', () => {
 
 	test('two proxies for the same (id, arg) share a single cache entry', () => {
 		const fn = () => Promise.resolve('value');
-		void new QueryProxy('q', { x: 1 }, fn).current;
-		void new QueryProxy('q', { x: 1 }, fn).current;
+		void new QueryProxy('q', { x: 1 }, fn).then;
+		void new QueryProxy('q', { x: 1 }, fn).then;
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries.size).toBe(1);
@@ -78,8 +78,8 @@ describe('QueryProxy', () => {
 
 	test('proxies for different args produce different cache entries', () => {
 		const fn = () => Promise.resolve('value');
-		void new QueryProxy('q', { x: 1 }, fn).current;
-		void new QueryProxy('q', { x: 2 }, fn).current;
+		void new QueryProxy('q', { x: 1 }, fn).then;
+		void new QueryProxy('q', { x: 2 }, fn).then;
 
 		expect(query_map.get('q')?.size).toBe(2);
 	});
@@ -90,7 +90,7 @@ describe('QueryProxy', () => {
 		// Construct the proxy in a nested scope so V8's debug scope tracking can't
 		// keep it alive in the surrounding closure.
 		(() => {
-			void new QueryProxy('q', { name: 'echo' }, fn).current;
+			void new QueryProxy('q', { name: 'echo' }, fn).then;
 		})();
 
 		expect(query_map.get('q')?.size).toBe(1);
@@ -114,7 +114,7 @@ describe('QueryProxy', () => {
 		(() => {
 			const proxy = new QueryProxy('q', 'arg', fn);
 			proxy_ref = new WeakRef(proxy);
-			void proxy.current;
+			void proxy.then;
 			const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 			const [entry] = /** @type {Iterable<any>} */ (entries.values());
 			query = entry.resource;
@@ -141,12 +141,12 @@ describe('QueryProxy', () => {
 
 		(() => {
 			const proxy = new QueryProxy('q', 'arg', fn);
-			void proxy.current;
+			void proxy.then;
 			first_ref = new WeakRef(proxy);
 		})();
 		(() => {
 			const proxy = new QueryProxy('q', 'arg', fn);
-			void proxy.current;
+			void proxy.then;
 			second_ref = new WeakRef(proxy);
 		})();
 
