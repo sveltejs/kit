@@ -1,87 +1,27 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import process from 'node:process';
 import { describe, test, vi, expect } from 'vitest';
 import {
-	is_building_for_cloudflare_pages,
 	validate_worker_settings,
-	get_routes_json,
-	parse_redirects,
 	generate_redirects,
-	append_headers
+	append_headers,
+	sync_process_env
 } from './utils.js';
 
-describe('detects Cloudflare Pages project', () => {
-	test('by default', () => {
-		expect(
-			is_building_for_cloudflare_pages(/** @type {import('wrangler').Unstable_Config} */ ({}))
-		).toBe(true);
-	});
-
-	test('CF_PAGES environment variable', () => {
-		vi.stubEnv('CF_PAGES', '1');
-		const result = is_building_for_cloudflare_pages(
-			/** @type {import('wrangler').Unstable_Config} */ ({})
-		);
-		vi.unstubAllEnvs();
-		expect(result).toBe(true);
-	});
-
-	test('empty Wrangler configuration file', () => {
-		expect(
-			is_building_for_cloudflare_pages(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc'
-				})
-			)
-		).toBe(true);
-	});
-
-	test('pages_build_output_dir config key', () => {
-		expect(
-			is_building_for_cloudflare_pages(
+describe('validates Wrangler config', () => {
+	test('rejects Cloudflare Pages configuration', () => {
+		expect(() =>
+			validate_worker_settings(
 				/** @type {import('wrangler').Unstable_Config} */ ({
 					configPath: 'wrangler.jsonc',
 					pages_build_output_dir: 'dist'
 				})
 			)
-		).toBe(true);
-	});
-});
-
-describe('detects Cloudflare Workers project', () => {
-	test('main config key', () => {
-		expect(
-			is_building_for_cloudflare_pages(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					main: 'dist/index.js'
-				})
-			)
-		).toBe(false);
+		).toThrow('Cloudflare Pages is no longer supported');
 	});
 
-	test('assets config key', () => {
-		expect(
-			is_building_for_cloudflare_pages(
-				/** @type {import('wrangler').Unstable_Config} */ ({
-					configPath: 'wrangler.jsonc',
-					assets: {
-						directory: 'dist/assets'
-					}
-				})
-			)
-		).toBe(false);
-	});
-
-	test('WORKERS_CI environment variable', () => {
-		vi.stubEnv('WORKERS_CI', '1');
-		const result = is_building_for_cloudflare_pages(
-			/** @type {import('wrangler').Unstable_Config} */ ({})
-		);
-		vi.unstubAllEnvs();
-		expect(result).toBe(false);
-	});
-});
-
-describe('validates Wrangler config', () => {
 	test('Worker and static assets', () => {
 		expect(() =>
 			validate_worker_settings(
@@ -197,32 +137,6 @@ describe('_headers', () => {
 });
 
 describe('_redirects', () => {
-	test('parses sources', () => {
-		const redirects = parse_redirects(
-			`
-/home301 / 301
-/notrailing/ /nottrailing 301
-
-/blog/* https://blog.my.domain/:splat
-`.trim()
-		);
-
-		expect(redirects).toEqual(['/home301', '/notrailing/', '/blog/*']);
-	});
-
-	test('ignores comments while parsing', () => {
-		const redirects = parse_redirects(
-			`
-# This is a comment
-/home301 / 301
-  # Indented comment
-/blog/* https://blog.my.domain/:splat
-`.trim()
-		);
-
-		expect(redirects).toEqual(['/home301', '/blog/*']);
-	});
-
 	test('generates rules for prerendered redirects', () => {
 		const warn = vi.fn();
 		const content = generate_redirects(
@@ -292,150 +206,74 @@ describe('_redirects', () => {
 	});
 });
 
-describe('_routes.json', () => {
-	test('generates file contents', () => {
-		const routes = get_routes_json(
-			{
-				getAppPath: () => 'base-path/_app',
-				config: {
-					appDir: '_app',
-					paths: {
-						base: '/base-path',
-						assets: '',
-						origin: 'http://localhost',
-						relative: true
-					},
-					alias: {},
-					csrf: {
-						checkOrigin: true,
-						trustedOrigins: []
-					},
-					embedded: false,
-					files: {
-						src: 'src',
-						assets: 'static',
-						hooks: {
-							client: 'src/hooks.client.js',
-							server: 'src/hooks.server.js',
-							universal: 'src/hooks.js'
-						},
-						params: 'src/params',
-						routes: 'src/routes',
-						serviceWorker: 'src/service-worker.js',
-						appTemplate: 'src/app.html',
-						errorTemplate: 'src/error.html'
-					},
-					inlineStyleThreshold: 0,
-					moduleExtensions: ['.js', '.ts'],
-					csp: {
-						mode: 'auto',
-						// @ts-ignore
-						directives: {},
-						// @ts-ignore
-						reportOnly: {}
-					},
-					env: {
-						dir: '.'
-					},
-					outDir: '.svelte-kit'
-				},
-				prerendered: {
-					paths: ['/base-path/prerendered', '/base-path/account/*', '/base-path/account/:id'],
-					pages: new Map(),
-					assets: new Map(),
-					redirects: new Map()
-				}
-			},
-			['_app/immutable/this-should-not-be-excluded.js', 'robots.txt'],
-			['/base-path/redirect'],
-			undefined
+describe('sync_process_env', () => {
+	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+
+	/**
+	 * @param {Record<string, unknown>} vars
+	 */
+	const config = (vars) =>
+		/** @type {import('@cloudflare/vite-plugin').WorkerConfig} */ (
+			/** @type {unknown} */ ({ configPath: path.join(dir, 'wrangler.jsonc'), vars })
 		);
 
-		expect(routes).toEqual({
-			version: 1,
-			description: 'Generated by @sveltejs/adapter-cloudflare',
-			include: ['/*'],
-			exclude: [
-				'/base-path/_app/version.json',
-				'/base-path/_app/immutable/*',
-				'/base-path/robots.txt',
-				'/base-path/prerendered',
-				'/base-path/redirect'
-			]
-		});
+	test('adds variables and removes the ones that are gone', () => {
+		sync_process_env(config({ SYNC_A: 'a', SYNC_B: { json: true } }));
+		expect(process.env.SYNC_A).toBe('a');
+		expect(process.env.SYNC_B).toBe('{"json":true}');
+
+		sync_process_env(config({ SYNC_A: 'changed' }));
+		expect(process.env.SYNC_A).toBe('changed');
+		expect('SYNC_B' in process.env).toBe(false);
+
+		sync_process_env(config({}));
+		expect('SYNC_A' in process.env).toBe(false);
 	});
 
-	test('truncates excess exclude rules', () => {
-		const routes = get_routes_json(
-			{
-				// @ts-ignore
-				log: {
-					warn: console.warn
-				},
-				getAppPath: () => 'base-path/_app',
-				config: {
-					appDir: '_app',
-					paths: {
-						base: '/base-path',
-						assets: '',
-						origin: 'http://localhost',
-						relative: true
-					},
-					alias: {},
-					csrf: {
-						checkOrigin: true,
-						trustedOrigins: []
-					},
-					embedded: false,
-					files: {
-						src: 'src',
-						assets: 'static',
-						hooks: {
-							client: 'src/hooks.client.js',
-							server: 'src/hooks.server.js',
-							universal: 'src/hooks.js'
-						},
-						params: 'src/params',
-						routes: 'src/routes',
-						serviceWorker: 'src/service-worker.js',
-						appTemplate: 'src/app.html',
-						errorTemplate: 'src/error.html'
-					},
-					inlineStyleThreshold: 0,
-					moduleExtensions: ['.js', '.ts'],
-					csp: {
-						mode: 'auto',
-						// @ts-ignore
-						directives: {},
-						// @ts-ignore
-						reportOnly: {}
-					},
-					env: {
-						dir: '.'
-					},
-					outDir: '.svelte-kit'
-				},
-				prerendered: {
-					paths: Array.from({ length: 100 }, (_, i) => `/base-path/blog/post/${i + 1}`),
-					pages: new Map(),
-					assets: new Map(),
-					redirects: new Map()
-				}
-			},
-			['_app/immutable/this-should-not-be-excluded.js', 'robots.txt'],
-			[],
-			undefined
+	test('does not overwrite variables set elsewhere', () => {
+		process.env.SYNC_A = 'shell';
+		sync_process_env(config({ SYNC_A: 'wrangler' }));
+		expect(process.env.SYNC_A).toBe('shell');
+
+		sync_process_env(config({}));
+		expect(process.env.SYNC_A).toBe('shell');
+		delete process.env.SYNC_A;
+	});
+});
+
+describe('sync_process_env', () => {
+	// an empty directory so that Wrangler doesn't pick up any `.env` or `.dev.vars` files
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+
+	/**
+	 * @param {Record<string, unknown>} vars
+	 */
+	const config = (vars) =>
+		/** @type {import('@cloudflare/vite-plugin').WorkerConfig} */ (
+			/** @type {unknown} */ ({ configPath: path.join(dir, 'wrangler.jsonc'), vars })
 		);
 
-		expect(routes).toEqual({
-			version: 1,
-			description: 'Generated by @sveltejs/adapter-cloudflare',
-			include: ['/*'],
-			exclude: [
-				'/base-path/_app/version.json',
-				'/base-path/_app/immutable/*',
-				'/base-path/robots.txt'
-			].concat(Array.from({ length: 96 }, (_, i) => `/base-path/blog/post/${i + 1}`))
-		});
+	test('adds variables and removes the ones that are gone', () => {
+		sync_process_env(config({ SYNC_A: 'a', SYNC_B: { json: true } }));
+		expect(process.env.SYNC_A).toBe('a');
+		expect(process.env.SYNC_B).toBe('{"json":true}');
+
+		sync_process_env(config({ SYNC_A: 'changed' }));
+		expect(process.env.SYNC_A).toBe('changed');
+		expect('SYNC_B' in process.env).toBe(false);
+
+		sync_process_env(config({}));
+		expect('SYNC_A' in process.env).toBe(false);
+	});
+
+	test('does not overwrite variables set elsewhere', () => {
+		process.env.SYNC_A = 'shell';
+		sync_process_env(config({ SYNC_A: 'wrangler' }));
+		expect(process.env.SYNC_A).toBe('shell');
+
+		sync_process_env(config({}));
+		expect(process.env.SYNC_A).toBe('shell');
+		delete process.env.SYNC_A;
 	});
 });

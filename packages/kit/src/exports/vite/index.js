@@ -19,6 +19,7 @@ import {
 	get_config_aliases,
 	is_remote_module,
 	remote_module_pattern,
+	adds_vite_devtools_dock,
 	uses_unsupported_html_hook,
 	warn_overridden_config
 } from './utils.js';
@@ -561,7 +562,10 @@ function kit({ svelte_config }) {
 				write_app_manifest(`${out_dir}/generated/dev`, undefined, false);
 			}
 
-			const unsupported_plugins = config.plugins.filter(uses_unsupported_html_hook);
+			const adds_dock = adds_vite_devtools_dock(config);
+			const unsupported_plugins = config.plugins.filter((plugin) =>
+				uses_unsupported_html_hook(plugin, adds_dock)
+			);
 			if (unsupported_plugins.length) {
 				const plugins = bullet_list(
 					unsupported_plugins.map((plugin) => plugin.name || '(missing plugin name)')

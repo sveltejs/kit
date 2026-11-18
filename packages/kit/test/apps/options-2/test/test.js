@@ -198,6 +198,9 @@ test.describe('Link header preload', () => {
 
 		expect(header).toContain('rel="modulepreload"');
 		expect(header).toContain('as="font"');
+		expect(header).toContain('as="style"');
+		// CDNs can replay this header as Early Hints, where Chromium rejects nopush.
+		expect(header).not.toContain('nopush');
 	});
 
 	test('does not inject Link headers on prerendered pages', async ({ request }) => {
