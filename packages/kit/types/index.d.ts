@@ -59,7 +59,7 @@ declare module '@sveltejs/kit' {
 		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
 		 * previewing the build output on its own.
 		 * @default false
-		 * @since 3.3.0
+		 * @since 3.4.0
 		 */
 		customPreview?: boolean;
 		/**
