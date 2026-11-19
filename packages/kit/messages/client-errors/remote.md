@@ -4,6 +4,12 @@
 
 Remote commands are imperative mutations and cannot redirect. Return the destination or another result from the command, then call [`goto`](https://svelte.dev/docs/kit/$app-navigation#goto) in the browser after awaiting it. Remote forms support redirects when you need a progressively enhanced submission.
 
+## remote_env_missing
+
+> Remote functions need `%name%`, which is only available after the app has started. Outside a SvelteKit app, provide it with `set_remote_env`
+
+Remote functions use the router and the current page of the running app. Code that renders components without a SvelteKit app, such as a component test runner, must call `set_remote_env` from `@sveltejs/kit/internal/client` with `page` and `goto` before it calls a remote function.
+
 ## remote_form_multiple_elements
 
 > A form object can only be attached to a single `<form>` element

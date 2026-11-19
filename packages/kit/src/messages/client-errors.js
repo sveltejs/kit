@@ -134,6 +134,19 @@ export function remote_command_redirect(_values) {
 }
 
 /**
+ * Remote functions need `%name%`, which is only available after the app has started. Outside a SvelteKit app, provide it with `set_remote_env`
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function remote_env_missing(_values) {
+	if (DEV) {
+		throw_error('remote_env_missing', `Remote functions need \`${_values.name}\`, which is only available after the app has started. Outside a SvelteKit app, provide it with \`set_remote_env\``, remote_env_missing);
+	}
+
+	throw new Error('https://svelte.dev/e/kit/remote_env_missing');
+}
+
+/**
  * Cannot mix and match file and non-file inputs under the same name (`%name%`)
  * @param {{ "name": string }} _values
  * @returns {never}

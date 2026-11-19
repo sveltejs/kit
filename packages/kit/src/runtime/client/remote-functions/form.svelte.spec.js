@@ -1,5 +1,7 @@
+import * as devalue from 'devalue';
 import { flushSync, tick } from 'svelte';
 import { beforeEach, expect, test, vi } from 'vitest';
+import { reset_remote_state, set_remote_env } from '@sveltejs/kit/internal/client';
 
 const env = vi.hoisted(() => ({ DEV: true }));
 vi.mock('esm-env', () => ({
@@ -16,10 +18,7 @@ beforeEach(() => {
 // router/hydration machinery. Creating form instances needs none of it.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	query_responses: {},
-	_goto: () => {},
-	set_nearest_error_page: () => {},
-	handle_error: () => {},
-	refreshAll: () => {}
+	set_nearest_error_page: () => {}
 }));
 
 const { form } = await import('./form.svelte.js');
@@ -230,5 +229,57 @@ test('form.for keeps its instance when the derived that holds it reconnects', as
 		expect(remote.for('key') === held).toBe(true);
 	} finally {
 		cleanup();
+	}
+});
+
+test('a keyed submission that settles after reset_remote_state keeps the new keyed instance', async () => {
+	const slow = Promise.withResolvers();
+	const fetch = vi.fn(() => slow.promise);
+	set_remote_env({
+		fetch,
+		page: { url: new URL('http://localhost/') },
+		goto: () => Promise.resolve(),
+		refresh_all: () => Promise.resolve(),
+		handle_error: () => Promise.resolve({ status: 500, message: 'error' })
+	});
+
+	const remote = form('hash/keyedPost');
+
+	/** @type {any} */
+	let old;
+	const destroy_old = $effect.root(() => {
+		old = remote.for('x');
+	});
+	flushSync();
+
+	const { attach: mount } = attach(old);
+	const detach = mount();
+	const submission = old.submit();
+	await vi.waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+	detach();
+	destroy_old();
+
+	await reset_remote_state();
+
+	/** @type {any} */
+	let next;
+	const destroy_next = $effect.root(() => {
+		next = remote.for('x');
+	});
+	flushSync();
+
+	try {
+		expect(next).not.toBe(old);
+
+		slow.resolve(
+			Response.json({ type: 'result', data: devalue.stringify({ _: { result: { id: 1 } } }) })
+		);
+		await submission;
+		await tick();
+		await tick();
+
+		expect(remote.for('x')).toBe(next);
+	} finally {
+		destroy_next();
 	}
 });

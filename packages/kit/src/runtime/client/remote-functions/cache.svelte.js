@@ -137,6 +137,17 @@ export class CacheController {
 	};
 
 	/**
+	 * Tear down every cache entry, regardless of how many proxies reference it.
+	 */
+	clear = () => {
+		for (const [id, entries] of this.#cache_map) {
+			for (const payload of entries.keys()) {
+				this.#evict(id, payload);
+			}
+		}
+	};
+
+	/**
 	 * Tear down the cache entry for `(id, payload)` if it exists. Runs the optional
 	 * resource teardown and the entry's `$effect.root` cleanup, then removes the entry
 	 * from the cache map.
