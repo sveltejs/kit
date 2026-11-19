@@ -1,9 +1,20 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
+/** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 /** @import { MaybePromise, RequestState, RemoteInternals, RequestStore, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 import { error } from '@sveltejs/kit';
 import { ValidationError } from '@sveltejs/kit/internal';
 import { with_request_store } from '@sveltejs/kit/internal/server';
 import * as e from '../../../../messages/server-errors.js';
+
+/**
+ * returns null without a validator or when it is `'unchecked'`
+ * @param {any} validate_or_fn
+ * @param {((arg?: any) => any) | undefined} maybe_fn
+ * @returns {StandardSchemaV1 | null}
+ */
+export function get_schema(validate_or_fn, maybe_fn) {
+	return maybe_fn && validate_or_fn !== 'unchecked' ? validate_or_fn : null;
+}
 
 /**
  * @param {any} validate_or_fn
