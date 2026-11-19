@@ -253,13 +253,13 @@ function batch(validate_or_fn, maybe_fn) {
 	 * Enqueues a single call into the current batch (creating one if necessary)
 	 * and returns a promise that resolves with the result for this entry.
 	 *
+	 * @param {RequestEvent} event — the event of the request the query was called in
+	 * @param {RequestState} state — the state of that request
 	 * @param {string} payload — the stringified raw argument (cache key)
 	 * @param {() => MaybePromise<any>} get_validated — produces the validated argument for this entry
 	 * @returns {Promise<any>}
 	 */
-	const enqueue = (payload, get_validated) => {
-		const { event, state } = get_request_store();
-
+	const enqueue = (event, state, payload, get_validated) => {
 		return new Promise((resolve, reject) => {
 			const batches = (state.remote.batches ??=
 				/** @type {NonNullable<typeof state.remote.batches>} */ (new Map()));
@@ -360,7 +360,7 @@ function batch(validate_or_fn, maybe_fn) {
 			const { event, state } = get_request_store();
 
 			return create_query_resource(__, payload, event, state, () =>
-				enqueue(payload, () => validated_arg)
+				enqueue(event, state, payload, () => validated_arg)
 			);
 		}
 	};
@@ -377,7 +377,7 @@ function batch(validate_or_fn, maybe_fn) {
 		return create_query_resource(__, payload, event, state, () =>
 			// Collect all the calls to the same query in the same macrotask,
 			// then execute them as one backend request.
-			enqueue(payload, () => validate(arg))
+			enqueue(event, state, payload, () => validate(arg))
 		);
 	};
 

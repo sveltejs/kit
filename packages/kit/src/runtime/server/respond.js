@@ -30,7 +30,7 @@ import { action_json_redirect, is_action_json_request } from './page/actions.js'
 import { INVALIDATED_PARAM, TRAILING_SLASH_PARAM } from '../shared.js';
 import { get_public_env } from './env_module.js';
 import { resolve_route, resolve_route_by_id } from './page/server_routing.js';
-import { validateHeaders } from './validate-headers.js';
+import { create_set_headers } from './headers.js';
 import {
 	add_data_suffix,
 	add_resolution_suffix,
@@ -208,33 +208,7 @@ export async function internal_respond(request, state) {
 			: state.platform,
 		request,
 		route: { id: null },
-		setHeaders: (new_headers) => {
-			if (DEV) {
-				validateHeaders(new_headers);
-			}
-
-			for (const key in new_headers) {
-				const lower = key.toLowerCase();
-				const value = new_headers[key];
-
-				if (lower === 'set-cookie') {
-					e.set_headers_cookie();
-				} else if (lower in headers) {
-					// appendHeaders-style for Server-Timing https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Server-Timing
-					if (lower === 'server-timing') {
-						headers[lower] += ', ' + value;
-					} else {
-						e.header_already_set({ name: key });
-					}
-				} else {
-					headers[lower] = value;
-
-					if (state.prerendering && lower === 'cache-control') {
-						state.prerendering.cache = /** @type {string} */ (value);
-					}
-				}
-			}
-		},
+		setHeaders: create_set_headers(state),
 		url,
 		isDataRequest: is_data_request,
 		isSubRequest: state.depth > 0,
