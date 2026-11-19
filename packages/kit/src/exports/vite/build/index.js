@@ -22,7 +22,6 @@ import { write_client_manifest } from '../../../core/sync/write_client_manifest.
 import { logger, runtime_directory } from '../../../core/utils.js';
 import { compact } from '../../../utils/array.js';
 import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
-import { load_and_validate_params } from '../../../core/params.js';
 import { posixify } from '../../../utils/os.js';
 import { stackless } from '../../../utils/error.js';
 import * as e from '../../../messages/build-errors.js';
@@ -928,19 +927,13 @@ export function plugin_compile(
 			// `vite build`
 			ssr_build = Array.isArray(ssr_build) ? ssr_build[0] : ssr_build;
 			if ('output' in ssr_build) {
-				await load_and_validate_params({
-					routes: manifest_data.routes,
-					params_path: manifest_data.params,
-					root
-				});
-
 				return await process_ssr_build(ssr_build.output);
 			}
 
 			// `vite build --watch`
 			let rebuild = false;
 
-			const before_ssr_build_rerun = async () => {
+			const before_ssr_build_rerun = () => {
 				rebuild = true;
 
 				// these are set once per plugin initialisation or when the config hook
@@ -955,12 +948,6 @@ export function plugin_compile(
 				finalise = null;
 
 				fs.mkdirSync(out, { recursive: true });
-
-				await load_and_validate_params({
-					routes: manifest_data.routes,
-					params_path: manifest_data.params,
-					root
-				});
 			};
 
 			ssr_build.on('change', before_ssr_build_rerun);
