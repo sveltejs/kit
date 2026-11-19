@@ -268,6 +268,37 @@ export type RecursiveRequired<T> = {
 
 export type RequiredResolveOptions = Required<ResolveOptions>;
 
+/** paths are relative to the project root */
+export interface DevRouteNode {
+	component: string | null;
+	universal: string | null;
+	server: string | null;
+}
+
+/**
+ * known false means file has page options static analysis cannot read
+ * file null means no file sets the option so the default applies
+ */
+export type DevRoutePageOption =
+	| { known: true; value: any; file: string | null; inherited: boolean }
+	| { known: false; file: string; inherited: boolean };
+
+export interface DevRouteInfo {
+	id: string;
+	params: Array<{ name: string; matcher: string | null; optional: boolean; rest: boolean }>;
+	page: {
+		/** one entry per level from the root, null where a level has an error page but no layout */
+		layouts: Array<DevRouteNode | null>;
+		errors: Array<string | null>;
+		leaf: DevRouteNode;
+		options: Record<'ssr' | 'csr' | 'prerender' | 'trailingSlash', DevRoutePageOption>;
+	} | null;
+	endpoint: {
+		file: string;
+		options: Record<'prerender' | 'trailingSlash', DevRoutePageOption>;
+	} | null;
+}
+
 export interface RouteParam {
 	name: string;
 	matcher: string;
