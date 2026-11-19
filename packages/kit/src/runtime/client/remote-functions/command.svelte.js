@@ -7,8 +7,11 @@ import {
 	get_remote_request_headers,
 	categorize_updates,
 	remote_request,
-	fail_unhandled_refreshes
+	fail_unhandled_refreshes,
+	override_keys
 } from './shared.svelte.js';
+import { DEV } from 'esm-env';
+import { listening, mutation_settled, mutation_started } from './devtools.svelte.js';
 
 /**
  * Client-version of the `command` function from `$app/server`.
@@ -44,9 +47,16 @@ export function command(id) {
 		const promise =
 			/** @type {Promise<any> & { updates: (...args: RemoteQueryUpdate[]) => Promise<any> }} */ (
 				(async () => {
+					/** @type {ReturnType<typeof mutation_started> | null} */
+					let dev = null;
+
 					try {
 						// Wait a tick to give room for the `updates` method to be called
 						await Promise.resolve();
+
+						if (DEV && listening()) {
+							dev = mutation_started('command', id, arg, refreshes, override_keys(overrides));
+						}
 
 						if (updates_error) {
 							throw updates_error;
@@ -71,7 +81,12 @@ export function command(id) {
 
 						fail_unhandled_refreshes(refreshes);
 
+						if (DEV && dev) mutation_settled(dev, { ok: true, result: response._, data: response });
+
 						return response._;
+					} catch (error) {
+						if (DEV && dev) mutation_settled(dev, { ok: false, error });
+						throw error;
 					} finally {
 						overrides?.forEach((fn) => fn());
 
