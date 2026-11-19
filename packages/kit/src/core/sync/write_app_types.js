@@ -43,33 +43,36 @@ const get_pathname_patterns = (id) => {
 };
 
 /**
- * Get pathnames to add based on trailingSlash settings
- * @param {string} pathname
+ * Get variants based on trailingSlash settings
+ * @param {string} value
  * @param {import('types').RouteData} route
  * @returns {string[]}
  */
-function get_pathnames_for_trailing_slash(pathname, route) {
+function get_trailing_slash_variants(value, route) {
+	// Short-circuit for the root value to avoid accidental double slashes.
+	if (value === '/') return ['/'];
+
 	/** @type {Set<string>} */
-	const pathnames = new Set();
+	const variants = new Set();
 
 	/**
-	 * @param {{ trailingSlash?: import('types').TrailingSlash } | null | undefined} page_options
+	 * @param {{ trailingSlash?: import('types').TrailingSlash } | null} page_options
 	 */
-	const add_pathnames = (page_options) => {
+	const add = (page_options) => {
 		if (page_options === null || page_options?.trailingSlash === 'ignore') {
-			pathnames.add(pathname);
-			pathnames.add(pathname + '/');
+			variants.add(value);
+			variants.add(value + '/');
 		} else if (page_options?.trailingSlash === 'always') {
-			pathnames.add(pathname + '/');
+			variants.add(value + '/');
 		} else {
-			pathnames.add(pathname);
+			variants.add(value);
 		}
 	};
 
-	if (route.leaf) add_pathnames(route.leaf.page_options ?? null);
-	if (route.endpoint) add_pathnames(route.endpoint.page_options);
+	if (route.leaf) add(route.leaf.page_options ?? null);
+	if (route.endpoint) add(route.endpoint.page_options);
 
-	return Array.from(pathnames);
+	return Array.from(variants);
 }
 
 // `declare module "svelte/elements"` needs to happen in a non-ambient module, and dts-buddy generates one big ambient module,
@@ -179,6 +182,9 @@ function generate_app_types(manifest_data, config, dir) {
 	const app_route_ids = [];
 
 	/** @type {string[]} */
+	const resolvable_app_route_ids = [];
+
+	/** @type {string[]} */
 	const dynamic_routes = [];
 
 	/** @type {string[]} */
@@ -234,7 +240,13 @@ function generate_app_types(manifest_data, config, dir) {
 
 		if (is_page_route(route)) page_route_ids.push(id);
 		if (is_endpoint_route(route)) endpoint_route_ids.push(id);
-		if (is_app_route(route)) app_route_ids.push(id);
+
+		if (is_app_route(route)) {
+			app_route_ids.push(id);
+			for (const id of get_trailing_slash_variants(route.id, route)) {
+				resolvable_app_route_ids.push(s(id));
+			}
+		}
 
 		/** @type {(path: string) => string} */
 		let serialise = s;
@@ -253,7 +265,7 @@ function generate_app_types(manifest_data, config, dir) {
 		}
 
 		for (const pathname of get_pathname_patterns(route.id)) {
-			for (const p of get_pathnames_for_trailing_slash(pathname, route)) {
+			for (const p of get_trailing_slash_variants(pathname, route)) {
 				pathnames.add(serialise(p));
 			}
 		}
@@ -283,6 +295,7 @@ function generate_app_types(manifest_data, config, dir) {
 		`\t\tPageRouteId(): ${page_route_ids.join(' | ') || 'never'};`,
 		`\t\tEndpointRouteId(): ${endpoint_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteId(): ${app_route_ids.join(' | ') || 'never'};`,
+		`\t\tResolvableRouteId(): ${resolvable_app_route_ids.join(' | ') || 'never'};`,
 		`\t\tRouteParams(): {\n\t\t\t${dynamic_routes.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tLayoutParams(): {\n\t\t\t${layouts.join(';\n\t\t\t')}\n\t\t};`,
 		`\t\tPath(): ${Array.from(pathnames).join(' | ') || 'never'};`,
