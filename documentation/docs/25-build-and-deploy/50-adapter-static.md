@@ -48,6 +48,8 @@ export const prerender = true;
 
 > [!NOTE] You must ensure SvelteKit's [`ssr`](page-options#ssr) option isn't set to `false`. Otherwise, prerendering will save an empty 'shell' page instead of the fully rendered content.
 
+`vite preview` serves the files in `pages` and `assets` like a static host, without rendering anything on the server. A URL that doesn't match a file gets the `fallback` page if you set one, and otherwise a 404 (with your `404.html`, if you have one).
+
 ## Zero-config support
 
 Some platforms have zero-config support (more to come in future):
