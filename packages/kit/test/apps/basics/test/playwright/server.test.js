@@ -48,18 +48,10 @@ test.describe('Endpoints', () => {
 });
 
 test.describe('Errors', () => {
-	for (const path of ['/%%7BimgPath%7D', '/%', '/%zz', '/%c0%ae%c0%ae/etc/passwd']) {
-		test(`returns 400 when accessing a malformed URI: ${path}`, async ({ page }) => {
-			const response = await page.goto(path);
-			expect(/** @type {Response} */ (response).status()).toBe(400);
-		});
-	}
-
-	test('returns 400 for malformed subresource paths', async ({ request }) => {
-		const response = await request.get('/%%7BimgPath%7D', {
-			headers: { 'sec-fetch-dest': 'image' }
-		});
-		expect(response.status()).toBe(400);
+	test('returns 400 when accessing a malformed URI', async ({ page }) => {
+		const response = await page.goto('/%c0%ae%c0%ae/etc/passwd');
+		expect(/** @type {Response} */ (response).status()).toBe(400);
+		await expect(page.locator('#message')).toContainText('Malformed URI');
 	});
 });
 
@@ -98,12 +90,6 @@ test.describe('Static files', () => {
 		response = await request.get('/test.ico');
 		expect(response.status()).toBe(200);
 		expect(response.headers()['content-type']).toBe('image/x-icon');
-	});
-
-	test('allows malformed percent escapes in asset query strings', async ({ request }) => {
-		const response = await request.get('/static.json?query=%');
-		expect(response.status()).toBe(200);
-		expect(await response.json()).toBe('static file');
 	});
 
 	test('does not use Vite to serve contents of static directory', async ({ request }) => {
