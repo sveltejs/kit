@@ -207,6 +207,12 @@ function clear_onward_history(current_history_index, current_navigation_index) {
  * @returns {Promise<any>} a promise that never resolves
  */
 function native_navigation(url, replace = false) {
+	// The document is already being unloaded in favour of another one. Navigating
+	// now would replace that navigation (which is most likely the reason we got
+	// here in the first place, since some browsers cancel pending requests as
+	// soon as the document starts to unload) with one the user didn't ask for
+	if (unloading !== null) return new Promise(noop);
+
 	if (replace) {
 		location.replace(url.href);
 	} else {
@@ -336,6 +342,13 @@ let current = {
 	// @ts-ignore - we need the initial value to be null
 	nav: null
 };
+
+/**
+ * The `timeStamp` of the `beforeunload` event of a document unload that
+ * is (as far as we can tell) underway, `null` otherwise
+ * @type {number | null}
+ */
+let unloading = null;
 
 /** this being true means we SSR'd */
 let hydrated = false;
@@ -550,6 +563,9 @@ async function _start(_app, _target, data) {
 			scrollTo(scroll.x, scroll.y);
 		}
 	}
+
+	// this needs to happen before the initial load, which can itself be interrupted by an unload
+	track_unload();
 
 	if (data) {
 		restore_reload_scroll();
@@ -1953,6 +1969,12 @@ async function navigate({
 	intent,
 	action_result
 }) {
+	// A new navigation that was started after a `beforeunload` means that
+	// the document didn't go away after all (e.g. because it was a download)
+	if (unloading !== null && redirect_count === 0 && !(event && event.timeStamp < unloading)) {
+		unloading = null;
+	}
+
 	const prev_token = navigation_token;
 	const prev_invalidation_token = invalidation_token;
 	navigation_token = invalidation_token = nav_token;
@@ -3088,6 +3110,31 @@ export async function set_nearest_error_page(error) {
 
 		void tick().then(() => reset_focus(current.url));
 	}
+}
+
+/**
+ * Keeps track of whether the document is being unloaded, so that
+ * we don't get in the way of the navigation that causes it
+ */
+function track_unload() {
+	addEventListener('beforeunload', (event) => {
+		unloading = event.timeStamp;
+
+		// Listeners that are registered later, or the user via the resulting confirmation
+		// dialog, can still cancel the unload. In that case this runs once the dialog is closed
+		setTimeout(() => {
+			if (event.defaultPrevented || event.returnValue) {
+				unloading = null;
+			}
+		});
+	});
+
+	addEventListener('pageshow', (event) => {
+		// restored from bfcache
+		if (event.persisted) {
+			unloading = null;
+		}
+	});
 }
 
 function _start_router() {
