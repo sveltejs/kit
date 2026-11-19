@@ -12,7 +12,8 @@ import { prevent_conflicts } from './conflict.js';
 import { sort_routes } from './sort.js';
 import {
 	create_node_analyser,
-	get_page_options
+	get_page_options,
+	has_endpoint_handler_export
 } from '../../../exports/vite/static_analysis/index.js';
 
 const component_name_pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error))$/;
@@ -241,11 +242,17 @@ function create_routes_and_nodes(cwd, config, fallback) {
 						? component_name_pattern
 						: module_name_pattern;
 
-					// check if it is a valid route filename but missing the + prefix
-					if (pattern.test(`+${name}`)) {
+					// `server.js` / `server.ts` are valid server-only modules. Only warn if
+					// the file looks like a forgotten `+server` (it exports endpoint handlers):
+					// https://svelte.dev/docs/kit/server-only-modules#Your-modules
+					const filepath = path.join(dir, file.name);
+					if (
+						pattern.test(`+${name}`) &&
+						(name !== 'server' || has_endpoint_handler_export(filepath))
+					) {
 						w.route_file_prefix_missing({
 							corrected: `+${file.name}`,
-							file: path.join(dir, file.name)
+							file: filepath
 						});
 					}
 
