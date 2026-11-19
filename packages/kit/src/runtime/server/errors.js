@@ -4,7 +4,7 @@ import {
 	SvelteKitError,
 	ValidationError
 } from '@sveltejs/kit/internal';
-import { with_request_store } from '@sveltejs/kit/internal/server';
+import { send_devtools_validation, with_request_store } from '@sveltejs/kit/internal/server';
 import { add_deprecated_handle_error_properties, coalesce_to_error } from '../../utils/error.js';
 // `$app/server` reaches this module, so it must not import anything generated
 import { fix_stack_trace, hooks } from './internal.js';
@@ -37,6 +37,14 @@ export function handle_error_and_jsonify(event, state, error) {
 			issues: error.issues,
 			remote: error.remote
 		};
+
+		if (__SVELTEKIT_DEV__) {
+			send_devtools_validation({
+				issues: error.issues,
+				remote: error.remote,
+				remote_id: error.remote_id
+			});
+		}
 	} else {
 		caught = { kind: 'unknown', error };
 

@@ -588,7 +588,8 @@ function kit({ svelte_config }) {
 				root,
 				(data) => {
 					manifest_data = data;
-				}
+				},
+				initial_config.devtools
 			);
 		},
 
