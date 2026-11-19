@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { matches } from './utils.js';
+import { disjoint, matches } from './utils.js';
 
 /**
  * Helper to create a static route segment
@@ -116,5 +116,31 @@ describe('matches', () => {
 
 	test('both dynamic segments match', () => {
 		expect(matches([dynamic_segment('[id]')], [dynamic_segment('[slug]')])).toBe(true);
+	});
+});
+
+describe('disjoint', () => {
+	test('different static prefixes are disjoint', () => {
+		expect(
+			disjoint(
+				[static_segment('blog'), dynamic_segment('[slug]')],
+				[static_segment('docs'), rest_segment('[...rest]')]
+			)
+		).toBe(true);
+	});
+
+	test('a dynamic segment before the difference can overlap', () => {
+		expect(
+			disjoint(
+				[dynamic_segment('[[lang]]'), static_segment('a')],
+				[static_segment('a'), static_segment('b')]
+			)
+		).toBe(false);
+	});
+
+	test('a shared static prefix can overlap', () => {
+		expect(disjoint([static_segment('a')], [static_segment('a'), dynamic_segment('[id]')])).toBe(
+			false
+		);
 	});
 });

@@ -42,3 +42,27 @@ test('reroute works', async ({ page }) => {
 // TODO: test remote function works
 
 // TODO: test preloadCode works
+
+test('overlapping split routes follow route priority with more than ten functions', async ({
+	page,
+	request
+}) => {
+	const response = await request.get('/z/specific');
+	expect(response.status()).toBe(200);
+	expect(await response.text()).toBe('specific');
+
+	await page.goto('/z/known');
+	await expect(page.locator('p')).toHaveText('matched');
+
+	// The matcher rejects this slug, so the same function must retain its fallback route.
+	await page.goto('/z/other');
+	await expect(page.locator('p')).toHaveText('slug: other');
+
+	const data = await request.get('/z/other/__data.json');
+	expect(await data.json()).toMatchObject({
+		nodes: [null, { type: 'data', data: [{ slug: 1 }, 'other'] }]
+	});
+
+	await page.goto('/z/a/b');
+	await expect(page.locator('p')).toHaveText('rest: a/b');
+});

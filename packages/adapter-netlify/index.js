@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import process from 'node:process';
 import { build } from 'rolldown';
-import { matches, s } from './utils.js';
+import { disjoint, matches, s } from './utils.js';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 const adapter_version = pkg.version;
@@ -174,6 +174,8 @@ function write_frameworks_config({ builder }) {
  */
 function get_split_functions(builder) {
 	const seen = new Set();
+	/** @type {Array<{ segments: RouteDefinition['segments'], patterns: string[] }>} */
+	const higher = [];
 	let index = 0;
 
 	/** @type {EntrypointMetadata[]} */
@@ -207,8 +209,15 @@ function get_split_functions(builder) {
 		// skip routes with identical patterns, they were already folded into another function
 		if (seen.has(pattern)) continue;
 
+		// Netlify doesn't resolve overlapping functions by route specificity. Exclude the
+		// higher priority patterns that could match the same path so routing doesn't
+		// depend on function name order.
+		const exclude = higher
+			.filter((fn) => !disjoint(fn.segments, route.segments))
+			.flatMap((fn) => fn.patterns);
 		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
 		patterns.forEach((pattern) => seen.add(pattern));
+		higher.push({ segments: route.segments, patterns });
 
 		// figure out which lower priority routes should be considered fallbacks
 		for (let j = i + 1; j < builder.routes.length; j += 1) {
@@ -225,7 +234,8 @@ function get_split_functions(builder) {
 			routes,
 			patterns,
 			name: `${FUNCTION_PREFIX}${index++}`,
-			display_name: `SvelteKit ${route.id}`
+			display_name: `SvelteKit ${route.id}`,
+			exclude
 		});
 	}
 
