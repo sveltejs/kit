@@ -95,6 +95,125 @@ describe('reactive consumption never produces unhandled rejections', () => {
 });
 
 describe('Query errors', () => {
+	test.each(['then', 'catch', 'finally'])(
+		'%s retries a failed query in a later task',
+		async (method) => {
+			const fn = vi.fn().mockRejectedValueOnce(new Error('nope')).mockResolvedValue('ok');
+			const query = new Query('retry', fn);
+			const error = await query.catch((/** @type {any} */ error) => error);
+
+			// Sequential awaits in the failing task still share its rejection.
+			await expect(Promise.resolve(query)).rejects.toBe(error);
+			expect(fn).toHaveBeenCalledTimes(1);
+			await flush();
+
+			const result =
+				method === 'then'
+					? Promise.resolve(query)
+					: method === 'catch'
+						? query.catch(() => 'unexpected')
+						: query.finally(() => {});
+			expect(await result).toBe('ok');
+			expect(fn).toHaveBeenCalledTimes(2);
+			await flush();
+			expect(await query).toBe('ok');
+			expect(fn).toHaveBeenCalledTimes(2);
+		}
+	);
+
+	test('concurrent consumers share a retry after a failed refresh with an existing value', async () => {
+		const pending = Promise.withResolvers();
+		const fn = vi.fn().mockRejectedValueOnce(new Error('nope')).mockReturnValue(pending.promise);
+		const query = new Query('retry-refresh', fn);
+		query.set('old');
+
+		await expect(query.refresh()).rejects.toMatchObject({ body: { message: 'nope' } });
+		await flush();
+		expect(query.ready).toBe(true);
+		expect(query.current).toBe('old');
+
+		const results = Promise.all([query, query]);
+		await tick();
+		expect(fn).toHaveBeenCalledTimes(2);
+		expect(query.loading).toBe(true);
+		expect(query.current).toBe('old');
+
+		pending.resolve('fresh');
+		expect(await results).toEqual(['fresh', 'fresh']);
+		expect(query.error).toBeUndefined();
+		expect(query.loading).toBe(false);
+		expect(fn).toHaveBeenCalledTimes(2);
+	});
+
+	test('a persistent failure does not automatically retry or invalidate awaiting consumers', async () => {
+		const fn = vi.fn().mockRejectedValue(new Error('nope'));
+		const query = new Query('persistent', fn);
+		let invalidations = 0;
+		const destroy = $effect.root(() => {
+			$effect.pre(() => {
+				invalidations++;
+				void query.then;
+			});
+			$effect.pre(() => {
+				void query.current;
+				void query.error;
+				void query.loading;
+				void query.ready;
+			});
+		});
+		try {
+			await flush();
+			expect(query.error?.message).toBe('nope');
+			expect(query.loading).toBe(false);
+			expect(query.ready).toBe(false);
+			await flush();
+			expect(fn).toHaveBeenCalledTimes(1);
+			expect(invalidations).toBe(1);
+
+			await expect(Promise.resolve(query)).rejects.toMatchObject({ body: { message: 'nope' } });
+			await flush();
+			expect(fn).toHaveBeenCalledTimes(2);
+		} finally {
+			destroy();
+		}
+	});
+
+	test.each(['fail', 'SSR'])('%s errors can be retried after the failing task', async (source) => {
+		const { query_responses } = await import('../client.js');
+		const error = new HandledHttpError({ status: 503, message: 'unavailable' });
+		if (source === 'SSR') query_responses['seeded-retry'] = { e: error.body };
+		const fn = vi.fn().mockResolvedValue('ok');
+		const query = new Query('seeded-retry', fn);
+		if (source === 'fail') query.fail(error);
+
+		await expect(Promise.resolve(query)).rejects.toMatchObject({ body: error.body });
+		expect(fn).not.toHaveBeenCalled();
+		await flush();
+		expect(await query).toBe('ok');
+		expect(fn).toHaveBeenCalledTimes(1);
+	});
+
+	test('a delayed failure cannot invalidate a newer set value or refresh', async () => {
+		const pending = Promise.withResolvers();
+		const fn = vi.fn().mockRejectedValueOnce(new Error('nope')).mockReturnValue(pending.promise);
+		const query = new Query('retry-race', fn);
+		await query.catch(() => {});
+		const refreshed = query.refresh();
+		await flush();
+		const result = Promise.resolve(query);
+		pending.resolve('fresh');
+		await refreshed;
+		expect(await result).toBe('fresh');
+		expect(fn).toHaveBeenCalledTimes(2);
+
+		query.fail(new HttpError({ status: 503, message: 'unavailable' }));
+		await query.catch(() => {});
+		query.set('set');
+		await flush();
+		expect(await query).toBe('set');
+		expect(fn).toHaveBeenCalledTimes(2);
+	});
+
 	test('a failed newer run rejects superseded awaiters before the first value', async () => {
 		const first = Promise.withResolvers();
 		const second = Promise.withResolvers();

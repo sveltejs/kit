@@ -5,6 +5,39 @@ import { test } from '../../../utils.js';
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
 test.describe('remote functions', () => {
+	for (const kind of ['query', 'query.batch']) {
+		test(`a boundary reset retries a failed ${kind} without garbage collection`, async ({
+			page
+		}) => {
+			let requests = 0;
+			page.on('request', (r) => (requests += r.url().includes('/_app/remote/') ? 1 : 0));
+			const key = `${Date.now()}${Math.random()}`;
+			await page.goto(`/remote/query-retry?key=${key}${kind === 'query.batch' ? '&batch' : ''}`);
+			await expect(page.locator('p')).toHaveText('Failed: Not available yet');
+			expect(requests).toBe(1);
+
+			await page.getByRole('button', { name: 'Try again' }).click();
+			await expect(page.locator('p')).toHaveText('Hello (run 2)');
+			expect(requests).toBe(2);
+		});
+	}
+
+	test('a discarded fork does not consume a failed query retry', async ({ page }) => {
+		let requests = 0;
+		await page.route('**/_app/remote/**', (route) => {
+			requests++;
+			// Keep the speculative retry pending so it cannot update the live query.
+			if (requests !== 2) return route.continue();
+		});
+		await page.goto(`/remote/query-retry?key=${Date.now()}${Math.random()}`);
+		await expect(page.locator('p')).toHaveText('Failed: Not available yet');
+		await page.getByRole('button', { name: 'Discard speculative retry' }).click();
+		await expect.poll(() => requests).toBe(2);
+		await page.getByRole('button', { name: 'Try again' }).click();
+		await expect(page.locator('p')).toHaveText('Hello (run 2)');
+		expect(requests).toBe(3);
+	});
+
 	test('preloading data works when the page component and server load both import a remote function', async ({
 		page,
 		clicknav
