@@ -1,5 +1,15 @@
 # @sveltejs/kit
 
+## 3.4.1
+
+### Patch Changes
+
+- fix: re-run nested queries on each iteration of a `query.live` function instead of returning the value from the first iteration ([#17758](https://github.com/sveltejs/kit/pull/17758))
+
+- fix: return 400 for malformed request paths in development ([#17651](https://github.com/sveltejs/kit/pull/17651))
+
+- fix: ship less client JavaScript when the app has no `reroute` hook ([#17817](https://github.com/sveltejs/kit/pull/17817))
+
 ## 3.4.0
 
 ### Minor Changes
