@@ -65,7 +65,6 @@ export default function (options = {}) {
 				await builder.generateFallback(path.join(assets, '404.html'));
 			}
 			builder.writeClient(assets_dest);
-			// sveltekit copies the server assets to the client
 			restore_wasm_imports(`${assets_dest}/${builder.getAppPath()}/immutable/assets`);
 			builder.writePrerendered(assets_dest);
 			if (not_found_handling === 'single-page-application') {
