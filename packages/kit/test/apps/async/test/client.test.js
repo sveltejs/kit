@@ -616,6 +616,33 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('p')).toHaveText('foo');
 	});
 
+	test('a value kept for an unused query is used by the page navigated to', async ({ page }) => {
+		await page.goto('/remote/optimistic-new-query');
+
+		let request_count = 0;
+		page.on('request', (r) => (request_count += r.url().includes('/_app/remote') ? 1 : 0));
+
+		await page.getByText('override').click();
+		await page.waitForTimeout(100);
+
+		await page.getByText('reader').click();
+		await expect(page.locator('p')).toHaveText('baz');
+		expect(request_count).toBe(1);
+	});
+
+	test('a value kept for an unused query is discarded by a navigation that does not read it', async ({
+		page
+	}) => {
+		await page.goto('/remote/optimistic-new-query');
+
+		await page.getByText('override').click();
+		await page.waitForTimeout(100);
+
+		await page.getByText('other').click();
+		await page.getByText('reader').click();
+		await expect(page.locator('p')).toHaveText('foo');
+	});
+
 	test('form pending resets when enhance callback skips submit', async ({ page }) => {
 		await page.goto('/remote/form/skip-submit');
 

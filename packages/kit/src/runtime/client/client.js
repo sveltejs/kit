@@ -255,9 +255,15 @@ export let app;
  */
 export const query_responses = {};
 
-function discard_kept_query_responses() {
+function kept_query_responses() {
+	return new Set(Object.values(query_responses).filter((node) => node.kept));
+}
+
+/** @param {Set<RemoteFunctionDataNode>} [nodes] if given, only these are discarded */
+function discard_kept_query_responses(nodes) {
 	for (const key in query_responses) {
-		if (query_responses[key].kept) delete query_responses[key];
+		const node = query_responses[key];
+		if (node.kept && (!nodes || nodes.has(node))) delete query_responses[key];
 	}
 }
 
@@ -1997,6 +2003,9 @@ async function navigate({
 
 	accept();
 
+	// a kept value is for the page being navigated to, if that page does not read it it is dropped
+	const kept = kept_query_responses();
+
 	is_navigating = true;
 
 	if (started && nav.navigation.type !== 'enter') {
@@ -2230,6 +2239,8 @@ async function navigate({
 		commit_promise
 	);
 	if (!finished) return;
+
+	discard_kept_query_responses(kept);
 
 	if (type === 'popstate') {
 		restore_snapshot(current_navigation_index);
