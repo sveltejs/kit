@@ -1,5 +1,9 @@
+/** @import { ServerResponse } from 'node:http' */
+/** @import { AddressInfo } from 'node:net' */
 import { EventEmitter, once } from 'node:events';
-import { validateHeaderValue } from 'node:http';
+import { IncomingMessage, validateHeaderValue } from 'node:http';
+import { connect, constants, createServer } from 'node:http2';
+import { Socket } from 'node:net';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -12,7 +16,7 @@ import { getRequest, setResponse } from './index.js';
  */
 function create_request(options = {}) {
 	const req = new PassThrough();
-	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+	const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 
 	incoming.headers = {
 		'content-type': 'text/plain',
@@ -31,6 +35,48 @@ function create_request(options = {}) {
 		req
 	};
 }
+
+// https://github.com/sveltejs/kit/issues/17633
+test('errors the body of a request that was aborted before being adapted', async () => {
+	const incoming = new IncomingMessage(new Socket());
+	incoming.method = 'POST';
+	incoming.url = '/';
+	incoming.httpVersionMajor = 1;
+	incoming.headers = { 'content-length': '2' };
+
+	const closed = once(incoming, 'close');
+	incoming.destroy();
+	await closed;
+
+	const request = getRequest({ request: incoming, base: 'http://localhost' });
+
+	expect(request.signal.aborted).toBe(true);
+	expect(request.bodyUsed).toBe(false);
+	await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+});
+
+test('errors the body of a request that was already read, without aborting', async () => {
+	const incoming = new IncomingMessage(new Socket());
+	incoming.method = 'POST';
+	incoming.url = '/';
+	incoming.httpVersionMajor = 1;
+	incoming.headers = { 'content-length': '2' };
+
+	const closed = once(incoming, 'close');
+	incoming.push('{}');
+	incoming.push(null);
+	incoming.resume();
+	await closed;
+
+	expect(incoming.destroyed).toBe(true);
+	expect(incoming.readableEnded).toBe(true);
+
+	const request = getRequest({ request: incoming, base: 'http://localhost' });
+
+	expect(request.signal.aborted).toBe(false);
+	expect(request.bodyUsed).toBe(false);
+	await expect(request.text()).rejects.toThrow('already read');
+});
 
 test('rejects chunked request bodies that exceed body size limit', async () => {
 	const { request, req } = create_request({
@@ -86,7 +132,7 @@ test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
 	'enforces body size limit without content-type (%j)',
 	async (headers) => {
 		const req = new PassThrough();
-		const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+		const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 		incoming.headers = headers;
 		incoming.method = 'POST';
 		incoming.url = '/';
@@ -111,7 +157,7 @@ test.each([{ 'content-length': '11' }, { 'transfer-encoding': 'chunked' }])(
 /**
  * Minimal `ServerResponse` stand-in that records headers and body writes and
  * emits `finish` when ended.
- * @param {import('http').IncomingMessage} [req]
+ * @param {IncomingMessage} [req]
  */
 function create_response(req) {
 	const res = /** @type {any} */ (new EventEmitter());
@@ -139,17 +185,17 @@ function create_response(req) {
 		res.emit('finish');
 		res.emit('close');
 	};
-	return /** @type {import('http').ServerResponse} */ (res);
+	return /** @type {ServerResponse} */ (res);
 }
 
 /**
  * @param {Record<string, string>} [headers]
- * @param {import('stream').PassThrough} [stream]
- * @param {import('http').ServerResponse} [response]
+ * @param {PassThrough} [stream]
+ * @param {ServerResponse} [response]
  */
 function setup_post_request(headers = {}, stream, response) {
 	const req = stream ?? new PassThrough();
-	const incoming = /** @type {import('http').IncomingMessage} */ (/** @type {unknown} */ (req));
+	const incoming = /** @type {IncomingMessage} */ (/** @type {unknown} */ (req));
 	incoming.headers = {
 		'content-type': 'text/plain',
 		...headers
@@ -164,7 +210,7 @@ function setup_post_request(headers = {}, stream, response) {
 }
 
 /**
- * @param {import('stream').PassThrough} req
+ * @param {PassThrough} req
  */
 async function expect_request_drained(req) {
 	if (!req.readableEnded) await once(req, 'end');
@@ -254,6 +300,16 @@ test('does not remove unrelated data listeners when draining', async () => {
 
 	await expect_request_drained(req);
 	expect(unrelated).toHaveBeenCalled();
+});
+
+test('aborts the request signal when the response was destroyed before being adapted', () => {
+	const res = /** @type {any} */ (new EventEmitter());
+	res.destroyed = true;
+	res.writableEnded = false;
+
+	const { request } = setup_post_request({ 'content-length': '0' }, undefined, res);
+
+	expect(request.signal.aborted).toBe(true);
 });
 
 // https://github.com/sveltejs/kit/issues/16778
@@ -383,4 +439,67 @@ test('requests with no content-length and no transfer-encoding return null body'
 	req.end();
 
 	await expect(text).resolves.toBe(''); // Should return an empty string if bug is actually fixed
+});
+
+/**
+ * Sends a real HTTP/2 upload that declares 10 bytes and writes 3, because
+ * a mocked stream doesn't model how HTTP/2 reports cancellation
+ */
+async function create_http2_upload() {
+	const server = createServer();
+	await once(server.listen(0, 'localhost'), 'listening');
+	const { port } = /** @type {AddressInfo} */ (server.address());
+	const client = connect(`http://localhost:${port}`);
+
+	const incoming = once(server, 'request');
+	const stream = client.request({ ':method': 'POST', ':path': '/', 'content-length': '10' });
+	stream.on('error', () => {});
+	stream.write('abc');
+
+	const [req] = /** @type {[IncomingMessage]} */ (/** @type {unknown} */ (await incoming));
+
+	return {
+		req,
+		cancel: () => stream.close(constants.NGHTTP2_CANCEL),
+		async close() {
+			client.destroy();
+			await new Promise((resolve) => server.close(resolve));
+		}
+	};
+}
+
+// https://github.com/sveltejs/kit/issues/17752
+test('errors the body of an HTTP/2 request that was cancelled before being adapted', async () => {
+	const upload = await create_http2_upload();
+
+	try {
+		const closed = once(upload.req, 'close');
+		upload.cancel();
+		await closed;
+
+		const request = getRequest({ request: upload.req, base: 'http://localhost' });
+
+		expect(request.signal.aborted).toBe(true);
+		await expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+	} finally {
+		await upload.close();
+	}
+});
+
+test('errors the body of an HTTP/2 request that is cancelled while being read', async () => {
+	const upload = await create_http2_upload();
+
+	try {
+		const request = getRequest({ request: upload.req, base: 'http://localhost' });
+		const data = once(upload.req, 'data');
+		const text = expect(request.text()).rejects.toMatchObject({ code: 'ECONNRESET' });
+
+		await data;
+		upload.cancel();
+
+		await text;
+		expect(request.signal.aborted).toBe(true);
+	} finally {
+		await upload.close();
+	}
 });
