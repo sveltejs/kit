@@ -48,12 +48,19 @@ import {
 function merge_with_server_issues(form_data, data, server_input, current_issues, client_issues) {
 	const client_names = new Set(client_issues.map((issue) => issue.name));
 
+	/**
+	 * @param {string} _
+	 * @param {any} value
+	 */
+	const describe_file = (_, value) =>
+		value instanceof File ? [value.name, value.size, value.type, value.lastModified] : value;
+
 	/** @param {InternalRemoteFormIssue} issue */
 	const unchanged = (issue) =>
 		server_input === null ||
 		issue.path.length === 0 ||
-		JSON.stringify(deep_get(data, issue.path)) ===
-			JSON.stringify(deep_get(server_input, issue.path));
+		JSON.stringify(deep_get(data, issue.path), describe_file) ===
+			JSON.stringify(deep_get(server_input, issue.path), describe_file);
 
 	const merged = [
 		...current_issues.filter(
