@@ -1,4 +1,4 @@
-import { isRedirect } from '@sveltejs/kit';
+import { isRedirect, redirect } from '@sveltejs/kit';
 import { do_something } from './routes/remote/server-action/action.remote';
 
 /** @type {import('@sveltejs/kit/hooks').Handle} */
@@ -19,6 +19,13 @@ export async function handle({ event, resolve }) {
 			status: 403,
 			headers: { 'content-type': 'application/json' }
 		});
+	}
+
+	if (
+		event.url.pathname === '/remote/form/validate' &&
+		event.cookies.get('redirect-validation') === 'hook'
+	) {
+		redirect(303, '/remote');
 	}
 
 	if (event.url.pathname === '/remote/hook-command') {
