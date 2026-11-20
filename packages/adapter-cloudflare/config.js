@@ -81,7 +81,7 @@ export function plugin_config(config_path, set_worker_config) {
 					{
 						...plugin,
 						apply: 'build',
-						// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which vite turns into urls
+						// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
 						resolveId: { ...resolve_id, filter: { id: [/\.wasm(\?module)?$/, /^#/] } }
 					}
 				]);
