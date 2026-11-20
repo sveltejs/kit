@@ -2,6 +2,7 @@
 /** @import { RequestEvent } from '@sveltejs/kit' */
 /** @import { RemoteInternals, MaybePromise, RequestState, RemoteQueryLiveInternals, RemoteQueryBatchInternals, RemoteQueryInternals, RemoteLiveQueryUserFunctionReturnType } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
+import { DEV } from 'esm-env';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '#app/env/server';
@@ -98,6 +99,11 @@ export function query(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+
+		if (DEV && state.prerender_default === true) {
+			e.remote_query_prerender({ type: 'query', name: __.name });
+		}
+
 		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
@@ -195,6 +201,11 @@ function live(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+
+		if (DEV && state.prerender_default === true) {
+			e.remote_query_prerender({ type: 'query.live', name: __.name });
+		}
+
 		const payload = stringify_remote_arg(arg);
 
 		return create_live_query_resource(__, payload, event, state, () =>
@@ -372,6 +383,11 @@ function batch(validate_or_fn, maybe_fn) {
 		}
 
 		const { event, state } = get_request_store();
+
+		if (DEV && state.prerender_default === true) {
+			e.remote_query_prerender({ type: 'query.batch', name: __.name });
+		}
+
 		const payload = stringify_remote_arg(arg);
 
 		return create_query_resource(__, payload, event, state, () =>
