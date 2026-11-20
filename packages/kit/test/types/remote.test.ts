@@ -780,6 +780,21 @@ function form_tests() {
 		}>,
 		() => {}
 	);
+
+	// file upload progress
+	const f13 = form(null as any as StandardSchemaV1<{ file: File; nonfile: number }>, () => {});
+	f13.fields.file.progress().uploaded;
+	f13.fields.file.progress().total;
+	f13.fields.file.progress().percent;
+	// readonly:
+	// @ts-expect-error
+	f13.fields.file.progress().uploaded = 123;
+	// @ts-expect-error
+	f13.fields.file.progress().total = 123;
+	// @ts-expect-error
+	f13.fields.file.progress().percent = 123;
+	// @ts-expect-error
+	f13.fields.nonfile.progress();
 }
 form_tests();
 
