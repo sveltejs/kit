@@ -344,6 +344,8 @@ let updating = false;
 let is_navigating = false;
 /** @type {HistoryMetadata | null} */
 let hash_navigating = null;
+/** `true` if the `navigate` event already captured the scroll position for a traversal */
+let scroll_captured = false;
 /** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
 let has_navigated = false;
 
@@ -3345,7 +3347,8 @@ function _start_router() {
 			const previous_history_index = current_history_index;
 			const previous_navigation_index = current_navigation_index;
 			const previous_reset_index = current_reset_index;
-			capture_scroll(previous_history_index);
+			if (!scroll_captured) capture_scroll(previous_history_index);
+			scroll_captured = false;
 			if (!shallow) capture_snapshot(previous_navigation_index);
 			capture_navigation_snapshot(previous_history_index);
 			current_history_index = history_index;
@@ -3424,7 +3427,25 @@ function _start_router() {
 		}
 	});
 
-	addEventListener('hashchange', () => {
+	// navigate fires before the browser scrolls so this is the position of the entry being left
+	/** @type {any} */ (globalThis).navigation?.addEventListener(
+		'navigate',
+		(/** @type {any} */ event) => {
+			if (event.navigationType === 'traverse') {
+				if (event.destination.sameDocument && history_info[current_history_index]) {
+					capture_scroll(current_history_index);
+					scroll_captured = true;
+				}
+			} else if (hash_navigating) {
+				// firefox fires no hashchange when going from no hash to an empty one
+				event.target.addEventListener('currententrychange', finish_hash_navigation, {
+					once: true
+				});
+			}
+		}
+	);
+
+	function finish_hash_navigation() {
 		// if the hashchange happened as a result of clicking on a link,
 		// we need to update history, otherwise we have to leave it alone
 		if (hash_navigating) {
@@ -3445,7 +3466,9 @@ function _start_router() {
 			);
 			set_history_options(current_history_index, history_metadata);
 		}
-	});
+	}
+
+	addEventListener('hashchange', finish_hash_navigation);
 
 	// fix link[rel=icon], because browsers will occasionally try to load relative
 	// URLs after a pushState/replaceState, resulting in a 404 — see

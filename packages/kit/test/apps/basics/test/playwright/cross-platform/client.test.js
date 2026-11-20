@@ -603,6 +603,54 @@ test.describe('Scrolling', () => {
 		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
 	});
 
+	test('scroll is restored after going back, forward and back again across a hash link', async ({
+		page
+	}) => {
+		await page.goto('/anchor');
+		await page.locator('#scroll-anchor').click();
+		await page.waitForURL('/anchor#last-anchor-2');
+		const hash_scroll_y = /** @type {number} */ (await page.evaluate(() => scrollY));
+		expect(hash_scroll_y).toBeGreaterThan(0);
+
+		await page.goBack();
+		await page.waitForURL('/anchor');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+
+		await page.goForward();
+		await page.waitForURL('/anchor#last-anchor-2');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(hash_scroll_y);
+
+		await page.goBack();
+		await page.waitForURL('/anchor');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+	});
+
+	test('scroll is restored after going back from an empty hash link', async ({
+		page,
+		scroll_to
+	}) => {
+		await page.goto('/scroll/top');
+		await scroll_to(0, 9999);
+		const scroll_y = /** @type {number} */ (await page.evaluate(() => scrollY));
+		expect(scroll_y).toBeGreaterThan(0);
+
+		await page.click('a[href="#"]');
+		await page.waitForURL('/scroll/top#');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+
+		await page.goBack();
+		await page.waitForURL('/scroll/top');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(scroll_y);
+
+		await page.goForward();
+		await page.waitForURL('/scroll/top#');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(0);
+
+		await page.goBack();
+		await page.waitForURL('/scroll/top');
+		await expect.poll(() => page.evaluate(() => scrollY)).toBe(scroll_y);
+	});
+
 	test('scroll is restored after hitting the back button for an in-app cross-document navigation', async ({
 		page,
 		clicknav,
