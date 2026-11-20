@@ -30,6 +30,8 @@ export class Query {
 	#promise = $state.raw(null);
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
+	/** whether `set` supplied a value that nothing has read yet */
+	#unread = false;
 
 	/** @type {T | undefined} */
 	#current = $derived.by(() => {
@@ -56,6 +58,7 @@ export class Query {
 					);
 				}
 
+				this.#unread = false;
 				return /** @type {T} */ (this.#current);
 			});
 
@@ -109,6 +112,7 @@ export class Query {
 
 	#run() {
 		this.#loading = true;
+		this.#unread = false;
 
 		const { promise, resolve, reject } = with_resolvers();
 
@@ -201,6 +205,7 @@ export class Query {
 
 	get current() {
 		this.start();
+		this.#unread = false;
 		return this.#current;
 	}
 
@@ -250,6 +255,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#unread = true;
 
 		if (!in_flight) {
 			this.#promise = Promise.resolve();
@@ -265,6 +271,7 @@ export class Query {
 		this.#clear_pending();
 		this.#loading = false;
 		this.#error = error.body;
+		this.#unread = false;
 
 		const promise = Promise.reject(error);
 
@@ -300,7 +307,18 @@ export class Query {
 	 */
 	reset() {
 		this.#promise = null;
+		this.#unread = false;
 		delete query_responses[this.#key];
+	}
+
+	/**
+	 * Called when the query is evicted from the cache. Hands a value that was
+	 * set but never read to the next instance, instead of losing it.
+	 */
+	destroy() {
+		if (this.#unread) {
+			query_responses[this.#key] = { v: this.#raw };
+		}
 	}
 
 	get [Symbol.toStringTag]() {

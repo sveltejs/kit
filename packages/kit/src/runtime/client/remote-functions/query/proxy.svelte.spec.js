@@ -48,13 +48,9 @@ describe('QueryProxy', () => {
 		query_map.clear();
 	});
 
-	test('a proxy populates the cache once it is used', () => {
+	test('constructing a proxy populates the cache', () => {
 		const fn = () => Promise.resolve('value');
-		const proxy = new QueryProxy('q', undefined, fn);
-
-		expect(query_map.has('q')).toBe(false);
-
-		void proxy.then;
+		new QueryProxy('q', undefined, fn);
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries).toBeDefined();
@@ -66,8 +62,8 @@ describe('QueryProxy', () => {
 
 	test('two proxies for the same (id, arg) share a single cache entry', () => {
 		const fn = () => Promise.resolve('value');
-		void new QueryProxy('q', { x: 1 }, fn).then;
-		void new QueryProxy('q', { x: 1 }, fn).then;
+		new QueryProxy('q', { x: 1 }, fn);
+		new QueryProxy('q', { x: 1 }, fn);
 
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		expect(entries.size).toBe(1);
@@ -78,8 +74,8 @@ describe('QueryProxy', () => {
 
 	test('proxies for different args produce different cache entries', () => {
 		const fn = () => Promise.resolve('value');
-		void new QueryProxy('q', { x: 1 }, fn).then;
-		void new QueryProxy('q', { x: 2 }, fn).then;
+		new QueryProxy('q', { x: 1 }, fn);
+		new QueryProxy('q', { x: 2 }, fn);
 
 		expect(query_map.get('q')?.size).toBe(2);
 	});
@@ -90,7 +86,7 @@ describe('QueryProxy', () => {
 		// Construct the proxy in a nested scope so V8's debug scope tracking can't
 		// keep it alive in the surrounding closure.
 		(() => {
-			void new QueryProxy('q', { name: 'echo' }, fn).then;
+			new QueryProxy('q', { name: 'echo' }, fn);
 		})();
 
 		expect(query_map.get('q')?.size).toBe(1);
@@ -114,7 +110,6 @@ describe('QueryProxy', () => {
 		(() => {
 			const proxy = new QueryProxy('q', 'arg', fn);
 			proxy_ref = new WeakRef(proxy);
-			void proxy.then;
 			const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 			const [entry] = /** @type {Iterable<any>} */ (entries.values());
 			query = entry.resource;
@@ -140,14 +135,10 @@ describe('QueryProxy', () => {
 		let second_ref;
 
 		(() => {
-			const proxy = new QueryProxy('q', 'arg', fn);
-			void proxy.then;
-			first_ref = new WeakRef(proxy);
+			first_ref = new WeakRef(new QueryProxy('q', 'arg', fn));
 		})();
 		(() => {
-			const proxy = new QueryProxy('q', 'arg', fn);
-			void proxy.then;
-			second_ref = new WeakRef(proxy);
+			second_ref = new WeakRef(new QueryProxy('q', 'arg', fn));
 		})();
 
 		await wait_for(() => first_ref.deref() === undefined && second_ref.deref() === undefined);
@@ -179,7 +170,8 @@ describe('QueryProxy', () => {
 		expect(query_map.has('q')).toBe(true);
 		const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
 		const [entry] = /** @type {Iterable<any>} */ (entries.values());
-		// the only ref is the withOverride manual_ref
+		// proxy_count: 1 from withOverride's manual_ref; the constructor's `ref` was
+		// dropped when the proxy was GC'd.
 		expect(entry.proxy_count).toBe(1);
 
 		release?.();
@@ -187,6 +179,33 @@ describe('QueryProxy', () => {
 		await tick();
 
 		expect(query_map.has('q')).toBe(false);
+	});
+
+	test('a value that was set but never read survives eviction', async () => {
+		const fn = vi.fn(() => Promise.resolve('fetched'));
+
+		(() => {
+			new QueryProxy('q', 'arg', fn).set('set');
+		})();
+
+		await wait_for(() => !query_map.has('q'));
+
+		expect(await new QueryProxy('q', 'arg', fn)).toBe('set');
+		expect(fn).not.toHaveBeenCalled();
+	});
+
+	test('a value that was set and read does not survive eviction', async () => {
+		const fn = vi.fn(() => Promise.resolve('fetched'));
+
+		await (async () => {
+			const proxy = new QueryProxy('q', 'arg', fn);
+			proxy.set('set');
+			await proxy;
+		})();
+
+		await wait_for(() => !query_map.has('q'));
+
+		expect(await new QueryProxy('q', 'arg', fn)).toBe('fetched');
 	});
 
 	test('reading `then` inside an effect pins the cache entry until the effect is destroyed', async () => {

@@ -588,7 +588,9 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#command-pending')).toHaveText('Command pending: 0');
 	});
 
-	test('optimistic overrides avoid unused query requests', async ({ page }) => {
+	test('a value set by a command on an unused query is kept for its first reader', async ({
+		page
+	}) => {
 		await page.goto('/remote/optimistic-new-query');
 
 		let request_count = 0;
@@ -599,8 +601,8 @@ test.describe('remote function mutations', () => {
 		expect(request_count).toBe(1); // just the command
 
 		await page.getByText('show').click();
-		await expect(page.locator('p')).toHaveText('foo'); // set() from command mutation is obsolete as query was removed from cache
-		expect(request_count).toBe(2); // now the query, too
+		await expect(page.locator('p')).toHaveText('baz');
+		expect(request_count).toBe(1);
 	});
 
 	test('form pending resets when enhance callback skips submit', async ({ page }) => {
