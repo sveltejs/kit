@@ -94,6 +94,48 @@ Cloudflare specific values are emulated during dev and preview modes. Local [bin
 
 For testing the build, you should use [Wrangler](https://developers.cloudflare.com/workers/wrangler/) version 4. Once you have built your site, run `wrangler dev`.
 
+## WebAssembly
+
+Importing a `.wasm` file gives you a [`WebAssembly.Module`](https://developer.mozilla.org/en-US/docs/WebAssembly/Reference/JavaScript_interface/Module), [the same as in any Worker](https://developers.cloudflare.com/workers/runtime-apis/webassembly/javascript/). This works during development and in the deployed Worker, for your own files and for dependencies.
+
+```js
+/// file: +server.js
+// @filename: ambient.d.ts
+declare module '*.wasm' {
+	const module: WebAssembly.Module;
+	export default module;
+}
+// @filename: +server.js
+// ---cut---
+import module from './add.wasm';
+
+const { exports } = new WebAssembly.Instance(module);
+const add = /** @type {(a: number, b: number) => number} */ (exports.add);
+
+/** @type {import('./$types').RequestHandler} */
+export function GET() {
+	return new Response(String(add(1, 2)));
+}
+```
+
+A `.wasm?module` import does the same. A `.wasm?init` import gives you a function that instantiates the module instead:
+
+```js
+/// file: +server.js
+// @filename: ambient.d.ts
+declare module '*.wasm?init' {
+	const init: (imports?: WebAssembly.Imports) => Promise<WebAssembly.Instance>;
+	export default init;
+}
+// @filename: +server.js
+// ---cut---
+import init from './add.wasm?init';
+
+const instance = await init();
+```
+
+> [!NOTE] Unlike in a Worker built with Wrangler, `.txt`, `.html`, `.sql` and `.bin` imports are handled by Vite, as they are everywhere else in SvelteKit. Add `?raw` to the import to get the contents of the file as a string, or `?url` to get a URL that can be passed to [`read`]($app-server#read).
+
 ## Headers and redirects
 
 The [`_headers`](https://developers.cloudflare.com/workers/static-assets/headers/) and [`_redirects`](https://developers.cloudflare.com/workers/static-assets/redirects/) files, specific to Cloudflare, can be used for static asset responses (like images) by putting them into the project root folder.
