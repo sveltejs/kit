@@ -1,5 +1,39 @@
 # @sveltejs/adapter-cloudflare
 
+## 9.0.0
+
+### Major Changes
+
+- breaking: use the adapter `worker` option to control if a Worker is built ([#17520](https://github.com/sveltejs/kit/pull/17520))
+
+- breaking: set the Wrangler config `main` setting automatically ([#17520](https://github.com/sveltejs/kit/pull/17520))
+
+- breaking: reject `paths.assets`, which can't be served when previewing in workerd ([#17751](https://github.com/sveltejs/kit/pull/17751))
+
+- breaking: remove Cloudflare Pages support ([#17479](https://github.com/sveltejs/kit/pull/17479))
+
+- breaking: remove the adapter `fallback` option in favour of Wrangler's `assets.not_found_handling` setting ([#17520](https://github.com/sveltejs/kit/pull/17520))
+
+### Minor Changes
+
+- feat: support unbundled deployments ([#17520](https://github.com/sveltejs/kit/pull/17520))
+
+### Patch Changes
+
+- fix: use the Wrangler environment resolved from `CLOUDFLARE_ENV` in `.env` files for platform bindings during development ([#17520](https://github.com/sveltejs/kit/pull/17520))
+- Updated dependencies:
+  - @sveltejs/kit@3.4.0
+
+## 8.0.3
+
+### Patch Changes
+
+- fix: apply the environment config from `@cloudflare/vite-plugin` during dev and build so that dependencies resolve the same way as in workerd and CommonJS `require` calls of Node builtins work ([#17503](https://github.com/sveltejs/kit/pull/17503))
+
+- fix: populate `process.env` with Wrangler `vars` and local `.dev.vars` secrets during `vite dev` and `vite build` ([#17559](https://github.com/sveltejs/kit/pull/17559))
+- Updated dependencies:
+  - @sveltejs/kit@3.3.1
+
 ## 8.0.2
 
 ### Patch Changes

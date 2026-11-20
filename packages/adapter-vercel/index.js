@@ -4,7 +4,13 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { VERSION } from '@sveltejs/kit';
 import { nodeFileTrace } from '@vercel/nft';
-import { escape_src, parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import {
+	create_optional_peer_dependency_checker,
+	escape_src,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 const INTERNAL = '![-]'; // this name is guaranteed not to conflict with user routes
 
@@ -43,7 +49,7 @@ const plugin = function (defaults = {}) {
 			builder.writeClient(dirs.static);
 			builder.writePrerendered(dirs.static);
 
-			const static_config = static_vercel_config(builder, defaults, dirs.static);
+			const static_config = static_vercel_config(builder, defaults);
 
 			builder.log.minor('Generating serverless function...');
 
@@ -391,9 +397,8 @@ function write(file, data) {
 /**
  * @param {import('@sveltejs/kit').Builder} builder
  * @param {import('./index.js').Config} config
- * @param {string} dir
  */
-function static_vercel_config(builder, config, dir) {
+function static_vercel_config(builder, config) {
 	/** @type {any[]} */
 	const prerendered_redirects = [];
 
@@ -484,28 +489,19 @@ function static_vercel_config(builder, config, dir) {
 					value: 'document'
 				}
 			],
-			headers: {
-				'Set-Cookie': `__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`
-			},
-			continue: true
-		});
-
-		// this is a dreadful hack that is necessary until the Vercel Build Output API
-		// allows you to set multiple cookies for a single route. essentially, since we
-		// know that the entry file will be requested immediately, we can set the second
-		// cookie in _that_ response rather than the document response
-		const base = `${dir}/${builder.config.appDir}/immutable/entry`;
-		const entry = fs.readdirSync(base).find((file) => file.startsWith('start.'));
-
-		if (!entry) {
-			throw new Error('Could not find entry point');
-		}
-
-		routes.splice(-2, 0, {
-			src: `/${builder.getAppPath()}/immutable/entry/${entry}`,
-			headers: {
-				'Set-Cookie': `__vdpl=; Path=/${builder.getAppPath()}/version.json; SameSite=Strict; Secure; HttpOnly`
-			},
+			// Append both cookies to the document response, including the more specific
+			// empty cookie that lets version checks bypass skew protection.
+			transforms: [
+				{
+					type: 'response.headers',
+					op: 'append',
+					target: { key: 'Set-Cookie' },
+					args: [
+						`__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`,
+						`__vdpl=; Path=/${builder.getAppPath()}/version.json; SameSite=Strict; Secure; HttpOnly`
+					]
+				}
+			],
 			continue: true
 		});
 	}
@@ -557,6 +553,7 @@ async function create_function_bundle(builder, entry, dir, config) {
 
 	/** @type {Map<string, string[]>} */
 	const resolution_failures = new Map();
+	const is_optional_peer_dependency = create_optional_peer_dependency_checker();
 
 	traced.warnings.forEach((error) => {
 		// pending https://github.com/vercel/nft/issues/284
@@ -570,6 +567,8 @@ async function create_function_bundle(builder, entry, dir, config) {
 		if (error.message.startsWith('Failed to resolve dependency')) {
 			const match = /Cannot find module '(.+?)' loaded from (.+)/;
 			const [, module, importer] = match.exec(error.message) ?? [, error.message, '(unknown)'];
+
+			if (is_optional_peer_dependency(module, importer)) return;
 
 			if (!resolution_failures.has(importer)) {
 				resolution_failures.set(importer, []);

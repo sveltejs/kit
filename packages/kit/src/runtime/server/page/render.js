@@ -34,6 +34,9 @@ import { options } from '<sveltekit:generated>/server.js';
 import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
 
+const vite_devtools_loader =
+	"{ const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; s.nonce = document.currentScript.nonce; document.body.appendChild(s); }";
+
 // TODO rename this function/module
 
 /**
@@ -291,7 +294,7 @@ export async function render_response({
 	 */
 	const add_preload = (path, attributes) => {
 		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && !is_prerendering(state)) {
-			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}`);
 		} else {
 			head.add_link_tag(path, attributes);
 		}
@@ -308,7 +311,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
-				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"`);
 			}
 		}
 
@@ -556,6 +559,14 @@ export async function render_response({
 		}>${init_app}</script>\n\t\t`;
 	}
 
+	if (DEV && manifest.vite_devtools) {
+		// inline so the csp can allow it
+		await csp.add_script(vite_devtools_loader);
+		body += `\n\t\t\t<script${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}>${vite_devtools_loader}</script>`;
+	}
+
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
 		'content-type': 'text/html'
@@ -606,11 +617,16 @@ export async function render_response({
 	// the response body is these bytes, so the etag is hashed from them rather than from the string
 	const encoded = chunks ? null : text_encoder.encode(transformed);
 
-	// an `etag` from `setHeaders` replaces ours, and a `no-store` response is never revalidated
+	const needs_nonce =
+		csp.script_needs_nonce || csp.style_needs_nonce || options.app_template_contains_nonce;
+
+	// an `etag` from `setHeaders` replaces ours, a `no-store` response is never revalidated,
+	// and a page with a nonce can never generate matching etags, so we can skip processing it
 	if (
 		encoded &&
 		!('etag' in state.headers) &&
-		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '')
+		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '') &&
+		!(needs_nonce && transformed.includes(csp.nonce))
 	) {
 		headers.set('etag', `"${hash_bytes(encoded)}"`);
 	}
