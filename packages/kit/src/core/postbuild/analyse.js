@@ -70,7 +70,7 @@ async function analyse({
 	if (manifest_data.hooks.universal) {
 		const file = server_manifest[manifest_data.hooks.universal].file;
 		const hooks = await import(pathToFileURL(`${server_root}/server/${file}`).href);
-		metadata.has_reroute = hooks.reroute !== undefined;
+		metadata.has_reroute = 'reroute' in hooks;
 	}
 
 	const nodes = await Promise.all(manifest.nodes.map((loader) => loader()));
