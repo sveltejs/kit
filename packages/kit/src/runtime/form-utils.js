@@ -490,7 +490,13 @@ class LazyFile {
 	}
 }
 
-const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
+// Matches a JS object-notation path: dot-separated identifier names with
+// optional array indices. Identifier characters follow the ECMAScript
+// IdentifierName production, so any key that needs no quotes in JS object
+// notation — such as `prénom` or `a$b` — is accepted, while one that does
+// (`a-b`, `a b`) is still rejected.
+const path_regex =
+	/^[\p{ID_Start}$_][\p{ID_Continue}$\u200c\u200d]*(?:\.[\p{ID_Start}$_][\p{ID_Continue}$\u200c\u200d]*|\[\d+\])*$/u;
 
 /**
  * @param {string} path
