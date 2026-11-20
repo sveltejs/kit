@@ -40,8 +40,12 @@ export function plugin_wasm() {
 				for (const chunk of Object.values(bundle)) {
 					if (chunk.type !== 'chunk') continue;
 
-					chunk.code = chunk.code.replace(wasm_import, (_match, start, quote, specifier) => {
-						const file = path.posix.join(path.posix.dirname(chunk.fileName), `${specifier}.js`);
+					chunk.code = chunk.code.replace(wasm_import, (match, start, quote, specifier) => {
+						const wasm = path.posix.join(path.posix.dirname(chunk.fileName), specifier);
+						// text that looks like an import does not point at an emitted file
+						if (!bundle[wasm]) return match;
+
+						const file = `${wasm}.js`;
 						const source = node_module(
 							`new URL('./${path.posix.basename(specifier)}', import.meta.url)`
 						);
@@ -62,18 +66,28 @@ export function plugin_wasm() {
 export function restore_wasm_imports(directory) {
 	if (!fs.existsSync(directory)) return;
 
-	for (const file of fs.readdirSync(directory, { recursive: true, encoding: 'utf8' })) {
-		const file_path = path.join(directory, file);
+	/** @type {Set<string>} */
+	const stand_ins = new Set();
 
-		if (file.endsWith('.wasm.js')) {
-			fs.rmSync(file_path);
-		} else if (file.endsWith('.js')) {
-			const contents = fs.readFileSync(file_path, 'utf8');
-			// pad outside the string literal so source map columns stay valid
-			const restored = contents.replace(wasm_import, (match, start, quote) =>
-				match.endsWith(`.js${quote}`) ? `${start}${quote}   ` : match
-			);
-			if (restored !== contents) fs.writeFileSync(file_path, restored);
+	for (const file of fs.readdirSync(directory, { recursive: true, encoding: 'utf8' })) {
+		if (!file.endsWith('.js')) continue;
+
+		const file_path = path.join(directory, file);
+		if (file.endsWith('.wasm.js') && fs.existsSync(file_path.slice(0, -3))) {
+			stand_ins.add(file_path);
+			continue;
 		}
+
+		const contents = fs.readFileSync(file_path, 'utf8');
+		const restored = contents.replace(wasm_import, (match, start, quote, specifier) => {
+			const stand_in = path.resolve(path.dirname(file_path), `${specifier}.js`);
+			if (!match.endsWith(`.js${quote}`) || !fs.existsSync(stand_in)) return match;
+
+			// pad outside the string literal so source map columns stay valid
+			return `${start}${quote}   `;
+		});
+		if (restored !== contents) fs.writeFileSync(file_path, restored);
 	}
+
+	for (const file of stand_ins) fs.rmSync(file);
 }
