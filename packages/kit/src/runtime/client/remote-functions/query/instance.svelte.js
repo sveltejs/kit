@@ -1,6 +1,5 @@
-/** @import { HttpError } from '@sveltejs/kit' */
 import { query_responses, handle_error } from '../../client.js';
-import { HandledHttpError } from '@sveltejs/kit/internal';
+import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -42,6 +41,10 @@ export class Query {
 	/** @type {App.Error | undefined} */
 	#error = $state.raw(undefined);
 
+	// A terminal failure invalidates the value for awaiters, even though
+	// `ready` and `current` still record the last successful result.
+	#failed = false;
+
 	/** @type {Promise<T>['then']} */
 	// @ts-expect-error TS doesn't understand that the promise returns something
 	#then = $derived.by(() => {
@@ -49,15 +52,22 @@ export class Query {
 		this.#overrides.length;
 
 		return (resolve, reject) => {
-			const result = p.then(tick).then(() => {
-				if (!this.#ready) {
-					throw new HandledHttpError(
-						this.#error ?? { status: 500, message: 'Query resolved without a value' }
-					);
-				}
+			const result = p
+				.catch((error) => {
+					// The refresh request still rejects, but a transport failure need not
+					// invalidate a value that consumers can continue to use.
+					if (!this.#ready || this.#failed) throw error;
+				})
+				.then(tick)
+				.then(() => {
+					if (!this.#ready || this.#failed) {
+						throw new HandledHttpError(
+							this.#error ?? { status: 500, message: 'Query resolved without a value' }
+						);
+					}
 
-				return /** @type {T} */ (this.#current);
-			});
+					return /** @type {T} */ (this.#current);
+				});
 
 			if (resolve || reject) {
 				return result.then(resolve, reject);
@@ -132,15 +142,22 @@ export class Query {
 					this.#loading = false;
 					this.#raw = value;
 					this.#error = undefined;
+					this.#failed = false;
 				});
 			})
 			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
 				// - We should not reject on redirects, but should hook into the router
 				//   to ensure the query is properly refreshed before the navigation completes
-				// - Instead of failing on transport-level errors, we should probably do what
-				//   LiveQuery does and preserve the last known good value and retry the connection
 				if (!this.#latest.includes(resolve)) return;
+
+				// Structured application errors are authoritative, even for a 5xx.
+				// Raw transport failures may be transient. Classify the original error,
+				// before handleError normalizes it (and can change its status).
+				const transient =
+					!(e instanceof HandledHttpError) &&
+					!(e instanceof Redirect) &&
+					(!(e instanceof HttpError) || e.status >= 500 || e.status === 408 || e.status === 429);
 
 				const error = await handle_error(e, {
 					params: {},
@@ -159,6 +176,8 @@ export class Query {
 					this.#latest.shift();
 					this.#error = error;
 					this.#loading = false;
+
+					this.#failed ||= !transient;
 				});
 
 				reject(new HandledHttpError(error));
@@ -250,6 +269,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#failed = false;
 
 		if (!in_flight) {
 			this.#promise = Promise.resolve();
@@ -265,6 +285,7 @@ export class Query {
 		this.#clear_pending();
 		this.#loading = false;
 		this.#error = error.body;
+		this.#failed = true;
 
 		const promise = Promise.reject(error);
 
