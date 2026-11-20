@@ -232,3 +232,45 @@ test('form.for keeps its instance when the derived that holds it reconnects', as
 		cleanup();
 	}
 });
+
+test('controls owned by another form are ignored during input and focusout (#17724)', () => {
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+
+	// A control owned by this form
+	const bound = document.createElement('input');
+	bound.name = remote.fields.title.as('text').name;
+	element.append(bound);
+
+	// A control nested in the form's DOM tree but owned by another form
+	const otherForm = document.createElement('form');
+	const foreign = document.createElement('input');
+	foreign.name = 'unbound-foreign-control';
+	Object.defineProperty(foreign, 'form', { value: otherForm });
+	element.append(foreign);
+
+	const listeners = vi.spyOn(element, 'addEventListener');
+	const detach = mount();
+	const handle_input = /** @type {(event: Event) => void} */ (
+		listeners.mock.calls.find(([type]) => type === 'input')?.[1]
+	);
+	const handle_focusout = /** @type {(event: Event) => void} */ (
+		listeners.mock.calls.find(([type]) => type === 'focusout')?.[1]
+	);
+
+	try {
+		// input on foreign element must not throw form_field_unbound
+		expect(() => handle_input(/** @type {any} */ ({ target: foreign }))).not.toThrow();
+
+		// focusout on foreign element must not throw form_field_unbound
+		expect(() => handle_focusout(/** @type {any} */ ({ target: foreign }))).not.toThrow();
+
+		// input on bound element still works
+		bound.value = 'hello';
+		expect(() => handle_input(/** @type {any} */ ({ target: bound }))).not.toThrow();
+		expect(remote.fields.title.value()).toBe('hello');
+	} finally {
+		detach();
+		listeners.mockRestore();
+	}
+});
