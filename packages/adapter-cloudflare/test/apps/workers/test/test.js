@@ -63,3 +63,8 @@ test('dependencies resolve the workerd export condition', async ({ request }) =>
 	const res = await request.get('/conditions');
 	expect(await res.text()).toBe('workerd');
 });
+
+test('imports WebAssembly modules', async ({ request }) => {
+	const res = await request.get('/wasm');
+	expect(await res.text()).toBe('3');
+});

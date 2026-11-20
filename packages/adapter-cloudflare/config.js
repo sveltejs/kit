@@ -12,12 +12,13 @@ const useful_cloudflare_plugins = new Set([
 	// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
-	'vite-plugin-cloudflare:nodejs-compat-warnings'
+	'vite-plugin-cloudflare:nodejs-compat-warnings',
+	// turns `.wasm?init` imports into `.wasm` imports
+	'vite-plugin-cloudflare:wasm-helper'
 ]);
 
 const useful_cloudflare_build_plugins = new Set([
 	'vite-plugin-cloudflare:output-config',
-	'vite-plugin-cloudflare:wasm-helper',
 	'vite-plugin-cloudflare:additional-modules'
 ]);
 
