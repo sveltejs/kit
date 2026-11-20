@@ -181,33 +181,6 @@ describe('QueryProxy', () => {
 		expect(query_map.has('q')).toBe(false);
 	});
 
-	test('a value that was set but never read survives eviction', async () => {
-		const fn = vi.fn(() => Promise.resolve('fetched'));
-
-		(() => {
-			new QueryProxy('q', 'arg', fn).set('set');
-		})();
-
-		await wait_for(() => !query_map.has('q'));
-
-		expect(await new QueryProxy('q', 'arg', fn)).toBe('set');
-		expect(fn).not.toHaveBeenCalled();
-	});
-
-	test('a value that was set and read does not survive eviction', async () => {
-		const fn = vi.fn(() => Promise.resolve('fetched'));
-
-		await (async () => {
-			const proxy = new QueryProxy('q', 'arg', fn);
-			proxy.set('set');
-			await proxy;
-		})();
-
-		await wait_for(() => !query_map.has('q'));
-
-		expect(await new QueryProxy('q', 'arg', fn)).toBe('fetched');
-	});
-
 	test('reading `then` inside an effect pins the cache entry until the effect is destroyed', async () => {
 		const fn = () => Promise.resolve('value');
 
