@@ -10,7 +10,9 @@ const useful_cloudflare_plugins = new Set([
 	// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
-	'vite-plugin-cloudflare:nodejs-compat-warnings'
+	'vite-plugin-cloudflare:nodejs-compat-warnings',
+	// turns `.wasm?init` imports into `.wasm` imports
+	'vite-plugin-cloudflare:wasm-helper'
 ]);
 
 /** @type {Plugin['apply']} */
@@ -64,9 +66,29 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_dev_or_build })),
+		...plugins.flatMap((plugin) => {
+			if (useful_cloudflare_plugins.has(plugin.name)) {
+				return [{ ...plugin, apply: is_dev_or_build }];
+			}
+
+			// leaves `.wasm` imports in the server output for workerd to import
+			if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
+				const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
+					plugin.resolveId
+				);
+
+				return /** @satisfies {Plugin[]} */ ([
+					{
+						...plugin,
+						apply: 'build',
+						// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
+						resolveId: { ...resolve_id, filter: { id: [/\.wasm(\?module)?$/, /^#/] } }
+					}
+				]);
+			}
+
+			return [];
+		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
