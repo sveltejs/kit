@@ -600,9 +600,20 @@ test.describe('remote function mutations', () => {
 		await page.waitForTimeout(100); // allow any requests to happen
 		expect(request_count).toBe(1); // just the command
 
-		await page.getByText('show').click();
+		await page.getByText('show', { exact: true }).click();
 		await expect(page.locator('p')).toHaveText('baz');
 		expect(request_count).toBe(1);
+	});
+
+	test('refreshAll discards a value kept for an unused query', async ({ page }) => {
+		await page.goto('/remote/optimistic-new-query');
+
+		await page.getByText('override').click();
+		await page.waitForTimeout(100);
+
+		await page.getByText('refresh all').click();
+		await page.getByText('show', { exact: true }).click();
+		await expect(page.locator('p')).toHaveText('foo');
 	});
 
 	test('form pending resets when enhance callback skips submit', async ({ page }) => {

@@ -317,7 +317,7 @@ export class Query {
 	 */
 	destroy() {
 		if (this.#unread) {
-			query_responses[this.#key] = { v: this.#raw };
+			query_responses[this.#key] = { v: this.#raw, kept: true };
 		}
 	}
 

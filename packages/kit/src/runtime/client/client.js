@@ -250,9 +250,16 @@ export let app;
  * Data that was serialized during SSR for queries/forms/commands, stored as
  * `{ v }` (value) or `{ e }` (error) nodes so that failed states survive hydration.
  * Entries are deleted as they are consumed (when the corresponding resource is created).
- * @type {Record<string, RemoteFunctionDataNode>}
+ * `kept` marks a value the client is holding for a query that is not in the cache.
+ * @type {Record<string, RemoteFunctionDataNode & { kept?: true }>}
  */
 export const query_responses = {};
+
+function discard_kept_query_responses() {
+	for (const key in query_responses) {
+		if (query_responses[key].kept) delete query_responses[key];
+	}
+}
 
 /**
  * Data that was serialized during SSR for prerender functions, stored as
@@ -593,6 +600,8 @@ async function _invalidate(reset_page_state = true) {
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
 	if (force_invalidation) {
+		discard_kept_query_responses();
+
 		for (const [, { resource }] of cache_entries(query_map)) {
 			void resource.refresh();
 		}
@@ -740,6 +749,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 					entry.resource?.reset();
 					query_keys.add(key);
 				}
+				discard_kept_query_responses();
 				live_query_keys = new Set();
 				for (const [key] of cache_entries(live_query_map)) {
 					live_query_keys.add(key);

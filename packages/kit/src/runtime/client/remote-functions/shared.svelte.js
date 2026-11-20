@@ -153,7 +153,7 @@ export async function remote_request(url, init, refreshes) {
 			// `query_responses` stores `{ v }`/`{ e }` nodes, not raw values.
 			// Errors are deliberately dropped here: they are responses to a specific
 			// refresh, not durable state a future resource should initialize with
-			query_responses[key] = result;
+			query_responses[key] = { ...result, kept: true };
 		}
 	}
 
