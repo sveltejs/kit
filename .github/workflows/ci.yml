@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - main
+      - adapter-cloudflare-8
     paths-ignore: &paths_ignore
       - '.changeset/**'
       - '.githooks/**'
