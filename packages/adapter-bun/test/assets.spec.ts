@@ -177,6 +177,11 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(file).toHaveBeenCalledWith(`${dir}/client/app.js.gz`);
 
 	expect(
+		get('/app.js', { headers: { 'accept-encoding': 'br;q=0.5, gzip' } })?.headers.get(
+			'content-encoding'
+		)
+	).toBe('gzip');
+	expect(
 		get('/app.js', { headers: { 'accept-encoding': '*' } })?.headers.get('content-encoding')
 	).toBe('br');
 	expect(

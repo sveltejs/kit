@@ -55,6 +55,7 @@ export interface Adapter {
 	/**
 	 * Creates an `Emulator`, which allows the adapter to influence the environment
 	 * during dev, build and prerendering.
+	 * @deprecated This will be removed in the next major version
 	 */
 	emulate?: () => MaybePromise<Emulator>;
 	/**
@@ -65,6 +66,15 @@ export interface Adapter {
 }
 
 export interface AdapterViteConfig {
+	/**
+	 * By default, SvelteKit creates a Node preview server to serve the build
+	 * output during `vite preview`. Set this option to `true` when the adapter
+	 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+	 * previewing the build output on its own.
+	 * @default false
+	 * @since 3.4.0
+	 */
+	customPreview?: boolean;
 	/**
 	 * This function overrides the default behavior during Vite's dev and preview modes
 	 * to convert an `http.IncomingMessage` to a `Request` object.
@@ -425,6 +435,7 @@ export interface Cookies {
 
 /**
  * A collection of functions that influence the environment during dev, build and prerendering
+ * @deprecated This will be removed in the next major version
  */
 export interface Emulator {
 	/**

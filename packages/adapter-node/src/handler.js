@@ -1,6 +1,7 @@
 /** @import { IncomingHttpHeaders } from 'node:http' */
 import process from 'node:process';
 import { getRequest, setResponse, createReadableStream } from '@sveltejs/kit/node';
+import { forwardedAddress } from '@sveltejs/adapter-server/runtime';
 import {
 	server,
 	dir,
@@ -102,34 +103,12 @@ const render = async (req, res) => {
 		platform: { req },
 		getClientAddress: () => {
 			if (address_header) {
-				if (!(address_header in req.headers)) {
-					throw new Error(
-						`Address header was specified with ${
-							env_prefix + 'ADDRESS_HEADER'
-						}=${address_header} but is absent from request`
-					);
-				}
-
-				const value = /** @type {string} */ (req.headers[address_header]) || '';
-
-				if (address_header === 'x-forwarded-for') {
-					const addresses = value.split(',');
-
-					if (xff_depth < 1) {
-						throw new Error(`${env_prefix + 'XFF_DEPTH'} must be a positive integer`);
-					}
-
-					if (xff_depth > addresses.length) {
-						throw new Error(
-							`${env_prefix + 'XFF_DEPTH'} is ${xff_depth}, but only found ${
-								addresses.length
-							} addresses`
-						);
-					}
-					return addresses[addresses.length - xff_depth].trim();
-				}
-
-				return value;
+				return forwardedAddress({
+					header: address_header,
+					value: /** @type {string | undefined} */ (req.headers[address_header]),
+					depth: xff_depth,
+					envPrefix: env_prefix
+				});
 			}
 
 			return (
@@ -149,7 +128,7 @@ const render = async (req, res) => {
 	// that don't recognise it. See https://github.com/sveltejs/kit/issues/15790
 	// The header is set on the Node response rather than the `Response` object,
 	// whose headers may be immutable (e.g. when returned from `fetch`)
-	if (response.headers.get('content-type') === 'text/event-stream') {
+	if (response.headers.get('content-type')?.startsWith('text/event-stream')) {
 		res.setHeader('x-accel-buffering', 'no');
 	}
 
@@ -206,7 +185,9 @@ function get_origin(headers) {
 		);
 	}
 
-	return port ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
+	// a proxy on a non-standard port can forward a host that already includes the port
+	// (e.g. `example.com:8443`), so replace it rather than appending a second one
+	return port ? `${protocol}://${host.replace(/:\d*$/, '')}:${port}` : `${protocol}://${host}`;
 }
 
 const serve = serve_static(

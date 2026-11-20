@@ -627,13 +627,8 @@ test.describe('Scrolling', () => {
 
 	test('scroll is restored after going back, forward and back again across an empty hash link', async ({
 		page,
-		scroll_to,
-		browserName
+		scroll_to
 	}) => {
-		// firefox fires no hashchange when the hash goes from absent to empty,
-		// so the router never records the new entry
-		test.skip(browserName === 'firefox');
-
 		await page.goto('/scroll/top');
 		await scroll_to(0, 9999);
 		const scroll_y = /** @type {number} */ (await page.evaluate(() => scrollY));
