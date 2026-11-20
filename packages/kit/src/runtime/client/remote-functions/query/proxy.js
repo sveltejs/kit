@@ -51,9 +51,9 @@ export class QueryProxy {
 	}
 
 	#get_cached_query() {
+		// Only a proxy that has been used keeps the query cached. A separate mechanism
+		// keeps unread values until the next navigation completes, then discards them
 		if (!this.#referenced) {
-			// this reference is only released when the proxy is garbage collected,
-			// so a proxy that is never read does not take one
 			cache.ref(this, this.#ensure_entry(), this.#id, this.#payload);
 			this.#referenced = true;
 		}

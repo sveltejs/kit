@@ -312,10 +312,11 @@ export class Query {
 	}
 
 	/**
-	 * Called when the query is evicted from the cache. Hands a value that was
-	 * set but never read to the next instance, instead of losing it.
+	 * Called when the query is evicted from the cache
 	 */
 	destroy() {
+		// Hands a value that was set, but never read, to the next instance,
+		// instead of losing it along with the evicted query
 		if (this.#unread) {
 			query_responses[this.#key] = { v: this.#raw, kept: true };
 		}
