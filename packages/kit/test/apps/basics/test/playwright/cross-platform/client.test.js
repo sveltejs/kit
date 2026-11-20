@@ -716,6 +716,38 @@ test.describe('Scrolling', () => {
 		await waiter;
 	});
 
+	test('browser restores scroll on reload before the client starts', async ({
+		page,
+		scroll_to
+	}) => {
+		await page.addInitScript(() => {
+			const scroll_to = window.scrollTo;
+
+			// the client restores the saved position with `scrollTo` when it starts. By then
+			// the browser should already have restored it, so that the page doesn't paint at
+			// the top first. We can't check `history.scrollRestoration` instead, because
+			// Firefox restores the scroll but still reports `manual` at this point
+			window.scrollTo = /** @type {typeof window.scrollTo} */ (
+				(...args) => {
+					// @ts-expect-error
+					window.__scroll_y_before_client_restore ??= window.scrollY;
+					// @ts-expect-error
+					scroll_to(...args);
+				}
+			);
+		});
+		await page.goto('/anchor');
+
+		await scroll_to(0, 1000);
+		// WebKit doesn't restore a scroll made less than ~300ms before the reload
+		await page.waitForTimeout(500);
+		await page.reload();
+
+		// @ts-expect-error
+		expect(await page.evaluate(() => window.__scroll_y_before_client_restore)).toBe(1000);
+		expect(await page.evaluate(() => history.scrollRestoration)).toBe('manual');
+	});
+
 	test('scroll position is top of page on ssr:false reload', async ({ page }) => {
 		await page.goto('/no-ssr/margin');
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
