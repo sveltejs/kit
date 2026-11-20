@@ -738,14 +738,13 @@ test.describe('Scrolling', () => {
 		});
 		await page.goto('/anchor');
 
-		// WebKit only restores a position it had time to record before the reload, so retry
-		await expect(async () => {
-			await scroll_to(0, 1000);
-			await page.reload();
-			// @ts-expect-error
-			expect(await page.evaluate(() => window.__scroll_y_before_client_restore)).toBe(1000);
-		}).toPass({ timeout: 5000 });
+		await scroll_to(0, 1000);
+		// WebKit doesn't restore a scroll made less than ~300ms before the reload
+		await page.waitForTimeout(500);
+		await page.reload();
 
+		// @ts-expect-error
+		expect(await page.evaluate(() => window.__scroll_y_before_client_restore)).toBe(1000);
 		expect(await page.evaluate(() => history.scrollRestoration)).toBe('manual');
 	});
 
