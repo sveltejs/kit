@@ -9,6 +9,7 @@ import { getPlatformProxy, unstable_readConfig } from 'wrangler';
 import { exactRegex } from '@rolldown/pluginutils';
 import { getRequest } from '@sveltejs/kit/node';
 import { is_dev_or_build, plugin_config } from './config.js';
+import { plugin_wasm, restore_wasm_imports } from './wasm.js';
 import {
 	is_building_for_cloudflare_pages,
 	validate_worker_settings,
@@ -94,6 +95,7 @@ export default function (options = {}) {
 			fs.mkdirSync(tmp, { recursive: true });
 
 			replace_stub(builder.getServerDirectory(), stub_import);
+			restore_wasm_imports(builder.getServerDirectory());
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.paths.base}`;
@@ -112,7 +114,10 @@ export default function (options = {}) {
 					fs.writeFileSync(fallback, 'Not Found');
 				}
 			}
-			const client_assets = builder.writeClient(assets_dest);
+			const written = builder.writeClient(assets_dest);
+			// sveltekit copies the server assets to the client
+			restore_wasm_imports(`${assets_dest}/${builder.getAppPath()}/immutable/assets`);
+			const client_assets = written.filter((file) => fs.existsSync(path.join(assets_dest, file)));
 			builder.writePrerendered(assets_dest);
 			if (
 				!building_for_cloudflare_pages &&
@@ -211,6 +216,7 @@ export default function (options = {}) {
 			},
 			plugins: [
 				...plugin_config(options.config, (config) => (worker_config = config)),
+				...plugin_wasm(),
 				{
 					name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
 					apply: is_dev_or_build,

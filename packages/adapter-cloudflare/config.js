@@ -10,8 +10,13 @@ const useful_cloudflare_plugins = new Set([
 	// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
-	'vite-plugin-cloudflare:nodejs-compat-warnings'
+	'vite-plugin-cloudflare:nodejs-compat-warnings',
+	// turns `.wasm?init` imports into `.wasm` imports
+	'vite-plugin-cloudflare:wasm-helper'
 ]);
+
+// leaves `.wasm` imports in the server output for workerd to import
+const useful_cloudflare_build_plugins = new Set(['vite-plugin-cloudflare:additional-modules']);
 
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
@@ -64,9 +69,17 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_dev_or_build })),
+		...plugins.flatMap((plugin) => {
+			if (useful_cloudflare_plugins.has(plugin.name)) {
+				return [{ ...plugin, apply: is_dev_or_build }];
+			}
+
+			if (useful_cloudflare_build_plugins.has(plugin.name)) {
+				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
+			}
+
+			return [];
+		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
