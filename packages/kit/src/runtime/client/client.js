@@ -3643,8 +3643,6 @@ async function load_data(url, invalid) {
 	return new Promise((resolve, reject) => {
 		process_stream(resolve, res).catch(reject);
 	});
-
-	// TODO edge case handling necessary? stream() read fails?
 }
 
 /**
@@ -3675,33 +3673,50 @@ async function process_stream(resolve, res) {
 		});
 	}
 
-	for await (const node of read_ndjson(reader)) {
-		if (node.type === 'redirect') {
-			return resolve(node);
-		}
+	try {
+		for await (const node of read_ndjson(reader)) {
+			if (node.type === 'redirect') {
+				return resolve(node);
+			}
 
-		if (node.type === 'data') {
-			// This is the first (and possibly only, if no pending promises) chunk
-			node.nodes?.forEach((/** @type {any} */ node) => {
-				if (node?.type === 'data') {
-					node.uses = deserialize_uses(node.uses);
-					node.data = deserialize(node.data);
+			if (node.type === 'data') {
+				// This is the first (and possibly only, if no pending promises) chunk
+				node.nodes?.forEach((/** @type {any} */ node) => {
+					if (node?.type === 'data') {
+						node.uses = deserialize_uses(node.uses);
+						node.data = deserialize(node.data);
+					}
+				});
+
+				resolve(node);
+			} else if (node.type === 'chunk') {
+				// This is a subsequent chunk containing deferred data
+				const { id, data, error } = node;
+				const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
+
+				if (error) {
+					deferred.reject(deserialize(error));
+				} else {
+					deferred.fulfil(deserialize(data));
 				}
-			});
 
-			resolve(node);
-		} else if (node.type === 'chunk') {
-			// This is a subsequent chunk containing deferred data
-			const { id, data, error } = node;
-			const deferred = /** @type {import('types').Deferred} */ (deferreds.get(id));
-			deferreds.delete(id);
-
-			if (error) {
-				deferred.reject(deserialize(error));
-			} else {
-				deferred.fulfil(deserialize(data));
+				// removed only once settled, so that if `deserialize` throws,
+				// the catch below rejects this promise along with the others
+				deferreds.delete(id);
 			}
 		}
+
+		if (deferreds.size > 0) {
+			throw new Error('Streamed response ended before all promises were settled');
+		}
+	} catch (error) {
+		// if the response ended early or failed, the promises that
+		// are still pending would otherwise never settle
+		for (const deferred of deferreds.values()) {
+			deferred.reject(/** @type {Error} */ (error));
+		}
+
+		throw error;
 	}
 }
 
