@@ -116,6 +116,46 @@ test.describe('hash based navigation', () => {
 		expect(page.locator('p')).toHaveText('b');
 	});
 
+	test('iframe navigation works with unreadable history.state', async ({ page }) => {
+		const errors = /** @type {string[]} */ ([]);
+		page.on('pageerror', (error) => errors.push(error.message));
+
+		await page.addInitScript(() => {
+			if (window !== window.top) {
+				Object.defineProperty(History.prototype, 'state', { get: () => null });
+			}
+		});
+
+		await page.goto('/');
+		await page.evaluate(() => {
+			document.body.append(Object.assign(document.createElement('iframe'), { src: '/#/a' }));
+		});
+
+		const iframe = page.frameLocator('iframe');
+		await expect(iframe.locator('body.started')).toBeAttached();
+		await expect(iframe.locator('p')).toHaveText('a');
+		expect(await iframe.locator('body').evaluate(() => history.state)).toBe(null);
+		await iframe.locator('body').evaluate((body) => (body.dataset.marker = 'preserved'));
+
+		// Shallow navigation must retain the rendered route even though the URL changes.
+		await iframe.locator('button[data-shallow]').click();
+		await expect.poll(() => iframe.locator('body').evaluate(() => location.hash)).toBe('#/b');
+		await expect(iframe.locator('p')).toHaveText('a');
+		await iframe.locator('body').evaluate(() => history.back());
+		await expect.poll(() => iframe.locator('body').evaluate(() => location.hash)).toBe('#/a');
+		await expect(iframe.locator('p')).toHaveText('a');
+		await expect(iframe.locator('body')).toHaveAttribute('data-marker', 'preserved');
+
+		await iframe.locator('a[href="/#/b"]').click();
+		await expect(iframe.locator('p')).toHaveText('b');
+		await iframe.locator('body').evaluate(() => history.back());
+		await expect(iframe.locator('p')).toHaveText('a');
+		await iframe.locator('body').evaluate(() => history.forward());
+		await expect(iframe.locator('p')).toHaveText('b');
+		await expect(iframe.locator('body')).toHaveAttribute('data-marker', 'preserved');
+		expect(errors).toEqual([]);
+	});
+
 	test('sequential focus navigation point is set correctly', async ({ page, browserName }) => {
 		const tab = browserName === 'webkit' ? 'Alt+Tab' : 'Tab';
 		await page.goto('/#/focus');
