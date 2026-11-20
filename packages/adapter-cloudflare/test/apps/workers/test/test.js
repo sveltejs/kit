@@ -68,3 +68,8 @@ test('imports WebAssembly modules', async ({ request }) => {
 	const res = await request.get('/wasm');
 	expect(await res.text()).toBe('3');
 });
+
+test('leaves text that looks like a WebAssembly import alone', async ({ request }) => {
+	const res = await request.get('/wasm-text');
+	expect(await res.text()).toBe("import module from './add.wasm';");
+});
