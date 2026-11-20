@@ -159,9 +159,12 @@ if (DEV) {
 	};
 }
 
-/** @param {number} index */
-function capture_scroll(index) {
-	history_info[index].scroll = scroll_state();
+/**
+ * @param {number} index
+ * @param {{ x: number, y: number }} [scroll]
+ */
+function capture_scroll(index, scroll = scroll_state()) {
+	history_info[index].scroll = scroll;
 }
 
 /**
@@ -344,6 +347,7 @@ let updating = false;
 let is_navigating = false;
 /** @type {HistoryMetadata | null} */
 let hash_navigating = null;
+let last_scroll = { x: 0, y: 0 };
 /** True as soon as there happened one client-side navigation (excluding the SvelteKit-initialized initial one when in SPA mode) */
 let has_navigated = false;
 
@@ -3093,6 +3097,15 @@ export async function set_nearest_error_page(error) {
 function _start_router() {
 	history.scrollRestoration = 'manual';
 
+	last_scroll = scroll_state();
+	addEventListener(
+		'scroll',
+		() => {
+			last_scroll = scroll_state();
+		},
+		{ passive: true }
+	);
+
 	addEventListener('beforeunload', (e) => {
 		let should_block = false;
 
@@ -3356,7 +3369,12 @@ function _start_router() {
 			const previous_history_index = current_history_index;
 			const previous_navigation_index = current_navigation_index;
 			const previous_reset_index = current_reset_index;
-			capture_scroll(previous_history_index);
+			// webkit scrolls to the fragment before popstate but fires the scroll event after
+			capture_scroll(
+				previous_history_index,
+				// `location.hash` is empty for a bare `#`, which scrolls to the top
+				location.href.includes('#') && !app.hash ? last_scroll : undefined
+			);
 			if (!shallow) capture_snapshot(previous_navigation_index);
 			capture_navigation_snapshot(previous_history_index);
 			current_history_index = history_index;
@@ -3391,7 +3409,11 @@ function _start_router() {
 
 				update_url(url);
 
-				if (reset && scroll) scrollTo(scroll.x, scroll.y);
+				if (reset && scroll) {
+					scrollTo(scroll.x, scroll.y);
+					// the scroll event for this never fires if another traversal lands in the same frame
+					last_scroll = scroll_state();
+				}
 				restore_navigation_snapshot(current_history_index, current_registrations());
 				// the token above aborted any in-flight navigation, and nothing else will clear it
 				is_navigating = false;
