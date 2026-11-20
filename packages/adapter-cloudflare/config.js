@@ -15,9 +15,6 @@ const useful_cloudflare_plugins = new Set([
 	'vite-plugin-cloudflare:wasm-helper'
 ]);
 
-// leaves `.wasm` imports in the server output for workerd to import
-const useful_cloudflare_build_plugins = new Set(['vite-plugin-cloudflare:additional-modules']);
-
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
 
@@ -74,8 +71,20 @@ export function plugin_config(config_path, set_worker_config) {
 				return [{ ...plugin, apply: is_dev_or_build }];
 			}
 
-			if (useful_cloudflare_build_plugins.has(plugin.name)) {
-				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
+			// leaves `.wasm` imports in the server output for workerd to import
+			if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
+				const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
+					plugin.resolveId
+				);
+
+				return /** @satisfies {Plugin[]} */ ([
+					{
+						...plugin,
+						apply: 'build',
+						// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which vite turns into urls
+						resolveId: { ...resolve_id, filter: { id: [/\.wasm(\?module)?$/, /^#/] } }
+					}
+				]);
 			}
 
 			return [];
