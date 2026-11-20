@@ -9,12 +9,9 @@ const wasm_import = /((?:\bfrom|\bimport)\s*\(?\s*(["'])(\.{1,2}\/[^"'\n]*?\.was
 const node_module = (file) =>
 	`import fs from 'node:fs';\nexport default new WebAssembly.Module(fs.readFileSync(${file}));\n`;
 
+// TODO: the plugin will not be needed if dev, analysis, or prerender run in workerd
 /**
- * node cannot import `.wasm` as a `WebAssembly.Module` like workerd does, so dev loads the file
- * itself and the server output imports a javascript stand in until `restore_wasm_imports` runs
- *
- * TODO remove the dev plugin once dev runs in workerd, and the rest once analysis and
- * prerendering do too
+ * node cannot import `.wasm` as a `WebAssembly.Module` like workerd does, so we stub them in dev
  * @returns {Plugin[]}
  */
 export function plugin_wasm() {
@@ -60,7 +57,7 @@ export function plugin_wasm() {
 }
 
 /**
- * removes the stand in files and imports the `.wasm` files again
+ * Restore the native workerd WASM importing statements after the build
  * @param {string} directory
  */
 export function restore_wasm_imports(directory) {
