@@ -119,6 +119,41 @@ describe('is_csrf_forbidden', () => {
 		);
 	});
 
+	test.each([null, 'null'])(
+		'forbids a form submission with origin %j when the self-origin is opaque',
+		(request_origin) => {
+			const request = new Request('custom://self.test/csrf', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/x-www-form-urlencoded',
+					...(request_origin === null ? {} : { origin: request_origin })
+				}
+			});
+
+			assert.equal(
+				is_csrf_forbidden({
+					request,
+					request_origin: request.headers.get('origin'),
+					self_origin: get_self_origin(undefined, new URL(request.url).origin),
+					trusted_origins: []
+				}),
+				true
+			);
+		}
+	);
+
+	test('treats an explicitly trusted opaque origin as cross-origin, not same-origin', () => {
+		assert.equal(
+			is_csrf_forbidden({
+				request: form_post({ headers: { origin: 'null' } }),
+				request_origin: 'null',
+				self_origin: 'null',
+				trusted_origins: ['null']
+			}),
+			false
+		);
+	});
+
 	test('forbids a request with no content-type header', () => {
 		assert.equal(
 			is_csrf_forbidden({
@@ -284,6 +319,28 @@ describe('is_remote_forbidden', () => {
 			true
 		);
 	});
+
+	test.each([null, 'null'])(
+		'forbids a remote call with origin %j when the self-origin is opaque',
+		(request_origin) => {
+			const request = new Request('custom://self.test/_app/remote/foo/bar', {
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json',
+					...(request_origin === null ? {} : { origin: request_origin })
+				}
+			});
+
+			assert.equal(
+				is_remote_forbidden({
+					request,
+					request_origin: request.headers.get('origin'),
+					self_origin: get_self_origin(undefined, new URL(request.url).origin)
+				}),
+				true
+			);
+		}
+	);
 
 	test('allows GET remote calls regardless of origin', () => {
 		assert.equal(
