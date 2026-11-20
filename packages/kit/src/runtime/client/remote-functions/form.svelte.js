@@ -36,16 +36,36 @@ import {
 /**
  * Merge client issues into server issues. Server issues are persisted unless
  * a client-issue exists for the same path, in which case the client-issue overrides it.
+ * Server issues are also dropped once the value at their path differs from the one
+ * the server validated.
  * @param {FormData} form_data
+ * @param {Record<string, any>} data
+ * @param {Record<string, any> | null} server_input
  * @param {InternalRemoteFormIssue[]} current_issues
  * @param {InternalRemoteFormIssue[]} client_issues
  * @returns {InternalRemoteFormIssue[]}
  */
-function merge_with_server_issues(form_data, current_issues, client_issues) {
+function merge_with_server_issues(form_data, data, server_input, current_issues, client_issues) {
 	const client_names = new Set(client_issues.map((issue) => issue.name));
 
+	/**
+	 * @param {string} _
+	 * @param {any} value
+	 */
+	const describe_file = (_, value) =>
+		value instanceof File ? [value.name, value.size, value.type, value.lastModified] : value;
+
+	/** @param {InternalRemoteFormIssue} issue */
+	const unchanged = (issue) =>
+		server_input === null ||
+		issue.path.length === 0 ||
+		JSON.stringify(deep_get(data, issue.path), describe_file) ===
+			JSON.stringify(deep_get(server_input, issue.path), describe_file);
+
 	const merged = [
-		...current_issues.filter((issue) => issue.server && !client_names.has(issue.name)),
+		...current_issues.filter(
+			(issue) => issue.server && !client_names.has(issue.name) && unchanged(issue)
+		),
 		...client_issues
 	];
 
@@ -116,6 +136,9 @@ export function form(id) {
 
 		/** @type {InternalRemoteFormIssue[]} */
 		let raw_issues = $state.raw(initial?.issues ?? []);
+
+		/** @type {Record<string, any> | null} */
+		let server_input = null;
 
 		const issues = $derived(flatten_issues(raw_issues));
 
@@ -238,7 +261,8 @@ export function form(id) {
 								if (!valid) return false;
 							}
 
-							const { blob } = serialize_binary_form(convert(form_data), {
+							const data = convert(form_data);
+							const { blob } = serialize_binary_form(data, {
 								remote_refreshes: Array.from(refreshes ?? [])
 							});
 
@@ -258,6 +282,7 @@ export function form(id) {
 							);
 
 							({ issues: raw_issues = [], result } = response._ ?? {});
+							server_input = data;
 
 							// if the developer took control of updates via `.updates(...)` (even with
 							// no arguments), or the server performed explicit refreshes, don't invalidateAll
@@ -360,6 +385,8 @@ export function form(id) {
 			if (validated?.issues) {
 				raw_issues = merge_with_server_issues(
 					form_data,
+					data,
+					server_input,
 					raw_issues,
 					validated.issues.map((issue) => normalize_issue(issue, false))
 				);
@@ -746,9 +773,12 @@ export function form(id) {
 
 					const is_server_validation = !validated?.issues && !preflightOnly;
 
-					raw_issues = is_server_validation
-						? array
-						: merge_with_server_issues(form_data, raw_issues, array);
+					if (is_server_validation) {
+						raw_issues = array;
+						server_input = data;
+					} else {
+						raw_issues = merge_with_server_issues(form_data, data, server_input, raw_issues, array);
+					}
 				}
 			},
 			enhance: {
