@@ -35,8 +35,9 @@ import {
 
 /**
  * Merge client issues into server issues. Server issues are persisted unless
- * a client-issue exists for the same path, in which case the client-issue overrides it,
- * or the value at their path no longer matches the one the server validated.
+ * a client-issue exists for the same path, in which case the client-issue overrides it.
+ * Server issues are also dropped once the value at their path differs from the one
+ * the server validated.
  * @param {FormData} form_data
  * @param {Record<string, any>} data
  * @param {Record<string, any> | null} server_input

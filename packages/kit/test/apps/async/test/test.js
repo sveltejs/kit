@@ -733,6 +733,7 @@ test.describe('remote functions', () => {
 		await page.goto('/remote/form/preflight-only');
 
 		const a = page.locator('[name^="a"]');
+		const b = page.locator('[name^="b"]');
 		const button = page.locator('button');
 		const issues = page.locator('.issues');
 
@@ -752,7 +753,7 @@ test.describe('remote functions', () => {
 		await expect(issues).not.toContainText('a is too short');
 
 		// ...or the field has changed since it was submitted
-		await page.locator('[name^="b"]').fill('bbb');
+		await b.fill('bbb');
 		await expect(issues).not.toContainText('b is too short');
 		await expect(issues).toContainText('c is too short');
 	});
