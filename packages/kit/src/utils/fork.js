@@ -55,9 +55,11 @@ export function forked(module, callback) {
 		return new Promise((fulfil, reject) => {
 			const worker = new Worker(fileURLToPath(module), {
 				env: {
+					// worker output isn't a TTY, so colors need forcing unless the user has
+					// disabled them. An explicit `FORCE_COLOR` from the parent takes precedence
+					...(process.env.NO_COLOR ? {} : { FORCE_COLOR: '1' }),
 					...process.env,
-					SVELTEKIT_FORK: 'true',
-					FORCE_COLOR: '1'
+					SVELTEKIT_FORK: 'true'
 				}
 			});
 

@@ -439,6 +439,8 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	/** Whether the universal hooks file exports `reroute` */
+	has_reroute: boolean;
 }
 
 export type SSRComponentLoader = () => Promise<Component>;

@@ -282,7 +282,13 @@ export async function dev(
 			req.headers[':authority'] || req.headers.host
 		}`;
 
-		const decoded = decodeURI(new URL(base + req.url).pathname);
+		let decoded = new URL(base + req.url).pathname;
+		try {
+			decoded = decodeURI(decoded);
+		} catch {
+			// malformed URI — let the runtime respond with a 400 error page
+			return next();
+		}
 
 		if (decoded.startsWith(assets)) {
 			const pathname = decoded.slice(assets.length);
@@ -330,7 +336,12 @@ export async function dev(
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				let decoded = new URL(base + req.url).pathname;
+				try {
+					decoded = decodeURI(decoded);
+				} catch {
+					// malformed URI — the runtime will respond with a 400
+				}
 				const file = posixify(
 					path.resolve(root, decoded.slice(svelte_config.paths.base.length + 1))
 				);

@@ -297,6 +297,7 @@ export function plugin_compile(
 							define: {
 								__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 								__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+								__SVELTEKIT_HAS_REROUTE__: 'true',
 								__SVELTEKIT_PAYLOAD__: '{}'
 							}
 						},
@@ -564,6 +565,9 @@ export function plugin_compile(
 							s(has_server_load);
 						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
 							s(has_universal_load);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_REROUTE__ = s(
+							metadata.has_reroute
+						);
 					}
 
 					const client_build = await builder.build(builder.environments.client);
