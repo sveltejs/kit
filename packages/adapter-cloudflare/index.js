@@ -95,7 +95,6 @@ export default function (options = {}) {
 			fs.mkdirSync(tmp, { recursive: true });
 
 			replace_stub(builder.getServerDirectory(), stub_import);
-			restore_wasm_imports(builder.getServerDirectory());
 
 			// client assets and prerendered pages
 			const assets_dest = `${dest}${builder.config.paths.base}`;
@@ -125,6 +124,9 @@ export default function (options = {}) {
 			) {
 				await builder.generateFallback(path.join(assets_dest, 'index.html'));
 			}
+
+			// the fallback pages are rendered in node, which needs the stand ins
+			restore_wasm_imports(builder.getServerDirectory());
 
 			// worker
 			const worker_dest_dir = path.dirname(worker_dest);
