@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { afterAll, expect, test, vi } from 'vitest';
-import { check_spelling, write_if_changed } from './utils.js';
+import { check_spelling, write, write_if_changed } from './utils.js';
 
 const fixtures = path.join(import.meta.dirname, 'fixtures');
 
@@ -50,6 +50,112 @@ test.describe('write', () => {
 
 	afterAll(() => {
 		fs.rmSync(dir, { recursive: true, force: true });
+	});
+
+	test('writes files with basenames near the filesystem length limit', () => {
+		const directory = path.join(dir, 'long-filename');
+		const basename = `${'a'.repeat(230)}.html`;
+		const file = path.join(directory, basename);
+
+		write(file, 'before');
+		write(file, 'after');
+
+		expect(fs.readFileSync(file, 'utf-8')).toBe('after');
+		expect(fs.readdirSync(directory)).toEqual([basename]);
+	});
+
+	test('concurrent writes of different lengths do not leave trailing bytes', () => {
+		const file = path.join(dir, 'concurrent.json');
+		const shorter = JSON.stringify({ rootDirs: ['.svelte-kit-a/types'] });
+		const longer = JSON.stringify({ rootDirs: ['.svelte-kit-ab/types'] });
+		const write_file = fs.writeFileSync;
+		let interleaved = false;
+
+		// Reproduce the OS interleaving deterministically: both writers open/truncate
+		// their destination before the longer write finishes, then the shorter one wins.
+		const spy = vi.spyOn(fs, 'writeFileSync').mockImplementation((target, code, options) => {
+			const fd = fs.openSync(/** @type {string} */ (target), 'w');
+			try {
+				if (!interleaved) {
+					interleaved = true;
+					write_if_changed(file, longer);
+				}
+				write_file(fd, code, options);
+			} finally {
+				fs.closeSync(fd);
+			}
+		});
+
+		try {
+			write_if_changed(file, shorter);
+		} finally {
+			spy.mockRestore();
+		}
+
+		expect(fs.readFileSync(file, 'utf-8')).toBe(shorter);
+		expect(JSON.parse(fs.readFileSync(file, 'utf-8'))).toEqual(JSON.parse(shorter));
+		expect(fs.readdirSync(dir).filter((name) => name.endsWith('.tmp'))).toEqual([]);
+	});
+
+	test('readers see the previous contents until the replacement is complete', () => {
+		const file = path.join(dir, 'reader.js');
+		write(file, 'before');
+
+		const write_file = fs.writeFileSync;
+		const spy = vi.spyOn(fs, 'writeFileSync').mockImplementationOnce((target, code, options) => {
+			write_file(target, code, options);
+			expect(fs.readFileSync(file, 'utf-8')).toBe('before');
+		});
+
+		try {
+			write(file, 'after');
+		} finally {
+			spy.mockRestore();
+		}
+
+		expect(fs.readFileSync(file, 'utf-8')).toBe('after');
+	});
+
+	test('a failed temporary write preserves the destination and removes partial output', () => {
+		const directory = path.join(dir, 'failed-write');
+		const file = path.join(directory, 'generated.js');
+		write(file, 'before');
+
+		const error = new Error('write failed');
+		const write_file = fs.writeFileSync;
+		const spy = vi.spyOn(fs, 'writeFileSync').mockImplementationOnce((target) => {
+			write_file(target, 'partial');
+			throw error;
+		});
+
+		try {
+			expect(() => write(file, 'after')).toThrow(error);
+		} finally {
+			spy.mockRestore();
+		}
+
+		expect(fs.readFileSync(file, 'utf-8')).toBe('before');
+		expect(fs.readdirSync(directory)).toEqual(['generated.js']);
+	});
+
+	test('a failed rename preserves the destination and removes temporary output', () => {
+		const directory = path.join(dir, 'failed-rename');
+		const file = path.join(directory, 'generated.js');
+		write(file, 'before');
+
+		const error = Object.assign(new Error('rename failed'), { code: 'EACCES' });
+		const spy = vi.spyOn(fs, 'renameSync').mockImplementationOnce(() => {
+			throw error;
+		});
+
+		try {
+			expect(() => write(file, 'after')).toThrow(error);
+		} finally {
+			spy.mockRestore();
+		}
+
+		expect(fs.readFileSync(file, 'utf-8')).toBe('before');
+		expect(fs.readdirSync(directory)).toEqual(['generated.js']);
 	});
 
 	test('write_if_changed leaves a file that another process already wrote alone', () => {
