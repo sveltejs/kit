@@ -52,7 +52,8 @@ export class QueryProxy {
 
 	#get_cached_query() {
 		if (!this.#referenced) {
-			// an unused proxy must not hold the entry or eviction waits on garbage collection
+			// this reference is only released when the proxy is garbage collected,
+			// so a proxy that is never read does not take one
 			cache.ref(this, this.#ensure_entry(), this.#id, this.#payload);
 			this.#referenced = true;
 		}
