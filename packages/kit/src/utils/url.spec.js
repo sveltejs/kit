@@ -5,6 +5,7 @@ import {
 	relative_pathname,
 	make_trackable,
 	disable_search,
+	decode_uri_safe,
 	matches_external_allowlist_entry
 } from './url.js';
 
@@ -280,5 +281,20 @@ describe('disable_search', (test) => {
 				contains: [`url.${prop}`]
 			});
 		});
+	});
+});
+
+describe('decode_uri_safe', (test) => {
+	test('decodes valid percent-encoding', () => {
+		assert.equal(decode_uri_safe('a%20b'), 'a b');
+	});
+
+	test('keeps a raw percent intact', () => {
+		assert.equal(decode_uri_safe('100%'), '100%');
+		assert.equal(decode_uri_safe('/guide#100%'), '/guide#100%');
+	});
+
+	test('keeps a mixed value intact when part of it is invalid', () => {
+		assert.equal(decode_uri_safe('a%20b%zz'), 'a%20b%zz');
 	});
 });

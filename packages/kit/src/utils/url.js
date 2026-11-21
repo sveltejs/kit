@@ -109,6 +109,20 @@ export function decode_uri(uri) {
 }
 
 /**
+ * Percent-decodes a URI, leaving it as-is when it isn't valid percent-encoding.
+ * HTML ids and crawler-discovered hrefs may legally contain a raw `%`.
+ * @param {string} uri
+ */
+export function decode_uri_safe(uri) {
+	try {
+		return decode_uri(uri);
+	} catch (e) {
+		if (e instanceof URIError) return uri;
+		throw e;
+	}
+}
+
+/**
  * Returns everything up to the first `#` in a URL
  * @param {{href: string}} url_like
  */

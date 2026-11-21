@@ -304,6 +304,12 @@ test('crawls pages whose content-type has a charset parameter', () => {
 	expect(read('content-type-charset/dynamic.html')).toBeTruthy();
 });
 
+test('prerenders raw percent ids and fragment links', () => {
+	const content = read('raw-percent-id.html');
+	expect(content).toContain('id="100%"');
+	expect(content).toContain('href="#100%"');
+});
+
 test('identifies missing ids', () => {
 	const missing_ids_file = fileURLToPath(new URL('../missing_ids/index.jsonl', import.meta.url));
 	const missing_ids_content = fs.readFileSync(missing_ids_file, 'utf-8');

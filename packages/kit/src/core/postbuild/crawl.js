@@ -1,4 +1,4 @@
-import { resolve, decode_uri } from '../../utils/url.js';
+import { resolve, decode_uri_safe } from '../../utils/url.js';
 import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
@@ -194,11 +194,11 @@ export function crawl(html, base) {
 				}
 
 				if (id) {
-					ids.push(decode_uri(id));
+					ids.push(decode_uri_safe(id));
 				}
 
 				if (name && tag === 'A') {
-					ids.push(decode_uri(name));
+					ids.push(decode_uri_safe(name));
 				}
 
 				if (src) {
