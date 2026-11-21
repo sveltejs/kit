@@ -41,7 +41,14 @@ export function parse_route_id(id) {
 			? /^\/$/
 			: new RegExp(
 					`^${get_route_segments(id)
-						.map((segment) => {
+						.map((segment, i, segments) => {
+							// Values can only shift into a following parameter at the start of a
+							// segment. An inline optional (e.g. [[slug]].json) cannot receive a whole segment.
+							const next = segments[i + 1] ?? '';
+							const chained =
+								/^\[(?:\.\.\.)?[\w-]+(?:=[\w-]+)?\]/.test(next) ||
+								(next.startsWith('[[') && param_pattern.test(next.slice(1, -1)));
+
 							// special case — /[...rest]/ could contain zero segments
 							const rest_match = /^\[\.\.\.([\w-]+)(?:=([\w-]+))?\]$/.exec(segment);
 							if (rest_match) {
@@ -50,7 +57,7 @@ export function parse_route_id(id) {
 									matcher: rest_match[2],
 									optional: false,
 									rest: true,
-									chained: true
+									chained
 								});
 								return '(?:/([^]*))?';
 							}
@@ -62,7 +69,7 @@ export function parse_route_id(id) {
 									matcher: optional_match[2],
 									optional: true,
 									rest: false,
-									chained: true
+									chained
 								});
 								return '(?:/([^/]+))?';
 							}
@@ -93,7 +100,7 @@ export function parse_route_id(id) {
 											matcher,
 											optional: !!is_optional,
 											rest: !!is_rest,
-											chained: is_rest ? i === 1 && parts[0] === '' : false
+											chained: parts.length === 3 && parts[0] === '' && parts[2] === '' && chained
 										});
 										return is_rest ? '([^]*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
 									}
@@ -192,24 +199,10 @@ export function exec(match, params, matchers) {
 	const result = {};
 
 	const values = match.slice(1);
-	const values_needing_match = values.filter((value) => value !== undefined);
-
-	let buffered = 0;
 
 	for (let i = 0; i < params.length; i += 1) {
 		const param = params[i];
-		let value = values[i - buffered];
-
-		// in the `[[a=b]]/.../[...rest]` case, if one or more optional parameters
-		// weren't matched, roll the skipped values into the rest
-		if (param.chained && param.rest && buffered) {
-			value = values
-				.slice(i - buffered, i + 1)
-				.filter((s) => s)
-				.join('/');
-
-			buffered = 0;
-		}
+		let value = values[i];
 
 		// if `value` is undefined, it means this is an optional or rest parameter
 		if (value === undefined) {
@@ -227,10 +220,35 @@ export function exec(match, params, matchers) {
 			const outcome = run_matcher(matchers[param.matcher], decoded);
 
 			if (!outcome.success) {
-				// in the `/[[a=b]]/...` case, if the value didn't satisfy the matcher,
-				// keep track of the number of skipped optional parameters and continue
-				if (param.optional && param.chained) {
-					buffered++;
+				if (param.optional) {
+					// Find somewhere for this value to go without crossing any static text.
+					// Every intervening capture must be preserved, including required params.
+					let j = i;
+					let found = false;
+					while (params[j].chained) {
+						j += 1;
+
+						if (params[j].rest) {
+							values[j] = [values[j - 1], values[j]]
+								.filter((value) => value !== undefined)
+								.join('/');
+							found = true;
+							break;
+						}
+
+						if (values[j] === undefined) {
+							values[j] = values[j - 1];
+							found = true;
+							break;
+						}
+					}
+
+					// No vacancy or rest param was found before the end of this chain.
+					if (!found) return;
+
+					while (--j > i) {
+						values[j] = values[j - 1];
+					}
 					continue;
 				}
 
@@ -242,23 +260,8 @@ export function exec(match, params, matchers) {
 		} else {
 			result[param.name] = decoded;
 		}
-
-		// Now that the params match, reset the buffer if the next param isn't the [...rest]
-		// and the next value is defined, otherwise the buffer will cause us to skip values
-		const next_param = params[i + 1];
-		const next_value = values[i + 1];
-		if (next_param && !next_param.rest && next_param.optional && next_value && param.chained) {
-			buffered = 0;
-		}
-
-		// There are no more params and no more values, but all non-empty values have been matched
-		if (!next_param && !next_value && Object.keys(result).length === values_needing_match.length) {
-			buffered = 0;
-		}
-		continue;
 	}
 
-	if (buffered) return;
 	return result;
 }
 
