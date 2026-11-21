@@ -13,6 +13,19 @@ const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
 const WHITESPACE = /[\s\n\r]/;
 
+/**
+ * Percent-decodes an id or anchor name, leaving it as-is if it isn't valid percent-encoding
+ * (`id="100%"` is valid HTML, but `decodeURI` throws on it)
+ * @param {string} value
+ */
+function decode_id(value) {
+	try {
+		return decode_uri(value);
+	} catch {
+		return value;
+	}
+}
+
 const CRAWLABLE_META_NAME_ATTRS = new Set([
 	'og:url',
 	'og:image',
@@ -194,11 +207,11 @@ export function crawl(html, base) {
 				}
 
 				if (id) {
-					ids.push(decode_uri(id));
+					ids.push(decode_id(id));
 				}
 
 				if (name && tag === 'A') {
-					ids.push(decode_uri(name));
+					ids.push(decode_id(name));
 				}
 
 				if (src) {
