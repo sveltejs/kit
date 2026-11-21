@@ -24,7 +24,7 @@ import { compact } from '../../../utils/array.js';
 import { copy, read, resolve_entry, walk } from '../../../utils/filesystem.js';
 import { load_and_validate_params } from '../../../core/params.js';
 import { posixify } from '../../../utils/os.js';
-import { stackless } from '../../../utils/error.js';
+import { coalesce_to_error, stackless } from '../../../utils/error.js';
 import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
 import { s } from '../../../utils/misc.js';
@@ -97,6 +97,17 @@ export function plugin_compile(
 	/** @type {Prerendered} */
 	let prerendered;
 
+	const get_client_node_input = () => {
+		/** @type {Record<string, string>} */
+		const input = {};
+		manifest_data.nodes.forEach((node, i) => {
+			if (node.component || node.universal) {
+				input[`nodes/${i}`] = `${out_dir}/generated/build/client-optimized/nodes/${i}.js`;
+			}
+		});
+		return input;
+	};
+
 	return {
 		name: 'vite-plugin-sveltekit-compile',
 
@@ -139,48 +150,7 @@ export function plugin_compile(
 				set_manifest_data(manifest_data);
 				sync.all(kit, root, manifest_data);
 
-				// add entry points for every endpoint...
-				manifest_data.routes.forEach((route) => {
-					if (route.endpoint) {
-						const resolved = path.resolve(root, route.endpoint.file);
-						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-						const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
-						server_input[name] = resolved;
-					}
-				});
-
-				// ...and every component used by pages...
-				manifest_data.nodes.forEach((node) => {
-					for (const file of [node.component, node.universal, node.server]) {
-						if (file) {
-							const resolved = path.resolve(root, file);
-							const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
-
-							const name = relative.startsWith('..')
-								? posixify(path.join('entries/fallbacks', path.basename(file)))
-								: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
-							server_input[name] = resolved;
-						}
-					}
-				});
-
-				// ...and the params file
-				if (manifest_data.params) {
-					server_input['entries/params'] = path.resolve(root, manifest_data.params);
-				}
-
-				// ...and the hooks files
-				if (manifest_data.hooks.server) {
-					server_input['entries/hooks.server'] = path.resolve(root, manifest_data.hooks.server);
-				}
-				if (manifest_data.hooks.universal) {
-					server_input['entries/hooks.universal'] = path.resolve(
-						root,
-						manifest_data.hooks.universal
-					);
-				}
-
-				// ...and the server instrumentation file
+				// Add an entry point for server instrumentation
 				const server_instrumentation = resolve_entry(
 					path.join(kit.files.src, 'instrumentation.server'),
 					kit.moduleExtensions
@@ -197,19 +167,13 @@ export function plugin_compile(
 
 				/** @type {Record<string, string>} */
 				const client_input = {};
-
 				if (kit.output.bundleStrategy !== 'split') {
 					client_input['bundle'] = `${runtime_directory}/client/bundle.js`;
 				} else {
 					client_input['entry/start'] = `${runtime_directory}/client/entry.js`;
 					client_input['entry/payload'] = `${runtime_directory}/client/payload.js`;
 					client_input['entry/app'] = `${out_dir}/generated/build/client-optimized/app.js`;
-					manifest_data.nodes.forEach((node, i) => {
-						if (node.component || node.universal) {
-							client_input[`nodes/${i}`] =
-								`${out_dir}/generated/build/client-optimized/nodes/${i}.js`;
-						}
-					});
+					Object.assign(client_input, get_client_node_input());
 				}
 
 				const inline = kit.output.bundleStrategy === 'inline';
@@ -289,7 +253,9 @@ export function plugin_compile(
 									input: server_input,
 									output: {
 										entryFileNames: '[name].js',
-										chunkFileNames: 'chunks/[name].js'
+										// Emitted route entries use chunkFileNames rather than entryFileNames.
+										chunkFileNames: (chunk) =>
+											chunk.name.startsWith('entries/') ? '[name].js' : 'chunks/[name].js'
 									}
 								}
 							},
@@ -395,6 +361,69 @@ export function plugin_compile(
 			return environment.name !== 'serviceWorker';
 		},
 
+		buildStart() {
+			if (this.environment.config.consumer === 'client') return;
+
+			if (this.meta.watchMode) {
+				// Config hooks don't rerun in watch mode. Refresh the manifest before
+				// emitting entries, and watch the directory to discover new routes.
+				this.addWatchFile(kit.files.routes);
+				manifest_data = create_manifest_data(kit, root);
+				set_manifest_data(manifest_data);
+				sync.all(kit, root, manifest_data);
+				tracked_features = {};
+			}
+
+			if (manifest_data.params) {
+				this.emitFile({
+					type: 'chunk',
+					id: path.resolve(root, manifest_data.params),
+					name: 'entries/params',
+					// The generated manifest imports this fixed path.
+					fileName: 'entries/params.js'
+				});
+			}
+
+			for (const type of ['server', 'universal']) {
+				const file = manifest_data.hooks[/** @type {'server' | 'universal'} */ (type)];
+				if (file) {
+					this.emitFile({
+						type: 'chunk',
+						id: path.resolve(root, file),
+						name: `entries/hooks.${type}`,
+						fileName: `entries/hooks.${type}.js`
+					});
+				}
+			}
+
+			// Route entries belong to the current build, not the initial config.
+			// In particular, removed routes must not remain configured inputs.
+			// Add entry points for every endpoint...
+			manifest_data.routes.forEach((route) => {
+				if (route.endpoint) {
+					const resolved = path.resolve(root, route.endpoint.file);
+					const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+					const name = posixify(path.join('entries/endpoints', relative.replace(/\.js$/, '')));
+					this.emitFile({ type: 'chunk', id: resolved, name });
+				}
+			});
+
+			// ...and every component used by pages...
+			manifest_data.nodes.forEach((node) => {
+				for (const file of [node.component, node.universal, node.server]) {
+					if (file) {
+						const resolved = path.resolve(root, file);
+						const relative = decodeURIComponent(path.relative(kit.files.routes, resolved));
+
+						const name = relative.startsWith('..')
+							? posixify(path.join('entries/fallbacks', path.basename(file)))
+							: posixify(path.join('entries/pages', relative.replace(/\.js$/, '')));
+						this.emitFile({ type: 'chunk', id: resolved, name });
+					}
+				}
+			});
+		},
+
 		renderChunk: {
 			// composable filters are not accepted type-wise but still work during build
 			// see https://github.com/vitejs/rolldown-vite/issues/605
@@ -408,7 +437,7 @@ export function plugin_compile(
 					return {
 						// Rolldown changes our single quotes to double quotes so we need it in the regex too
 						code: code.replace(/__SVELTEKIT_TRACK__\(['"](.+?)['"]\)/g, (_, label) => {
-							(tracked_features[chunk.name + '.js'] ??= []).push(label);
+							(tracked_features[chunk.fileName] ??= []).push(label);
 							// put extra whitespace at the end of the comment to preserve the source size and avoid interfering with source maps
 							return `/* track ${label}            */`;
 						}),
@@ -560,16 +589,32 @@ export function plugin_compile(
 					const has_server_load = nodes.some((node) => node.has_server_load);
 					const has_universal_load = nodes.some((node) => node.has_universal_load);
 
+					// Vite caches defines per environment. Keep these paths available in
+					// watch mode, where later routes can introduce load functions/hooks.
+					const watch = !!builder.environments.ssr.config.build.watch;
 					if (builder.environments.client.config.define) {
-						builder.environments.client.config.define.__SVELTEKIT_HAS_SERVER_LOAD__ =
-							s(has_server_load);
-						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
-							s(has_universal_load);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_SERVER_LOAD__ = s(
+							watch || has_server_load
+						);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ = s(
+							watch || has_universal_load
+						);
 						builder.environments.client.config.define.__SVELTEKIT_HAS_REROUTE__ = s(
-							metadata.has_reroute
+							watch || metadata.has_reroute
 						);
 					}
 
+					// Unlike the SSR watcher, each client build is started from scratch
+					// and reads its inputs again. Node indexes may have changed.
+					if (watch && kit.output.bundleStrategy === 'split') {
+						const input = /** @type {Record<string, string>} */ (
+							builder.environments.client.config.build.rolldownOptions.input
+						);
+						for (const key in input) {
+							if (key.startsWith('nodes/')) delete input[key];
+						}
+						Object.assign(input, get_client_node_input());
+					}
 					const client_build = await builder.build(builder.environments.client);
 					const client_chunks = await normalise_build(
 						builder.environments.client.name,
@@ -944,32 +989,6 @@ export function plugin_compile(
 			// `vite build --watch`
 			let rebuild = false;
 
-			const before_ssr_build_rerun = async () => {
-				rebuild = true;
-
-				// these are set once per plugin initialisation or when the config hook
-				// runs. However, those don't re-run during watch mode. So, we need to
-				// re-initialise them manually here
-				manifest_data = create_manifest_data(kit, root);
-				set_manifest_data(manifest_data);
-				sync.all(kit, root, manifest_data);
-
-				tracked_features = {};
-
-				finalise = null;
-
-				fs.mkdirSync(out, { recursive: true });
-
-				await load_and_validate_params({
-					routes: manifest_data.routes,
-					params_path: manifest_data.params,
-					root
-				});
-			};
-
-			ssr_build.on('change', before_ssr_build_rerun);
-			ssr_build.on('restart', before_ssr_build_rerun);
-
 			/** @type {PromiseWithResolvers<void>} */
 			const task = Promise.withResolvers();
 
@@ -980,6 +999,14 @@ export function plugin_compile(
 
 				if (event.code === 'BUNDLE_END') {
 					try {
+						if (rebuild) {
+							await load_and_validate_params({
+								routes: manifest_data.routes,
+								params_path: manifest_data.params,
+								root
+							});
+						}
+
 						await process_ssr_build(
 							/** @type {Rolldown.RolldownOutput['output']} */ (
 								watch_build_output.get(builder.environments.ssr.name)
@@ -989,10 +1016,15 @@ export function plugin_compile(
 						// the deferred steps here on subsequent builds
 						if (rebuild) await finalise?.();
 					} catch (e) {
-						return task.reject(e);
+						if (!rebuild) return task.reject(e);
+
+						// The initial build has already settled task.promise.
+						const error = coalesce_to_error(e);
+						builder.config.logger.error(error.stack || error.message, { error });
 					} finally {
 						await event.result.close();
 					}
+					rebuild = true;
 					return task.resolve();
 				}
 			});
