@@ -448,7 +448,7 @@ async function prerender({
 			// this seems circuitous, but using new URL allows us to not care
 			// whether dependency_path is encoded or not
 			const encoded_dependency_path = new URL(dependency_path, 'http://localhost').pathname;
-			const decoded_dependency_path = decode_uri(encoded_dependency_path);
+			const decoded_dependency_path = decode_uri_safe(encoded_dependency_path);
 
 			const headers = Object.fromEntries(result.response.headers);
 
