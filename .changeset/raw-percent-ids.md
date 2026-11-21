@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: don't fail prerendering when an id or anchor name contains a raw `%`
+fix: don't fail prerendering when an id, anchor name, or link contains a raw `%`

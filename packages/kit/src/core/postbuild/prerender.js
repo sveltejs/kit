@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
-import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
+import { decode_uri, decode_uri_safe, is_root_relative, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { write } from '../sync/utils.js';
@@ -516,7 +516,7 @@ async function prerender({
 				}
 
 				if (hash) {
-					const key = decode_uri(pathname + hash);
+					const key = decode_uri_safe(pathname + hash);
 
 					if (!expected_hashlinks.has(key)) {
 						expected_hashlinks.set(key, new Set());
@@ -525,7 +525,7 @@ async function prerender({
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				void enqueue(decoded, decode_uri(pathname), pathname);
+				void enqueue(decoded, decode_uri_safe(pathname), pathname);
 			}
 		}
 	}

@@ -1,4 +1,4 @@
-import { resolve, decode_uri } from '../../utils/url.js';
+import { resolve, decode_uri_safe } from '../../utils/url.js';
 import { decode } from './entities.js';
 
 const DOCTYPE = 'DOCTYPE';
@@ -12,19 +12,6 @@ const TAG_CHAR = /[a-zA-Z0-9]/;
 const ATTRIBUTE_NAME = /[^\t\n\f />"'=]/;
 
 const WHITESPACE = /[\s\n\r]/;
-
-/**
- * Percent-decodes an id or anchor name, leaving it as-is if it isn't valid percent-encoding
- * (`id="100%"` is valid HTML, but `decodeURI` throws on it)
- * @param {string} value
- */
-function decode_id(value) {
-	try {
-		return decode_uri(value);
-	} catch {
-		return value;
-	}
-}
 
 const CRAWLABLE_META_NAME_ATTRS = new Set([
 	'og:url',
@@ -207,11 +194,11 @@ export function crawl(html, base) {
 				}
 
 				if (id) {
-					ids.push(decode_id(id));
+					ids.push(decode_uri_safe(id));
 				}
 
 				if (name && tag === 'A') {
-					ids.push(decode_id(name));
+					ids.push(decode_uri_safe(name));
 				}
 
 				if (src) {
