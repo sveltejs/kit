@@ -5,7 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { afterEach, assert, beforeEach, describe, expect, test } from 'vitest';
 import create_manifest_data from '../create_manifest_data/index.js';
-import { tweak_types, write_all_types } from './index.js';
+import { tweak_types, write_all_types, write_types } from './index.js';
 import { write_app_types } from '../write_app_types.js';
 import { validate_config } from '../../config/index.js';
 import { write_env } from '../write_env.js';
@@ -404,4 +404,44 @@ describe('Cleans up unused files', () => {
 			assert.equal(fs.statSync(file).mtimeMs, then.getTime(), file);
 		}
 	});
+});
+
+test('refreshes layout types when a page gains or loses a load function', () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-write-types-'));
+	const routes = path.join(root, 'src/routes');
+	const page = path.join(routes, 'sub/+page.js');
+	fs.mkdirSync(path.join(routes, 'sub'), { recursive: true });
+	fs.writeFileSync(path.join(routes, '+layout.server.js'), 'export function load() {}');
+	fs.writeFileSync(path.join(routes, '+page.svelte'), '');
+	fs.writeFileSync(path.join(routes, '+page.js'), 'export function load() {}');
+	fs.writeFileSync(path.join(routes, 'sub/+page.svelte'), '');
+	fs.writeFileSync(page, '');
+
+	const config = validate_config({});
+	config.files.assets = path.join(root, 'static');
+	config.files.params = path.join(root, 'src/params');
+	config.files.routes = routes;
+	config.outDir = path.join(root, '.svelte-kit');
+	const manifest = create_manifest_data(config, root);
+
+	// a layout `load` may leave required `App.PageData` keys to its pages only if they all have a `load`
+	const lenient = () =>
+		fs
+			.readFileSync(path.join(config.outDir, 'types/src/routes/$types.d.ts'), 'utf-8')
+			.includes('LayoutServerLoad<OutputData extends Partial');
+
+	try {
+		write_all_types(config, manifest, root);
+		assert.ok(!lenient());
+
+		fs.writeFileSync(page, 'export function load() {}');
+		write_types(config, manifest, page, root);
+		assert.ok(lenient());
+
+		fs.writeFileSync(page, '');
+		write_types(config, manifest, page, root);
+		assert.ok(!lenient());
+	} finally {
+		fs.rmSync(root, { force: true, recursive: true });
+	}
 });
