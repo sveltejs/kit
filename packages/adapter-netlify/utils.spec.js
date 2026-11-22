@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { matches } from './utils.js';
+import { matches, resolve_runtime } from './utils.js';
 
 /**
  * Helper to create a static route segment
@@ -27,6 +27,19 @@ function dynamic_segment(content) {
 function rest_segment(content) {
 	return { rest: true, dynamic: true, content };
 }
+
+describe('resolve_runtime', () => {
+	test('edge: true cannot be combined with nodeVersion', () => {
+		expect(() => resolve_runtime({ edge: true, nodeVersion: 'nodejs24.x' })).toThrow(
+			'Cannot combine `edge: true` with `nodeVersion`'
+		);
+	});
+
+	test('rejects a nodeVersion that is not in the nodejs<major>.x format', () => {
+		// @ts-expect-error
+		expect(() => resolve_runtime({ nodeVersion: '24' })).toThrow('Invalid `nodeVersion` "24"');
+	});
+});
 
 describe('matches', () => {
 	test('two identical static routes match', () => {
