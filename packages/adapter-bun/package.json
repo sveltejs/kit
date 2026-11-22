@@ -46,7 +46,7 @@
 	},
 	"dependencies": {
 		"@sveltejs/adapter-server": "workspace:^",
-		"bun-types": "^1.3.14"
+		"bun-types": "^1.4.0"
 	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^3.0.0-next.0"

@@ -314,7 +314,7 @@ importers:
         specifier: workspace:^
         version: link:../adapter-server
       bun-types:
-        specifier: ^1.3.14
+        specifier: ^1.4.0
         version: 1.4.2
     devDependencies:
       '@playwright/test':
