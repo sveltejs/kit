@@ -7,7 +7,7 @@ const app = deploy(import.meta.dirname);
 
 test('explicit nodeVersion is included in function metadata', () => {
 	const entrypoint = fs.readFileSync(
-		path.resolve(import.meta.dirname, '.netlify/v1/functions/sveltekit-render.mjs'),
+		path.join(app, '.netlify/v1/functions/sveltekit-render.mjs'),
 		'utf-8'
 	);
 	const function_config = JSON.parse(entrypoint.match(/export const config = (\{[\s\S]*?\});/)[1]);
