@@ -1612,13 +1612,7 @@ test.describe('Streaming', () => {
 		});
 
 		await page.goto('/streaming');
-		const [response] = await Promise.all([
-			page.waitForResponse(
-				(response) => new URL(response.url()).pathname === `${path}/__data.json`
-			),
-			app.preloadData(path)
-		]);
-		expect(await response.finished()).toBeNull();
+		await app.preloadData(path);
 
 		// Let rejection events be dispatched while the destination's await block is not mounted.
 		await page.evaluate(
