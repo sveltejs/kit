@@ -28,3 +28,14 @@ test('disable_scroll_handling is consumed by the next navigation, reset or not',
 	restore_scroll(url, true, null);
 	expect(window.scrollTo).toHaveBeenCalledTimes(2);
 });
+
+test.each([
+	['100%', '#100%'],
+	['a%20b', '#a%20b'],
+	['a b', '#a%20b']
+])('scrolls to the element with id "%s" for %s', (id, hash) => {
+	document.body.append(Object.assign(document.createElement('div'), { id }));
+	restore_scroll(new URL(`/${hash}`, location.href), true, null);
+	expect(Element.prototype.scrollIntoView).toHaveBeenCalledOnce();
+	expect(window.scrollTo).not.toHaveBeenCalled();
+});

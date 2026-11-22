@@ -1,6 +1,7 @@
 import { DEV } from 'esm-env';
 import { PRELOAD_PRIORITIES } from './constants.js';
 import * as w from '../../messages/client-warnings.js';
+import { percent_decode } from '../../utils/url.js';
 
 export const origin = location.origin;
 
@@ -245,7 +246,10 @@ export function is_external_url(url, base, hash_routing) {
  */
 export function get_hash_element(url, hash_routing) {
 	const id = hash_routing ? (url.hash.split('#', 3)[2] ?? '') : url.hash.slice(1);
-	return id ? document.getElementById(decodeURIComponent(id)) : null;
+	if (!id) return null;
+
+	// browsers look for the fragment as written before percent-decoding it
+	return document.getElementById(id) ?? document.getElementById(percent_decode(id));
 }
 
 /** @type {Set<string> | null} */

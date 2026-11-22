@@ -100,6 +100,11 @@ test.describe('hash based navigation', () => {
 		expect(url.hash).toBe('#/anchor#test');
 	});
 
+	test('loads a url whose anchor has a raw percent', async ({ page }) => {
+		await page.goto('/#/anchor#100%');
+		await expect(page.locator('#test')).toHaveText('#test');
+	});
+
 	test('navigation history works', async ({ page }) => {
 		await page.goto('/');
 
