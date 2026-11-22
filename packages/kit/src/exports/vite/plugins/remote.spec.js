@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { assert, expect, onTestFinished, test, vi } from 'vitest';
 import * as vite from 'vite';
@@ -9,7 +10,7 @@ import { plugin_remote } from './remote.js';
 // Inspect the collection, not the manifest object: duplicate hashes in the
 // collection already produce the correct manifest, but retain every transform.
 test('remote metadata stays unique across dev transforms', async () => {
-	const root = fs.mkdtempSync(path.resolve('test/remote-metadata-'));
+	const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'kit-remote-metadata-'));
 	onTestFinished(() => fs.rmSync(root, { recursive: true, force: true }));
 
 	const set_metadata = vi.fn();
