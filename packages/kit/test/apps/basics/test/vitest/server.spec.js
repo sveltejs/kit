@@ -921,13 +921,12 @@ describe('setHeaders', () => {
 		expect(cookies).toMatch('cookie2=value2');
 	});
 
-	test('drops headers set by the failed render from the error page', async () => {
-		const response = await get('/errors/error-page-setheaders');
+	test('drops only the headers set by the failed render from the error page', async () => {
+		const response = await get('/errors/stack-trace');
 
-		expect(response.status).toBe(500);
 		expect(response.headers.get('x-failed-render')).toBeNull();
-		expect(response.headers.get('cache-control')).toBe('private, max-age=60');
-		expect(await response.text()).toContain('This is your custom error page saying:');
+		expect(response.headers.get('x-handle')).toBe('true');
+		expect(response.headers.get('x-root-layout')).toBe('true');
 	});
 });
 

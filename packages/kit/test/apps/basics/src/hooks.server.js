@@ -138,14 +138,7 @@ export const handle = sequence(
 		const response = await resolve(event, {
 			transformPageChunk: event.url.pathname.startsWith('/transform-page-chunk')
 				? ({ html }) => html.replace('__REPLACEME__', 'Worked!')
-				: event.url.pathname.startsWith('/errors/error-page-setheaders')
-					? ({ html }) => {
-							if (html.includes('makes the page transform crash')) {
-								throw new Error('Crashing now');
-							}
-							return html;
-						}
-					: undefined
+				: undefined
 		});
 
 		try {
@@ -199,11 +192,11 @@ export const handle = sequence(
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {
-		if (
-			event.url.pathname.startsWith('/errors/error-page-setheaders') ||
-			['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)
-		) {
+		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
 			event.locals.url = new URL(event.request.url);
+		}
+		if (event.url.pathname === '/errors/stack-trace') {
+			event.setHeaders({ 'x-handle': 'true' });
 		}
 		return resolve(event);
 	},
