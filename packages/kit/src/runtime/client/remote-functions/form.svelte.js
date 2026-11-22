@@ -19,6 +19,7 @@ import { categorize_updates, fail_unhandled_refreshes, remote_request } from './
 import { createAttachmentKey } from 'svelte/attachments';
 import {
 	convert_formdata,
+	fill_absent_fields,
 	flatten_issues,
 	create_field_proxy,
 	deep_set,
@@ -93,6 +94,7 @@ export function form(id) {
 				if (page.url.search) {
 					const params = new URLSearchParams(page.url.search);
 					params.delete('/remote');
+					params.delete('/fields');
 					cached_query = params.toString();
 				} else {
 					cached_query = '';
@@ -193,6 +195,18 @@ export function form(id) {
 		 */
 		function convert(form_data) {
 			const data = convert_formdata(action_id_without_key, form_data);
+
+			if (element) {
+				// the same fields the server-rendered form lists for a native submission
+				const names = Array.from(
+					/** @type {HTMLCollectionOf<HTMLInputElement>} */ (element.elements)
+				)
+					.filter((control) => control.type === 'checkbox' || control.type === 'select-multiple')
+					.map((control) => control.name);
+
+				fill_absent_fields(data, action_id_without_key, names);
+			}
+
 			if (key !== undefined && !('id' in data)) {
 				data.id = key;
 			}

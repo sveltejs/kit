@@ -131,6 +131,30 @@ export function convert_formdata(form_id, data) {
 	return result;
 }
 
+/**
+ * Gives fields that were rendered but left out of the submission by the browser their empty
+ * value: `false` for an unchecked checkbox, `[]` for a checkbox group or `<select multiple>`
+ * with nothing selected
+ * @param {Record<string, any>} data
+ * @param {string} form_id
+ * @param {Iterable<string>} keys the `name` attributes of the rendered fields
+ */
+export function fill_absent_fields(data, form_id, keys) {
+	const suffix = '/' + form_id;
+
+	for (const key of keys) {
+		if (!key.endsWith(suffix)) continue;
+
+		const field = parse_form_key(form_id, key);
+		if (field.type !== 'boolean' && !field.is_array) continue;
+
+		const path = split_path(field.name);
+		if (deep_get(data, path) !== undefined) continue;
+
+		deep_set(data, path, field.is_array ? [] : false);
+	}
+}
+
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
 const BINARY_FORM_VERSION = 0;
 const HEADER_BYTES = 1 + 4 + 2;
@@ -739,7 +763,8 @@ const public_issue = (issue) => ({ path: issue.path, message: issue.message });
  * 	set: (path: (string | number)[], value: any) => void,
  * 	get_issues: (path?: (string | number)[], all?: boolean) => Record<string, InternalRemoteFormIssue[]>,
  * 	get_touched: () => Record<string, boolean>,
- * 	get_dirty: () => Record<string, boolean>
+ * 	get_dirty: () => Record<string, boolean>,
+ * 	register?: (name: string) => void
  * }} FieldContext */
 
 /**
@@ -810,11 +835,17 @@ function create_field_method(context, path, prop) {
 					(type === 'checkbox' && typeof input_value === 'string');
 
 				const type_prefix = get_type_prefix(type, is_array, input_value);
+				const name = type_prefix + key + (is_array ? '[]' : '');
+
+				// these submit nothing when unchecked or empty, so the form has to say they exist
+				if ((type === 'checkbox' || type === 'select multiple') && path_regex.test(key)) {
+					context.register?.(name);
+				}
 
 				// Base properties for all input types
 				/** @type {Record<string, any>} */
 				const base_props = {
-					name: type_prefix + key + (is_array ? '[]' : '') + '/' + context.form_id,
+					name: name + '/' + context.form_id,
 					get 'aria-invalid'() {
 						const issues = context.get_issues();
 						return key in issues ? 'true' : undefined;

@@ -270,6 +270,12 @@ export async function render_response({
 	const head = new Head(rendered.head);
 	let body = rendered.body;
 
+	// tell a native submission which fields exist, because the browser omits the empty ones
+	for (const [action_id, names] of state.remote.fields ?? []) {
+		const action = `/remote=${action_id}`;
+		body = body.replaceAll(`${action}"`, `${action}&amp;/fields=${[...names].join(',')}"`);
+	}
+
 	/** @param {string} path */
 	const prefixed = (path) => client_path(path, { base, assets });
 

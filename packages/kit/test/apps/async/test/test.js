@@ -1196,6 +1196,163 @@ test.describe('remote functions', () => {
 	});
 });
 
+test.describe('fields the browser leaves out of a submission', () => {
+	const route = '/remote/form/absent-fields';
+
+	/** @param {import('@playwright/test').Page} page */
+	const settle = async (page, javaScriptEnabled = true) => {
+		if (javaScriptEnabled) await expect(page.locator('#hydrated')).toHaveText('true');
+	};
+
+	test('required booleans and arrays get their empty value', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#plain input[name^="name"]').fill('x');
+		await page.locator('#plain button').click();
+
+		await expect(page.locator('#plain-result')).toHaveText(
+			JSON.stringify({
+				name: 'x',
+				subscribe: false,
+				langs: [],
+				colors: [],
+				flags: [false, false, false],
+				nested: { notify: false }
+			})
+		);
+		await expect(page.locator('#plain-issues')).toHaveText('[]');
+
+		if (!javaScriptEnabled) {
+			// the page that answers a native submission must not carry the old list forward
+			const action = await page.locator('#plain').getAttribute('action');
+			expect(action?.split('/fields=')).toHaveLength(2);
+		}
+	});
+
+	test('a disabled checkbox is false however it is submitted', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#locked button').click();
+		await expect(page.locator('#locked-result')).toHaveText(JSON.stringify({ on: false }));
+	});
+
+	test('checked and selected values are kept', async ({ page, javaScriptEnabled }) => {
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#plain input[name^="name"]').fill('x');
+		await page.locator('#subscribe').check();
+		await page.locator('#plain input[value="css"]').check();
+		await page.locator('#plain select').selectOption('green');
+		await page.locator('#plain .flag').nth(1).check();
+		await page.locator('#plain button').click();
+
+		await expect(page.locator('#plain-result')).toHaveText(
+			JSON.stringify({
+				name: 'x',
+				subscribe: true,
+				langs: ['css'],
+				colors: ['green'],
+				flags: [false, true, false],
+				nested: { notify: false }
+			})
+		);
+	});
+
+	test('a field that was not rendered stays absent', async ({ page, javaScriptEnabled }) => {
+		await page.goto(`${route}?extra`);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#plain button').click();
+		await expect(page.locator('#plain-result')).toContainText('"extra":false');
+
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#plain button').click();
+		await expect(page.locator('#plain-result')).toContainText('"notify":false');
+		await expect(page.locator('#plain-result')).not.toContainText('extra');
+	});
+
+	test('a required consent checkbox reports its own message on its own field', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#consent button').click();
+
+		await expect(page.locator('#agree-issues')).toContainText('You must agree');
+		await expect(page.locator('#terms-issues')).toContainText('Accept the terms');
+		await expect(page.locator('#consent-result')).toHaveText('none');
+
+		await page.locator('#agree').check();
+		await page.locator('#terms').check();
+		await page.locator('#consent button').click();
+
+		await expect(page.locator('#consent-result')).toHaveText('accepted');
+	});
+
+	test('keyed instances get their own fields', async ({ page, javaScriptEnabled }) => {
+		await page.goto(route);
+		await settle(page, javaScriptEnabled);
+
+		await page.locator('#keyed button').click();
+		await expect(page.locator('#keyed-result')).toHaveText(
+			JSON.stringify({ id: 'a b', done: false })
+		);
+	});
+
+	test('hydrating the form logs nothing', async ({ page, javaScriptEnabled }) => {
+		test.skip(!javaScriptEnabled);
+
+		/** @type {string[]} */
+		const messages = [];
+		page.on('console', (message) => {
+			if (message.type() === 'warning' || message.type() === 'error') messages.push(message.text());
+		});
+		page.on('pageerror', (error) => messages.push(error.message));
+
+		await page.goto(route);
+		await settle(page);
+
+		expect(messages).toEqual([]);
+	});
+
+	test('a native submission without the field list behaves as before', async ({
+		page,
+		javaScriptEnabled
+	}) => {
+		test.skip(javaScriptEnabled);
+
+		await page.goto(route);
+
+		const action = await page.locator('#plain').getAttribute('action');
+		expect(action).toContain('/fields=');
+
+		await page
+			.locator('#plain')
+			.evaluate((form) =>
+				form.setAttribute('action', (form.getAttribute('action') ?? '').split('&/fields=')[0])
+			);
+
+		await page.locator('#plain input[name^="name"]').fill('x');
+		await page.locator('#plain button').click();
+
+		await expect(page.locator('#plain-result')).toHaveText('null');
+		await expect(page.locator('#plain-issues')).not.toHaveText('[]');
+	});
+});
+
 test.describe('server error boundaries', () => {
 	test('catches server render error and shows root +error.svelte', async ({ page }) => {
 		await page.goto('/server-error-boundary');

@@ -751,35 +751,11 @@ function form_tests() {
 	// @ts-expect-error
 	f12.fields.c.as('text');
 
-	// non-optional booleans
-	form(
-		// @ts-expect-error
-		null as unknown as StandardSchemaV1<{
-			a: boolean;
-		}>,
-		() => {}
-	);
-	form(
-		// @ts-expect-error
-		null as unknown as StandardSchemaV1<{
-			a: boolean[];
-		}>,
-		() => {}
-	);
-	form(
-		// @ts-expect-error
-		null as unknown as StandardSchemaV1<{
-			nested?: { a: boolean };
-			b?: boolean;
-		}>,
-		() => {}
-	);
-	form(
-		null as unknown as StandardSchemaV1<{
-			a?: boolean;
-		}>,
-		() => {}
-	);
+	// required booleans are allowed, because a rendered checkbox always has a value
+	form(null as unknown as StandardSchemaV1<{ a: boolean }>, () => {});
+	form(null as unknown as StandardSchemaV1<{ a: true }>, () => {});
+	form(null as unknown as StandardSchemaV1<{ a: boolean[] }>, () => {});
+	form(null as unknown as StandardSchemaV1<{ nested?: { a: boolean }; b?: boolean }>, () => {});
 }
 form_tests();
 

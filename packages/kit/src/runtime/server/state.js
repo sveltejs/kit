@@ -9,6 +9,7 @@ function transient_fields() {
 			explicit: null,
 			implicit: null,
 			forms: null,
+			fields: null,
 			requested: null,
 			ignored: null,
 			batches: null,

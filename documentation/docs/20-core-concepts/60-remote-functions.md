@@ -432,7 +432,7 @@ const datingProfile = v.object({
 	photo: v.file(),
 	info: v.object({
 		height: v.number(),
-		likesDogs: v.optional(v.boolean(), false)
+		likesDogs: v.boolean()
 	}),
 	attributes: v.array(v.string())
 });
@@ -477,7 +477,7 @@ export const createProfile = form(datingProfile, (data) => { /* ... */ });
 
 Because our form contains a `file` input, we've added an `enctype="multipart/form-data"` attribute. The values for `info.height` and `info.likesDogs` are coerced to a number and a boolean respectively.
 
-> [!NOTE] If a `checkbox` input is unchecked, the value is not included in the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) object that SvelteKit constructs the data from. As such, we have to give the value a default of `false` in our schema, rather than merely marking it optional. In Valibot that means using `v.optional(v.boolean(), false)` instead of just `v.boolean()`, whereas in Zod it means using `z.boolean().default(false)` instead of just `z.boolean()`.
+> [!NOTE] A browser leaves an unchecked `checkbox` out of the [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) it submits. SvelteKit sets the field to `false` before validating the data, so the schema can use `v.boolean()`. For a checkbox that has to be checked, such as agreeing to terms of service, use `v.literal(true)`.
 
 In the case of `radio` and `checkbox` inputs that all belong to the same field, the `value` must be specified as a second argument to `.as(...)`:
 
@@ -501,7 +501,7 @@ import { operatingSystems, languages } from './constants';
 export const survey = form(
 	v.object({
 		operatingSystem: v.picklist(operatingSystems),
-		languages: v.optional(v.array(v.picklist(languages)), []),
+		languages: v.array(v.picklist(languages)),
 	}),
 	(data) => { /* ... */ },
 );
@@ -555,7 +555,7 @@ Alternatively, you could use `select` and `select multiple`:
 </form>
 ```
 
-> [!NOTE] As with unchecked `checkbox` inputs, if no selections are made then the data will be `undefined`. For this reason, the `languages` field uses `v.optional(v.array(...), [])` rather than just `v.array(...)`.
+> [!NOTE] As with an unchecked `checkbox`, a browser submits nothing for `languages` when no option is selected. SvelteKit sets the field to an empty array before validating the data.
 
 ### Programmatic validation
 

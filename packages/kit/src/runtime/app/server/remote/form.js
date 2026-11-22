@@ -1,5 +1,5 @@
 /** @import { RemoteFormInput, RemoteForm, RemoteFormInvalidField } from '$app/server' */
-/** @import { InternalRemoteFormIssue, MaybePromise, HasNonOptionalBoolean, RemoteFormInternals } from 'types' */
+/** @import { InternalRemoteFormIssue, MaybePromise, RemoteFormInternals } from 'types' */
 /** @import { StandardSchemaV1 } from '@standard-schema/spec' */
 import { get_request_store } from '@sveltejs/kit/internal/server';
 import {
@@ -48,7 +48,7 @@ import * as e from '../../../../messages/server-errors.js';
  * @template {StandardSchemaV1<RemoteFormInput, Record<string, any>>} Schema
  * @template Output
  * @overload
- * @param {true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? 'Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked.' : Schema} validate
+ * @param {Schema} validate
  * @param {(data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>} fn
  * @returns {RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>}
  * @since 2.27
@@ -153,16 +153,18 @@ export function form(validate_or_fn, maybe_fn) {
 
 		Object.defineProperty(instance, '__', { value: __ });
 
+		const get_action_id = () => (__.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id);
+
 		Object.defineProperty(instance, 'action', {
 			get: () => {
 				const { event, state } = get_request_store();
 				const search = new URLSearchParams(state.prerendering ? '' : event.url.search);
 				search.delete('/remote');
+				search.delete('/fields');
 
 				const query = search.toString();
-				const action_id = __.key ? `${__.id}/${encodeURIComponent(__.key)}` : __.id;
 
-				return `?${query ? `${query}&` : ''}/remote=${action_id}`;
+				return `?${query ? `${query}&` : ''}/remote=${get_action_id()}`;
 			},
 			enumerable: true
 		});
@@ -195,7 +197,15 @@ export function form(validate_or_fn, maybe_fn) {
 					get_issues: () =>
 						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
 					get_touched: () => ({}),
-					get_dirty: () => ({})
+					get_dirty: () => ({}),
+					register: (name) => {
+						const { remote } = get_request_store().state;
+						const action_id = get_action_id();
+
+						let names = (remote.fields ??= new Map()).get(action_id);
+						if (!names) remote.fields.set(action_id, (names = new Set()));
+						names.add(name);
+					}
 				});
 			}
 		});

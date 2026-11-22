@@ -14,7 +14,7 @@ import {
 	get_action_location,
 	method_not_allowed_result
 } from './page/actions.js';
-import { deserialize_binary_form } from '../form-utils.js';
+import { deserialize_binary_form, fill_absent_fields } from '../form-utils.js';
 import { text_encoder } from '../utils.js';
 import { with_version_header } from './utils.js';
 import { manifest } from './internal.js';
@@ -585,6 +585,16 @@ async function handle_remote_form_post_internal(event, state, id) {
 		const __ = /** @type {RemoteFormInternals} */ (form.__);
 
 		const { data, meta, form_data } = await deserialize_binary_form(event.request, __.id);
+
+		// a native submission lists the fields the browser may have left out
+		const fields = event.url.searchParams.get('/fields');
+		if (fields) {
+			fill_absent_fields(
+				data,
+				__.id,
+				fields.split(',').map((name) => `${name}/${__.id}`)
+			);
+		}
 
 		if (action_id && !('id' in data)) {
 			data.id = JSON.parse(decodeURIComponent(action_id));

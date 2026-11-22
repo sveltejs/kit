@@ -9,6 +9,7 @@ import {
 	deep_get,
 	deep_set,
 	deserialize_binary_form,
+	fill_absent_fields,
 	flatten_issues,
 	group_formdata,
 	parse_form_key,
@@ -245,6 +246,45 @@ describe('convert_formdata', () => {
 		} finally {
 			await worker.terminate();
 		}
+	});
+});
+
+describe('fill_absent_fields', () => {
+	const keys = (/** @type {string[]} */ ...names) => names.map((name) => name + '/form');
+
+	test('gives absent checkboxes, groups and multi-selects their empty value', () => {
+		const data = { name: 'x' };
+		fill_absent_fields(
+			data,
+			'form',
+			keys('b:a', 'langs[]', 'b:nested.on', 'b:flags[0]', 'b:flags[1]')
+		);
+
+		expect(data).toEqual({
+			name: 'x',
+			a: false,
+			langs: [],
+			nested: { on: false },
+			flags: [false, false]
+		});
+	});
+
+	test('leaves submitted values alone', () => {
+		const data = { a: true, langs: ['css'], flags: [undefined, true] };
+		fill_absent_fields(data, 'form', keys('b:a', 'langs[]', 'b:flags[0]', 'b:flags[1]'));
+
+		expect(data).toEqual({ a: true, langs: ['css'], flags: [false, true] });
+	});
+
+	test('ignores fields that always submit and fields of other forms', () => {
+		const data = {};
+		fill_absent_fields(data, 'form', [...keys('name', 'n:count'), 'b:a/other', 'b:a']);
+
+		expect(data).toEqual({});
+	});
+
+	test.each(POLLUTION_ATTACKS)('rejects prototype pollution via %s', (name) => {
+		expect(() => fill_absent_fields({}, 'form', keys('b:' + name))).toThrow();
 	});
 });
 

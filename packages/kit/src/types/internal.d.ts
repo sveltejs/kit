@@ -780,6 +780,8 @@ export interface RequestState {
 		>;
 		/** Instances created via `myForm.for(...)` */
 		forms: null | Map<string, any>;
+		/** A map of form action ID to the names of rendered fields that submit nothing when empty */
+		fields: null | Map<string, Set<string>>;
 		/** A map of remote function ID to payloads requested for refreshing by the client */
 		requested: null | Map<string, Set<string>>;
 		/** Client-requested updates intentionally ignored by `requested(...).ignoreAll()` or `ignore` */
