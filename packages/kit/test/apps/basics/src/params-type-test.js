@@ -23,5 +23,11 @@ async function _type_test() {
 		// @ts-expect-error
 		{ number: '1' }
 	);
+
+	resolve('/routing/trailing-slash/always');
+	resolve('/routing/trailing-slash/always/');
+	resolve('/routing/trailing-slash/ignore/');
+	// @ts-expect-error
+	resolve('/routing/trailing-slash/never/');
 }
 _type_test;

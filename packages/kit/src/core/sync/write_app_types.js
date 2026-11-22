@@ -243,8 +243,9 @@ function generate_app_types(manifest_data, config, dir) {
 
 		if (is_app_route(route)) {
 			app_route_ids.push(id);
-			for (const id of get_trailing_slash_variants(route.id, route)) {
-				resolvable_app_route_ids.push(s(id));
+			// `resolve` accepts every route ID as-is, whatever its `trailingSlash` option
+			for (const variant of new Set([route.id, ...get_trailing_slash_variants(route.id, route)])) {
+				resolvable_app_route_ids.push(s(variant));
 			}
 		}
 
