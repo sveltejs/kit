@@ -18,13 +18,12 @@ const is_whitespace = (/** @type {string} */ char) => /\s/.test(char);
  *   exports: any[];
  *  } | null} Proxy
  *
- *  @typedef {{
- *   server: Proxy,
- *   universal: Proxy
- *  }} Proxies
- *
- *  @typedef {Map<import('types').PageNode, {route: import('types').RouteData, proxies: Proxies}>} RoutesMap
+ *  @typedef {Map<import('types').PageNode, import('types').RouteData>} RoutesMap
  */
+
+// proxies are kept until the module they were made from changes
+/** @type {Map<string, { content: string, proxy: Proxy }>} */
+const proxy_cache = new Map();
 
 /**
  * Recursively remove empty directories under `root`, leaving `root` itself.
@@ -57,43 +56,24 @@ function remove_empty_directories(dir, root = dir) {
 export function write_all_types(config, manifest_data, root) {
 	if (!ts) return;
 
-	const types_dir = `${config.outDir}/types`;
-
-	// empty out files that no longer need to exist
-	const routes_dir = remove_relative_parent_traversals(
-		posixify(path.relative(root, config.files.routes))
-	);
-	const expected_directories = new Set(
-		manifest_data.routes.map((route) => path.posix.join(routes_dir, route.id).replace(/\/$/, ''))
-	);
-
-	if (fs.existsSync(types_dir)) {
-		for (const file of walk(types_dir)) {
-			const dir = path.posix.dirname(file);
-			if (!expected_directories.has(dir)) {
-				fs.rmSync(path.join(types_dir, file), { force: true, recursive: true });
-			}
-		}
-		// Stale files are removed above; empty route directories are left behind.
-		remove_empty_directories(types_dir);
-	}
+	for (const node of manifest_data.nodes) refresh_proxies(node, root);
 
 	const routes_map = create_routes_map(manifest_data);
-	// For each directory, write $types.d.ts
-	for (const route of manifest_data.routes) {
-		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
+	/** @type {Map<string, string>} */
+	const files = new Map();
+	for (const route of manifest_data.routes) generate_types(config, routes_map, route, root, files);
 
-		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
-		fs.mkdirSync(outdir, { recursive: true });
+	for (const [file, code] of files) write_if_changed(file, code);
 
-		// track which old files end up being surplus to requirements
-		const to_delete = new Set(
-			fs
-				.readdirSync(outdir, { withFileTypes: true })
-				.filter((entry) => entry.isFile())
-				.map((entry) => entry.name)
-		);
-		update_types(config, routes_map, route, root, to_delete);
+	// remove files that no longer need to exist
+	const types_dir = path.join(config.outDir, 'types');
+	if (fs.existsSync(types_dir)) {
+		for (const file of walk(types_dir)) {
+			if (!files.has(path.join(types_dir, file))) {
+				fs.rmSync(path.join(types_dir, file), { force: true });
+			}
+		}
+		remove_empty_directories(types_dir);
 	}
 }
 
@@ -117,35 +97,50 @@ export function write_types(config, manifest_data, file, root) {
 
 	const route = manifest_data.routes.find((route) => route.id === id);
 	if (!route) return;
-	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
 
-	update_types(config, create_routes_map(manifest_data), route, root);
+	if (route.leaf) refresh_proxies(route.leaf, root);
+	if (route.layout) refresh_proxies(route.layout, root);
+
+	// a layout's types depend on the `load` exports of the pages below it
+	const routes_map = create_routes_map(manifest_data);
+	const routes = new Set([route]);
+	for (let node = route.leaf?.parent; node; node = node.parent) {
+		const layout_route = routes_map.get(node);
+		if (layout_route) routes.add(layout_route);
+	}
+
+	/** @type {Map<string, string>} */
+	const files = new Map();
+	for (const route of routes) generate_types(config, routes_map, route, root, files);
+
+	for (const [output, code] of files) write_if_changed(output, code);
 }
 
 /**
- * Collect all leafs into a leaf -> route map
+ * Collect all leafs and layouts into a node -> route map
  * @param {import('types').ManifestData} manifest_data
  */
 function create_routes_map(manifest_data) {
 	/** @type {RoutesMap} */
 	const map = new Map();
 	for (const route of manifest_data.routes) {
-		if (route.leaf) {
-			map.set(route.leaf, { route, proxies: { server: null, universal: null } });
-		}
+		if (route.leaf) map.set(route.leaf, route);
+		if (route.layout) map.set(route.layout, route);
 	}
 	return map;
 }
 
 /**
- * Update types for a specific route
+ * Generate types for a specific route
  * @param {import('types').ValidatedConfig} config
  * @param {RoutesMap} routes
  * @param {import('types').RouteData} route
  * @param {string} root The project root directory
- * @param {Set<string>} [to_delete]
+ * @param {Map<string, string>} files The generated files, by path
  */
-function update_types(config, routes, route, root, to_delete = new Set()) {
+function generate_types(config, routes, route, root, files) {
+	if (!route.leaf && !route.layout && !route.endpoint) return; // nothing to do
+
 	const routes_dir = remove_relative_parent_traversals(
 		posixify(path.relative(root, config.files.routes))
 	);
@@ -211,30 +206,10 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	}
 
 	if (route.leaf) {
-		let route_info = routes.get(route.leaf);
-		if (!route_info) {
-			// This should be defined, but belts and braces
-			route_info = { route, proxies: { server: null, universal: null } };
-			routes.set(route.leaf, route_info);
-		}
-
-		const {
-			declarations: d,
-			exports: e,
-			proxies
-		} = process_node(route.leaf, outdir, true, route_info.proxies, root);
+		const { declarations: d, exports: e } = process_node(route.leaf, outdir, true, files, root);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server) {
-			route_info.proxies.server = proxies.server;
-			if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		}
-		if (proxies.universal) {
-			route_info.proxies.universal = proxies.universal;
-			if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
-		}
 
 		if (route.leaf.server) {
 			exports.push(
@@ -258,21 +233,22 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		route.layout.child_pages?.forEach((page) => {
 			const leaf = routes.get(page);
 			if (leaf) {
-				if (leaf.route.page) ids.push(`"${leaf.route.id}"`);
+				if (leaf.page) ids.push(`"${leaf.id}"`);
 
-				for (const param of leaf.route.params) {
+				for (const param of leaf.params) {
 					// skip if already added
 					if (layout_params.some((p) => p.name === param.name)) continue;
 					layout_params.push({ ...param, optional: true });
 				}
 
-				ensureProxies(page, leaf.proxies, root);
+				const server = page.server ? get_proxy(page.server, true, root) : null;
+				const universal = page.universal ? get_proxy(page.universal, false, root) : null;
 
 				if (
 					// Be defensive - if a proxy doesn't exist (because it couldn't be created), assume a load function exists.
 					// If we didn't and it's a false negative, the user could wrongfully get a type error on layouts.
-					(leaf.proxies.server && !leaf.proxies.server.exports.includes('load')) ||
-					(leaf.proxies.universal && !leaf.proxies.universal.exports.includes('load'))
+					(server && !server.exports.includes('load')) ||
+					(universal && !universal.exports.includes('load'))
 				) {
 					all_pages_have_load = false;
 				}
@@ -293,24 +269,17 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 			'type LayoutParams = RouteParams & ' + generate_params_type(layout_params, outdir, config)
 		);
 
-		const {
-			exports: e,
-			declarations: d,
-			proxies
-		} = process_node(
+		const { exports: e, declarations: d } = process_node(
 			route.layout,
 			outdir,
 			false,
-			{ server: null, universal: null },
+			files,
 			root,
 			all_pages_have_load
 		);
 
 		exports.push(...e);
 		declarations.push(...d);
-
-		if (proxies.server?.modified) to_delete.delete(proxies.server.file_name);
-		if (proxies.universal?.modified) to_delete.delete(proxies.universal.file_name);
 
 		exports.push(
 			'export type LayoutProps = { params: LayoutParams; data: LayoutData; children: import("svelte").Snippet }'
@@ -329,23 +298,18 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 		.filter(Boolean)
 		.join('\n\n');
 
-	write_if_changed(`${outdir}/$types.d.ts`, output);
-	to_delete.delete('$types.d.ts');
-
-	for (const file of to_delete) {
-		fs.rmSync(path.join(outdir, file), { force: true });
-	}
+	files.set(path.join(outdir, '$types.d.ts'), output);
 }
 
 /**
  * @param {import('types').PageNode} node
  * @param {string} outdir
  * @param {boolean} is_page
- * @param {Proxies} proxies
+ * @param {Map<string, string>} files The generated files, by path
  * @param {string} root The project root directory
  * @param {boolean} [all_pages_have_load]
  */
-function process_node(node, outdir, is_page, proxies, root, all_pages_have_load = true) {
+function process_node(node, outdir, is_page, files, root, all_pages_have_load = true) {
 	const params = `${is_page ? 'Route' : 'Layout'}Params`;
 	const prefix = is_page ? 'Page' : 'Layout';
 
@@ -361,13 +325,11 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	/** @type {string} */
 	let data;
 
-	ensureProxies(node, proxies, root);
-
 	if (node.server) {
 		const basename = path.basename(node.server);
-		const proxy = proxies.server;
+		const proxy = get_proxy(node.server, true, root);
 		if (proxy?.modified) {
-			write_if_changed(`${outdir}/proxy${basename}`, proxy.code);
+			files.set(path.join(outdir, proxy.file_name), proxy.code);
 		}
 
 		server_data = get_data_type(node.server, 'null', proxy, true);
@@ -418,9 +380,9 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 	declarations.push(`type ${parent_type} = ${get_parent_type(node, 'LayoutData')};`);
 
 	if (node.universal) {
-		const proxy = proxies.universal;
+		const proxy = get_proxy(node.universal, false, root);
 		if (proxy?.modified) {
-			write_if_changed(`${outdir}/proxy${path.basename(node.universal)}`, proxy.code);
+			files.set(path.join(outdir, proxy.file_name), proxy.code);
 		}
 
 		const type = get_data_type(
@@ -448,7 +410,7 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 
 	exports.push(`export type ${prefix}Data = ${data};`);
 
-	return { declarations, exports, proxies };
+	return { declarations, exports };
 
 	/**
 	 * @param {string} file_path
@@ -476,41 +438,46 @@ function process_node(node, outdir, is_page, proxies, root, all_pages_have_load 
 }
 
 /**
- * This function populates the proxies object, if necessary and not already done.
- * Proxies are used to tweak the code of a file before it's typechecked.
- * They are needed in two places - when generating the types for a page or layout.
- * To not do the same work twice, we generate the proxies once and pass them around.
- *
+ * Read the modules of a page or layout again, in case they changed since their proxies were made
  * @param {import('types').PageNode} node
- * @param {Proxies} proxies
  * @param {string} root The project root directory
  */
-function ensureProxies(node, proxies, root) {
-	if (node.server && !proxies.server) {
-		proxies.server = createProxy(node.server, true, root);
-	}
-
-	if (node.universal && !proxies.universal) {
-		proxies.universal = createProxy(node.universal, false, root);
-	}
+function refresh_proxies(node, root) {
+	if (node.server) refresh_proxy(path.resolve(root, node.server), true);
+	if (node.universal) refresh_proxy(path.resolve(root, node.universal), false);
 }
 
 /**
+ * Parse a module again if it changed since its proxy was made
+ * @param {string} file
+ * @param {boolean} is_server
+ */
+function refresh_proxy(file, is_server) {
+	const content = fs.readFileSync(file, 'utf8');
+	let cached = proxy_cache.get(file);
+
+	if (cached?.content !== content) {
+		const proxy = tweak_types(content, is_server);
+		cached = { content, proxy: proxy && { ...proxy, file_name: `proxy${path.basename(file)}` } };
+		proxy_cache.set(file, cached);
+	}
+
+	return cached;
+}
+
+/**
+ * Proxies are used to tweak the code of a file before it's typechecked.
+ * They are needed in two places - when generating the types for a page or layout.
+ * To not do the same work twice, we generate the proxies once and keep them in `proxy_cache`.
+ *
  * @param {string} file_path
  * @param {boolean} is_server
  * @param {string} root The project root directory
  * @returns {Proxy}
  */
-function createProxy(file_path, is_server, root) {
-	const proxy = tweak_types(fs.readFileSync(path.resolve(root, file_path), 'utf8'), is_server);
-	if (proxy) {
-		return {
-			...proxy,
-			file_name: `proxy${path.basename(file_path)}`
-		};
-	} else {
-		return null;
-	}
+function get_proxy(file_path, is_server, root) {
+	const file = path.resolve(root, file_path);
+	return (proxy_cache.get(file) ?? refresh_proxy(file, is_server)).proxy;
 }
 
 /**
