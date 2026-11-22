@@ -18,6 +18,7 @@ import { disable_scroll_handling, restore_scroll } from './scroll.js';
 import {
 	find_anchor,
 	resolve_url,
+	get_hash_element,
 	get_link_info,
 	get_router_options,
 	is_external_url,
@@ -3203,17 +3204,16 @@ function _start_router() {
 			if (current_hash === hash) {
 				event.preventDefault();
 
-				// We're already on /# and click on a link that goes to /#, or we're on
-				// /#top and click on a link that goes to /#top. In those cases just go to
-				// the top of the page, and avoid a history change.
-				if (hash === '' || (hash === 'top' && a.ownerDocument.getElementById('top') === null)) {
+				const element = get_hash_element(url, app.hash);
+
+				if (element) {
+					element.scrollIntoView();
+					element.focus();
+				} else if (hash === '' || hash === 'top') {
+					// We're already on /# and click on a link that goes to /#, or we're on
+					// /#top and click on a link that goes to /#top. In those cases just go to
+					// the top of the page, and avoid a history change.
 					scrollTo({ top: 0 });
-				} else {
-					const element = a.ownerDocument.getElementById(decodeURIComponent(hash));
-					if (element) {
-						element.scrollIntoView();
-						element.focus();
-					}
 				}
 
 				return;
