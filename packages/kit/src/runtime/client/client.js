@@ -604,8 +604,6 @@ async function _invalidate(reset_page_state = true) {
 		}
 	}
 
-	const prev_state = page.state;
-	const prev_shallow = page.shallow;
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
 		return;
@@ -626,16 +624,13 @@ async function _invalidate(reset_page_state = true) {
 		return;
 	}
 
-	apply_navigation_result(navigation_result);
-
-	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`).
-	// Must run after `apply_navigation_result`, which overwrites `state`/`shallow` with the fresh
-	// page object's `{}`/`null` values when the page changed.
+	// `pushState`/`replaceState` can change these mid-load without cancelling the invalidation
 	if (!reset_page_state) {
-		update_page({ state: prev_state });
+		navigation_result.props.page.state = page.state;
 	}
+	navigation_result.props.page.shallow = page.shallow;
 
-	update_page({ shallow: prev_shallow });
+	apply_navigation_result(navigation_result);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 
