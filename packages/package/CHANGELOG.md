@@ -1,5 +1,25 @@
 # @sveltejs/package
 
+## 3.0.3
+
+### Patch Changes
+
+- fix: remove transformed output files when sources are deleted in watch mode ([#17519](https://github.com/sveltejs/kit/pull/17519))
+
+## 3.0.2
+
+### Patch Changes
+
+- chore(deps): update dependency chokidar to v6 ([#17514](https://github.com/sveltejs/kit/pull/17514))
+
+- fix: exit after packaging when preprocessors leave resources running ([#17497](https://github.com/sveltejs/kit/pull/17497))
+
+## 3.0.1
+
+### Patch Changes
+
+- fix: emit component types for the installed Svelte version, rather than the oldest one the `svelte` dependency range allows ([#17330](https://github.com/sveltejs/kit/pull/17330))
+
 ## 3.0.0
 
 ### Major Changes

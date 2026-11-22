@@ -1,6 +1,15 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import process from 'node:process';
-import { assert, test, describe } from 'vitest';
-import { parse_isr_expiration, pattern_to_src, resolve_runtime } from './utils.js';
+import { afterEach, assert, beforeEach, test, describe } from 'vitest';
+import {
+	create_optional_peer_dependency_checker,
+	escape_src,
+	parse_isr_expiration,
+	pattern_to_src,
+	resolve_runtime
+} from './utils.js';
 
 // workaround so that TypeScript doesn't follow that import which makes it pick up that file and then error on missing import aliases
 const { parse_route_id } = await import(
@@ -38,6 +47,24 @@ test('pattern_to_src for route with rest parameter', () => {
 
 test('pattern_to_src for route with rest parameter in the middle', () => {
 	run_pattern_to_src_test('/foo/[...bar]/baz', '^/foo(?:/([^]*))?/baz/?');
+});
+
+describe('escape_src', () => {
+	test('matches prerendered paths literally', () => {
+		for (const path of ['/account/x|.*', '/blog/(a)[b]{1}+?', '/a$', '/a\\/b', '/^a']) {
+			const regex = new RegExp(`^${escape_src(path)}$`);
+			assert.ok(regex.test(path), path);
+		}
+
+		const regex = new RegExp(`^${escape_src('/account/x|.*')}$`);
+		assert.notOk(regex.test('/'));
+		assert.notOk(regex.test('/_app/immutable/entry/start.js'));
+	});
+
+	test('does not end with `$` or contain `\\/`', () => {
+		assert.equal(escape_src('/a$'), '/a\\x24');
+		assert.equal(escape_src('/a\\/b'), '/a\\x5c/b');
+	});
 });
 
 describe('parse_isr_expiration', () => {
@@ -92,14 +119,29 @@ describe('resolve_runtime', () => {
 		assert.equal(result, 'bun1.x');
 	});
 
-	test('throws an error when resolving to an invalid runtime', () => {
-		assert.throws(() => resolve_runtime('node18.x', undefined), /Unsupported runtime: node18.x/);
+	test.each([
+		'node18.x',
+		'nodejs028.x',
+		'nodejs18.x',
+		'nodejs23.x',
+		'nodejs25.x',
+		'nodejs100.x',
+		'nodejs2,.x'
+	])('throws an error when resolving to an invalid runtime (%s)', (runtime) => {
+		assert.throws(() => resolve_runtime(runtime), /Unsupported runtime/);
 	});
 
 	test('accepts a minor-pinned bun runtime', () => {
 		const result = resolve_runtime('bun1.4.x');
 		assert.equal(result, 'bun1.4.x');
 	});
+
+	test.each(['nodejs22.x', 'nodejs24.x', 'nodejs26.x', 'nodejs27.x', 'nodejs33.x', 'nodejs99.x'])(
+		'accepts %s',
+		(runtime) => {
+			assert.equal(resolve_runtime(runtime), runtime);
+		}
+	);
 
 	test('throws an error for an unsupported bun minor', () => {
 		assert.throws(() => resolve_runtime('bun1.9.x', undefined), /Unsupported runtime: bun1.9.x/);
@@ -144,5 +186,175 @@ describe('resolve_runtime with bun detected', () => {
 		with_bun('2.0.0', () => {
 			assert.throws(() => resolve_runtime(undefined, undefined), /Unsupported Bun version: 2/);
 		});
+	});
+});
+
+describe('resolve_runtime with node detected', () => {
+	/**
+	 * @param {string} node_version
+	 * @param {() => void} fn
+	 */
+	function with_node(node_version, fn) {
+		const node = Object.getOwnPropertyDescriptor(process.versions, 'node');
+		const bun = Object.getOwnPropertyDescriptor(process.versions, 'bun');
+		Object.defineProperty(process.versions, 'node', { value: node_version, configurable: true });
+		delete process.versions.bun;
+		try {
+			fn();
+		} finally {
+			if (node) Object.defineProperty(process.versions, 'node', node);
+			if (bun) Object.defineProperty(process.versions, 'bun', bun);
+		}
+	}
+
+	test.each([
+		['22.0.0', 'nodejs22.x'],
+		['24.1.0', 'nodejs24.x'],
+		['26.0.0', 'nodejs26.x'],
+		['27.0.0', 'nodejs27.x'],
+		['29.1.0', 'nodejs29.x'],
+		['99.0.0', 'nodejs99.x']
+	])('detects Node %s', (version, runtime) => {
+		with_node(version, () => {
+			assert.equal(resolve_runtime(undefined, undefined), runtime);
+		});
+	});
+
+	test.each(['18.0.0', '23.0.0', '25.0.0'])(
+		'throws for an unsupported Node major (%s)',
+		(version) => {
+			with_node(version, () => {
+				assert.throws(
+					() => resolve_runtime(undefined, undefined),
+					/Unsupported Node\.js version.*Please use an up-to-date Node version to build your project/
+				);
+			});
+		}
+	);
+});
+
+describe('optional peer dependency warnings', () => {
+	/** @type {string} */
+	let dir;
+	/** @type {string} */
+	let importer;
+	/** @type {ReturnType<typeof create_optional_peer_dependency_checker>} */
+	let check;
+
+	/** @param {string} file @param {string} content */
+	function write(file, content) {
+		fs.mkdirSync(path.dirname(file), { recursive: true });
+		fs.writeFileSync(file, content);
+	}
+
+	beforeEach(() => {
+		dir = fs.mkdtempSync(path.join(os.tmpdir(), 'vercel-optional-peers-'));
+		importer = path.join(dir, 'node_modules/fixture/dist/index.mjs');
+		write(importer, '');
+		write(
+			path.join(dir, 'node_modules/fixture/package.json'),
+			JSON.stringify({
+				peerDependencies: { 'absent-optional-peer': '*', '@optional/peer': '*' },
+				peerDependenciesMeta: {
+					'absent-optional-peer': { optional: true },
+					'@optional/peer': { optional: true }
+				}
+			})
+		);
+		check = create_optional_peer_dependency_checker();
+	});
+
+	afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+	test('recognizes scoped and unscoped optional peers, including subpaths', () => {
+		for (const name of [
+			'absent-optional-peer',
+			'absent-optional-peer/render',
+			'@optional/peer',
+			'@optional/peer/render'
+		]) {
+			assert.equal(check(name, importer), true);
+		}
+	});
+
+	test('does not suppress relative, absolute, internal or unknown imports', () => {
+		for (const name of ['./absent-optional-peer', '../absent-optional-peer', '#optional']) {
+			assert.equal(check(name, importer), false);
+		}
+		assert.equal(check(path.join(dir, 'absent-optional-peer'), importer), false);
+		assert.equal(check('absent-optional-peer', '(unknown)'), false);
+		assert.equal(check('absent-optional-peer', path.join(dir, 'missing.mjs')), false);
+	});
+
+	test('requires peer membership and an explicitly boolean optional flag', () => {
+		write(
+			path.join(dir, 'node_modules/fixture/package.json'),
+			JSON.stringify({
+				peerDependencies: { required: '*', truthy: '*', missing: '*' },
+				peerDependenciesMeta: {
+					required: { optional: false },
+					truthy: { optional: 'true' },
+					undeclared: { optional: true }
+				},
+				optionalDependencies: { optional: '*' }
+			})
+		);
+		for (const name of ['required', 'truthy', 'missing', 'undeclared', 'optional']) {
+			assert.equal(check(name, importer), false);
+		}
+	});
+
+	test('uses only the nearest manifest', () => {
+		write(path.join(dir, 'node_modules/fixture/dist/package.json'), '{}');
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('does not search past invalid metadata', () => {
+		write(path.join(dir, 'node_modules/fixture/dist/package.json'), '{');
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('does not cross node_modules into another package', () => {
+		fs.rmSync(path.join(dir, 'node_modules/fixture/package.json'));
+		write(
+			path.join(dir, 'package.json'),
+			JSON.stringify({
+				peerDependencies: { 'absent-optional-peer': '*' },
+				peerDependenciesMeta: { 'absent-optional-peer': { optional: true } }
+			})
+		);
+		assert.equal(check('absent-optional-peer', importer), false);
+	});
+
+	test('resolves symlinked importers to their own package metadata', () => {
+		const link = path.join(dir, 'linked.mjs');
+		fs.symlinkSync(importer, link);
+		write(path.join(dir, 'package.json'), '{}');
+		assert.equal(check('absent-optional-peer', link), true);
+	});
+
+	test('does not hide resolution failures for installed optional peers', () => {
+		write(path.join(dir, 'node_modules/@optional/peer/package.json'), '{}');
+		assert.equal(check('@optional/peer', importer), false);
+		assert.equal(check('@optional/peer/missing', importer), false);
+	});
+
+	test('does not hide resolution failures for broken linked optional peers', () => {
+		fs.symlinkSync(
+			path.join(dir, 'missing-workspace-peer'),
+			path.join(dir, 'node_modules/absent-optional-peer'),
+			'junction'
+		);
+		assert.equal(check('absent-optional-peer', importer), false);
+		assert.equal(check('absent-optional-peer/missing', importer), false);
+	});
+
+	test('does not share stale metadata between function bundles', () => {
+		assert.equal(check('absent-optional-peer', importer), true);
+		write(path.join(dir, 'node_modules/fixture/package.json'), '{}');
+		assert.equal(
+			create_optional_peer_dependency_checker()('absent-optional-peer', importer),
+			false
+		);
 	});
 });

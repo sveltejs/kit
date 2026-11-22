@@ -27,7 +27,6 @@ To solve this problem, SvelteKit generates `.d.ts` files for each of your endpoi
 
 ```ts
 /// file: .svelte-kit/types/src/routes/[foo]/[bar]/[baz]/$types.d.ts
-/// link: true
 import type * as Kit from '@sveltejs/kit';
 
 type RouteParams = {

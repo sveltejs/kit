@@ -101,6 +101,7 @@ test('passes validation errors to handleError without exposing issues by default
 		kind: 'validation',
 		error: { status: 400, message: 'Bad Request' },
 		issues,
+		remote: undefined,
 		event: store.current.event
 	});
 	expect(transformed).toEqual({ status: 400, message: 'Bad Request' });

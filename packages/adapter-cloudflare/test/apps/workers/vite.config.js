@@ -1,10 +1,11 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import adapter from '../../../index.js';
+import adapter from '@sveltejs/adapter-cloudflare';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	build: {
-		minify: false
+		minify: false,
+		sourcemap: true
 	},
 	plugins: [
 		sveltekit({

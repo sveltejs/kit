@@ -105,7 +105,7 @@ export function not_found(req, res, base) {
 	}
 }
 
-const query_pattern = /\?.*$/s;
+export const query_pattern = /\?.*$/s;
 
 /**
  * Removes cwd path from the start of the id and replaces any `#`-prefixed
@@ -347,15 +347,30 @@ export function comparable(value) {
 }
 
 /**
- * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
- * @param {import('vite').Plugin} plugin
+ * Whether SvelteKit adds the Vite DevTools dock, which Vite only adds to HTML it serves itself
+ * @see https://devtools.vite.dev/guide/#projects-without-an-html-entry
+ * @param {import('vite').ResolvedConfig} config
  * @returns {boolean}
  */
-export function uses_unsupported_html_hook(plugin) {
+export function adds_vite_devtools_dock(config) {
+	return (
+		config.command === 'serve' &&
+		config.plugins.some((plugin) => plugin.name === 'vite:devtools:injection')
+	);
+}
+
+/**
+ * Whether a plugin uses the `transformIndexHtml` hook, which SvelteKit apps don't support
+ * @param {import('vite').Plugin} plugin
+ * @param {boolean} [adds_dock] whether SvelteKit adds the Vite DevTools dock itself
+ * @returns {boolean}
+ */
+export function uses_unsupported_html_hook(plugin, adds_dock = false) {
 	// Vitest and Storybook invoke this hook for their own HTML, not the SvelteKit app
 	return (
 		!!plugin.transformIndexHtml &&
 		plugin.name !== 'vitest:browser:loader' &&
-		!plugin.name?.includes('storybook')
+		!plugin.name?.includes('storybook') &&
+		!(adds_dock && plugin.name === 'vite:devtools:injection')
 	);
 }

@@ -3,6 +3,7 @@ import process from 'node:process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { write_if_changed } from '../utils.js';
+import { ts } from '../ts.js';
 import {
 	ESSENTIAL_OPTIONS,
 	normalize_config,
@@ -14,14 +15,6 @@ import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
 import { posixify } from '../../../utils/os.js';
 import { bullet_list } from '../../../utils/format.js';
-
-/** @type {typeof import('typescript')} */
-let ts;
-try {
-	ts = await import('typescript');
-} catch {
-	// The user has not installed TypeScript.
-}
 
 /**
  * Generates the tsconfig that the user's tsconfig inherits from.
@@ -94,8 +87,7 @@ function write_parent_tsconfig(root, id, config, transform) {
 	// simplified tsconfig resolvers (e.g. Playwright's) only find `${id}.json`, not `${id}/tsconfig.json`
 	const out_file = path.join(root, `node_modules/${id}.json`);
 
-	let normalized = normalize_config(out_file, config);
-	normalized = transform?.(normalized) ?? normalized;
+	const normalized = normalize_config(out_file, config, transform);
 
 	write_if_changed(out_file, JSON.stringify(normalized, null, '\t'));
 }

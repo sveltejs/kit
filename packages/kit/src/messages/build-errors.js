@@ -672,6 +672,24 @@ export function preview_build_missing(_values, options) {
 }
 
 /**
+ * Cannot import remote module `%module%` into code that runs in the browser because it is server-only.
+
+%chain%
+
+Move the remote module outside any `server` directory, and remove any `server` segment from its filename.
+ * @param {{ "module": string; "chain": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function remote_module_server_only(_values, options) {
+	throw_error('remote_module_server_only', `Cannot import remote module \`${_values.module}\` into code that runs in the browser because it is server-only.
+
+${_values.chain}
+
+Move the remote module outside any \`server\` directory, and remove any \`server\` segment from its filename.`, options, remote_module_server_only);
+}
+
+/**
  * Unexpectedly called `prerender` function. Did you forget to set `{ dynamic: true }`?
  * @param {void} _values
  * @param {ThrowOptions} [options]
@@ -917,6 +935,16 @@ export function service_worker_invalid_import(_values, options) {
  */
 export function tsconfig_parse_failed(_values, options) {
 	throw_error('tsconfig_parse_failed', (_values?.details !== undefined ? `Failed to parse TypeScript config: ${_values.details}` : `Failed to parse TypeScript config`), options, tsconfig_parse_failed);
+}
+
+/**
+ * TypeScript %version% does not provide the JavaScript compiler API required by SvelteKit. Install `typescript@^6.0.0`. To use TypeScript 7 for type checking, install it separately as `@typescript/native`.
+ * @param {{ "version": string }} _values
+ * @param {ThrowOptions} [options]
+ * @returns {never}
+ */
+export function typescript_compiler_api_missing(_values, options) {
+	throw_error('typescript_compiler_api_missing', `TypeScript ${_values.version} does not provide the JavaScript compiler API required by SvelteKit. Install \`typescript@^6.0.0\`. To use TypeScript 7 for type checking, install it separately as \`@typescript/native\`.`, options, typescript_compiler_api_missing);
 }
 
 /**

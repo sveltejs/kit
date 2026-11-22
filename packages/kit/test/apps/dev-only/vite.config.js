@@ -7,12 +7,13 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
+	devtools: { apply: 'serve' },
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
 		// the reload confuses Playwright
 		include: ['cookie']
 	},
-	plugins: [sveltekit()],
+	plugins: [sveltekit({ experimental: { remoteFunctions: true } })],
 	server: {
 		fs: {
 			allow: [path.resolve('../../../src')]
