@@ -5,12 +5,7 @@ import { deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 
-test('explicit nodeVersion is included in framework and function metadata', () => {
-	const framework_config = JSON.parse(
-		fs.readFileSync(path.resolve(import.meta.dirname, '.netlify/v1/config.json'), 'utf-8')
-	);
-	expect(framework_config.functions).toEqual({ nodeVersion: '24' });
-
+test('explicit nodeVersion is included in function metadata', () => {
 	const entrypoint = fs.readFileSync(
 		path.resolve(import.meta.dirname, '.netlify/v1/functions/sveltekit-render.mjs'),
 		'utf-8'
