@@ -108,19 +108,17 @@ export function decode_uri(uri) {
 	}
 }
 
+const decoder = new TextDecoder('utf-8', { ignoreBOM: true });
+
 /**
- * Percent-decodes a string, leaving malformed sequences as they are
+ * Percent-decodes a string the way browsers decode a URL fragment, which never throws
  * @param {string} str
  * @returns {string}
  */
 export function percent_decode(str) {
-	return str.replace(/(?:%[0-9a-f]{2})+/gi, (sequence) => {
-		try {
-			return decodeURIComponent(sequence);
-		} catch {
-			return sequence;
-		}
-	});
+	return str.replace(/(%[0-9a-f]{2})+/gi, (sequence) =>
+		decoder.decode(Uint8Array.from(sequence.slice(1).split('%'), (hex) => parseInt(hex, 16)))
+	);
 }
 
 /**

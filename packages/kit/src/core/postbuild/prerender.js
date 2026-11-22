@@ -732,17 +732,14 @@ async function prerender({
 		const index = key.indexOf('#');
 		const path = key.slice(0, index);
 		const fragment = key.slice(index + 1);
+		const id = percent_decode(fragment);
 
 		const hashlinks = actual_hashlinks.get(path);
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
 		// browsers look for the fragment as written before percent-decoding it
-		if (hashlinks.has(fragment)) continue;
-
-		const id = percent_decode(fragment);
-
-		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
+		if (!hashlinks.has(fragment) && !hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}
