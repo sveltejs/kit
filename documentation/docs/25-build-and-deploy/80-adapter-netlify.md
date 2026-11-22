@@ -25,7 +25,7 @@ export default defineConfig({
 				edge: false,
 				nodeVersion: 'nodejs24.x',
 				split: false,
-        publish: 'build'
+				publish: 'build'
 			})
 		})
 	]
@@ -44,7 +44,7 @@ Cannot be combined with the `nodeVersion` option.
 
 The [Node.js version](https://docs.netlify.com/build/functions/configuration/#nodejs-version-for-runtime) used for the serverless function. The supported values are `'nodejs22.x'` and `'nodejs24.x'`.
 
-Cannot be combined with the `edge` option.
+Cannot be combined with `edge: true`.
 
 ### `split`
 
