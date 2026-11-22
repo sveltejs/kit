@@ -1057,6 +1057,20 @@ describe('create_field_proxy', () => {
 		});
 		expect(() => proxy.field.as(type)).toThrowKitError('form_input_missing_value');
 	});
+	test('fields are not plain objects', () => {
+		const proxy = create_field_proxy({
+			form_id: 'form',
+			get: () => ({}),
+			set: () => {},
+			get_issues: () => ({}),
+			get_touched: () => ({}),
+			get_dirty: () => ({})
+		});
+
+		for (const field of [proxy, proxy.user, proxy.jobs[0]]) {
+			expect(Object.getPrototypeOf(field)).not.toBe(Object.prototype);
+		}
+	});
 	test('image inputs use coordinate names and omit value properties', () => {
 		const proxy = create_field_proxy({
 			form_id: 'form',

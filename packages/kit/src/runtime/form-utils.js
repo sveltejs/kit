@@ -912,14 +912,18 @@ function create_field_method(context, path, prop) {
 	}
 }
 
+// The target of a field that is not a method: an object of its own class, so that a field is not
+// taken for a plain object (by `$state`, for example), which nothing else can tell it apart from
+class RemoteFormField {}
+
 /**
  * Creates a proxy-based field accessor for form data
  * @param {FieldContext} context
- * @param {any} target - Function or empty POJO
+ * @param {any} target - Function or empty RemoteFormField
  * @param {(string | number)[]} path - Current access path
  * @returns {any} Proxy object with name(), value(), and issues() methods
  */
-export function create_field_proxy(context, target = {}, path = []) {
+export function create_field_proxy(context, target = new RemoteFormField(), path = []) {
 	return new Proxy(target, {
 		...dev_traps,
 		get(target, prop) {
