@@ -624,8 +624,7 @@ async function _invalidate(reset_page_state = true) {
 		return;
 	}
 
-	// Preserve the latest shallow-routing values, which may have changed while loading.
-	// Override the fresh page's defaults before applying the result.
+	// `pushState`/`replaceState` can change these mid-load without cancelling the invalidation
 	if (!reset_page_state) {
 		navigation_result.props.page.state = page.state;
 	}

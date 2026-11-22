@@ -39,7 +39,6 @@
 	>replace state</button
 >
 
-<code>{JSON.stringify(page.state)}</code>
 <output>{page.shallow?.url.href}</output>
 <p>active: {page.state.active ?? false}</p>
 <span>{data.now}</span>
