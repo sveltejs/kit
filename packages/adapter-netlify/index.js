@@ -88,7 +88,7 @@ export default function ({ split = false, edge, nodeVersion, publish = 'build' }
 			}
 
 			builder.log.minor('Writing Netlify config...');
-			write_frameworks_config({ builder, node_version });
+			write_frameworks_config({ builder });
 
 			const functions = get_functions(builder, split, default_runtime);
 			const reroute_id = functions.length > 1 ? crypto.randomUUID() : undefined;
@@ -131,11 +131,11 @@ function generate_serverless_functions(builder, functions, reroute_id) {
 /**
  * Writes the Netlify Frameworks API config file
  * https://docs.netlify.com/build/frameworks/frameworks-api/
- * @param {{ builder: Builder; node_version?: string }} params
+ * @param {{ builder: import('@sveltejs/kit').Builder }} params
  */
-function write_frameworks_config({ builder, node_version }) {
+function write_frameworks_config({ builder }) {
 	// https://docs.netlify.com/build/frameworks/frameworks-api/#headers
-	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }>; functions?: { nodeVersion: string } }} */
+	/** @type {{ headers: Array<{ for: string, values: Record<string, string> }> }} */
 	const config = {
 		headers: [
 			{
@@ -146,10 +146,6 @@ function write_frameworks_config({ builder, node_version }) {
 			}
 		]
 	};
-
-	if (node_version !== undefined) {
-		config.functions = { nodeVersion: node_version };
-	}
 
 	mkdirSync('.netlify/v1', { recursive: true });
 	writeFileSync(netlify_framework_config_path, s(config));

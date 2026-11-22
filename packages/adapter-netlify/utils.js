@@ -16,10 +16,9 @@ export function parse_node_version(node_version) {
 
 /**
  * @param {{ edge?: boolean; nodeVersion?: Runtime }} options
- * @param {boolean} [default_edge]
  * @returns {{ edge: boolean; node_version?: string }}
  */
-export function resolve_runtime({ edge, nodeVersion }, default_edge = false) {
+export function resolve_runtime({ edge, nodeVersion }) {
 	if (edge === true && nodeVersion !== undefined) {
 		throw new Error(
 			'@sveltejs/adapter-netlify: Cannot combine `edge: true` with `nodeVersion`. Remove `nodeVersion` to use Edge Functions, or set `edge: false` to use a Node.js runtime.'
@@ -30,7 +29,7 @@ export function resolve_runtime({ edge, nodeVersion }, default_edge = false) {
 		return { edge: false, node_version: parse_node_version(nodeVersion) };
 	}
 
-	return { edge: edge ?? default_edge };
+	return { edge: edge ?? false };
 }
 
 /**

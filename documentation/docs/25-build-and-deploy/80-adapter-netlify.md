@@ -25,7 +25,7 @@ export default defineConfig({
 				edge: false,
 				nodeVersion: 'nodejs24.x',
 				split: false,
-        publish: 'build'
+				publish: 'build'
 			})
 		})
 	]
