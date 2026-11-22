@@ -751,6 +751,43 @@ function form_tests() {
 	// @ts-expect-error
 	f12.fields.c.as('text');
 
+	// Required consent checkboxes must allow schemas whose input is literal true.
+	const consent = form(null as unknown as StandardSchemaV1<{ agree_tos: true }>, (data) => {
+		const agreed: true = data.agree_tos;
+		return agreed;
+	});
+	consent.fields.agree_tos.as('checkbox');
+	consent.fields.agree_tos.set(true);
+	// @ts-expect-error
+	consent.fields.agree_tos.set(false);
+
+	form(
+		null as unknown as StandardSchemaV1<{
+			agreements: true[];
+			nested?: { agree_tos: true; optional?: true; enabled?: boolean };
+			variant: { kind: 'consent'; agreed: true } | { kind: 'text'; text: string };
+		}>,
+		() => {}
+	);
+
+	// A true-only field must not hide a required general boolean elsewhere.
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{ agreed: true; enabled: boolean }>,
+		() => {}
+	);
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{ agreements: Array<{ enabled: boolean }> }>,
+		() => {}
+	);
+	// Unlike literal true, literal false cannot be supplied by an unchecked checkbox.
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{ agreed: false }>,
+		() => {}
+	);
+
 	// non-optional booleans
 	form(
 		// @ts-expect-error

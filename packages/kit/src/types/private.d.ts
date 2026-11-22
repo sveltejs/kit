@@ -291,7 +291,9 @@ export type HasNonOptionalBoolean<T> =
 	IsAny<T> extends true
 		? never
 		: [T] extends [boolean]
-			? true
+			? [T] extends [true]
+				? never // Required consent checkboxes intentionally reject an unchecked value.
+				: true
 			: T extends Array<infer U>
 				? HasNonOptionalBoolean<U>
 				: T extends Record<string, any>
