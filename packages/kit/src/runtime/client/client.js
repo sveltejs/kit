@@ -3670,9 +3670,12 @@ async function process_stream(resolve, res) {
 		return devalue.unflatten(data, {
 			...app.decoders,
 			Promise: (id) => {
-				return new Promise((fulfil, reject) => {
+				const promise = new Promise((fulfil, reject) => {
 					deferreds.set(id, { fulfil, reject });
 				});
+				// The page may not be mounted yet, or this data may only be preloaded.
+				promise.catch(noop);
+				return promise;
 			}
 		});
 	}

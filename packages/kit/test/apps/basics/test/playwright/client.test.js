@@ -1600,6 +1600,39 @@ test.describe('Streaming', () => {
 		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
 	});
 
+	test('Handles preloaded streamed rejections before navigation', async ({ page, app }) => {
+		const path = '/streaming/server/delayed-rejection';
+		/** @type {Error[]} */
+		const errors = [];
+		let data_requests = 0;
+
+		page.on('pageerror', (error) => errors.push(error));
+		page.on('request', (request) => {
+			if (new URL(request.url()).pathname === `${path}/__data.json`) data_requests += 1;
+		});
+
+		await page.goto('/streaming');
+		const [response] = await Promise.all([
+			page.waitForResponse(
+				(response) => new URL(response.url()).pathname === `${path}/__data.json`
+			),
+			app.preloadData(path)
+		]);
+		expect(await response.finished()).toBeNull();
+
+		// Let rejection events be dispatched while the destination's await block is not mounted.
+		await page.evaluate(
+			() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+		);
+		await expect(page).toHaveURL(/\/streaming$/);
+		expect(errors).toEqual([]);
+
+		await app.goto(path);
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
+		expect(data_requests).toBe(1);
+		expect(errors).toEqual([]);
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {
