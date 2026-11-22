@@ -9,7 +9,13 @@
 import { DEV } from 'esm-env';
 import { settled, tick, fork, onMount, hydrate, mount } from 'svelte';
 import { HttpError, Redirect, SvelteKitError, HandledHttpError } from '@sveltejs/kit/internal';
-import { decode_pathname, strip_hash, make_trackable, normalize_path } from '../../utils/url.js';
+import {
+	decode_pathname,
+	strip_hash,
+	make_trackable,
+	normalize_path,
+	percent_decode
+} from '../../utils/url.js';
 import { dev_fetch, initial_fetch, lock_fetch, subsequent_fetch, unlock_fetch } from './fetcher.js';
 import { parse_routes, parse_server_route } from './parse.js';
 import * as storage from './session-storage.js';
@@ -3790,7 +3796,7 @@ function create_navigation(
 function decode_hash(url) {
 	const new_url = new URL(url);
 	// Safari, for some reason, does change # to %23, when entered through the address bar
-	new_url.hash = decodeURIComponent(url.hash);
+	new_url.hash = percent_decode(url.hash);
 	return new_url;
 }
 
