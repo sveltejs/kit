@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { builtinModules } from 'node:module';
 import { build } from 'rolldown';
-import { matches, parse_node_version, resolve_runtime, s } from './utils.js';
+import { parse_node_version, plan_functions, resolve_runtime, s } from './utils.js';
 
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
 const adapter_version = pkg.version;
@@ -165,32 +165,6 @@ function write_frameworks_config({ builder }) {
  */
 
 /**
- * @param {RouteDefinition<Config>} route
- * @returns {string}
- */
-function get_route_pattern(route) {
-	/** @type {string[]} */
-	const parts = [];
-
-	// The parts should conform to URLPattern syntax
-	// https://docs.netlify.com/build/functions/get-started/?fn-language=ts&data-tab=TypeScript#route-requests
-	for (const [i, segment] of route.segments.entries()) {
-		if (segment.rest) {
-			parts.push('*');
-		} else if (segment.dynamic) {
-			// URLPattern requires params to start with letters
-			const optional = /^\[\[.+\]\]$/.test(segment.content) ? '?' : '';
-			parts.push(`:param${i}${optional}`);
-		} else {
-			parts.push(segment.content);
-		}
-	}
-
-	// Netlify handles trailing slashes for us, so we don't need to include them in the pattern
-	return `/${parts.join('/')}`;
-}
-
-/**
  * @param {Config} config
  * @param {EffectiveRuntime} default_runtime
  * @param {string} route_id
@@ -215,70 +189,18 @@ function resolve_route_runtime(config, default_runtime, route_id) {
  * @returns {EntrypointMetadata[]}
  */
 function get_functions(builder, split, default_runtime) {
-	/** @type {Map<EffectiveRuntime, Array<{ runtime: EffectiveRuntime, split: boolean, routes: RouteDefinition<Config>[], patterns: string[], display_name: string }>>} */
-	const groups = new Map();
-	/** @type {Map<string, { runtime: EffectiveRuntime, split: boolean, route_id: string }>} */
-	const conflicts = new Map();
-	const app_patterns = new Set();
-
-	for (let i = 0; i < builder.routes.length; i += 1) {
-		/** @type {RouteDefinition<Config>} */
-		const route = builder.routes[i];
-		if (route.prerender === true) continue;
-
-		const runtime = resolve_route_runtime(route.config, default_runtime, route.id);
-		const route_split = route.config.split ?? split;
-		const pattern = get_route_pattern(route);
-		const existing = conflicts.get(pattern);
-
-		if (existing && (existing.runtime !== runtime || existing.split !== route_split)) {
-			throw new Error(
-				`The ${route.id} and ${existing.route_id} routes normalize to the same Netlify pattern (${pattern}), but have incompatible deployment configs. Rename one of the routes or make their edge, nodeVersion and split configs match.`
-			);
-		}
-		conflicts.set(pattern, { runtime, split: route_split, route_id: route.id });
-
-		const patterns = [pattern, `${pattern === '/' ? '' : pattern}/__data.json`];
-		patterns.forEach((pattern) => app_patterns.add(pattern));
-
-		let runtime_groups = groups.get(runtime);
-		if (!runtime_groups) groups.set(runtime, (runtime_groups = []));
-
-		let group = route_split
-			? runtime_groups.find((group) => group.split && group.patterns[0] === pattern)
-			: runtime_groups.find((group) => !group.split);
-		// Include lower-priority routes that this pattern can fall back to.
-		const routes = [route];
-		for (let j = i + 1; j < builder.routes.length; j += 1) {
-			const other = builder.routes[j];
-			if (other.prerender !== true && matches(route.segments, other.segments)) routes.push(other);
-		}
-
-		if (!group) {
-			group = {
-				runtime,
-				split: route_split,
-				routes,
-				patterns,
-				display_name: `SvelteKit ${route.id}`
-			};
-			runtime_groups.push(group);
-		} else if (!route_split) {
-			for (const route of routes) {
-				if (!group.routes.includes(route)) group.routes.push(route);
-			}
-			for (const pattern of patterns) {
-				if (!group.patterns.includes(pattern)) group.patterns.push(pattern);
-			}
-		}
-	}
-
-	const route_groups = Array.from(groups.values()).flat();
+	const groups = plan_functions(
+		/** @type {RouteDefinition<Config>[]} */ (builder.routes),
+		(route) => ({
+			runtime: resolve_route_runtime(route.config, default_runtime, route.id),
+			split: route.config.split ?? split
+		})
+	);
 
 	// Even when every route is prerendered we still emit a single fallback
 	// function so that SvelteKit can serve its own 404/error page for unknown
 	// paths and handle the `reroute` hook
-	if (route_groups.length <= 1) {
+	if (groups.length <= 1) {
 		return [
 			{
 				type: 'singular',
@@ -286,19 +208,20 @@ function get_functions(builder, split, default_runtime) {
 				patterns: ['/*'],
 				name: `${FUNCTION_PREFIX}render`,
 				display_name: 'SvelteKit server',
-				runtime: route_groups.length === 1 ? route_groups[0].runtime : default_runtime
+				runtime: groups.length === 1 ? groups[0].runtime : default_runtime
 			}
 		];
 	}
 
 	/** @type {EntrypointMetadata[]} */
-	const functions = route_groups.map((group, i) => ({
+	const functions = groups.map((group, i) => ({
 		type: /** @type {const} */ ('split'),
 		routes: group.routes,
 		patterns: group.patterns,
 		name: `${FUNCTION_PREFIX}${i}`,
-		display_name: group.display_name,
-		runtime: group.runtime
+		display_name: `SvelteKit ${group.routes[0].id}`,
+		runtime: group.runtime,
+		exclude: group.exclude
 	}));
 
 	functions.push({
@@ -308,7 +231,7 @@ function get_functions(builder, split, default_runtime) {
 		name: `${FUNCTION_PREFIX}catch-all`,
 		display_name: 'SvelteKit catch-all',
 		runtime: default_runtime,
-		exclude: Array.from(app_patterns)
+		exclude: groups.flatMap((group) => group.patterns)
 	});
 
 	return functions;
