@@ -109,6 +109,21 @@ export function decode_uri(uri) {
 }
 
 /**
+ * Percent-decodes a string, leaving malformed sequences as they are
+ * @param {string} str
+ * @returns {string}
+ */
+export function percent_decode(str) {
+	return str.replace(/(?:%[0-9a-f]{2})+/gi, (sequence) => {
+		try {
+			return decodeURIComponent(sequence);
+		} catch {
+			return sequence;
+		}
+	});
+}
+
+/**
  * Returns everything up to the first `#` in a URL
  * @param {{href: string}} url_like
  */
