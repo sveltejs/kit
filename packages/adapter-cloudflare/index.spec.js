@@ -1,3 +1,7 @@
+/** @import { Plugin } from 'vite' */
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { createServer } from 'vite';
 import { getPlatformProxy } from 'wrangler';
@@ -7,6 +11,7 @@ const dispose = vi.fn(() => Promise.resolve());
 
 vi.mock('wrangler', () => ({
 	getPlatformProxy: vi.fn(() => Promise.resolve({ caches: {}, dispose })),
+	unstable_getVarsForDev: vi.fn(() => ({})),
 	unstable_readConfig: vi.fn()
 }));
 
@@ -14,8 +19,38 @@ beforeEach(() => {
 	vi.clearAllMocks();
 });
 
+/**
+ * @param {import('@sveltejs/kit').Adapter} [instance]
+ * @param {string} [assets]
+ */
+function get_vite_config(instance = adapter(), assets = '') {
+	if (typeof instance.vite !== 'function') throw new Error('Expected an adapter config function');
+	return /** @type {{ plugins: Plugin[] }} */ (
+		instance.vite({
+			config: /** @type {Parameters<typeof instance.vite>[0]['config']} */ ({
+				paths: { assets },
+				files: {
+					src: 'src',
+					routes: 'src/routes',
+					params: 'src/params',
+					hooks: { server: 'src/hooks.server', universal: 'src/hooks' }
+				}
+			})
+		})
+	);
+}
+
+test.each(['https://cdn.example.com', '/assets'])(
+	'rejects paths.assets=%s when configuring the adapter',
+	(assets) => {
+		expect(() => get_vite_config(adapter(), assets)).toThrow(
+			'@sveltejs/adapter-cloudflare does not support `paths.assets`'
+		);
+	}
+);
+
 function create_server() {
-	const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+	const { plugins } = get_vite_config();
 	return createServer({
 		configFile: false,
 		logLevel: 'silent',
@@ -48,7 +83,7 @@ test('exposes the platform caches when the runtime defines `caches` as a getter'
 	});
 
 	try {
-		const { plugins } = /** @type {{ plugins: import('vite').Plugin[] }} */ (adapter().vite);
+		const { plugins } = get_vite_config();
 		const server = await createServer({
 			configFile: false,
 			logLevel: 'silent',
@@ -140,4 +175,33 @@ test('rejects concurrent servers sharing a failed platform proxy and allows a re
 	await server.close();
 	expect(dispose).toHaveBeenCalledOnce();
 	expect(globalThis.__sveltekit_cloudflare_platform_setup).toBeUndefined();
+});
+
+test('starts the platform proxy with the Wrangler environment from a `.env` file', async () => {
+	const root = fs.mkdtempSync(path.join(os.tmpdir(), 'adapter-cloudflare-'));
+	fs.writeFileSync(
+		path.join(root, 'wrangler.jsonc'),
+		JSON.stringify({ name: 'app', compatibility_date: '2025-01-01', env: { staging: {} } })
+	);
+	fs.writeFileSync(path.join(root, '.env.staging'), 'CLOUDFLARE_ENV=staging');
+
+	try {
+		const { plugins } = get_vite_config();
+		const server = await createServer({
+			root,
+			mode: 'staging',
+			configFile: false,
+			logLevel: 'silent',
+			plugins,
+			server: { middlewareMode: true }
+		});
+
+		expect(getPlatformProxy).toHaveBeenCalledWith(
+			expect.objectContaining({ environment: 'staging' })
+		);
+
+		await server.close();
+	} finally {
+		fs.rmSync(root, { recursive: true, force: true });
+	}
 });

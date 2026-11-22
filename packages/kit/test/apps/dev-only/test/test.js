@@ -243,6 +243,15 @@ test.describe('Remote functions', () => {
 	});
 });
 
+test.describe('Vite DevTools', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	test('adds the in-page dock', async ({ page }) => {
+		await page.goto('/');
+		await expect(page.locator('devframes-dock-embedded')).toBeAttached();
+	});
+});
+
 test('adapters can render requests themselves', async ({ request }) => {
 	const response = await request.get('/adapter-respond');
 	expect(await response.text()).toBe('rendered by the adapter');

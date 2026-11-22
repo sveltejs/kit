@@ -401,6 +401,20 @@ describe('exec', () => {
 
 describe('resolve_route', () => {
 	const from_params_tests = [
+		{ route: '/', params: {}, expected: '/' },
+		{ route: '/(app)', params: {}, expected: '/' },
+		{ route: '/(app)/', params: {}, expected: '/' },
+		{ route: '/(app)/(nested)', params: {}, expected: '/' },
+		{ route: '/(auth)/login', params: {}, expected: '/login' },
+		{ route: '/(auth)/login/(app)', params: {}, expected: '/login' },
+		{ route: '/(auth)/login/(app)/', params: {}, expected: '/login/' },
+		{ route: '/[[optional]]/', params: {}, expected: '/' },
+		{ route: '/[...rest]/', params: { rest: '' }, expected: '/' },
+		{
+			route: '/[x+3f]/[x+23]/[x+28]app[x+29]/(group)',
+			params: undefined,
+			expected: '/%3F/%23/(app)'
+		},
 		{
 			route: '/blog/[one]/[two]',
 			params: { one: 'one', two: 'two' },
@@ -529,6 +543,17 @@ describe('resolve_route', () => {
 			assert.equal(result, expected);
 		});
 	}
+
+	test.each([
+		'?a=1',
+		'#top',
+		'?next=/a//(group)/[one]/[x+23]/#top?',
+		'#top?next=/a//(group)/[one]/[x+23]/',
+		'?q=line\n/another-line#top'
+	])('resolvePath leaves suffix %j untouched', (suffix) => {
+		assert.equal(resolve_route('/blog/[slug]/(app)' + suffix, { slug: 'a' }), '/blog/a' + suffix);
+		assert.equal(resolve_route('/(app)/' + suffix), '/' + suffix);
+	});
 
 	test.each([
 		{ id: '/blog/[one]/[two]', params: { one: 'one' }, code: 'route_param_missing', name: 'two' },

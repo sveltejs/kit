@@ -1749,6 +1749,8 @@ async function load_root_error_page({ error, url, route }) {
  * @returns {Promise<URL | undefined>}
  */
 async function get_rerouted_url(url) {
+	if (!__SVELTEKIT_HAS_REROUTE__) return url;
+
 	const href = url.href;
 
 	if (reroute_cache.has(href)) {

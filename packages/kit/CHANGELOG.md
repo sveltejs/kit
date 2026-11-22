@@ -1,5 +1,61 @@
 # @sveltejs/kit
 
+## 3.4.0
+
+### Minor Changes
+
+- feat: allow adapters to disable SvelteKit's Node preview server with `vite.customPreview: true` when providing their own preview implementation ([#17750](https://github.com/sveltejs/kit/pull/17750))
+
+- feat: add `sveltekit.remote.call.file` attribute to remote function tracing spans ([#17760](https://github.com/sveltejs/kit/pull/17760))
+
+### Patch Changes
+
+- fix: strip trailing route groups when resolving routes with search parameters or fragments ([#17808](https://github.com/sveltejs/kit/pull/17808))
+
+- fix: correctly display non-ASCII characters for plain text error messages during development ([#17468](https://github.com/sveltejs/kit/pull/17468))
+
+- fix: explain missing TypeScript compiler API instead of crashing with TypeScript 7 ([#17539](https://github.com/sveltejs/kit/pull/17539))
+
+- fix: reject remote function requests that use the wrong HTTP method ([#17740](https://github.com/sveltejs/kit/pull/17740))
+
+- fix: respect `NO_COLOR` and explicit `FORCE_COLOR` settings in forked build processes ([#17618](https://github.com/sveltejs/kit/pull/17618))
+
+## 3.3.1
+
+### Patch Changes
+
+- fix: read environment variables for route analysis and prerendering after all adapter Vite `config` hooks have run ([#17559](https://github.com/sveltejs/kit/pull/17559))
+
+- fix: respect a user-set `build.cssMinify` ([#17797](https://github.com/sveltejs/kit/pull/17797))
+
+- fix: don't serialize the results of remote functions awaited in server `load` functions into the page ([#17759](https://github.com/sveltejs/kit/pull/17759))
+
+## 3.3.0
+
+### Minor Changes
+
+- feat: support the Vite DevTools dock in dev ([#17787](https://github.com/sveltejs/kit/pull/17787))
+
+## 3.2.1
+
+### Patch Changes
+
+- fix: check the return value of async `load` functions against `App.PageData` ([#17793](https://github.com/sveltejs/kit/pull/17793))
+
+- fix: prerender crawler finds links located after a quoted attribute value ending with `\` ([#17688](https://github.com/sveltejs/kit/pull/17688))
+
+- fix: omit nopush from preload Link headers so Chromium can use CDN Early Hints ([#17786](https://github.com/sveltejs/kit/pull/17786))
+
+- perf: hash a page's encoded bytes for its `ETag` and send the same bytes as the body, and skip the hash when `setHeaders` already sets an `etag` or the response is `no-store` ([#17674](https://github.com/sveltejs/kit/pull/17674))
+
+- chore: deprecate `adapter.emulate` ([#17769](https://github.com/sveltejs/kit/pull/17769))
+
+- fix: generate valid types for route params whose names start with a digit, such as `[2nd]` ([#17661](https://github.com/sveltejs/kit/pull/17661))
+
+- perf: skip the `ETag` hash for a page that has a CSP nonce in it, since no two responses are the same ([#17743](https://github.com/sveltejs/kit/pull/17743))
+
+- fix: correctly scan routes on Windows when optimising dependencies ([#17757](https://github.com/sveltejs/kit/pull/17757))
+
 ## 3.2.0
 
 ### Minor Changes

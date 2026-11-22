@@ -20,7 +20,12 @@ import { SRC_ROOT, SVELTE_KIT_ASSETS } from '../../../constants.js';
 import * as sync from '../../../core/sync/sync.js';
 import { get_runtime_base } from '../../../core/utils.js';
 import '../../../utils/mime.js'; // extend mrmime with additional types (affects sirv too)
-import { is_chrome_devtools_request, is_remote_module, not_found } from '../utils.js';
+import {
+	adds_vite_devtools_dock,
+	is_chrome_devtools_request,
+	is_remote_module,
+	not_found
+} from '../utils.js';
 import { SCHEME } from '../../../utils/url.js';
 import { check_feature } from '../../../core/features.js';
 import * as e from '../../../messages/build-errors.js';
@@ -98,6 +103,8 @@ export async function dev(
 		}
 	}
 
+	const vite_devtools = adds_vite_devtools_dock(vite_dev_server.config);
+
 	/** @param {boolean} [validate_params] */
 	async function update_manifest(validate_params = true) {
 		try {
@@ -142,6 +149,7 @@ export async function dev(
 			root,
 			get_remotes
 		);
+		manifest.vite_devtools = vite_devtools;
 	}
 
 	// Initializing the Vite SSR runner before the server starts is unsafe, but generated types
@@ -274,7 +282,13 @@ export async function dev(
 			req.headers[':authority'] || req.headers.host
 		}`;
 
-		const decoded = decodeURI(new URL(base + req.url).pathname);
+		let decoded = new URL(base + req.url).pathname;
+		try {
+			decoded = decodeURI(decoded);
+		} catch {
+			// malformed URI — let the runtime respond with a 400 error page
+			return next();
+		}
 
 		if (decoded.startsWith(assets)) {
 			const pathname = decoded.slice(assets.length);
@@ -322,7 +336,12 @@ export async function dev(
 					req.headers[':authority'] || req.headers.host
 				}`;
 
-				const decoded = decodeURI(new URL(base + req.url).pathname);
+				let decoded = new URL(base + req.url).pathname;
+				try {
+					decoded = decodeURI(decoded);
+				} catch {
+					// malformed URI — the runtime will respond with a 400
+				}
 				const file = posixify(
 					path.resolve(root, decoded.slice(svelte_config.paths.base.length + 1))
 				);
@@ -485,6 +504,7 @@ export async function dev(
 			} catch (e) {
 				const error = coalesce_to_error(e);
 				res.statusCode = 500;
+				res.setHeader('content-type', 'text/plain; charset=utf-8');
 				fix_stack_trace(error);
 				console.error(styleText(['bold', 'red'], String(error)));
 				res.end(error.stack || error.message); // handle `stackless` errors
