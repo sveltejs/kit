@@ -758,12 +758,9 @@ function form_tests() {
 	});
 	consent.fields.agree_tos.as('checkbox');
 	consent.fields.agree_tos.set(true);
-	// @ts-expect-error
-	consent.fields.agree_tos.set(false);
 
 	form(
 		null as unknown as StandardSchemaV1<{
-			agreements: true[];
 			nested?: { agree_tos: true; optional?: true; enabled?: boolean };
 			variant: { kind: 'consent'; agreed: true } | { kind: 'text'; text: string };
 		}>,
@@ -779,6 +776,12 @@ function form_tests() {
 	form(
 		// @ts-expect-error
 		null as unknown as StandardSchemaV1<{ agreements: Array<{ enabled: boolean }> }>,
+		() => {}
+	);
+	// An unchecked checkbox in an array is left out, so `true[]` passes with one box checked.
+	form(
+		// @ts-expect-error
+		null as unknown as StandardSchemaV1<{ agreements: true[] }>,
 		() => {}
 	);
 	// Unlike literal true, literal false cannot be supplied by an unchecked checkbox.
