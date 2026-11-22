@@ -1633,6 +1633,16 @@ test.describe('Streaming', () => {
 		expect(errors).toEqual([]);
 	});
 
+	test('Handles streamed rejections before hydration', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
+		await page.goto('/streaming/server/delayed-rejection');
+		await expect(page.locator('p.fail')).toHaveText('delayed rejection (500 Internal Error)');
+		expect(errors).toEqual([]);
+	});
+
 	// TODO `vite preview` buffers responses, causing these tests to fail
 	if (process.env.DEV) {
 		test('Works for universal load functions (direct hit)', async ({ page }) => {

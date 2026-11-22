@@ -2,4 +2,4 @@
 '@sveltejs/kit': patch
 ---
 
-fix: handle early rejections of streamed data during client navigation and preloading
+fix: handle early rejections of streamed data during hydration, client navigation and preloading
