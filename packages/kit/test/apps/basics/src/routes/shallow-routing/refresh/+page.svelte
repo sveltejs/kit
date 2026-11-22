@@ -1,5 +1,12 @@
 <script>
-	import { goto, invalidate, invalidateAll, refreshAll } from '$app/navigation';
+	import {
+		goto,
+		invalidate,
+		invalidateAll,
+		pushState,
+		refreshAll,
+		replaceState
+	} from '$app/navigation';
 	import { page } from '$app/state';
 
 	let { data } = $props();
@@ -20,5 +27,19 @@
 	>invalidateAll</button
 >
 
+<button
+	data-id="invalidateKeepState"
+	onclick={() => (window.promise = invalidate('refresh:now', true))}
+	>invalidate keeping state</button
+>
+<button data-id="pushState" onclick={() => pushState('?state=pushed', { active: false })}
+	>push state</button
+>
+<button data-id="replaceState" onclick={() => replaceState('?state=replaced', {})}
+	>replace state</button
+>
+
+<code>{JSON.stringify(page.state)}</code>
+<output>{page.shallow?.url.href}</output>
 <p>active: {page.state.active ?? false}</p>
 <span>{data.now}</span>

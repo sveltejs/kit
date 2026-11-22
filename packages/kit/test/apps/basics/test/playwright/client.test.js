@@ -2619,6 +2619,36 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
 
+	for (const refresh of ['refreshAll', 'invalidateKeepState']) {
+		for (const method of ['pushState', 'replaceState']) {
+			test(`${refresh} preserves ${method} updates made while loading`, async ({ page }) => {
+				await page.goto('/shallow-routing/refresh');
+				await page.locator('[data-id="activate"]').click();
+				await expect(page.locator('code')).toHaveText('{"active":true}');
+
+				const now = /** @type {string} */ (await page.locator('span').textContent());
+				const state = method === 'pushState' ? '{"active":false}' : '{}';
+				let history_state;
+
+				await page.route('**/shallow-routing/refresh/__data.json*', async (route) => {
+					const response = await route.fetch();
+					// Change state while the refresh is waiting for the load result.
+					await page.locator(`[data-id="${method}"]`).click();
+					await expect(page.locator('code')).toHaveText(state);
+					history_state = await page.evaluate(() => history.state);
+					await route.fulfill({ response });
+				});
+
+				await page.locator(`[data-id="${refresh}"]`).click();
+				await page.evaluate(() => window.promise);
+				await expect(page.locator('span')).not.toHaveText(now);
+				await expect(page.locator('code')).toHaveText(state);
+				await expect(page.locator('output')).toHaveText(page.url());
+				expect(await page.evaluate(() => history.state)).toEqual(history_state);
+			});
+		}
+	}
+
 	test('invalidate resets page.state', async ({ page }) => {
 		await page.goto('/shallow-routing/refresh');
 		await expect(page.locator('p')).toHaveText('active: false');
