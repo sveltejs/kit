@@ -27,7 +27,7 @@ const FUNCTION_PREFIX = 'sveltekit-';
 
 /** @type {typeof import('./index.js').default} */
 export default function ({ split = false, edge, nodeVersion, publish = 'build' } = {}) {
-	const { edge: use_edge, node_version } = resolve_runtime({ edge, nodeVersion });
+	const { edge: use_edge } = resolve_runtime({ edge, nodeVersion });
 	const default_runtime = use_edge ? 'edge' : nodeVersion;
 
 	return {
