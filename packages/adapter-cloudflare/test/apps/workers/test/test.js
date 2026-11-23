@@ -76,7 +76,11 @@ test('leaves text that looks like a WebAssembly import alone', async ({ request 
 	expect(await res.text()).toBe("import module from './add.wasm';");
 });
 
-test('leaves text that looks like a Cloudflare module reference alone', async ({ request }) => {
-	const res = await request.get('/module-reference-text');
-	expect(await res.text()).toBe('__CLOUDFLARE_MODULE__Text__/not/a/file.txt__CLOUDFLARE_MODULE__');
+test('raw imports keep their content', async ({ request }) => {
+	const content = fs.readFileSync(
+		path.resolve(import.meta.dirname, '../src/routes/raw/content.txt'),
+		'utf-8'
+	);
+	const res = await request.get('/raw');
+	expect(await res.text()).toBe(content);
 });
