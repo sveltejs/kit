@@ -88,7 +88,10 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 
 				const wasm = /\.wasm(\?module)?$/;
 				const reference = /__CLOUDFLARE_MODULE__\w+?__.*?__CLOUDFLARE_MODULE__/g;
-				/** @type {Set<string>} */
+				/**
+				 * the references cloudflare created for real `.wasm` imports
+				 * @type {Set<string>}
+				 */
 				const references = new Set();
 
 				return /** @satisfies {Plugin[]} */ ([
@@ -110,8 +113,10 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 						renderChunk: {
 							...render_chunk,
 							async handler(code, ...args) {
-								// it reads the file named in any text that looks like a reference, so text
-								// that is not one of ours is hidden behind a placeholder of the same length
+								// cloudflare emits the file named in any text shaped like a reference,
+								// and sveltekit copies emitted files to the client, so text that is not
+								// in `references` is hidden from it behind a placeholder of the same
+								// length, which keeps source maps valid
 								const masked = code.replace(reference, (match) =>
 									references.has(match) ? match : `\0${match.slice(1)}`
 								);
@@ -120,6 +125,7 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								);
 								if (!result) return;
 
+								// restore the hidden text
 								return { ...result, code: result.code.replaceAll('\0_CLOUDFLARE', '__CLOUDFLARE') };
 							}
 						}
