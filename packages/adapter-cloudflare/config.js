@@ -105,6 +105,7 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
 								if (!resolved || !wasm.test(resolved.id)) return resolved;
 
+								// keep track of non-JavaScript modules recognised by Cloudflare
 								const result = await resolve_id.handler.call(this, source, importer, options);
 								if (result && typeof result === 'object') references.add(result.id);
 								return result;
