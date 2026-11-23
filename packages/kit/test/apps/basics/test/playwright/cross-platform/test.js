@@ -10,24 +10,24 @@ test.describe('CSS', () => {
 	/**
 	 * @param {(selector: string, prop: string) => Promise<string>} get_computed_style
 	 */
-	function check_styles(get_computed_style) {
-		test.step('applies imported styles', async () => {
+	async function check_styles(get_computed_style) {
+		await test.step('applies imported styles', async () => {
 			expect(await get_computed_style('.styled', 'color')).toBe('rgb(255, 0, 0)');
 		});
 
-		test.step('applies imported styles in the correct order', async () => {
+		await test.step('applies imported styles in the correct order', async () => {
 			expect(await get_computed_style('.overridden', 'color')).toBe('rgb(0, 128, 0)');
 		});
 
-		test.step('applies layout styles', async () => {
+		await test.step('applies layout styles', async () => {
 			expect(await get_computed_style('footer', 'color')).toBe('rgb(128, 0, 128)');
 		});
 
-		test.step('applies local styles', async () => {
+		await test.step('applies local styles', async () => {
 			expect(await get_computed_style('.also-styled', 'color')).toBe('rgb(0, 0, 255)');
 		});
 
-		test.step('does not apply raw and url', async () => {
+		await test.step('does not apply raw and url', async () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
 	}
@@ -36,7 +36,7 @@ test.describe('CSS', () => {
 		await page.goto('/css');
 		// without this assertion, the WebKit browser seems to close before we can compute the styles
 		await expect(page.locator('.styled')).toBeVisible();
-		check_styles(get_computed_style);
+		await check_styles(get_computed_style);
 	});
 
 	test('applies styles correctly after client-side navigation', async ({
@@ -50,7 +50,7 @@ test.describe('CSS', () => {
 		await page.goto('/');
 		await app.goto('/css');
 
-		check_styles(get_computed_style);
+		await check_styles(get_computed_style);
 	});
 
 	test('loads styles on routes with encoded characters', async ({ page, get_computed_style }) => {
