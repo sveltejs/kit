@@ -88,7 +88,7 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 					return [
 						{
 							...plugin,
-							apply: is_build_or_preview,
+							apply: 'build',
 							resolveId: {
 								filter: { id: [wasm, /^#/] },
 								async handler(source, importer, options) {
