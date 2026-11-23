@@ -31,7 +31,7 @@ test.describe('CSS', () => {
 			expect(await get_computed_style('.not', 'color')).toBe('rgb(0, 0, 0)');
 		});
 
-		test.step('applies styles from virtual modules', async () => {
+		await test.step('applies styles from virtual modules', async () => {
 			expect(await get_computed_style('.virtual', 'color')).toBe('rgb(255, 165, 0)');
 		});
 	}
