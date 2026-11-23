@@ -126,7 +126,6 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								);
 								if (!result) return;
 
-								// restore the hidden text
 								return { ...result, code: result.code.replaceAll('\0_CLOUDFLARE', '__CLOUDFLARE') };
 							}
 						}
