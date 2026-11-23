@@ -65,7 +65,7 @@ export default function (options = {}) {
 				await builder.generateFallback(path.join(assets, '404.html'));
 			}
 			builder.writeClient(assets_dest);
-			restore_wasm_imports(`${assets_dest}/${builder.getAppPath()}/immutable/assets`);
+			restore_wasm_imports(`${assets}/${builder.getAppPath()}/immutable/assets`);
 			builder.writePrerendered(assets_dest);
 			if (not_found_handling === 'single-page-application') {
 				// this is served with a 200 OK
