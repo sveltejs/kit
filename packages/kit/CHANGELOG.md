@@ -1,5 +1,97 @@
 # @sveltejs/kit
 
+## 3.4.0
+
+### Minor Changes
+
+- feat: allow adapters to disable SvelteKit's Node preview server with `vite.customPreview: true` when providing their own preview implementation ([#17750](https://github.com/sveltejs/kit/pull/17750))
+
+- feat: add `sveltekit.remote.call.file` attribute to remote function tracing spans ([#17760](https://github.com/sveltejs/kit/pull/17760))
+
+### Patch Changes
+
+- fix: strip trailing route groups when resolving routes with search parameters or fragments ([#17808](https://github.com/sveltejs/kit/pull/17808))
+
+- fix: correctly display non-ASCII characters for plain text error messages during development ([#17468](https://github.com/sveltejs/kit/pull/17468))
+
+- fix: explain missing TypeScript compiler API instead of crashing with TypeScript 7 ([#17539](https://github.com/sveltejs/kit/pull/17539))
+
+- fix: reject remote function requests that use the wrong HTTP method ([#17740](https://github.com/sveltejs/kit/pull/17740))
+
+- fix: respect `NO_COLOR` and explicit `FORCE_COLOR` settings in forked build processes ([#17618](https://github.com/sveltejs/kit/pull/17618))
+
+## 3.3.1
+
+### Patch Changes
+
+- fix: read environment variables for route analysis and prerendering after all adapter Vite `config` hooks have run ([#17559](https://github.com/sveltejs/kit/pull/17559))
+
+- fix: respect a user-set `build.cssMinify` ([#17797](https://github.com/sveltejs/kit/pull/17797))
+
+- fix: don't serialize the results of remote functions awaited in server `load` functions into the page ([#17759](https://github.com/sveltejs/kit/pull/17759))
+
+## 3.3.0
+
+### Minor Changes
+
+- feat: support the Vite DevTools dock in dev ([#17787](https://github.com/sveltejs/kit/pull/17787))
+
+## 3.2.1
+
+### Patch Changes
+
+- fix: check the return value of async `load` functions against `App.PageData` ([#17793](https://github.com/sveltejs/kit/pull/17793))
+
+- fix: prerender crawler finds links located after a quoted attribute value ending with `\` ([#17688](https://github.com/sveltejs/kit/pull/17688))
+
+- fix: omit nopush from preload Link headers so Chromium can use CDN Early Hints ([#17786](https://github.com/sveltejs/kit/pull/17786))
+
+- perf: hash a page's encoded bytes for its `ETag` and send the same bytes as the body, and skip the hash when `setHeaders` already sets an `etag` or the response is `no-store` ([#17674](https://github.com/sveltejs/kit/pull/17674))
+
+- chore: deprecate `adapter.emulate` ([#17769](https://github.com/sveltejs/kit/pull/17769))
+
+- fix: generate valid types for route params whose names start with a digit, such as `[2nd]` ([#17661](https://github.com/sveltejs/kit/pull/17661))
+
+- perf: skip the `ETag` hash for a page that has a CSP nonce in it, since no two responses are the same ([#17743](https://github.com/sveltejs/kit/pull/17743))
+
+- fix: correctly scan routes on Windows when optimising dependencies ([#17757](https://github.com/sveltejs/kit/pull/17757))
+
+## 3.2.0
+
+### Minor Changes
+
+- feat: Add clickable links to remote function invocation in dev server logs ([#17547](https://github.com/sveltejs/kit/pull/17547))
+
+### Patch Changes
+
+- fix: reject URL inputs in `resolve` ([#17627](https://github.com/sveltejs/kit/pull/17627))
+
+- fix: respond with JSON instead of rendering the error page for a `__data.json` request to a missing route ([#17630](https://github.com/sveltejs/kit/pull/17630))
+
+- fix: resolve relative paths against the page URL in data requests when `paths.relative` is `true` ([#17630](https://github.com/sveltejs/kit/pull/17630))
+
+- fix: reject binary remote forms referencing files with an empty file-offset table as 400 Bad Request ([#17579](https://github.com/sveltejs/kit/pull/17579))
+
+- fix: correctly populate route and params for `afterNavigate` during hydration ([#17577](https://github.com/sveltejs/kit/pull/17577))
+
+- fix: include assets imported through dynamic imports, remote functions and param matchers in `builder.findServerAssets` so that `read` can find them ([#17505](https://github.com/sveltejs/kit/pull/17505))
+
+- fix: set `navigation.from` to `null` in `afterNavigate` on start when SSR is disabled ([#17587](https://github.com/sveltejs/kit/pull/17587))
+
+- fix: include remote function name and declaration file in schema validation failure logs ([#17495](https://github.com/sveltejs/kit/pull/17495))
+
+- fix: reuse SSR results of remote functions from packages during hydration in dev ([#17604](https://github.com/sveltejs/kit/pull/17604))
+
+- fix: remove empty type output directories for removed routes ([#17472](https://github.com/sveltejs/kit/pull/17472))
+
+- fix: use the UTF-8 byte length when reading inline assets ([#17590](https://github.com/sveltejs/kit/pull/17590))
+
+- chore: simplify a few server and build helpers ([#17531](https://github.com/sveltejs/kit/pull/17531))
+
+- fix: ignore the query string and hash of an imported asset's URL when using `read` ([#17507](https://github.com/sveltejs/kit/pull/17507))
+
+- fix: avoid reloading unrelated server modules when saving files during development ([#17462](https://github.com/sveltejs/kit/pull/17462))
+
 ## 3.1.1
 
 ### Patch Changes

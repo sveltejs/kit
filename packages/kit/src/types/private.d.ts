@@ -287,6 +287,7 @@ export type DeepPartial<T> = T extends Record<PropertyKey, unknown> | unknown[]
 
 export type IsAny<T> = 0 extends 1 & T ? true : false;
 
+// a required `true` property is allowed, because leaving its checkbox unchecked should fail
 export type HasNonOptionalBoolean<T> =
 	IsAny<T> extends true
 		? never
@@ -295,5 +296,5 @@ export type HasNonOptionalBoolean<T> =
 			: T extends Array<infer U>
 				? HasNonOptionalBoolean<U>
 				: T extends Record<string, any>
-					? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+					? { [K in keyof T]: [T[K]] extends [true] ? never : HasNonOptionalBoolean<T[K]> }[keyof T]
 					: never;

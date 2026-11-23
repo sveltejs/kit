@@ -9,7 +9,7 @@ import { styleText } from 'node:util';
 import { code, include } from '@rolldown/pluginutils';
 import { build_server_nodes } from './build_server.js';
 import { treeshake_prerendered_remotes } from './remote.js';
-import { find_deps, resolve_symlinks } from './utils.js';
+import { find_deps, resolve_css_minify, resolve_symlinks } from './utils.js';
 import { warn_overridden_config } from '../utils.js';
 import { adapt } from '../../../core/adapt/index.js';
 import { generate_manifest } from '../../../core/generate_manifest/index.js';
@@ -46,7 +46,7 @@ import { s } from '../../../utils/misc.js';
  * @param {(metadata: ServerMetadata) => void} set_build_metadata
  * @param {(data: ManifestData) => void} set_manifest_data
  * @param {() => Record<string, EnvVarConfig<any>> | null} get_explicit_env_config
- * @param {() => ({ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string> })} get_remote_metadata
+ * @param {() => ({ remotes: Map<string, RemoteChunk>; remote_original_by_hash: Map<string, string> })} get_remote_metadata
  * @param {(fn: () => Promise<void>) => void} set_finalise
  * @returns {Plugin}
  */
@@ -109,7 +109,7 @@ export function plugin_compile(
 		config: {
 			// avoids overwriting the base setting that's also set by Vitest
 			order: 'pre',
-			handler(config, config_env) {
+			handler(config) {
 				let kit_global;
 				let sourcemapIgnoreList;
 
@@ -127,8 +127,6 @@ export function plugin_compile(
 
 				out_dir = posixify(kit.outDir);
 				out = `${out_dir}/output`;
-
-				env = vite.loadEnv(config_env.mode, kit.env.dir, '');
 
 				/** @type {Record<string, string>} */
 				const server_input = {
@@ -237,7 +235,7 @@ export function plugin_compile(
 					base: relative ? './' : base,
 					build: {
 						cssCodeSplit: !inline,
-						cssMinify: initial_config.build?.minify == null ? true : !!initial_config.build.minify,
+						cssMinify: resolve_css_minify(initial_config.build),
 						manifest: true,
 						rolldownOptions: {
 							output: {
@@ -299,6 +297,7 @@ export function plugin_compile(
 							define: {
 								__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 								__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+								__SVELTEKIT_HAS_REROUTE__: 'true',
 								__SVELTEKIT_PAYLOAD__: '{}'
 							}
 						},
@@ -388,6 +387,8 @@ export function plugin_compile(
 
 		configResolved(resolved_config) {
 			vite_config = resolved_config;
+			// read after the `config` hooks so that plugins (e.g. adapters) can populate `process.env`
+			env = vite.loadEnv(resolved_config.mode, kit.env.dir, '');
 		},
 
 		applyToEnvironment(environment) {
@@ -478,7 +479,8 @@ export function plugin_compile(
 					server_manifest: vite_server_manifest
 				};
 
-				const { remotes, remote_original_by_hash } = get_remote_metadata();
+				const { remotes: remotes_by_hash, remote_original_by_hash } = get_remote_metadata();
+				const remotes = Array.from(remotes_by_hash.values());
 
 				fs.writeFileSync(
 					manifest_path,
@@ -564,6 +566,9 @@ export function plugin_compile(
 							s(has_server_load);
 						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
 							s(has_universal_load);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_REROUTE__ = s(
+							metadata.has_reroute
+						);
 					}
 
 					const client_build = await builder.build(builder.environments.client);

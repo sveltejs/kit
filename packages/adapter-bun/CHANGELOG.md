@@ -1,5 +1,26 @@
 # @sveltejs/adapter-bun
 
+## 1.0.2
+
+### Patch Changes
+
+- fix: honour q-values in `Accept-Encoding` and serve dotfiles below `.well-known`, matching `@sveltejs/adapter-node` ([#17308](https://github.com/sveltejs/kit/pull/17308))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.1.0
+  - @sveltejs/kit@3.4.0
+
+## 1.0.1
+
+### Patch Changes
+
+- fix: serve client and prerendered files whichever way the request path is percent-encoded, and allow `*` and a leading `:` in their filenames ([#17123](https://github.com/sveltejs/kit/pull/17123))
+
+- perf: let Bun serve immutable files without calling into JavaScript ([#17123](https://github.com/sveltejs/kit/pull/17123))
+
+- fix: support the `ORIGIN` environment variable when `paths.origin` is not set ([#17632](https://github.com/sveltejs/kit/pull/17632))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.0
+
 ## 1.0.0
 
 ### Major Changes

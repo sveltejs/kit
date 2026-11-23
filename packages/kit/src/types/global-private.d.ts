@@ -43,6 +43,8 @@ declare global {
 	 * Used for treeshaking universal load code from client bundles when no universal loads exist.
 	 */
 	const __SVELTEKIT_HAS_UNIVERSAL_LOAD__: boolean;
+	/** True if the universal hooks file exports `reroute` */
+	const __SVELTEKIT_HAS_REROUTE__: boolean;
 	/**
 	 * The `__sveltekit_abc123` object in the init `<script>`.
 	 * Should only be used when bundleStrategy !== 'inline' to avoid SvelteKit runtime changing on every build, preventing cacheability.

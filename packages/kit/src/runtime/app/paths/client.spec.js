@@ -15,6 +15,16 @@ test('hash routing resolves to a fragment without the base', () => {
 	expect(resolve('/blog/[slug]', { slug: 'hello' })).toBe('#/blog/hello');
 });
 
+test.each(['?filter[name]=x', '#[anchor]'])('leaves suffix %s untouched', (suffix) => {
+	expect(resolve('/(app)/' + suffix)).toBe('#/' + suffix);
+});
+
+test('rejects missing params using the original route ID', () => {
+	const id = '/blog/[slug]/(app)?filter[name]=x';
+	// @ts-expect-error deliberately omit required params to test the runtime diagnostic
+	expect(() => resolve(id)).toThrowKitError('resolve_params_missing', { contains: [id] });
+});
+
 test.each(['https://example.com', 'mailto:hi@example.com', '//example.com'])(
 	'rejects URL input %s',
 	(input) => {

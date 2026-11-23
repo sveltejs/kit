@@ -2,10 +2,9 @@
 /** @import { SyncRenderOutput } from 'svelte/server' */
 import * as devalue from 'devalue';
 import { DEV } from 'esm-env';
-import { isRedirect, text } from '@sveltejs/kit';
+import { isRedirect } from '@sveltejs/kit';
 import * as paths from '#app/paths';
 import { relative } from '$app/paths/internal/server';
-import { hash } from '../../../utils/hash.js';
 import { escape_html } from '../../../utils/escape.js';
 import { serialize_data } from './serialize_data.js';
 import { s } from '../../../utils/misc.js';
@@ -20,8 +19,9 @@ import {
 } from './server_routing.js';
 import { add_resolution_suffix, route_id_resolution_pathname } from '../../pathname.js';
 import { try_get_request_store, with_request_store } from '@sveltejs/kit/internal/server';
-import { stream_text } from '../../utils.js';
+import { stream_text, text_encoder } from '../../utils.js';
 import { count_non_ssi_comments, is_prerendering } from '../utils.js';
+import { hash_bytes } from './hash_bytes.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import * as env from '<sveltekit:generated>/env/config.js';
 import { collect_remote_data } from '../remote-functions.js';
@@ -33,6 +33,9 @@ import { manifest } from '../internal.js';
 import { options } from '<sveltekit:generated>/server.js';
 import * as e from '../../../messages/server-errors.js';
 import * as w from '../../../messages/server-warnings.js';
+
+const vite_devtools_loader =
+	"{ const s = document.createElement('script'); s.type = 'module'; s.src = '/__devtools/embedded.js'; s.nonce = document.currentScript.nonce; document.body.appendChild(s); }";
 
 // TODO rename this function/module
 
@@ -291,7 +294,7 @@ export async function render_response({
 	 */
 	const add_preload = (path, attributes) => {
 		if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && !is_prerendering(state)) {
-			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}; nopush`);
+			link_headers.add(`<${encodeURI(path)}>; ${attributes.join('; ')}`);
 		} else {
 			head.add_link_tag(path, attributes);
 		}
@@ -308,7 +311,7 @@ export async function render_response({
 			attributes.push('disabled', 'media="(max-width: 0)"');
 		} else {
 			if (__SVELTEKIT_LINK_HEADER_PRELOAD__ && resolve_opts.preload({ type: 'css', path })) {
-				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"; nopush`);
+				link_headers.add(`<${encodeURI(path)}>; rel="preload"; as="style"`);
 			}
 		}
 
@@ -556,6 +559,14 @@ export async function render_response({
 		}>${init_app}</script>\n\t\t`;
 	}
 
+	if (DEV && manifest.vite_devtools) {
+		// inline so the csp can allow it
+		await csp.add_script(vite_devtools_loader);
+		body += `\n\t\t\t<script${
+			csp.script_needs_nonce ? ` nonce="${csp.nonce}"` : ''
+		}>${vite_devtools_loader}</script>`;
+	}
+
 	const headers = new Headers({
 		'x-sveltekit-page': 'true',
 		'content-type': 'text/html'
@@ -603,8 +614,21 @@ export async function render_response({
 			done: true
 		})) || '';
 
-	if (!chunks) {
-		headers.set('etag', `"${hash(transformed)}"`);
+	// the response body is these bytes, so the etag is hashed from them rather than from the string
+	const encoded = chunks ? null : text_encoder.encode(transformed);
+
+	const needs_nonce =
+		csp.script_needs_nonce || csp.style_needs_nonce || options.app_template_contains_nonce;
+
+	// an `etag` from `setHeaders` replaces ours, a `no-store` response is never revalidated,
+	// and a page with a nonce can never generate matching etags, so we can skip processing it
+	if (
+		encoded &&
+		!('etag' in state.headers) &&
+		!/\bno-store\b/i.test(state.headers['cache-control'] ?? '') &&
+		!(needs_nonce && transformed.includes(csp.nonce))
+	) {
+		headers.set('etag', `"${hash_bytes(encoded)}"`);
 	}
 
 	if (DEV) {
@@ -619,9 +643,13 @@ export async function render_response({
 		}
 	}
 
-	return chunks
-		? new Response(stream_text(transformed + '\n', chunks), { status, headers })
-		: text(transformed, { status, headers });
+	if (chunks) {
+		return new Response(stream_text(transformed + '\n', chunks), { status, headers });
+	}
+
+	const bytes = /** @type {Uint8Array<ArrayBuffer>} */ (encoded);
+	headers.set('content-length', bytes.byteLength.toString());
+	return new Response(bytes, { status, headers });
 }
 
 class Head {

@@ -1,5 +1,42 @@
 # @sveltejs/adapter-node
 
+## 6.0.5
+
+### Patch Changes
+
+- chore: build on `@sveltejs/adapter-server` ([#17308](https://github.com/sveltejs/kit/pull/17308))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.1.0
+  - @sveltejs/kit@3.4.0
+
+## 6.0.4
+
+### Patch Changes
+
+- fix: replace the port in the forwarded host with `PORT_HEADER` instead of appending a second one ([#17779](https://github.com/sveltejs/kit/pull/17779))
+- Updated dependencies:
+  - @sveltejs/kit@3.3.0
+
+## 6.0.3
+
+### Patch Changes
+
+- fix: set `X-Accel-Buffering: no` on `text/event-stream` responses whose content type has parameters, such as `charset=utf-8` ([#17687](https://github.com/sveltejs/kit/pull/17687))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.1
+
+## 6.0.2
+
+### Patch Changes
+
+- fix: ignore `Range` headers on `HEAD` requests for static assets ([#17602](https://github.com/sveltejs/kit/pull/17602))
+
+- fix: respond with a 500 instead of crashing the server when handling a request fails unexpectedly ([#17696](https://github.com/sveltejs/kit/pull/17696))
+
+- fix: support the `ORIGIN` environment variable when `paths.origin` is not set ([#17632](https://github.com/sveltejs/kit/pull/17632))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.0
+
 ## 6.0.1
 
 ### Patch Changes

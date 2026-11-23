@@ -1,5 +1,31 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.5
+
+### Patch Changes
+
+- fix: avoid build warnings for missing optional peer dependencies ([#17802](https://github.com/sveltejs/kit/pull/17802))
+- Updated dependencies:
+  - @sveltejs/kit@3.4.0
+
+## 7.0.4
+
+### Patch Changes
+
+- fix: support all bundle strategies with Vercel Skew Protection ([#17731](https://github.com/sveltejs/kit/pull/17731))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.1
+
+## 7.0.3
+
+### Patch Changes
+
+- fix: accept every Node.js version from 26 (`nodejs27.x`, `nodejs28.x`, ...), not only even ones ([#17584](https://github.com/sveltejs/kit/pull/17584))
+
+- fix: serve prerendered pages when `paths.base` is set ([#17525](https://github.com/sveltejs/kit/pull/17525))
+- Updated dependencies:
+  - @sveltejs/kit@3.2.0
+
 ## 7.0.2
 
 ### Patch Changes

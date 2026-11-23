@@ -23,14 +23,6 @@ export default function (options) {
 		async adapt(builder) {
 			// adapter implementation
 		},
-		async emulate() {
-			return {
-				async platform({ config, prerender }) {
-					// the returned object becomes `event.platform` during dev, build and
-					// preview. Its shape is that of `App.Platform`
-				}
-			}
-		},
 		supports: {
 			read: ({ config, route }) => {
 				// Return `true` if the route with the given `config` can use `read`
@@ -43,6 +35,8 @@ export default function (options) {
 			}
 		},
 		vite: {
+			// set this to `true` to disable the default Node server during `vite preview`
+			customPreview: false,
 			getRequest(options) {
 				const request = getRequest(options);
 				// modify the Request object here if needed
@@ -64,7 +58,7 @@ export default function (options) {
 }
 ```
 
-Of these, `name` and `adapt` are required. `emulate`, `vite`, and `supports` are optional.
+Of these, `name` and `adapt` are required. `vite` and `supports` are optional.
 
 Within the `adapt` method, there are a number of things that an adapter should do:
 
