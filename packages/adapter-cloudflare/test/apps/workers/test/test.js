@@ -33,6 +33,8 @@ test('read from $app/server works', async ({ request }) => {
 	);
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
+	const subpath = await request.get('/read/subpath');
+	expect(await subpath.text()).toBe(content);
 });
 
 test('static and prerendered assets', async ({ request }) => {
