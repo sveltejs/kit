@@ -19,7 +19,8 @@ export function plugin_externals() {
 		apply: 'build',
 
 		applyToEnvironment(environment) {
-			return environment.config.consumer === 'server';
+			const { consumer, resolve } = environment.config;
+			return consumer === 'server' && resolve.external !== true;
 		},
 
 		configResolved(config) {
