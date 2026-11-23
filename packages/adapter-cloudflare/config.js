@@ -1,5 +1,6 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
+/** @import { GetPlatformProxyOptions } from 'wrangler' */
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import { is_dev_or_build, needs_nodejs_als, validate_main } from './utils.js';
@@ -31,11 +32,24 @@ const is_build_or_preview = (_config, env) => env.isPreview === true || env.comm
  * @param {string[]} server_entries paths, without the file extension, to the hooks and
  * instrumentation files. Vite scans them for dependencies along with the route files
  * @param {boolean} worker whether a Worker is deployed
+ * @param {GetPlatformProxyOptions} platform_proxy preferences for the local bindings
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config, server_entries, worker) {
+export function plugin_config(
+	config_path,
+	set_worker_config,
+	server_entries,
+	worker,
+	platform_proxy = {}
+) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
+		// the Cloudflare Vite plugin creates the local bindings during preview.
+		// TODO: in the next major, pass `<persist.path>/v3` resolved from the Vite `root` to
+		// `getPlatformProxy` so that dev shares its data with preview. The Cloudflare Vite
+		// plugin always stores the data in the `v3` subdirectory of a custom path
+		persistState: platform_proxy.persist,
+		remoteBindings: platform_proxy.remoteBindings,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			validate_main(config.main, config.configPath, worker);

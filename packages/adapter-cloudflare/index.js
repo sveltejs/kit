@@ -211,7 +211,8 @@ export default function (options = {}) {
 							config.files.hooks.universal,
 							`${config.files.src}/instrumentation.server`
 						].map(posixify),
-						worker
+						worker,
+						options.platformProxy
 					),
 					...plugin_wasm(),
 					{
