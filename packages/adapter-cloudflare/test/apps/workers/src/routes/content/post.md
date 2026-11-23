@@ -1,0 +1,1 @@
+__CLOUDFLARE_MODULE__Text__config/wrangler.jsonc__CLOUDFLARE_MODULE__
