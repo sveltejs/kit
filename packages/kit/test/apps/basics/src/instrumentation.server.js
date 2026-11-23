@@ -1,7 +1,7 @@
-/** @import {SpanExporter} from '@opentelemetry/sdk-trace-node' */
+/** @import {SpanExporter} from '@opentelemetry/sdk-trace' */
 /** @import {SpanData} from '../../../types' */
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
 import fs from 'node:fs';
 
 /** @implements {SpanExporter} */
@@ -14,7 +14,7 @@ class FilesystemSpanExporter {
 		this.#path = path;
 	}
 
-	/** @param {import('@opentelemetry/sdk-trace-node').ReadableSpan[]} spans */
+	/** @param {import('@opentelemetry/sdk-trace').ReadableSpan[]} spans */
 	export(spans) {
 		// spans have circular references so they can't be naively json-ified
 		const serialized_spans = spans.map((span) => {
@@ -44,8 +44,8 @@ class FilesystemSpanExporter {
 }
 
 const filesystemSpanExporter = new FilesystemSpanExporter('test/spans.jsonl');
-const spanProcessor = new SimpleSpanProcessor(filesystemSpanExporter);
+const spanProcessor = new SimpleSpanProcessor({ exporter: filesystemSpanExporter });
 export const sdk = new NodeSDK({
-	spanProcessor
+	spanProcessors: [spanProcessor]
 });
 sdk.start();

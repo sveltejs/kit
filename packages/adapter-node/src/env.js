@@ -5,6 +5,7 @@ const expected = new Set([
 	'SOCKET_PATH',
 	'HOST',
 	'PORT',
+	'ORIGIN',
 	'XFF_DEPTH',
 	'ADDRESS_HEADER',
 	'PROTOCOL_HEADER',

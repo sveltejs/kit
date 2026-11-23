@@ -8,9 +8,10 @@ import * as e from '../../../../messages/server-errors.js';
 /**
  * @param {any} validate_or_fn
  * @param {((arg?: any) => any) | undefined} [maybe_fn]
+ * @param {(() => import('types').BaseRemoteInternals | undefined) | undefined} [get_internals]
  * @returns {(arg?: any) => MaybePromise<any>}
  */
-export function create_validator(validate_or_fn, maybe_fn) {
+export function create_validator(validate_or_fn, maybe_fn, get_internals) {
 	// prevent functions without validators being called with arguments
 	if (!maybe_fn) {
 		return (arg) => {
@@ -33,7 +34,11 @@ export function create_validator(validate_or_fn, maybe_fn) {
 
 			// if the `issues` field exists, the validation failed
 			if (result.issues) {
-				throw new ValidationError(result.issues);
+				const internals = get_internals?.();
+				throw new ValidationError(
+					result.issues,
+					internals?.name ? { name: internals.name, file: internals.file } : undefined
+				);
 			}
 
 			return result.value;
@@ -64,8 +69,9 @@ export async function get_response(internals, payload, state, get_result) {
 
 	const cache = get_cache(internals, state);
 
-	if (!state.is_in_remote_query) {
-		// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response
+	// if this is a top-level (not nested) `await myQuery()`, include it in the serialized response,
+	// unless it's in a server `load` — only what `load` returns should reach the client
+	if (!state.is_in_remote_query && !state.is_in_server_load) {
 		get_implicit_lookup(internals, state)[payload] = get_result;
 	}
 
@@ -168,6 +174,7 @@ export async function* run_remote_generator(event, state, allow_cookies, get_inp
 	const source = await with_request_store(store, () => fn(input));
 	const iterator = to_iterator(source, name);
 	let done = false;
+	let next_store = store;
 
 	try {
 		while (true) {
@@ -176,11 +183,19 @@ export async function* run_remote_generator(event, state, allow_cookies, get_inp
 			// access to the request context in generator functions, we have to
 			// provide it to every invocation of `.next`. (It's more obvious that
 			// this is necessary with plain iterators.)
-			const result = await with_request_store(store, () => iterator.next());
+			const result = await with_request_store(next_store, () => iterator.next());
 			if (result.done) {
 				done = true;
 				return result.value;
 			}
+
+			// give each subsequent iteration its own query cache, otherwise
+			// nested queries would keep returning the first iteration's value
+			next_store = {
+				...store,
+				state: { ...store.state, remote: { ...store.state.remote, data: null } }
+			};
+
 			yield result.value;
 		}
 	} finally {

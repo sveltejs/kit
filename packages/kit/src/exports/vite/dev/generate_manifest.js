@@ -19,7 +19,7 @@ const vite_css_query_regex = /(?:\?|&)(?:raw|url|inline)(?:&|$)/;
  * @param {ValidatedConfig} svelte_config
  * @param {ManifestData} manifest_data
  * @param {string} root
- * @param {() => RemoteChunk[]} get_remotes
+ * @param {() => Map<string, RemoteChunk>} get_remotes
  * @returns {SSRManifest}
  */
 export function generate_manifest(
@@ -168,7 +168,7 @@ export function generate_manifest(
 		prerendered_routes: new Set(),
 		get remotes() {
 			return Object.fromEntries(
-				get_remotes().map((remote) => [
+				Array.from(get_remotes().values(), (remote) => [
 					remote.hash,
 					() => runner.import(remote.file).then((module) => ({ default: module }))
 				])

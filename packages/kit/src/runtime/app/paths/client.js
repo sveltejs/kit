@@ -2,6 +2,7 @@
 /** @import { ResolveArgs } from './types.js' */
 import { base, assets, hash_routing, match_implementation } from './internal/client.js';
 import { resolve_route } from '../../../utils/routing.js';
+import { has_scheme_or_authority } from '../../../utils/url.js';
 import { DEV } from 'esm-env';
 import * as e from '../../../messages/shared-errors.js';
 import * as w from '../../../messages/shared-warnings.js';
@@ -70,13 +71,12 @@ const pathname_prefix = hash_routing ? '#' : base;
 export function resolve(...args) {
 	const [id, params] = /** @type {[string, Record<string, string>?]} */ (args);
 
-	if (id[0] === '/') {
-		// route ID
-		if (id.includes('[') && !params) {
-			e.resolve_params_missing({ id });
-		}
+	if (has_scheme_or_authority(id)) {
+		e.resolve_url_input({ id });
+	}
 
-		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params ?? {}));
+	if (id[0] === '/') {
+		return /** @type {ResolvedPathname} */ (pathname_prefix + resolve_route(id, params));
 	}
 
 	return /** @type {ResolvedPathname} */ (pathname_prefix + '/' + id);

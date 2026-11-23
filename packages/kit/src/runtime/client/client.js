@@ -604,8 +604,6 @@ async function _invalidate(reset_page_state = true) {
 		}
 	}
 
-	const prev_state = page.state;
-	const prev_shallow = page.shallow;
 	const navigation_result = intent && (await load_route(intent));
 	if (!navigation_result || token !== invalidation_token || nav_token !== navigation_token) {
 		return;
@@ -626,16 +624,13 @@ async function _invalidate(reset_page_state = true) {
 		return;
 	}
 
-	apply_navigation_result(navigation_result);
-
-	// Preserve `page.state` when invalidating without resetting it (e.g. `refresh`/`refreshAll`).
-	// Must run after `apply_navigation_result`, which overwrites `state`/`shallow` with the fresh
-	// page object's `{}`/`null` values when the page changed.
+	// `pushState`/`replaceState` can change these mid-load without cancelling the invalidation
 	if (!reset_page_state) {
-		update_page({ state: prev_state });
+		navigation_result.props.page.state = page.state;
 	}
+	navigation_result.props.page.shallow = page.shallow;
 
-	update_page({ shallow: prev_shallow });
+	apply_navigation_result(navigation_result);
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 
@@ -888,8 +883,8 @@ async function initialize(result, target, should_hydrate) {
 
 	/** @type {NavigationEvent} */
 	const nav = {
-		params: current.params,
-		route: { id: current.route?.id ?? null },
+		params: result.state.params,
+		route: { id: result.state.route?.id ?? null },
 		url: new URL(location.href)
 	};
 
@@ -941,7 +936,10 @@ async function initialize(result, target, should_hydrate) {
 	}
 
 	restore_snapshot(current_navigation_index);
-	restore_navigation_snapshot(current_history_index);
+	// Client-only startup restores in `navigate` so don't restore twice
+	if (hydrated) {
+		restore_navigation_snapshot(current_history_index);
+	}
 
 	started = true;
 }
@@ -1746,6 +1744,8 @@ async function load_root_error_page({ error, url, route }) {
  * @returns {Promise<URL | undefined>}
  */
 async function get_rerouted_url(url) {
+	if (!__SVELTEKIT_HAS_REROUTE__) return url;
+
 	const href = url.href;
 
 	if (reroute_cache.has(href)) {
@@ -1833,8 +1833,10 @@ export async function get_navigation_intent(url, invalidating) {
 	} else {
 		/** @type {{ route?: import('types').CSRRouteServer, params: Record<string, string>}} */
 		const { route, params } = await import(
+			// prefix with the origin, since a pathname like `//evil.com/x` would otherwise be treated
+			// as protocol-relative. Don't use `new URL(pathname, origin)`, which has the same problem
 			/* @vite-ignore */
-			add_resolution_suffix(url.pathname)
+			url.origin + add_resolution_suffix(url.pathname)
 		);
 
 		if (!route) return;
@@ -2077,7 +2079,8 @@ async function navigate({
 
 	updating = true;
 
-	if (!popped) {
+	// Initial entry has no outgoing page, and its persisted snapshots must survive startup.
+	if (started && !popped) {
 		// popstate captures the source entry synchronously, before the traversal is resolved
 		capture_scroll(previous_history_index);
 		capture_snapshot(previous_navigation_index);
@@ -3749,12 +3752,16 @@ function create_navigation(
 
 	/** @type {(Navigation | AfterNavigate) & { type: T }} */
 	const navigation = /** @type {any} */ ({
-		from: {
-			params: current.params,
-			route: { id: current.route?.id ?? null },
-			url: current.url,
-			scroll: scroll_state()
-		},
+		// the app's first navigation has no page to come from
+		from:
+			type === 'enter'
+				? null
+				: {
+						params: current.params,
+						route: { id: current.route?.id ?? null },
+						url: current.url,
+						scroll: scroll_state()
+					},
 		to: url && {
 			params: target ? target.params : (intent?.params ?? null),
 			route: { id: target ? (target.route?.id ?? null) : (intent?.route?.id ?? null) },

@@ -42,6 +42,7 @@ declare module '@sveltejs/kit' {
 		/**
 		 * Creates an `Emulator`, which allows the adapter to influence the environment
 		 * during dev, build and prerendering.
+		 * @deprecated This will be removed in the next major version
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
@@ -52,6 +53,15 @@ declare module '@sveltejs/kit' {
 	}
 
 	export interface AdapterViteConfig {
+		/**
+		 * By default, SvelteKit creates a Node preview server to serve the build
+		 * output during `vite preview`. Set this option to `true` when the adapter
+		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+		 * previewing the build output on its own.
+		 * @default false
+		 * @since 3.4.0
+		 */
+		customPreview?: boolean;
 		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
@@ -120,6 +130,11 @@ declare module '@sveltejs/kit' {
 	export interface ValidationError {
 		/** The validation issues */
 		issues: StandardSchemaV1.Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	}
 
 	type UnpackValidationError<T> =
@@ -404,6 +419,7 @@ declare module '@sveltejs/kit' {
 
 	/**
 	 * A collection of functions that influence the environment during dev, build and prerendering
+	 * @deprecated This will be removed in the next major version
 	 */
 	export interface Emulator {
 		/**
@@ -970,9 +986,12 @@ declare module '@sveltejs/kit' {
 			: T[K]; // Use the exact type for everything else
 	};
 
-	type ValidatedConfig = RecursiveRequired<Omit<Config, 'preprocess' | 'adapter'>> & {
+	type ValidatedConfig = RecursiveRequired<
+		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
+	> & {
 		adapter: Adapter & { vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
+		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
 	/**
 	 * Throws an error with a HTTP status code and an optional message.
@@ -1257,6 +1276,11 @@ declare module '@sveltejs/kit/hooks' {
 		kind: 'validation';
 		error: { status: number; message: string };
 		issues: Issue[];
+		/** Information about the remote function that failed validation */
+		remote?: {
+			name?: string;
+			file?: string;
+		};
 	};
 
 	/**
@@ -1275,6 +1299,8 @@ declare module '@sveltejs/kit/hooks' {
 					error: CaughtErrorMap[Kind];
 					/** Only present for validation errors */
 					issues?: undefined;
+					/** Only present for validation errors */
+					remote?: undefined;
 				};
 		  }[keyof CaughtErrorMap]
 		| ValidationCaughtError<Issue>;
@@ -2115,7 +2141,6 @@ declare module '@sveltejs/kit/vite' {
 			 *
 			 * Note that any paths configured here should be relative to the generated config file, which is written to `node_modules/$app/tsconfig.json`.
 			 *
-			 * @default (config) => config
 			 * @since 1.3.0
 			 */
 			config?: (config: Record<string, any>) => Record<string, any> | void;
@@ -2646,6 +2671,11 @@ declare module '$app/navigation' {
 	 */
 	export interface NavigationEnter extends NavigationBase {
 		type: 'enter';
+
+		/**
+		 * The app has just started, so there is no page it navigated from
+		 */
+		from: null;
 
 		/**
 		 * In case of a history back/forward navigation, the number of steps to go back/forward
@@ -3589,6 +3619,7 @@ declare module '$app/server' {
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
 
+	// a required `true` property is allowed, because leaving its checkbox unchecked should fail
 	type HasNonOptionalBoolean<T> =
 		IsAny<T> extends true
 			? never
@@ -3597,7 +3628,7 @@ declare module '$app/server' {
 				: T extends Array<infer U>
 					? HasNonOptionalBoolean<U>
 					: T extends Record<string, any>
-						? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+						? { [K in keyof T]: [T[K]] extends [true] ? never : HasNonOptionalBoolean<T[K]> }[keyof T]
 						: never;
 	/**
 	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
@@ -3654,7 +3685,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? "Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked." : Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? "Error: Boolean fields in form schemas that accept false must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked." : Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

@@ -2,6 +2,8 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import { init_transport, parse } from '#app/internal/transport';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 
+vi.mock('#app/env/server', () => ({ prerendering: false }));
+
 const decoder = new TextDecoder();
 
 /** @type {typeof import('./remote-functions.js').create_live_query_response} */
@@ -101,6 +103,32 @@ test('cancellation aborts the generator request signal and runs cleanup', async 
 	await vi.waitFor(() => expect(cleaned_up).toHaveBeenCalledOnce());
 });
 
+// https://github.com/sveltejs/kit/issues/15954
+test('nested queries are re-run on each iteration of a live query', async () => {
+	const { query } = await import('../app/server/remote/query.js');
+
+	let count = 0;
+	const get_count = query(() => ++count);
+	const live_count = query.live(async function* () {
+		for (let i = 0; i < 3; i += 1) {
+			yield await get_count();
+		}
+	});
+
+	const response = create_live_query_response(
+		/** @type {import('@sveltejs/kit').RequestEvent} */ ({
+			request: new Request('http://localhost/_app/remote/test?payload=undefined')
+		}),
+		/** @type {import('types').RequestState} */ (/** @type {unknown} */ ({ remote: {} })),
+		/** @type {any} */ (live_count).__,
+		undefined
+	);
+
+	expect(await response.text()).toBe(
+		[1, 2, 3].map((n) => `data: {"type":"result","result":"[${n}]"}\n\n`).join('')
+	);
+});
+
 test('serializes explicitly ignored requested updates', async () => {
 	const command = () => {
 		get_request_store().state.remote.ignored = new Set(['hash/query/[-1]']);
@@ -167,3 +195,39 @@ test.each([
 		);
 	}
 );
+
+test('validation error passes remote info to handleError', async () => {
+	const { ValidationError } = await import('@sveltejs/kit/internal');
+	const handleError = vi.fn();
+	set_hooks(/** @type {any} */ ({ handleError }));
+	const issues = [{ message: 'Expected string' }];
+	const fn = Object.assign(
+		() => {
+			throw new ValidationError(issues, { name: 'myFn', file: 'src/routes/foo.remote.js' });
+		},
+		{ __: { type: 'command', name: 'myFn', file: 'src/routes/foo.remote.js' } }
+	);
+	set_manifest(
+		/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { myFn: fn } }) } })
+	);
+	const response = await handle_remote_call(
+		/** @type {any} */ ({
+			request: new Request('http://localhost/_app/remote/hash/myFn', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ payload: '' })
+			}),
+			tracing: { current: { setAttributes: vi.fn() } }
+		}),
+		/** @type {any} */ ({ remote: {} }),
+		'hash/myFn'
+	);
+	expect(response.status).toBe(200);
+	expect(handleError).toHaveBeenCalledWith(
+		expect.objectContaining({
+			kind: 'validation',
+			issues,
+			remote: { name: 'myFn', file: 'src/routes/foo.remote.js' }
+		})
+	);
+});

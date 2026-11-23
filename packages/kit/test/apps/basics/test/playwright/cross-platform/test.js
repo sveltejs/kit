@@ -1188,6 +1188,7 @@ test.describe('$app/server', () => {
 		const auto = await page.textContent('[data-testid="auto"]');
 		const url = await page.textContent('[data-testid="url"]');
 		const styles = await page.textContent('[data-testid="styles"]');
+		const query = await page.textContent('[data-testid="query"]');
 		const local_glob = await page.textContent('[data-testid="local_glob"]');
 		const external_glob = await page.textContent('[data-testid="external_glob"]');
 		const svg = await page.innerHTML('[data-testid="svg"]');
@@ -1195,6 +1196,7 @@ test.describe('$app/server', () => {
 		// the emoji is there to check that base64 decoding works correctly
 		expect(auto?.trim()).toBe('Imported without ?url 😎');
 		expect(url?.trim()).toBe('Imported with ?url 😎');
+		expect(query?.trim()).toBe('Imported with a query 😎');
 		expect(local_glob?.trim()).toBe('Imported with ?url via glob 😎');
 		expect(external_glob?.trim()).toBe(
 			'Imported with url glob from the read-file test in basics. Placed here outside the app folder to force a /@fs prefix 😎'
@@ -1203,5 +1205,10 @@ test.describe('$app/server', () => {
 
 		// check that paths in .css files are relative
 		expect(styles).toContain('url(.');
+	});
+
+	test('can read a file imported through a dynamic import', async ({ page }) => {
+		await page.goto('/read-file/dynamic-import');
+		await expect(page.getByTestId('text')).toHaveText('Imported through a dynamic import 😎');
 	});
 });

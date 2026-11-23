@@ -63,6 +63,12 @@
 
 <enhanced:img src={object.image} alt="member access test" />
 
+<enhanced:img src={manual_image1} alt="dynamic width test" width="280" />
+
+<enhanced:img src={manual_image1} alt="dynamic height test" height="140" />
+
+<enhanced:img src={get_image(0)} alt="dynamic computed width test" width="280" />
+
 <picture>
 	<source src="./dev.avif" />
 	<source srcset="./dev.avif 500v ./bar.avif 100v" />

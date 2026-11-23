@@ -7,7 +7,7 @@ import { get_status, normalize_error } from '../../../utils/error.js';
 import { noop } from '../../../utils/functions.js';
 import { add_data_suffix } from '../../pathname.js';
 import { build_error_chain, nearest_error_pages } from '../../error-chain.js';
-import { redirect_response } from '../utils.js';
+import { is_prerendering, redirect_response } from '../utils.js';
 import { manifest } from '../internal.js';
 import { handle_error_and_jsonify } from '../errors.js';
 import {
@@ -113,10 +113,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 		// renders an empty 'shell' page if SSR is turned off and if there is
 		// no server data to prerender. As a result, the load functions and rendering
 		// only occur client-side.
-		if (
-			ssr === false &&
-			!((state.prerendering || state.prerender_default === true) && should_prerender_data)
-		) {
+		if (ssr === false && !(is_prerendering(state) && should_prerender_data)) {
 			// if the user makes a request through a non-enhanced form, the returned value is lost
 			// because there is no SSR or client-side handling of the response
 			if (DEV && action_result && !event.request.headers.has('x-sveltekit-action')) {
@@ -160,7 +157,7 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 		const data_serializer = server_data_serializer(event, state);
 		const data_serializer_json =
-			(state.prerendering || state.prerender_default === true) && should_prerender_data
+			is_prerendering(state) && should_prerender_data
 				? server_data_serializer_json(event, state)
 				: null;
 
