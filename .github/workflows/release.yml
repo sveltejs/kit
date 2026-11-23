@@ -8,7 +8,7 @@ on:
 concurrency:
   # prevent two release workflows from running at once
   # race conditions here can result in releases failing
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
 
 permissions: {}
 jobs:
