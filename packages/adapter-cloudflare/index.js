@@ -114,7 +114,7 @@ export default function (options = {}) {
 				}
 			}
 			const written = builder.writeClient(assets_dest);
-			restore_wasm_imports(`${assets_dest}/${builder.getAppPath()}/immutable/assets`);
+			restore_wasm_imports(`${dest}/${builder.getAppPath()}/immutable/assets`);
 			const client_assets = written.filter((file) => fs.existsSync(path.join(assets_dest, file)));
 			builder.writePrerendered(assets_dest);
 			if (
