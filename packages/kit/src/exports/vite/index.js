@@ -436,12 +436,6 @@ function kit({ svelte_config }) {
 					},
 					ssr: {
 						noExternal: [
-							// This ensures that esm-env is inlined into the server output with the
-							// export conditions resolved correctly through Vite. This prevents adapters
-							// that bundle later on from resolving the export conditions incorrectly
-							// and for example include browser-only code in the server output
-							// because they for example use rolldown.build with `platform: 'browser'`
-							'esm-env',
 							// This forces `$app/*` modules to be bundled, since they depend on
 							// generated modules like `<sveltekit:generated>/env/config.js` (this isn't a valid bare
 							// import, but Vitest's externalization logic matches it against the module path)
