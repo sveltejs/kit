@@ -33,6 +33,8 @@ test('read from $app/server works', async ({ request }) => {
 	);
 	const response = await request.get('/read');
 	expect(await response.text()).toBe(content);
+	const subpath = await request.get('/read/subpath');
+	expect(await subpath.text()).toBe(content);
 });
 
 test('static and prerendered assets', async ({ request }) => {
@@ -62,4 +64,14 @@ test('CommonJS dependencies can require Node builtins', async ({ request }) => {
 test('dependencies resolve the workerd export condition', async ({ request }) => {
 	const res = await request.get('/conditions');
 	expect(await res.text()).toBe('workerd');
+});
+
+test('imports WebAssembly modules', async ({ request }) => {
+	const res = await request.get('/wasm');
+	expect(await res.text()).toBe('3');
+});
+
+test('leaves text that looks like a WebAssembly import alone', async ({ request }) => {
+	const res = await request.get('/wasm-text');
+	expect(await res.text()).toBe("import module from './add.wasm';");
 });

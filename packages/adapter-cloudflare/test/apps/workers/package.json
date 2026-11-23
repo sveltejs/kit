@@ -23,5 +23,8 @@
 		"vite": "catalog:",
 		"wrangler": "catalog:"
 	},
-	"type": "module"
+	"type": "module",
+	"imports": {
+		"#file": "./src/routes/read/file.txt"
+	}
 }
