@@ -55,6 +55,9 @@ export function resolve_ts_endings(content) {
 	});
 }
 
+// a JavaScript identifier, which may contain `$` and `_` (e.g. `format_date`, `$config`)
+const identifier = String.raw`[\p{ID_Start}$_][\p{ID_Continue}$\u200C\u200D]*`;
+
 /**
  * Adjust import paths
  *
@@ -78,13 +81,19 @@ export function adjust_imports(content, adjust) {
 
 	// import/export (type) (xxx | xxx,) { ... } from ...
 	content = content.replace(
-		/\b(?:import|export)(?:\s+type)?(?:(?:\s+\p{L}[\p{L}0-9]*\s+)|(?:(?:\s+\p{L}[\p{L}0-9]*\s*,\s*)?\s*\{[^}]*\}\s*))from\s*(['"])([^'";]+)\1/gmu,
+		new RegExp(
+			String.raw`\b(?:import|export)(?:\s+type)?(?:(?:\s+${identifier}\s+)|(?:(?:\s+${identifier}\s*,\s*)?\s*\{[^}]*\}\s*))from\s*(['"])([^'";]+)\1`,
+			'gmu'
+		),
 		(match, quote, import_path) => replace_import_path(match, quote, import_path)
 	);
 
 	// import/export (type) * as xxx from ...
 	content = content.replace(
-		/\b(?:import|export)(?:\s+type)?\s*\*\s*as\s+\p{L}[\p{L}0-9]*\s+from\s*(['"])([^'";]+)\1/gmu,
+		new RegExp(
+			String.raw`\b(?:import|export)(?:\s+type)?\s*\*\s*as\s+${identifier}\s+from\s*(['"])([^'";]+)\1`,
+			'gmu'
+		),
 		(match, quote, import_path) => replace_import_path(match, quote, import_path)
 	);
 

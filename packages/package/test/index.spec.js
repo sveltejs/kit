@@ -9,7 +9,7 @@ import { build, watch } from '../src/index.js';
 import { load_config } from '../src/config.js';
 import { transpile_ts } from '../src/typescript.js';
 import { _create_validator } from '../src/validate.js';
-import { resolve_aliases } from '../src/utils.js';
+import { resolve_aliases, resolve_ts_endings } from '../src/utils.js';
 import { walk } from '../src/filesystem.js';
 
 const original_cwd = process.cwd();
@@ -681,4 +681,33 @@ import(  './dynamic2.js'  );
 
 	const resolved = resolve_aliases(input, file, source, alias);
 	expect(resolved.trim()).toBe(expectedResolved.trim());
+});
+
+test('resolves aliases for bindings containing `_` or `$`', () => {
+	const input = '/project/src/lib';
+	const file = 'components/Button.svelte';
+	const alias = { $lib: '/project/src/lib/components' };
+
+	const source = `
+import format_date from '$lib/format_date.js';
+import _ from '$lib/lodash.js';
+import $config from '$lib/config.js';
+import * as my_utils from '$lib/utils.js';
+import my_default, { helper } from '$lib/utils.js';
+export * as $utils from '$lib/utils.js';
+`;
+
+	const expected = `
+import format_date from './format_date.js';
+import _ from './lodash.js';
+import $config from './config.js';
+import * as my_utils from './utils.js';
+import my_default, { helper } from './utils.js';
+export * as $utils from './utils.js';
+`;
+
+	expect(resolve_aliases(input, file, source, alias)).toBe(expected);
+	expect(resolve_ts_endings("import do_thing from './do_thing.ts';")).toBe(
+		"import do_thing from './do_thing.js';"
+	);
 });
