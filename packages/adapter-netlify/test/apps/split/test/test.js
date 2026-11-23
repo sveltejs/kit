@@ -39,6 +39,22 @@ test('reroute works', async ({ page }) => {
 	await expect(page.locator('p')).not.toContainText('__sveltekit_original_pathname_');
 });
 
+test('a route wins over a lower priority route in another function', async ({ page, request }) => {
+	// a split route that a group of routes also matches
+	const response = await request.get('/dynamic/special');
+	expect(await response.text()).toBe('special');
+
+	await page.goto('/dynamic/a/b');
+	await expect(page.locator('p')).toHaveText('dynamic rest');
+
+	// a Node route that an edge function also matches
+	await page.goto('/greeting/world');
+	await expect(page.locator('h1')).toHaveText('Hello world');
+
+	await page.goto('/greeting/a/b');
+	await expect(page.locator('p')).toHaveText('greeting rest');
+});
+
 // TODO: test remote function works
 
 // TODO: test preloadCode works

@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest';
-import { matches, resolve_runtime } from './utils.js';
+import { get_route_pattern, matches, overlaps, plan_functions, resolve_runtime } from './utils.js';
 
 /**
  * Helper to create a static route segment
@@ -129,5 +129,130 @@ describe('matches', () => {
 
 	test('both dynamic segments match', () => {
 		expect(matches([dynamic_segment('[id]')], [dynamic_segment('[slug]')])).toBe(true);
+	});
+});
+
+/** @param {string} id */
+function segments(id) {
+	return id
+		.split('/')
+		.filter(Boolean)
+		.map((content) => ({
+			content,
+			dynamic: content.includes('['),
+			rest: content.includes('[...')
+		}));
+}
+
+describe('overlaps', () => {
+	test.each([
+		['/a/b', '/a/b', true],
+		['/a/b', '/a/c', false],
+		['/a', '/a/b', false],
+		['/a/[id]', '/a/b', true],
+		['/[a]/b', '/x/[c]', true],
+		['/a/[...rest]', '/a', true],
+		['/a/[...rest]', '/b/c', false],
+		['/[...rest]/end', '/a/b/end', true],
+		['/[...rest]/end', '/a/b/other', false],
+		['/[[lang]]/about', '/about', true],
+		['/[[lang]]/about', '/en/about', true],
+		['/[[lang]]/about', '/en/contact', false],
+		['/[...a]/x', '/[...b]/y', false]
+	])('%s and %s: %s', (a, b, expected) => {
+		expect(overlaps(segments(a), segments(b))).toBe(expected);
+		expect(overlaps(segments(b), segments(a))).toBe(expected);
+	});
+});
+
+// URLPattern is only a global from Node 23.8
+describe.skipIf(!('URLPattern' in globalThis))('plan_functions', () => {
+	/**
+	 * Plans functions for route ids given in priority order and returns a function that
+	 * resolves a path to the runtime and route that would answer it on Netlify
+	 * @param {Record<string, { runtime?: string, split?: boolean }>} config
+	 */
+	function plan(config) {
+		const routes = Object.keys(config).map((id) => ({
+			id,
+			prerender: false,
+			segments: segments(id)
+		}));
+		const functions = plan_functions(routes, (route) => ({
+			runtime: 'node',
+			split: false,
+			...config[route.id]
+		}));
+
+		/** @param {string} pathname */
+		const resolve = (pathname) => {
+			/** @param {string} pattern */
+			const test = (pattern) =>
+				new /** @type {any} */ (globalThis).URLPattern({ pathname: pattern }).test({ pathname });
+			const answering = functions.filter((fn) => fn.patterns.some(test) && !fn.exclude.some(test));
+			expect(answering, pathname).toHaveLength(1);
+
+			const route = answering[0].routes.find((route) => test(get_route_pattern(route)));
+			return `${answering[0].runtime} ${route?.id}`;
+		};
+
+		return { functions, resolve };
+	}
+
+	test('an edge route does not shadow a higher priority route', () => {
+		const { resolve } = plan({
+			'/blog/[slug]': {},
+			'/[...rest]': { runtime: 'edge' }
+		});
+
+		expect(resolve('/blog/a')).toBe('node /blog/[slug]');
+		expect(resolve('/a/b')).toBe('edge /[...rest]');
+	});
+
+	test('a group does not answer for a split route it overlaps', () => {
+		const { functions, resolve } = plan({
+			'/': {},
+			'/about': { split: true },
+			'/[slug]': {}
+		});
+
+		expect(functions).toHaveLength(2);
+		expect(resolve('/')).toBe('node /');
+		expect(resolve('/about')).toBe('node /about');
+		expect(resolve('/a')).toBe('node /[slug]');
+	});
+
+	test('a route starts a new group when excluding for it would hide a higher priority route', () => {
+		const { functions, resolve } = plan({
+			'/[a]/b': {},
+			'/x/[c]': { split: true },
+			'/[...rest]': {}
+		});
+
+		expect(functions).toHaveLength(3);
+		expect(resolve('/x/b')).toBe('node /[a]/b');
+		expect(resolve('/x/c')).toBe('node /x/[c]');
+		expect(resolve('/a/b/c')).toBe('node /[...rest]');
+	});
+
+	test('routes of a function stay in priority order', () => {
+		const { functions } = plan({
+			'/docs': {},
+			'/docs/[id]': {},
+			'/docs/[...rest]': {}
+		});
+
+		expect(functions.map((fn) => fn.routes.map((route) => route.id))).toEqual([
+			['/docs', '/docs/[id]', '/docs/[...rest]']
+		]);
+	});
+
+	test('routes with the same pattern need the same config', () => {
+		expect(() =>
+			plan({
+				'/blog/[id=number]': {},
+				'/blog/[slug]': { runtime: 'edge' }
+			})
+		).toThrow('normalize to the same Netlify pattern (/blog/:param1)');
 	});
 });

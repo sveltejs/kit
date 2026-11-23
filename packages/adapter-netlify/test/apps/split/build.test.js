@@ -71,6 +71,14 @@ test('split false overrides inherited configuration and groups routes', () => {
 	expect(functions[0]).toContain('"/dynamic/:param1/__data.json"');
 });
 
+test('functions exclude the higher priority routes they overlap', () => {
+	const functions = read_functions('edge', (content) =>
+		content.includes('"name": "SvelteKit /greeting/[...rest]"')
+	);
+	expect(functions).toHaveLength(1);
+	expect(functions[0]).toMatch(/"excludedPath": \[[^\]]*"\/greeting\/:param1"/);
+});
+
 test('functions have human friendly display names', () => {
 	const functions = read_functions('edge', (content) =>
 		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
