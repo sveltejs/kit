@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { getRequest } from '@sveltejs/kit/node';
 import { is_dev_or_build, plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
+import { plugin_wasm, restore_wasm_imports } from './wasm.js';
 import {
 	resolve_not_found_handling,
 	validate_worker_settings,
@@ -64,6 +65,7 @@ export default function (options = {}) {
 				await builder.generateFallback(path.join(assets, '404.html'));
 			}
 			builder.writeClient(assets_dest);
+			restore_wasm_imports(`${assets}/${builder.getAppPath()}/immutable/assets`);
 			builder.writePrerendered(assets_dest);
 			if (not_found_handling === 'single-page-application') {
 				// this is served with a 200 OK
@@ -76,6 +78,7 @@ export default function (options = {}) {
 				const server_dir = `${worker_dir}/server`;
 				builder.writeServer(server_dir);
 				replace_stub(server_dir, stub_import);
+				restore_wasm_imports(server_dir);
 				fs.rmSync(`${server_dir}/wrangler.json`);
 				if (fs.existsSync(`${server_dir}/.dev.vars`)) {
 					fs.renameSync(`${server_dir}/.dev.vars`, `${worker_dir}/.dev.vars`);
@@ -195,6 +198,7 @@ export default function (options = {}) {
 						].map(posixify),
 						worker
 					),
+					...plugin_wasm(),
 					{
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-env',
 						apply: is_dev_or_build,
