@@ -112,6 +112,9 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 							}
 						},
 						renderChunk: {
+							// avoid emitting a server asset for strings pretending to import a non-JavaScript module
+							// Cloudflare's Vite plugin indiscriminately emits a server asset if it matches their placeholder
+							// This is only an issue because SvelteKit copies those server assets into its public client dir too
 							...render_chunk,
 							async handler(code, ...args) {
 								const masked = code.replace(reference, (match) =>
