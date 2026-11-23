@@ -75,3 +75,8 @@ test('leaves text that looks like a WebAssembly import alone', async ({ request 
 	const res = await request.get('/wasm-text');
 	expect(await res.text()).toBe("import module from './add.wasm';");
 });
+
+test('leaves text that looks like a Cloudflare module reference alone', async ({ request }) => {
+	const res = await request.get('/module-reference-text');
+	expect(await res.text()).toBe('__CLOUDFLARE_MODULE__Text__/not/a/file.txt__CLOUDFLARE_MODULE__');
+});

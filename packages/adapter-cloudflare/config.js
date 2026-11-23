@@ -82,7 +82,14 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 					plugin.resolveId
 				);
 
+				const render_chunk = /** @type {Extract<Plugin['renderChunk'], { handler: unknown }>} */ (
+					plugin.renderChunk
+				);
+
 				const wasm = /\.wasm(\?module)?$/;
+				const reference = /__CLOUDFLARE_MODULE__\w+?__.*?__CLOUDFLARE_MODULE__/g;
+				/** @type {Set<string>} */
+				const references = new Set();
 
 				return /** @satisfies {Plugin[]} */ ([
 					{
@@ -95,7 +102,25 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
 								if (!resolved || !wasm.test(resolved.id)) return resolved;
 
-								return resolve_id.handler.call(this, source, importer, options);
+								const result = await resolve_id.handler.call(this, source, importer, options);
+								if (result && typeof result === 'object') references.add(result.id);
+								return result;
+							}
+						},
+						renderChunk: {
+							...render_chunk,
+							async handler(code, ...args) {
+								// it reads the file named in any text that looks like a reference, so text
+								// that is not one of ours is hidden behind a placeholder of the same length
+								const masked = code.replace(reference, (match) =>
+									references.has(match) ? match : `\0${match.slice(1)}`
+								);
+								const result = /** @type {{ code: string } | undefined} */ (
+									await render_chunk.handler.call(this, masked, ...args)
+								);
+								if (!result) return;
+
+								return { ...result, code: result.code.replaceAll('\0_CLOUDFLARE', '__CLOUDFLARE') };
 							}
 						}
 					}
