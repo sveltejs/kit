@@ -4,6 +4,9 @@ import process from 'node:process';
 import { unstable_getVarsForDev } from 'wrangler';
 
 /** @type {Plugin['apply']} */
+export const is_dev = (_config, env) => env.command === 'serve' && !env.isPreview;
+
+/** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
 
 /**
