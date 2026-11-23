@@ -77,12 +77,22 @@ export function plugin_config(config_path, set_worker_config) {
 					plugin.resolveId
 				);
 
+				const wasm = /\.wasm(\?module)?$/;
+
 				return /** @satisfies {Plugin[]} */ ([
 					{
 						...plugin,
 						apply: 'build',
-						// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
-						resolveId: { ...resolve_id, filter: { id: [/\.wasm(\?module)?$/, /^#/] } }
+						resolveId: {
+							filter: { id: [wasm, /^#/] },
+							async handler(source, importer, options) {
+								const resolved = await this.resolve(source, importer, options);
+								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
+								if (!resolved || !wasm.test(resolved.id)) return resolved;
+
+								return resolve_id.handler.call(this, source, importer, options);
+							}
+						}
 					}
 				]);
 			}
