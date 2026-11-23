@@ -5,7 +5,7 @@
 
 	function test_abort() {
 		const controller = new AbortController();
-		fetch('/request-abort', { method: 'POST', signal: controller.signal }).then((r) => r.json());
+		fetch('/request-abort', { method: 'POST', signal: controller.signal }).catch(() => {});
 		setTimeout(async () => {
 			controller.abort();
 

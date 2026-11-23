@@ -43,6 +43,7 @@ test('refetches route-dependent server data after an error page', async ({ page,
 });
 
 test('displays error.html when root layout load() throws in SPA mode', async ({ page }) => {
+	test.info().annotations.push({ type: 'pageerror' });
 	await page.goto('/root-layout-error', { wait_for_started: false });
 	await expect(page.locator('#error-status')).toHaveText('500');
 	await expect(page.locator('#error-message')).toHaveText('Root layout load failed');

@@ -1146,6 +1146,7 @@ test.describe('Actions', () => {
 	}) => {
 		test.skip(!javaScriptEnabled, 'Skip when JavaScript is disabled');
 		test.skip(!process.env.DEV, 'Skip when not in dev mode');
+		test.info().annotations.push({ type: 'pageerror' });
 		await page.goto('/actions/file-without-enctype');
 		const error_promise = page.waitForEvent('pageerror');
 		await page.click('button');

@@ -9,6 +9,10 @@ import process from 'node:process';
 test.describe.serial('Illegal imports', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 
+	test.beforeEach(() => {
+		test.info().annotations.push({ type: 'pageerror' });
+	});
+
 	for (const [location, module] of [
 		['directory', '#lib/server/location.remote.js'],
 		['filename', '#lib/location.server.remote.js']
