@@ -59,3 +59,12 @@ test('leaves text that looks like a WebAssembly import alone', async ({ request 
 	const res = await request.get('/wasm-text');
 	expect(await res.text()).toBe("import module from './add.wasm';");
 });
+
+test('leaves text that looks like a module reference alone', async ({ request }) => {
+	const content = fs.readFileSync(
+		path.resolve(import.meta.dirname, '../src/routes/module-reference-text/text.txt'),
+		'utf-8'
+	);
+	const res = await request.get('/module-reference-text');
+	expect(await res.text()).toBe(content);
+});
