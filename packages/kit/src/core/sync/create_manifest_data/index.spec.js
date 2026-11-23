@@ -14,7 +14,7 @@ const cwd = path.join(import.meta.dirname, 'test');
 const create = (dir, config = {}) => {
 	const initial = validate_config(config);
 
-	initial.files.assets = path.resolve(cwd, 'static');
+	initial.files.assets = path.resolve(cwd, config.files?.assets ?? 'static');
 	initial.files.params = path.resolve(cwd, 'params');
 	initial.files.routes = path.resolve(cwd, dir);
 
@@ -704,6 +704,57 @@ test('errors if no routes are found', () => {
 test('prevents route conflicts between params', () => {
 	expect(() => create('samples/conflicting-params')).toThrowKitError('route_conflict', {
 		contains: ['`/[slug1]` and `/[slug2]`']
+	});
+});
+
+test.each([
+	['shadowed.txt', 'shadowed.txt', '+server.js'],
+	['shadowed.txt', 'shadowed.txt', '+page.svelte'],
+	['(group)/nested/shadowed.txt', 'nested/shadowed.txt', '+server.ts'],
+	['[x+5b]file[x+5d].txt', '[file].txt', '+server.js'],
+	['[x+23][x+25].txt', '#%.txt', '+server.js'],
+	['literal%.txt', 'literal%.txt', '+server.js'],
+	['literal%25.txt', 'literal%25.txt', '+server.js'],
+	['%[x+25].txt', '%%.txt', '+server.js'],
+	['shadowed.txt', 'shadowed.txt', '+page.js'],
+	['shadowed.txt', 'shadowed.txt', '+page.server.js'],
+	['[u+1f600].txt', '😀.txt', '+server.js'],
+	['caf[u+00e9].txt', 'café.txt', '+server.js'],
+	['café.txt', 'cafe\u0301.txt', '+server.js']
+])('rejects route %s conflicting with asset %s (%s)', (route, asset, file) => {
+	with_routes([`routes/${route}/${file}`, `public/${asset}`], (dir) => {
+		expect(() => create(`${dir}/routes`, { files: { assets: `${dir}/public` } })).toThrowKitError(
+			'route_static_asset_conflict',
+			{ contains: [`/${route}`, `${dir}/public/${asset}`] }
+		);
+	});
+});
+
+test.each([
+	['[file]', 'shadowed.txt', '+server.js'],
+	['[...rest]', 'nested/shadowed.txt', '+page.svelte'],
+	['[[optional]]/shadowed.txt', 'shadowed.txt', '+server.js'],
+	['shadowed.txt', 'shadowed.txt', '+layout.svelte'],
+	['shadowed.txt', 'shadowed.txt', '+error.svelte'],
+	['shadowed.txt', 'SHADOWED.txt', '+server.js'],
+	['foo[x+2f]bar.txt', 'foo/bar.txt', '+server.js'],
+	['literal%25.txt', 'literal%.txt', '+server.js'],
+	['foo%2fbar.txt', 'foo/bar.txt', '+server.js'],
+	['shadowed.txt', 'shadowed.txt/child.txt', '+server.js']
+])('allows route %s alongside asset %s (%s)', (route, asset, file) => {
+	with_routes([`routes/${route}/${file}`, `public/${asset}`], (dir) => {
+		expect(() => create(`${dir}/routes`, { files: { assets: `${dir}/public` } })).not.toThrow();
+	});
+});
+
+test('allows hash routes alongside assets with the same path', () => {
+	with_routes(['routes/shadowed.txt/+page.svelte', 'public/shadowed.txt'], (dir) => {
+		expect(() =>
+			create(`${dir}/routes`, {
+				files: { assets: `${dir}/public` },
+				router: { type: 'hash' }
+			})
+		).not.toThrow();
 	});
 });
 
