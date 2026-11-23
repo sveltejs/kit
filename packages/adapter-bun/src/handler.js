@@ -104,8 +104,11 @@ function get_origin(request, url) {
 		);
 	}
 
+	// the host keeps the port the browser sent; PORT_HEADER only fills in a missing one
+	const authority = port && !/:\d*$/.test(host) ? `${host}:${port}` : host;
+
 	// canonicalized so the caller's comparison with url.origin matches (case, default ports)
-	return new URL(`${protocol}://${host}${port ? `:${port}` : ''}`).origin;
+	return new URL(`${protocol}://${authority}`).origin;
 }
 
 /**
