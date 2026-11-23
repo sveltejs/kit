@@ -93,7 +93,7 @@ test('serves prerendered pages, endpoints, and canonical redirects', async ({ re
 
 	const redirect = await request.get('/prerendered?via=test', { maxRedirects: 0 });
 	expect(redirect.status()).toBe(308);
-	expect(redirect.headers()['location']).toBe('/prerendered/?via=test');
+	expect(redirect.headers()['location']).toBe('./prerendered/?via=test');
 });
 
 test('uses SvelteKit for non-GET requests that share a static pathname', async ({ request }) => {

@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream';
-import { negotiateEncoding } from '@sveltejs/adapter-server/runtime';
+import { negotiateEncoding, trailingSlashLocation } from '@sveltejs/adapter-server/runtime';
 
 /**
  * @typedef {(req: IncomingMessage, res: ServerResponse, next: () => void | Promise<void>) => void | Promise<void>} Middleware
@@ -36,20 +36,6 @@ function split_url(req) {
 	}
 
 	return { pathname, search };
-}
-
-/**
- * Relative reference from `from` to `to`, which must differ only by a trailing slash.
- * Keep in sync with the copy in `packages/kit/src/utils/url.js`
- * @param {string} from
- * @param {string} to
- * @returns {string}
- */
-function relative_pathname(from, to) {
-	const segment = to.replace(/\/$/, '').split('/').at(-1);
-
-	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
-	return from.endsWith('/') ? `../${segment}` : `./${segment}/`;
 }
 
 /**
@@ -121,7 +107,7 @@ export function create_file_map({ dir, base, app_path, mime_types, assets, prere
 	for (const key of prerendered.keys()) {
 		const inverted = key.at(-1) === '/' ? key.slice(0, -1) : key + '/';
 		if (inverted && !files.has(inverted)) {
-			files.set(inverted, { location: relative_pathname(inverted, key) });
+			files.set(inverted, { location: trailingSlashLocation(inverted) });
 		}
 	}
 

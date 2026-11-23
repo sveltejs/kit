@@ -9,7 +9,7 @@ import {
 	server_assets as server_files
 } from '#@sveltejs/adapter-bun';
 import path from 'node:path';
-import { negotiateEncoding } from '@sveltejs/adapter-server/runtime';
+import { negotiateEncoding, trailingSlashLocation } from '@sveltejs/adapter-server/runtime';
 
 /**
  * @typedef {(request: Request) => Response} Serve
@@ -160,8 +160,10 @@ function add(pathname, { serve, native }) {
  */
 function redirect_to_canonical(request) {
 	const { pathname, search } = new URL(request.url);
-	const location = pathname.endsWith('/') ? pathname.slice(0, -1) : `${pathname}/`;
-	return new Response(null, { status: 308, headers: { location: location + search } });
+	return new Response(null, {
+		status: 308,
+		headers: { location: trailingSlashLocation(pathname) + search }
+	});
 }
 
 for (const [kind, url, filename, meta] of assets) {

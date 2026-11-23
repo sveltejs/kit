@@ -23,3 +23,9 @@ export function forwardedAddress(options: {
 	/** The adapter's `envPrefix`, which error messages name the variables with */
 	envPrefix: string;
 }): string;
+
+/**
+ * The relative `Location` that redirects `pathname` to its other trailing-slash form:
+ * `/a/b/` to `../b`, and `/a/b` to `./b/`.
+ */
+export function trailingSlashLocation(pathname: string): string;
