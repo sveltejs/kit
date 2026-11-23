@@ -193,10 +193,6 @@ Instead, use the [`read`]($app-server#read) function from `$app/server` to acces
 
 Alternatively, you can [prerender](page-options#prerender) the routes in question.
 
-### Non-JavaScript modules
-
-`.txt`, `.html`, `.sql` and `.bin` imports are processed by Vite rather than [defaulting to returning the file contents](https://developers.cloudflare.com/workers/vite-plugin/reference/non-javascript-modules/). Add `?raw` to the import to get the contents of the file as a string, or `?url` to get a URL that can be passed to [`read`]($app-server#read).
-
 ## Migrating from Workers Sites
 
 Cloudflare no longer recommends using [Workers Sites](https://developers.cloudflare.com/workers/configuration/sites/configuration/) and instead recommends using [Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/). To migrate, replace `@sveltejs/adapter-cloudflare-workers` with `@sveltejs/adapter-cloudflare` and remove all `site` configuration settings from your Wrangler configuration file, then add the `assets.directory` and `assets.binding` configuration settings:
