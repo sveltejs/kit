@@ -1016,6 +1016,10 @@ test.describe('remote functions', () => {
 
 		await page.click('#reset-btn');
 		await expect(ageTouched).toHaveText('Age touched: false');
+
+		await page.locator('#name-input').focus();
+		await page.locator('#name-input').blur();
+		await expect(page.locator('#touched-on-focusout')).toHaveText('Name touched on focusout: true');
 	});
 
 	test('selects are not nuked when unrelated controls change', async ({

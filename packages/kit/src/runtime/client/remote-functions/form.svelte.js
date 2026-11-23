@@ -584,7 +584,7 @@ export function form(id) {
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
 			// Chromium fires `focusout` when a focused field is removed, which can happen inside an effect
-			const off_focusout = on(form, 'focusout', handle_focusout);
+			const off_focusout = on(form, 'focusout', handle_focusout, { capture: true });
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
