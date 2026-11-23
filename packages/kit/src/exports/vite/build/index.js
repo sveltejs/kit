@@ -46,7 +46,7 @@ import { s } from '../../../utils/misc.js';
  * @param {(metadata: ServerMetadata) => void} set_build_metadata
  * @param {(data: ManifestData) => void} set_manifest_data
  * @param {() => Record<string, EnvVarConfig<any>> | null} get_explicit_env_config
- * @param {() => ({ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string> })} get_remote_metadata
+ * @param {() => ({ remotes: Map<string, RemoteChunk>; remote_original_by_hash: Map<string, string> })} get_remote_metadata
  * @param {(fn: () => Promise<void>) => void} set_finalise
  * @returns {Plugin}
  */
@@ -297,6 +297,7 @@ export function plugin_compile(
 							define: {
 								__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
 								__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+								__SVELTEKIT_HAS_REROUTE__: 'true',
 								__SVELTEKIT_PAYLOAD__: '{}'
 							}
 						},
@@ -478,7 +479,8 @@ export function plugin_compile(
 					server_manifest: vite_server_manifest
 				};
 
-				const { remotes, remote_original_by_hash } = get_remote_metadata();
+				const { remotes: remotes_by_hash, remote_original_by_hash } = get_remote_metadata();
+				const remotes = Array.from(remotes_by_hash.values());
 
 				fs.writeFileSync(
 					manifest_path,
@@ -564,6 +566,9 @@ export function plugin_compile(
 							s(has_server_load);
 						builder.environments.client.config.define.__SVELTEKIT_HAS_UNIVERSAL_LOAD__ =
 							s(has_universal_load);
+						builder.environments.client.config.define.__SVELTEKIT_HAS_REROUTE__ = s(
+							metadata.has_reroute
+						);
 					}
 
 					const client_build = await builder.build(builder.environments.client);

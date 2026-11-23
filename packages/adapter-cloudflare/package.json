@@ -1,6 +1,6 @@
 {
 	"name": "@sveltejs/adapter-cloudflare",
-	"version": "8.0.3",
+	"version": "9.0.0",
 	"description": "Adapts SvelteKit applications for Cloudflare Workers",
 	"keywords": [
 		"adapter",
@@ -33,7 +33,8 @@
 		"index.d.ts",
 		"config.js",
 		"platform.js",
-		"utils.js"
+		"utils.js",
+		"wasm.js"
 	],
 	"scripts": {
 		"lint": "oxfmt --check .",

@@ -12,14 +12,12 @@ const useful_cloudflare_plugins = new Set([
 	// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
-	'vite-plugin-cloudflare:nodejs-compat-warnings'
+	'vite-plugin-cloudflare:nodejs-compat-warnings',
+	// turns `.wasm?init` imports into `.wasm` imports
+	'vite-plugin-cloudflare:wasm-helper'
 ]);
 
-const useful_cloudflare_build_plugins = new Set([
-	'vite-plugin-cloudflare:output-config',
-	'vite-plugin-cloudflare:wasm-helper',
-	'vite-plugin-cloudflare:additional-modules'
-]);
+const useful_cloudflare_build_plugins = new Set(['vite-plugin-cloudflare:output-config']);
 
 /** @type {Plugin['apply']} */
 export const is_dev_or_build = (_config, env) => !env.isPreview;
@@ -76,6 +74,32 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 
 			if (useful_cloudflare_build_plugins.has(plugin.name)) {
 				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
+			}
+
+			// leaves `.wasm` imports in the server output for workerd to import
+			if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
+				const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
+					plugin.resolveId
+				);
+
+				const wasm = /\.wasm(\?module)?$/;
+
+				return /** @satisfies {Plugin[]} */ ([
+					{
+						...plugin,
+						apply: 'build',
+						resolveId: {
+							filter: { id: [wasm, /^#/] },
+							async handler(source, importer, options) {
+								const resolved = await this.resolve(source, importer, options);
+								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
+								if (!resolved || !wasm.test(resolved.id)) return resolved;
+
+								return resolve_id.handler.call(this, source, importer, options);
+							}
+						}
+					}
+				]);
 			}
 
 			return [];

@@ -64,7 +64,8 @@ if (DEV) {
 
 		return native_fetch(input, init);
 	};
-} else {
+} else if (__SVELTEKIT_HAS_UNIVERSAL_LOAD__ || __SVELTEKIT_HAS_REROUTE__) {
+	// only the fetch passed to universal load and reroute populates the cache
 	window.fetch = (input, init) => {
 		const method = input instanceof Request ? input.method : init?.method || 'GET';
 

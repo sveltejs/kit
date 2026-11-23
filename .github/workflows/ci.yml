@@ -73,7 +73,7 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         if: matrix.script == 'test:others'
         with:
-          bun-version: 1.4.4
+          bun-version: 1.4.5
       - run: pnpm run sync-all
       - run: pnpm ${{ matrix.script }}
   e2e:
@@ -96,9 +96,8 @@ jobs:
           - { app: basics, script: pw:build, project: js, shard: 2/2 }
           - { app: basics, script: pw:build, project: no-js }
           - { script: test:build:rest, workers: 2 }
-          # the server half of basics, a vitest spec against Server.respond and against the dev server
-          - { app: basics, script: server:dev }
-          - { app: basics, script: server:build }
+          # the server half of basics, a vitest spec against the dev server and then Server.respond
+          - { app: basics, script: server }
           # the server config variants each app declares in its playwright.config.js. nothing
           # requests `__route.js` without JS, so resolution has no no-js legs
           - { app: basics, script: pw:build, variant: async, project: js, shard: 1/2 }

@@ -522,7 +522,8 @@ function kit({ svelte_config }) {
 						__SVELTEKIT_APP_VERSION_POLL_INTERVAL__: '0',
 						__SVELTEKIT_PAYLOAD__: kit_global, // only relevant when bundleStrategy !== 'split'
 						__SVELTEKIT_HAS_SERVER_LOAD__: 'true',
-						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true'
+						__SVELTEKIT_HAS_UNIVERSAL_LOAD__: 'true',
+						__SVELTEKIT_HAS_REROUTE__: 'true'
 					};
 
 					// we avoid setting base to paths.assets in dev so that we get the
@@ -608,9 +609,9 @@ function kit({ svelte_config }) {
 	/** @type {Record<string, EnvVarConfig<any>> | null} */
 	let explicit_env_config = null;
 
-	/** @type {{ remotes: RemoteChunk[]; remote_original_by_hash: Map<string, string>}} */
+	/** @type {{ remotes: Map<string, RemoteChunk>; remote_original_by_hash: Map<string, string>}} */
 	let remote_metadata = {
-		remotes: [],
+		remotes: new Map(),
 		remote_original_by_hash: new Map()
 	};
 
