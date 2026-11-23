@@ -201,3 +201,115 @@ jobs:
 ```
 
 If you're not using GitHub actions to deploy your site (for example, you're pushing the built site to its own repo), add an empty `.nojekyll` file in your `static` directory to prevent Jekyll from interfering.
+
+## Apache and Nginx
+
+If you deploy the contents of your build directory to a traditional web server, the server has to map URLs like `/about` to the files SvelteKit generated. What it needs to do depends on your [`trailingSlash`](page-options#trailingSlash) option:
+
+- `'never'` (the default) writes `about.html`, so `/about` must be served from `about.html`
+- `'always'` writes `about/index.html`, so `/about/` is served by the server's directory index (and `/about` redirects to it)
+
+The configurations below handle both layouts. They also give every file a sensible `Cache-Control` header: only files in `_app/immutable` (the path changes if you set [`paths.base`](configuration#paths) or [`appDir`](configuration#appDir), so adjust the `/_app/immutable/` patterns below to match) have content-hashed names and can be cached forever, so everything else (including HTML and files copied from your `static` directory) must be revalidated.
+
+### Apache
+
+Enable `mod_rewrite` and `mod_headers` (plus `AllowOverride FileInfo Indexes Options` and `Options +FollowSymLinks` if you use `.htaccess`), then put this in a `.htaccess` file in your `static` directory so it is copied to the build output:
+
+```apache
+### file: static/.htaccess
+RewriteEngine On
+
+# serve /about from about.html (`trailingSlash: 'never'`)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.+)$ $1.html [L]
+
+Options -Indexes
+
+# revalidate by default, cache hashed files forever
+Header set Cache-Control "public, max-age=0, must-revalidate"
+<If "%{REQUEST_URI} =~ m#^/_app/immutable/#">
+	Header set Cache-Control "public, max-age=31536000, immutable"
+</If>
+```
+
+Each `RewriteCond` only applies to the `RewriteRule` that directly follows it, so repeat the conditions if you add more rules. If you set the [`fallback`](#Options-fallback) option, add this after all other rewrites (including the `precompress` ones below) so unknown URLs are served by the fallback page (for example `200.html`) instead of returning a 404:
+
+```apache
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME}/index.html !-f
+RewriteCond %{REQUEST_URI} !^/_app/immutable/
+RewriteRule ^ 200.html [L]
+```
+
+If you use [`precompress`](#Options-precompress), add the following. It serves `.br` or `.gz` files only to clients that ask for them, and sets `Content-Encoding` only on the precompressed files (so a real `.tar.gz` download is left alone):
+
+```apache
+### file: static/.htaccess (continued)
+# directory index pages, e.g. /about/ (`trailingSlash: 'always'`)
+RewriteCond %{HTTP:Accept-Encoding} \bbr\b
+RewriteCond %{REQUEST_FILENAME}index.html.br -s
+RewriteRule ^(.*/)?$ $1index.html.br [L]
+RewriteCond %{HTTP:Accept-Encoding} \bgzip\b
+RewriteCond %{REQUEST_FILENAME}index.html.gz -s
+RewriteRule ^(.*/)?$ $1index.html.gz [L]
+
+# everything else
+RewriteCond %{HTTP:Accept-Encoding} \bbr\b
+RewriteCond %{REQUEST_FILENAME}.br -s
+RewriteRule ^(.+)$ $1.br [L]
+RewriteCond %{HTTP:Accept-Encoding} \bgzip\b
+RewriteCond %{REQUEST_FILENAME}.gz -s
+RewriteRule ^(.+)$ $1.gz [L]
+
+# the original file type is kept, and mod_deflate doesn't compress twice
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)\.br$">
+	AddEncoding br .br
+</FilesMatch>
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)\.gz$">
+	RemoveType .gz
+	AddEncoding gzip .gz
+</FilesMatch>
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)(\.br|\.gz)?$">
+	Header append Vary Accept-Encoding
+</FilesMatch>
+```
+
+### Nginx
+
+```nginx
+server {
+	listen 80;
+	server_name example.com;
+	root /var/www/example.com/build;
+
+	add_header Cache-Control "public, max-age=0, must-revalidate";
+
+	location / {
+		# /about -> about.html (`trailingSlash: 'never'`)
+		# /about -> /about/ -> about/index.html (`trailingSlash: 'always'`)
+		try_files $uri $uri.html $uri/ =404;
+
+		# with the `fallback` option, replace `=404` with the fallback page:
+		# try_files $uri $uri.html $uri/index.html /200.html;
+	}
+
+	# only these files have content-hashed names. `add_header` here replaces
+	# the one above rather than adding to it
+	location /_app/immutable/ {
+		add_header Cache-Control "public, max-age=31536000, immutable";
+		try_files $uri =404;
+	}
+
+	# if you use `precompress`, serve the `.gz` files to clients that accept them
+	gzip_static on;
+	gzip_vary on;
+
+	# the same for `.br` files, if nginx was built with the third-party ngx_brotli module
+	# brotli_static on;
+}
+```
+
+Known limitation: a page and a folder with the same name (for example `about.html` next to `about/team.html`) don't work with `trailingSlash: 'never'`, because both servers redirect `/about` to the folder.
+
+Without the `fallback` variant, requests for files that do not exist return a 404. With it, every unknown URL outside `/_app/immutable/` is answered with the fallback page and a 200 status, so only use it if you want the app to handle those URLs on the client.
