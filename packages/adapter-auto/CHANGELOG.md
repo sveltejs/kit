@@ -1,5 +1,16 @@
 # @sveltejs/adapter-auto
 
+## 9.0.0
+
+### Major Changes
+
+- breaking: automatically build for Cloudflare Workers rather than Cloudflare Pages ([#17479](https://github.com/sveltejs/kit/pull/17479))
+
+### Patch Changes
+
+- Updated dependencies:
+  - @sveltejs/kit@3.4.0
+
 ## 8.0.1
 
 ### Patch Changes

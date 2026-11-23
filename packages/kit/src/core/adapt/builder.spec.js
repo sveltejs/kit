@@ -26,7 +26,7 @@ function create_test_builder(outDir, assets = []) {
 			},
 			server_manifest: {}
 		},
-		server_metadata: { nodes: [], routes: new Map(), remotes: new Map() },
+		server_metadata: { nodes: [], routes: new Map(), remotes: new Map(), has_reroute: false },
 		route_data: [],
 		prerendered: { pages: new Map(), assets: new Map(), paths: [], redirects: new Map() },
 		prerender_map: new Map(),

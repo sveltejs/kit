@@ -1,5 +1,14 @@
 # @sveltejs/adapter-bun
 
+## 1.0.2
+
+### Patch Changes
+
+- fix: honour q-values in `Accept-Encoding` and serve dotfiles below `.well-known`, matching `@sveltejs/adapter-node` ([#17308](https://github.com/sveltejs/kit/pull/17308))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.1.0
+  - @sveltejs/kit@3.4.0
+
 ## 1.0.1
 
 ### Patch Changes

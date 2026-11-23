@@ -2410,59 +2410,62 @@ test.describe('Shallow routing', () => {
 		page
 	}) => {
 		for (const shallow of [true, false]) {
-			const prefix = shallow ? 'shallow' : 'regular';
-			const input = page.locator('[data-id="options-focus"]');
-			const state = () =>
-				page.evaluate(() => ({
-					focus: document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
-					y: scrollY
-				}));
+			await test.step(shallow ? 'shallow' : 'non-shallow', async () => {
+				const prefix = shallow ? 'shallow' : 'regular';
+				const input = page.locator('[data-id="options-focus"]');
+				const state = () =>
+					page.evaluate(() => ({
+						focus:
+							document.activeElement?.getAttribute('data-id') ?? document.activeElement?.tagName,
+						y: scrollY
+					}));
 
-			await page.goto('/shallow-routing/push-state');
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 500));
+				await page.goto('/shallow-routing/push-state');
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 500));
 
-			await app.goto(`?${prefix}=a`, { shallow, reset: false });
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
+				await app.goto(`?${prefix}=a`, { shallow, reset: false });
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 500 });
 
-			await page.evaluate(() => scrollTo(0, 700));
-			await page.goBack();
-			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+				await page.evaluate(() => scrollTo(0, 700));
+				await page.goBack();
+				await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
-			await page.evaluate(() => scrollTo(0, 300));
-			await page.goForward();
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
+				await page.evaluate(() => scrollTo(0, 300));
+				await page.goForward();
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 300 });
 
-			await page.reload();
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 350));
-			await page.goBack();
-			await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
+				await page.reload();
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 350));
+				await page.goBack();
+				await expect(page).not.toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 350 });
 
-			await page.evaluate(() => scrollTo(0, 400));
-			await page.goForward();
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
+				await page.evaluate(() => scrollTo(0, 400));
+				await page.goForward();
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 400 });
 
-			await app.goto(`?${prefix}=b`, { shallow, reset: true });
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 700));
-			await app.goto(`?${prefix}=c`, { shallow, reset: false });
-			await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
+				await app.goto(`?${prefix}=b`, { shallow, reset: true });
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 700));
+				await app.goto(`?${prefix}=c`, { shallow, reset: false });
+				await expect.poll(state).toEqual({ focus: 'options-focus', y: 700 });
 
-			await page.evaluate(() => scrollTo(0, 900));
-			await page.evaluate(() => history.go(-2));
-			await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
-			await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
+				await page.evaluate(() => scrollTo(0, 900));
+				await page.evaluate(() => history.go(-2));
+				await expect(page).toHaveURL(new RegExp(`${prefix}=a`));
+				await expect.poll(state).toEqual({ focus: 'BODY', y: 400 });
 
-			await input.focus();
-			await page.evaluate(() => scrollTo(0, 400));
-			await page.evaluate(() => history.go(2));
-			await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
-			await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+				await input.focus();
+				await page.evaluate(() => scrollTo(0, 400));
+				await page.evaluate(() => history.go(2));
+				await expect(page).toHaveURL(new RegExp(`${prefix}=c`));
+				await expect.poll(state).toEqual({ focus: 'BODY', y: 900 });
+			});
 		}
 	});
 
@@ -2618,6 +2621,32 @@ test.describe('Shallow routing', () => {
 		await expect(page.locator('p')).toHaveText('active: true');
 		await expect(page.locator('span')).not.toHaveText(now);
 	});
+
+	for (const refresh of ['refreshAll', 'invalidateKeepState']) {
+		for (const method of ['pushState', 'replaceState']) {
+			test(`${refresh} preserves ${method} updates made while loading`, async ({ page }) => {
+				await page.goto('/shallow-routing/refresh');
+				await page.locator('[data-id="activate"]').click();
+				await expect(page.locator('p')).toHaveText('active: true');
+
+				const now = /** @type {string} */ (await page.locator('span').textContent());
+
+				await page.route('**/shallow-routing/refresh/__data.json*', async (route) => {
+					const response = await route.fetch();
+					// Change state while the refresh is waiting for the load result.
+					await page.locator(`[data-id="${method}"]`).click();
+					await expect(page.locator('p')).toHaveText('active: false');
+					await route.fulfill({ response });
+				});
+
+				await page.locator(`[data-id="${refresh}"]`).click();
+				await page.evaluate(() => window.promise);
+				await expect(page.locator('span')).not.toHaveText(now);
+				await expect(page.locator('p')).toHaveText('active: false');
+				await expect(page.locator('output')).toHaveText(page.url());
+			});
+		}
+	}
 
 	test('invalidate resets page.state', async ({ page }) => {
 		await page.goto('/shallow-routing/refresh');

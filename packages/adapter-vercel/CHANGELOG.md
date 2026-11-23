@@ -1,5 +1,13 @@
 # @sveltejs/adapter-vercel
 
+## 7.0.5
+
+### Patch Changes
+
+- fix: avoid build warnings for missing optional peer dependencies ([#17802](https://github.com/sveltejs/kit/pull/17802))
+- Updated dependencies:
+  - @sveltejs/kit@3.4.0
+
 ## 7.0.4
 
 ### Patch Changes
