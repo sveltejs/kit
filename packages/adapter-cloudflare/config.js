@@ -1,7 +1,10 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
+import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import MagicString from 'magic-string';
 import { needs_nodejs_als, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
@@ -82,17 +85,9 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 					plugin.resolveId
 				);
 
-				const render_chunk = /** @type {Extract<Plugin['renderChunk'], { handler: unknown }>} */ (
-					plugin.renderChunk
-				);
-
 				const wasm = /\.wasm(\?module)?$/;
-				const reference = /__CLOUDFLARE_MODULE__\w+?__.*?__CLOUDFLARE_MODULE__/g;
-				/**
-				 * the references cloudflare created for real `.wasm` imports
-				 * @type {Set<string>}
-				 */
-				const references = new Set();
+				/** @type {Map<string, string>} the module references we created and the files they point to */
+				const references = new Map();
 
 				return /** @satisfies {Plugin[]} */ ([
 					{
@@ -105,27 +100,53 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
 								if (!resolved || !wasm.test(resolved.id)) return resolved;
 
-								// keep track of non-JavaScript modules recognised by Cloudflare
 								const result = await resolve_id.handler.call(this, source, importer, options);
-								if (result && typeof result === 'object') references.add(result.id);
+								if (result && typeof result === 'object') {
+									references.set(result.id, resolved.id.replace(wasm, '.wasm'));
+								}
 								return result;
 							}
 						},
+						// the plugin's own hook reads and emits any file named by text shaped like a
+						// reference, so we only rewrite the exact references we created
 						renderChunk: {
-							// avoid emitting a server asset for strings pretending to import a non-JavaScript module
-							// Cloudflare's Vite plugin indiscriminately emits a server asset if it matches their placeholder
-							// This is only an issue because SvelteKit copies those server assets into its public client dir too
-							...render_chunk,
-							async handler(code, ...args) {
-								const masked = code.replace(reference, (match) =>
-									references.has(match) ? match : `\0${match.slice(1)}`
-								);
-								const result = /** @type {{ code: string } | undefined} */ (
-									await render_chunk.handler.call(this, masked, ...args)
-								);
-								if (!result) return;
+							filter: { code: { include: '__CLOUDFLARE_MODULE__' } },
+							async handler(code, chunk) {
+								/** @type {MagicString | undefined} */
+								let s;
 
-								return { ...result, code: result.code.replaceAll('\0_CLOUDFLARE', '__CLOUDFLARE') };
+								for (const [id, file] of references) {
+									let index = code.indexOf(id);
+									if (index === -1) continue;
+
+									const file_name = this.getFileName(
+										this.emitFile({
+											type: 'asset',
+											name: path.basename(file),
+											originalFileName: file,
+											source: await fs.promises.readFile(file)
+										})
+									);
+									const relative = path.posix.relative(
+										path.posix.dirname(chunk.fileName),
+										file_name
+									);
+									const import_path = relative.startsWith('.') ? relative : `./${relative}`;
+
+									s ??= new MagicString(code);
+									for (; index !== -1; index = code.indexOf(id, index + id.length)) {
+										s.update(index, index + id.length, import_path);
+									}
+								}
+
+								if (!s) return;
+
+								return {
+									code: s.toString(),
+									map: this.environment.config.build.sourcemap
+										? s.generateMap({ hires: 'boundary' })
+										: null
+								};
 							}
 						}
 					}
