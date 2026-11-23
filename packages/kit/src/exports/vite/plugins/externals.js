@@ -8,7 +8,10 @@ import { createIdResolver } from 'vite';
  */
 export function plugin_externals() {
 	/** @type {ReturnType<typeof createIdResolver>} */
-	let resolve;
+	let resolve_import;
+
+	/** @type {ReturnType<typeof createIdResolver>} */
+	let resolve_require;
 
 	return {
 		name: 'vite-plugin-sveltekit-externals',
@@ -20,7 +23,8 @@ export function plugin_externals() {
 		},
 
 		configResolved(config) {
-			resolve = createIdResolver(config, { noExternal: true });
+			resolve_import = createIdResolver(config, { noExternal: true });
+			resolve_require = createIdResolver(config, { noExternal: true, isRequire: true });
 		},
 
 		resolveId: {
@@ -28,6 +32,8 @@ export function plugin_externals() {
 			async handler(id, importer, options) {
 				const resolved = await this.resolve(id, importer, { ...options, skipSelf: true });
 				if (!resolved?.external) return resolved;
+
+				const resolve = options.kind === 'require-call' ? resolve_require : resolve_import;
 
 				// Vite externalizes based on what the project root resolves, whatever the importer
 				const [from_importer, from_root] = await Promise.all([
