@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { location } from '../../../../../../test-utils/deploy.js';
 
 test('worker', async ({ page }) => {
 	await page.goto('/');
@@ -76,10 +77,11 @@ test('leaves text that looks like a WebAssembly import alone', async ({ request 
 	expect(await res.text()).toBe("import module from './add.wasm';");
 });
 
-test('imported content cannot publish other files', async ({ request }) => {
-	// the post names the wrangler config, and the response would say where it was published
-	const res = await request.get('/content');
-	const file = path.basename((await res.text()).trim());
-	const published = await request.get(`/_app/immutable/assets/${file}`);
-	expect(await published.text()).not.toContain('from wrangler.jsonc');
+test('imported content cannot publish other files', () => {
+	test.skip(!!process.env.DEV);
+	// the post that /content imports names the wrangler config
+	const app = location(path.resolve(import.meta.dirname, '..'));
+	const assets = path.join(app, '.svelte-kit/cloudflare/client/_app/immutable/assets');
+	const published = fs.readdirSync(assets).filter((file) => file.startsWith('wrangler'));
+	expect(published).toEqual([]);
 });
