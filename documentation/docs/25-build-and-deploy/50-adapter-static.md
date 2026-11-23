@@ -263,14 +263,14 @@ RewriteCond %{REQUEST_FILENAME}.gz -s
 RewriteRule ^(.+)$ $1.gz [L]
 
 # the original file type is kept, and mod_deflate doesn't compress twice
-<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)\.br$">
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt|md|mdx)\.br$">
 	AddEncoding br .br
 </FilesMatch>
-<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)\.gz$">
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt|md|mdx)\.gz$">
 	RemoveType .gz
 	AddEncoding gzip .gz
 </FilesMatch>
-<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt)(\.br|\.gz)?$">
+<FilesMatch "\.(html|m?js|css|json|svg|xml|wasm|txt|md|mdx)(\.br|\.gz)?$">
 	Header append Vary Accept-Encoding
 </FilesMatch>
 ```
