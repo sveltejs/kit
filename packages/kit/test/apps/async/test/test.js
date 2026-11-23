@@ -445,6 +445,10 @@ test.describe('remote functions', () => {
 	});
 
 	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
 		await page.goto('/remote/form/throwing-error-page');
 
 		await page.fill('input', 'unexpected error');
@@ -455,6 +459,8 @@ test.describe('remote functions', () => {
 				'This is your custom error page saying: "error page render error (500 Internal Error, on /remote/form/throwing-error-page)"'
 			)
 			.waitFor();
+
+		expect(errors).toEqual([]);
 	});
 
 	test('form redirects', async ({ page }) => {
