@@ -91,3 +91,20 @@ test('applies PORT_HEADER when the forwarded host already includes the port', as
 		expect(await response.text()).toBe(expected);
 	}
 });
+
+test('rejects an XFF_DEPTH that is not a positive integer at startup', async () => {
+	onTestFinished(() => {
+		vi.unstubAllEnvs();
+	});
+
+	// the env vars are read when the handler is loaded
+	for (const value of ['abc', '0', '1abc', '2.5', '']) {
+		vi.stubEnv('XFF_DEPTH', value);
+		vi.resetModules();
+		await expect(import('./handler.js')).rejects.toThrow(`Invalid XFF_DEPTH: '${value}'`);
+	}
+
+	vi.stubEnv('XFF_DEPTH', '2');
+	vi.resetModules();
+	await expect(import('./handler.js')).resolves.toHaveProperty('handler');
+});
