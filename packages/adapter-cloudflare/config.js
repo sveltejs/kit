@@ -114,10 +114,6 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 						renderChunk: {
 							...render_chunk,
 							async handler(code, ...args) {
-								// cloudflare emits the file named in any text shaped like a reference,
-								// and sveltekit copies emitted files to the client, so text that is not
-								// in `references` is hidden from it behind a placeholder of the same
-								// length, which keeps source maps valid
 								const masked = code.replace(reference, (match) =>
 									references.has(match) ? match : `\0${match.slice(1)}`
 								);
