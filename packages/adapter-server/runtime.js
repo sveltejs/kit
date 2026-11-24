@@ -51,3 +51,12 @@ export function forwardedAddress({ header, value, depth, envPrefix }) {
 
 	return addresses[addresses.length - depth].trim();
 }
+
+// same logic as `relative_pathname` in `packages/kit/src/utils/url.js`
+/** @type {typeof import('./runtime.js').trailingSlashLocation} */
+export function trailingSlashLocation(pathname) {
+	const segment = pathname.replace(/\/$/, '').split('/').at(-1);
+
+	// The prefix prevents a colon in the segment from being interpreted as a URL scheme.
+	return pathname.endsWith('/') ? `../${segment}` : `./${segment}/`;
+}
