@@ -365,6 +365,25 @@ describe('Endpoints', () => {
 		expect(await html_response.text()).toContain('Hi');
 	});
 
+	test('content negotiation: Vary includes Accept alongside headers set by the app', async () => {
+		for (const path of [
+			'/routing/content-negotiation-headers',
+			'/routing/content-negotiation-headers?error'
+		]) {
+			for (const accept of ['application/json', 'text/html']) {
+				const response = await get(path, { headers: { accept } });
+
+				const vary = response.headers
+					.get('vary')
+					?.split(',')
+					.map((v) => v.trim().toLowerCase());
+
+				expect(vary).toContain('accept');
+				expect(vary).toContain('accept-language');
+			}
+		}
+	});
+
 	test('multiple set-cookie on endpoints using GET', async () => {
 		const response = await get('/set-cookie');
 
