@@ -1,6 +1,22 @@
-import { is_form_content_type } from '../../utils/http.js';
+import { is_form_content_type, matches_content_type } from '../../utils/http.js';
 
 const mutating_form_methods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/**
+ * Returns `true` if a browser could send a cross-site request with this content type
+ * without a CORS preflight, meaning its origin must be checked
+ * @param {Request} request
+ */
+function can_skip_preflight(request) {
+	const content_type = request.headers.get('content-type');
+
+	return (
+		!content_type ||
+		is_form_content_type(request) ||
+		// sent by hyperlink auditing (`<a ping>`)
+		matches_content_type(content_type, 'text/ping')
+	);
+}
 
 /**
  * The origin SvelteKit treats as "self" when validating the `Origin` header on
@@ -36,7 +52,7 @@ export function get_self_origin(paths_origin, url_origin) {
  */
 export function is_csrf_forbidden({ request, request_origin, self_origin, trusted_origins }) {
 	return (
-		(!request.headers.get('content-type') || is_form_content_type(request)) &&
+		can_skip_preflight(request) &&
 		mutating_form_methods.has(request.method) &&
 		request_origin !== self_origin &&
 		(!request_origin || !trusted_origins.includes(request_origin))
