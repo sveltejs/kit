@@ -30,6 +30,10 @@ const is_preview = (_config, env) => env.isPreview === true;
 const is_build_or_preview = (_config, env) => env.isPreview === true || env.command === 'build';
 
 /**
+ * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
+ * so that dev emulates workerd and the server output suits it.
+ * It also generates the Wrangler deployment config for the build output
+ * and runs the built Worker in workerd during preview
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
  * @param {string[]} server_entries paths, without the file extension, to the hooks and
