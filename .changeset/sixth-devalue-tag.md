@@ -1,0 +1,5 @@
+---
+'@sveltejs/kit': patch
+---
+
+chore: bump `devalue` to 6.0.4
