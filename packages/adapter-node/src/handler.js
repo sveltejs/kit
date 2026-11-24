@@ -185,9 +185,8 @@ function get_origin(headers) {
 		);
 	}
 
-	// a proxy on a non-standard port can forward a host that already includes the port
-	// (e.g. `example.com:8443`), so replace it rather than appending a second one
-	return port ? `${protocol}://${host.replace(/:\d*$/, '')}:${port}` : `${protocol}://${host}`;
+	// the host keeps the port the browser sent; PORT_HEADER only fills in a missing one
+	return port && !/:\d*$/.test(host) ? `${protocol}://${host}:${port}` : `${protocol}://${host}`;
 }
 
 const serve = serve_static(

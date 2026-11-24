@@ -54,7 +54,7 @@ test('passes successful responses through', async () => {
 	expect(await response.text()).toBe('hello');
 });
 
-test('applies PORT_HEADER when the forwarded host already includes the port', async () => {
+test('applies PORT_HEADER only when the forwarded host has no port', async () => {
 	vi.stubEnv('HOST_HEADER', 'x-forwarded-host');
 	vi.stubEnv('PORT_HEADER', 'x-forwarded-port');
 	onTestFinished(() => {
@@ -77,10 +77,11 @@ test('applies PORT_HEADER when the forwarded host already includes the port', as
 	await once(server, 'listening');
 	const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
 
-	// a proxy listening on a non-standard port can forward the host with that port included
+	// the host's own port is the one the browser used, so it wins over the forwarded port
 	for (const [host, expected] of [
 		['example.com', 'https://example.com:8443/page'],
 		['example.com:8443', 'https://example.com:8443/page'],
+		['example.com:9443', 'https://example.com:9443/page'],
 		['[::1]:8443', 'https://[::1]:8443/page']
 	]) {
 		const response = await fetch(`http://127.0.0.1:${port}/page`, {
