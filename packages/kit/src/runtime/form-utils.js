@@ -180,6 +180,8 @@ function check_gaps(data) {
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
 const BINARY_FORM_VERSION = 0;
 const HEADER_BYTES = 1 + 4 + 2;
+/** Smaller reads from the request body are combined until they reach this size */
+const MIN_CHUNK_SIZE = 16 * 1024;
 /**
  * The binary format is as follows:
  * - 1 byte: Format version
@@ -268,6 +270,38 @@ export async function deserialize_binary_form(request, form_id) {
 	const chunks = [];
 
 	/**
+	 * Reads the next chunk, combining small reads so that the number of stored
+	 * chunks is bounded by the body size rather than by how the body was split up
+	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
+	 */
+	async function read_chunk() {
+		const first = await reader.read();
+		if (first.done) return undefined;
+		if (first.value.byteLength >= MIN_CHUNK_SIZE) return first.value;
+
+		/** @type {Uint8Array<ArrayBuffer>[]} */
+		const parts = [first.value];
+		let size = first.value.byteLength;
+
+		while (size < MIN_CHUNK_SIZE) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			parts.push(value);
+			size += value.byteLength;
+		}
+
+		if (parts.length === 1) return parts[0];
+
+		const chunk = new Uint8Array(size);
+		let cursor = 0;
+		for (const part of parts) {
+			chunk.set(part, cursor);
+			cursor += part.byteLength;
+		}
+		return chunk;
+	}
+
+	/**
 	 * @param {number} index
 	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
 	 */
@@ -278,7 +312,7 @@ export async function deserialize_binary_form(request, form_id) {
 		while (i <= index) {
 			// chain reads so only one is ever pending — workerd forbids concurrent reads
 			const previous = chunks[i - 1] ?? Promise.resolve(undefined);
-			chunks[i] = previous.then(() => reader.read()).then((chunk) => chunk.value);
+			chunks[i] = previous.then(read_chunk);
 			i++;
 		}
 		return chunks[index];

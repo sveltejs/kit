@@ -1,5 +1,6 @@
 import { EventEmitter, once } from 'node:events';
-import { validateHeaderValue } from 'node:http';
+import { createServer, validateHeaderValue } from 'node:http';
+import { connect } from 'node:net';
 import { PassThrough } from 'node:stream';
 import { expect, test, vi } from 'vitest';
 import { getRequest, setResponse } from './index.js';
@@ -254,6 +255,47 @@ test('does not remove unrelated data listeners when draining', async () => {
 
 	await expect_request_drained(req);
 	expect(unrelated).toHaveBeenCalled();
+});
+
+test('errors an unfinished request body when the connection closes after the response', async () => {
+	/** @type {(request: Request) => void} */
+	let on_request = () => {};
+	/** @type {Promise<Request>} */
+	const received = new Promise((fulfil) => (on_request = fulfil));
+
+	const server = createServer((req, res) => {
+		const request = getRequest({ request: req, response: res, base: 'http://localhost' });
+		on_request(request);
+		setResponse(res, new Response('ok'));
+	});
+
+	await new Promise((fulfil) => server.listen(0, '127.0.0.1', () => fulfil(undefined)));
+
+	try {
+		const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
+		const socket = connect(port, '127.0.0.1');
+		socket.write(
+			'POST / HTTP/1.1\r\nHost: localhost\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n5\r\nhello\r\n'
+		);
+
+		const request = await received;
+		await once(socket, 'data');
+
+		const reader = /** @type {ReadableStream} */ (request.body).getReader();
+		const result = (async () => {
+			for (;;) {
+				const { done } = await reader.read();
+				if (done) return 'ended';
+			}
+		})().catch(() => 'errored');
+
+		socket.destroy();
+
+		const timeout = new Promise((fulfil) => setTimeout(() => fulfil('pending'), 1000));
+		expect(await Promise.race([result, timeout])).toBe('errored');
+	} finally {
+		server.close();
+	}
 });
 
 // https://github.com/sveltejs/kit/issues/16778

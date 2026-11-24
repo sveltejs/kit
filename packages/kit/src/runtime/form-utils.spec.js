@@ -433,6 +433,48 @@ describe('binary form serializer', () => {
 		expect(res.meta.validate_only).toBe(true);
 	});
 
+	test('combines small body chunks', async () => {
+		const contents = 'x'.repeat(40_000);
+		const { blob } = serialize_binary_form(
+			{ foo: 'bar', file: new File([contents], 'file.txt', { type: 'text/plain' }) },
+			{}
+		);
+		const bytes = new Uint8Array(await blob.arrayBuffer());
+
+		let i = 0;
+		const body = new ReadableStream({
+			pull(controller) {
+				if (i < bytes.length) {
+					controller.enqueue(bytes.slice(i, i + 1));
+					i++;
+				} else {
+					controller.close();
+				}
+			}
+		});
+
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body,
+				// @ts-expect-error
+				duplex: 'half',
+				headers: { 'Content-Type': BINARY_FORM_CONTENT_TYPE }
+			}),
+			''
+		);
+		expect(res.data.foo).toBe('bar');
+
+		/** @type {Uint8Array<ArrayBuffer>[]} */
+		const parts = [];
+		for await (const part of res.data.file.stream()) {
+			parts.push(part);
+		}
+
+		expect(parts.length).toBeLessThanOrEqual(4);
+		expect(await new Blob(parts).text()).toBe(contents);
+	});
+
 	test('does not preallocate large buffers for incomplete bodies', async () => {
 		const OriginalUint8Array = Uint8Array;
 		const header_bytes = 1 + 4 + 2;
@@ -734,6 +776,7 @@ describe('binary form serializer', () => {
 				offset_buffer.fill(255);
 				offset_buffer.set(chunk, 10);
 				controller.enqueue(offset_buffer.subarray(10));
+				controller.close();
 			}
 		});
 

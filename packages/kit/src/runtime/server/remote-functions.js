@@ -180,7 +180,8 @@ export async function get_remote_function(id, manifest) {
 	const remotes = manifest.remotes;
 	if (!Object.hasOwn(remotes, hash)) return;
 
-	const module = await remotes[hash]();
+	// load the module outside the request store, so that the module doesn't retain the event
+	const module = await with_request_store(null, () => remotes[hash]());
 	if (!Object.hasOwn(module.default, name)) return;
 
 	return {
