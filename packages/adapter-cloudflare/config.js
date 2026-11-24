@@ -1,7 +1,10 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
+import fs from 'node:fs';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import MagicString from 'magic-string';
 import { needs_nodejs_als, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
@@ -83,6 +86,8 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 				);
 
 				const wasm = /\.wasm(\?module)?$/;
+				/** @type {Map<string, string>} the module references we created and the files they point to */
+				const references = new Map();
 
 				return /** @satisfies {Plugin[]} */ ([
 					{
@@ -95,7 +100,53 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
 								if (!resolved || !wasm.test(resolved.id)) return resolved;
 
-								return resolve_id.handler.call(this, source, importer, options);
+								const result = await resolve_id.handler.call(this, source, importer, options);
+								if (result && typeof result === 'object') {
+									references.set(result.id, resolved.id.replace(wasm, '.wasm'));
+								}
+								return result;
+							}
+						},
+						// the plugin's own hook reads and emits any file named by text shaped like a
+						// reference, so we only rewrite the exact references we created
+						renderChunk: {
+							filter: { code: { include: '__CLOUDFLARE_MODULE__' } },
+							async handler(code, chunk) {
+								/** @type {MagicString | undefined} */
+								let s;
+
+								for (const [id, file] of references) {
+									let index = code.indexOf(id);
+									if (index === -1) continue;
+
+									const file_name = this.getFileName(
+										this.emitFile({
+											type: 'asset',
+											name: path.basename(file),
+											originalFileName: file,
+											source: await fs.promises.readFile(file)
+										})
+									);
+									const relative = path.posix.relative(
+										path.posix.dirname(chunk.fileName),
+										file_name
+									);
+									const import_path = relative.startsWith('.') ? relative : `./${relative}`;
+
+									s ??= new MagicString(code);
+									for (; index !== -1; index = code.indexOf(id, index + id.length)) {
+										s.update(index, index + id.length, import_path);
+									}
+								}
+
+								if (!s) return;
+
+								return {
+									code: s.toString(),
+									map: this.environment.config.build.sourcemap
+										? s.generateMap({ hires: 'boundary' })
+										: null
+								};
 							}
 						}
 					}

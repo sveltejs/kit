@@ -363,6 +363,9 @@ importers:
       '@rolldown/pluginutils':
         specifier: ^1.0.1
         version: 1.0.1
+      magic-string:
+        specifier: ^1.4.1
+        version: 1.4.1
       wrangler:
         specifier: ^4.162.0
         version: 4.162.0(@cloudflare/workers-types@5.20261115.1)(@types/node@22.20.4)
