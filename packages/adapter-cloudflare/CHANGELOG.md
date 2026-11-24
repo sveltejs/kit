@@ -1,5 +1,11 @@
 # @sveltejs/adapter-cloudflare
 
+## 8.0.4
+
+### Patch Changes
+
+- fix: support `.wasm` imports during dev and build ([#17824](https://github.com/sveltejs/kit/pull/17824))
+
 ## 8.0.3
 
 ### Patch Changes
