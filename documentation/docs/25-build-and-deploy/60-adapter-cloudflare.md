@@ -49,7 +49,7 @@ Path to your [Wrangler configuration file](https://developers.cloudflare.com/wor
 
 ### platformProxy
 
-Preferences for the emulated `env` local bindings during development. See the [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options.
+Preferences for the `env` local bindings during development and preview. See the [`getPlatformProxy`](https://developers.cloudflare.com/workers/wrangler/api/#parameters-1) Wrangler API documentation for a full list of options. Only the `persist` and `remoteBindings` options apply during preview.
 
 ### worker
 
