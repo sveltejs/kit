@@ -1,13 +1,33 @@
+/** @import { IncomingMessage, ServerResponse } from 'node:http' */
+/** @import { Http2ServerRequest } from 'node:http2' */
 import { createReadStream } from 'node:fs';
 import { Readable } from 'node:stream';
 import { SvelteKitError } from '../internal/shared.js';
 import { noop } from '../../utils/functions.js';
 
-/** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
+/** @type {WeakMap<IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
 /**
- * @param {import('http').IncomingMessage} req
+ * Whether the client went away before the request body finished.
+ * @param {IncomingMessage} request
+ */
+function is_aborted(request) {
+	if (request.readableAborted) return true;
+	if (request.httpVersionMajor < 2) return false;
+
+	// HTTP/2 compatibility requests don't reflect a cancelled stream in
+	// `destroyed`/`readableAborted`, only in `aborted`
+	return /** @type {Http2ServerRequest} */ (/** @type {unknown} */ (request)).aborted;
+}
+
+/** The same error Node emits when an HTTP/1.1 request is aborted while we're listening */
+function aborted_error() {
+	return Object.assign(new Error('aborted'), { code: 'ECONNRESET' });
+}
+
+/**
+ * @param {IncomingMessage} req
  * @param {number} [body_size_limit]
  */
 function get_raw_body(req, body_size_limit) {
@@ -24,17 +44,27 @@ function get_raw_body(req, body_size_limit) {
 		return null;
 	}
 
-	if (req.destroyed) {
-		const readable = new ReadableStream();
-		void readable.cancel();
-		return readable;
-	}
-
 	let size = 0;
 	let cancelled = false;
 
 	return new ReadableStream({
 		start(controller) {
+			// Settle through the controller rather than cancelling, which would
+			// disturb the stream before Request can use it.
+			if (is_aborted(req)) {
+				controller.error(aborted_error());
+				return;
+			}
+
+			// something else read the body first, such as body-parsing middleware.
+			// HTTP/2 requests end without being destroyed
+			if (req.readableEnded || req.destroyed) {
+				controller.error(
+					new Error('The request body was already read before it reached SvelteKit')
+				);
+				return;
+			}
+
 			if (body_size_limit !== undefined && has_content_length && content_length > body_size_limit) {
 				const error = new SvelteKitError(
 					413,
@@ -54,7 +84,13 @@ function get_raw_body(req, body_size_limit) {
 
 			const on_end = () => {
 				if (cancelled) return;
-				controller.close();
+
+				// a cancelled HTTP/2 request ends without an error
+				if (is_aborted(req)) {
+					on_error(aborted_error());
+				} else {
+					controller.close();
+				}
 			};
 
 			/** @param {Buffer} chunk */
@@ -92,6 +128,10 @@ function get_raw_body(req, body_size_limit) {
 				}
 			};
 
+			if (req.httpVersionMajor >= 2) {
+				req.once('aborted', () => on_error(aborted_error()));
+			}
+
 			req.on('error', on_error);
 			req.on('end', on_end);
 			req.on('data', on_data);
@@ -111,8 +151,8 @@ function get_raw_body(req, body_size_limit) {
 
 /**
  * @param {{
- *   request: import('http').IncomingMessage;
- *   response?: import('http').ServerResponse;
+ *   request: IncomingMessage;
+ *   response?: ServerResponse;
  *   base: string;
  *   bodySizeLimit?: number;
  * }} options
@@ -135,8 +175,18 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
 
 	const controller = new AbortController();
 
+	// Either stream may have closed before we started listening.
+	if (is_aborted(request) || (response?.destroyed && !response.writableEnded)) {
+		controller.abort();
+	}
+
+	if (request.httpVersionMajor >= 2) {
+		// abort before a pending body read rejects, rather than on `close`
+		request.once('aborted', () => controller.abort());
+	}
+
 	request.once('close', () => {
-		if (request.readableAborted) {
+		if (is_aborted(request)) {
 			controller.abort();
 		}
 	});
@@ -178,7 +228,7 @@ export function getRequest({ request, response, base, bodySizeLimit }) {
  * is the intended trade-off (keeping the connection reusable) over destroying it.
  * @see https://github.com/sveltejs/kit/issues/14916
  * @see https://github.com/sveltejs/kit/issues/15526
- * @param {import('http').ServerResponse} res
+ * @param {ServerResponse} res
  */
 function drain_request(res) {
 	const req = res.req;
@@ -202,7 +252,7 @@ function drain_request(res) {
 }
 
 /**
- * @param {import('http').ServerResponse} res
+ * @param {ServerResponse} res
  * @param {Response} response
  * @returns {void}
  */
