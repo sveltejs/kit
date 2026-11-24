@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { location } from '../../../../../../test-utils/deploy.js';
 
 test('worker', async ({ page }) => {
 	await page.goto('/');
@@ -60,11 +61,11 @@ test('leaves text that looks like a WebAssembly import alone', async ({ request 
 	expect(await res.text()).toBe("import module from './add.wasm';");
 });
 
-test('leaves text that looks like a module reference alone', async ({ request }) => {
-	const content = fs.readFileSync(
-		path.resolve(import.meta.dirname, '../src/routes/module-reference-text/text.txt'),
-		'utf-8'
-	);
-	const res = await request.get('/module-reference-text');
-	expect(await res.text()).toBe(content);
+test('imported content cannot publish other files', () => {
+	test.skip(!!process.env.DEV);
+	// the post that /content imports names the wrangler config
+	const app = location(path.resolve(import.meta.dirname, '..'));
+	const assets = path.join(app, 'dist/public/_app/immutable/assets');
+	const published = fs.readdirSync(assets).filter((file) => file.startsWith('wrangler'));
+	expect(published).toEqual([]);
 });
