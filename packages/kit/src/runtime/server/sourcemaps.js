@@ -22,9 +22,21 @@ const relative = cwd ? (file) => path.relative(cwd, file) : (file) => file;
 export let fix_stack_trace = (error) => {
 	if (!error.stack || !fs) return;
 
+	// The stack begins with the error name and message, which may contain arbitrary
+	// text. Only the frames that follow it should be parsed
+	let header;
+	try {
+		header = Error.prototype.toString.call(error);
+	} catch {
+		return;
+	}
+
+	if (!error.stack.startsWith(header + '\n')) return;
+
 	let end = 0;
 
-	const stack = error.stack
+	const frames = error.stack
+		.slice(header.length + 1)
 		.split('\n')
 		.map((line, i) => {
 			const match = line.match(/^ {4}at.+(file:\/\/\/.*):(\d+):(\d+)(\)?)$/);
@@ -58,10 +70,9 @@ export let fix_stack_trace = (error) => {
 
 			return line;
 		})
-		.slice(0, end)
-		.join('\n');
+		.slice(0, end);
 
-	set_error_stack(error, stack);
+	set_error_stack(error, [header, ...frames].join('\n'));
 };
 
 /**
@@ -88,6 +99,11 @@ function get_source_map(file) {
 		let source;
 		let directory = path.dirname(file);
 
+		if (!is_file(file)) {
+			source_maps.set(file, null);
+			return null;
+		}
+
 		const code = fs.readFileSync(file, 'utf8');
 		const matches = Array.from(code.matchAll(/\/\/[#@]\s*sourceMappingURL=(\S+)/g));
 		const url = matches.at(-1)?.[1];
@@ -103,7 +119,7 @@ function get_source_map(file) {
 			const map_file = url
 				? path.resolve(path.dirname(file), decodeURIComponent(url))
 				: `${file}.map`;
-			if (fs.existsSync(map_file)) {
+			if (is_file(map_file)) {
 				directory = path.dirname(map_file);
 				source = fs.readFileSync(map_file, 'utf8');
 			}
@@ -121,6 +137,14 @@ function get_source_map(file) {
 
 	source_maps.set(file, null);
 	return null;
+}
+
+/**
+ * @param {string} file
+ * @returns {boolean}
+ */
+function is_file(file) {
+	return fs.statSync(file, { throwIfNoEntry: false })?.isFile() ?? false;
 }
 
 /**

@@ -524,13 +524,23 @@ export async function collect_remote_data(data, event, state) {
 }
 
 /**
- * @param {string[] | undefined} refreshes
+ * @param {unknown} refreshes
  */
 function create_requested_map(refreshes) {
 	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
-	for (const key of refreshes ?? []) {
+	if (refreshes === undefined) return requested;
+
+	if (!Array.isArray(refreshes)) {
+		throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+	}
+
+	for (const key of refreshes) {
+		if (typeof key !== 'string' || !key.includes('/')) {
+			throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+		}
+
 		const parts = split_remote_key(key);
 
 		const existing = requested.get(parts.id);
