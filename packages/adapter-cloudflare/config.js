@@ -51,10 +51,11 @@ export function plugin_config(
 ) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
-		// the Cloudflare Vite plugin creates the local bindings during preview.
-		// TODO: in the next major, pass `<persist.path>/v3` resolved from the Vite `root` to
-		// `getPlatformProxy` so that dev shares its data with preview. The Cloudflare Vite
-		// plugin always stores the data in the `v3` subdirectory of a custom path
+		// during preview, the Cloudflare Vite plugin creates the local bindings instead of
+		// `getPlatformProxy`, so we pass it the same preferences.
+		// TODO: in the next major, make dev and preview share their data when `persist.path`
+		// is set. Currently, preview stores its data in `<persist.path>/v3`, resolved from
+		// the Vite `root`, whereas dev stores its data directly in `<persist.path>`
 		persistState: platform_proxy.persist,
 		remoteBindings: platform_proxy.remoteBindings,
 		viteEnvironment: { name: 'ssr' },
