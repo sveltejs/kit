@@ -33,7 +33,9 @@ const xff_depth_value = env('XFF_DEPTH', '1');
 const xff_depth = Number(xff_depth_value);
 
 if (!/^\d+$/.test(xff_depth_value) || !Number.isSafeInteger(xff_depth) || xff_depth < 1) {
-	throw new Error(`Invalid XFF_DEPTH: '${xff_depth_value}'. Please provide a positive integer.`);
+	throw new Error(
+		`Invalid ${env_prefix}XFF_DEPTH: '${xff_depth_value}'. Please provide a positive integer.`
+	);
 }
 
 const address_header = env('ADDRESS_HEADER', '').toLowerCase();
