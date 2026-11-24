@@ -211,7 +211,8 @@ describe.skipIf(dev)('CSRF', () => {
 			'application/x-www-form-urlencoded',
 			'multipart/form-data',
 			'text/plain',
-			'text/plaiN'
+			'text/plaiN',
+			'text/ping'
 		];
 		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 		for (const method of methods) {
