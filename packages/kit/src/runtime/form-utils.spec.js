@@ -1183,6 +1183,15 @@ describe('deep_set', () => {
 	});
 });
 
+describe('flatten_issues', () => {
+	test('reuses the result for the same issue array', () => {
+		const issues = [{ name: 'items[0]', path: ['items', 0], message: 'invalid', server: true }];
+		const flattened = flatten_issues(issues);
+
+		expect(flatten_issues(issues)).toBe(flattened);
+	});
+});
+
 describe('prototype property names', () => {
 	test('are treated like ordinary form field names', () => {
 		expect.soft(deep_get({}, ['toString'])).toBeUndefined();

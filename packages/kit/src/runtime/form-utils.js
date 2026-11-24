@@ -720,12 +720,19 @@ export function normalize_issue(issue, server = false) {
 	return normalized;
 }
 
+/** @type {WeakMap<InternalRemoteFormIssue[], Record<string, InternalRemoteFormIssue[]>>} */
+const flattened_issues = new WeakMap();
+
 /**
  * @param {InternalRemoteFormIssue[]} issues
  */
 export function flatten_issues(issues) {
+	const cached = flattened_issues.get(issues);
+	if (cached) return cached;
+
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
 	const result = Object.create(null);
+	flattened_issues.set(issues, result);
 
 	for (const issue of issues) {
 		(result.$ ??= []).push(issue);
