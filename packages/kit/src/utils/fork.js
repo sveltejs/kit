@@ -85,11 +85,24 @@ export function forked(module, callback) {
 				}
 			);
 
+			// Some runtimes (e.g. Bun 1.3) can let the event loop drain before delivering
+			// the worker's exit event. Don't let an unfinished build silently succeed.
+			const on_before_exit = () => {
+				reject(
+					new Error(
+						'The event loop is exiting before a SvelteKit build worker finished. If you are using Bun, try upgrading Bun or running the build with Node.js.'
+					)
+				);
+			};
+			process.once('beforeExit', on_before_exit);
+
 			worker.once('error', (error) => {
 				failure = { error };
 			});
 
 			worker.once('exit', (code) => {
+				process.off('beforeExit', on_before_exit);
+
 				if (failure) {
 					reject(failure.error);
 				} else if (code) {

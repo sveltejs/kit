@@ -3,7 +3,7 @@ import process from 'node:process';
 import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-import { afterEach, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { run } from './fixtures/fork/index.js';
 
 test('waits for the callback, async finally and exit handlers, then stops background work', async () => {
@@ -48,6 +48,30 @@ test('preserves falsy values thrown by exit handlers', async () => {
 	await expect(run({ action: 'exit-error', error: null })).rejects.toBeNull();
 });
 
+test('rejects if the event loop drains while waiting for the worker', async () => {
+	// Simulate a runtime failing to keep the event loop alive until the worker's exit event.
+	// Do this in a subprocess to avoid invoking Vitest's own beforeExit listeners.
+	await expect(
+		promisify(execFile)(process.execPath, [
+			'--eval',
+			`
+				import(${JSON.stringify(new URL('./fixtures/fork/index.js', import.meta.url).href)}).then(({ run }) => {
+					run({ action: 'return' }).catch((error) => {
+						console.error(error.message);
+						process.exitCode = 1;
+					});
+					process.emit('beforeExit', 0);
+				});
+			`
+		])
+	).rejects.toMatchObject({
+		code: 1,
+		stderr: expect.stringContaining(
+			'The event loop is exiting before a SvelteKit build worker finished. If you are using Bun, try upgrading Bun or running the build with Node.js.'
+		)
+	});
+});
+
 test('delivers buffered stdout and stderr before exiting', async () => {
 	const { stdout, stderr } = await promisify(execFile)(process.execPath, [
 		fileURLToPath(new URL('./fixtures/fork/stdio.js', import.meta.url))
@@ -57,8 +81,16 @@ test('delivers buffered stdout and stderr before exiting', async () => {
 	expect(stderr).toBe('err\n'.repeat(128 * 1024));
 });
 
+/** @type {Function[]} */
+let before_exit_listeners;
+
+beforeEach(() => {
+	before_exit_listeners = process.listeners('beforeExit');
+});
+
 afterEach(() => {
 	vi.unstubAllEnvs();
+	expect(process.listeners('beforeExit')).toEqual(before_exit_listeners);
 });
 
 test.each([
