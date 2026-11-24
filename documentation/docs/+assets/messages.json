@@ -1205,6 +1205,18 @@
 		],
 		"details": "Rather than modifying SvelteKit's generated TypeScript configuration with a function, add the options to your own `tsconfig.json`, which [extends `$app/tsconfig`](https://svelte.dev/docs/kit/$app-tsconfig)."
 	},
+	"route_params_slow": {
+		"variants": [
+			{
+				"text": "The `%id%` route can be slow to match, which could allow denial-of-service attacks, and won't be supported in SvelteKit 4: %reason%",
+				"variables": [
+					"id",
+					"reason"
+				]
+			}
+		],
+		"details": "The time taken to match a request against this route grows greatly depending on the length of the URL, so a long, carefully crafted URL can keep the server busy for seconds. To make sure every route can be matched quickly, SvelteKit 4 will not allow routes where:\n\n- a single directory with more than one [parameter](https://svelte.dev/docs/kit/routing) has an optional or rest parameter in any position but the last — `[a]-[b]-[[c]]` is fine, but `[[a]]-[b]` and `[...a]-[b]` aren't\n- there's more than one [rest parameter](https://svelte.dev/docs/kit/advanced-routing#Rest-parameters)\n\nInstead, capture that part of the path with a single parameter, and split it in your own code. For example, instead of `src/routes/[...a]/x/[...b]`, use `src/routes/[...path=has_x]` with a [matcher](https://svelte.dev/docs/kit/advanced-routing#Matching) that only matches paths containing an `x` directory:\n\n```js\n/// file: src/params.js\nimport { defineParams } from '@sveltejs/kit/params';\n\nexport const params = defineParams({\n\thas_x: (path) => (path.split('/').includes('x') ? path : undefined)\n});\n```\n\n...and a utility that splits `params.path` wherever you need the individual parts, taking the last `x` like the original route would:\n\n```js\n/// file: src/lib/split-path.js\n/** @param {string} path */\nexport function splitPath(path) {\n\tconst segments = path.split('/');\n\tconst i = segments.lastIndexOf('x');\n\n\treturn {\n\t\ta: segments.slice(0, i).join('/'),\n\t\tb: segments.slice(i + 1).join('/')\n\t};\n}\n```"
+	},
 	"route_file_prefix_missing": {
 		"variants": [
 			{
@@ -2496,6 +2508,17 @@
 			}
 		],
 		"details": "Remote form field paths cannot contain `__proto__`, `constructor` or `prototype`. These names could modify an object's prototype rather than its data. Rename the field in both the form and its schema. Never use untrusted input to construct field paths without validating it."
+	},
+	"form_field_too_many_gaps": {
+		"variants": [
+			{
+				"text": "Form field `%name%` has too many missing array indexes",
+				"variables": [
+					"name"
+				]
+			}
+		],
+		"details": "Browsers don't submit unchecked checkboxes, unselected radio buttons or disabled controls, so indexed fields such as `items[3].done` can leave gaps in arrays. Gaps are allowed, but to prevent a small request from creating very large arrays, a submission can't contain more than 1,000 gaps across all of its arrays. If you see this error with a legitimate form, make sure each indexed item includes a control that is always submitted, such as a text or hidden input, or use array inputs such as `form.fields.choices.as('checkbox', 'option')`, which only submit the selected values."
 	},
 	"form_field_array_conflict": {
 		"variants": [

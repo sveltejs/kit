@@ -22,6 +22,12 @@ Remote form field paths use identifiers separated by dots and numeric array inde
 
 Remote form field paths cannot contain `__proto__`, `constructor` or `prototype`. These names could modify an object's prototype rather than its data. Rename the field in both the form and its schema. Never use untrusted input to construct field paths without validating it.
 
+## form_field_too_many_gaps
+
+> Form field `%name%` has too many missing array indexes
+
+Browsers don't submit unchecked checkboxes, unselected radio buttons or disabled controls, so indexed fields such as `items[3].done` can leave gaps in arrays. Gaps are allowed, but to prevent a small request from creating very large arrays, a submission can't contain more than 1,000 gaps across all of its arrays. If you see this error with a legitimate form, make sure each indexed item includes a control that is always submitted, such as a text or hidden input, or use array inputs such as `form.fields.choices.as('checkbox', 'option')`, which only submit the selected values.
+
 ## form_field_array_conflict
 
 > Invalid array key `%key%`

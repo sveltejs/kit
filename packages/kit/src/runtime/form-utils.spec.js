@@ -433,6 +433,48 @@ describe('binary form serializer', () => {
 		expect(res.meta.validate_only).toBe(true);
 	});
 
+	test('combines small body chunks', async () => {
+		const contents = 'x'.repeat(40_000);
+		const { blob } = serialize_binary_form(
+			{ foo: 'bar', file: new File([contents], 'file.txt', { type: 'text/plain' }) },
+			{}
+		);
+		const bytes = new Uint8Array(await blob.arrayBuffer());
+
+		let i = 0;
+		const body = new ReadableStream({
+			pull(controller) {
+				if (i < bytes.length) {
+					controller.enqueue(bytes.slice(i, i + 1));
+					i++;
+				} else {
+					controller.close();
+				}
+			}
+		});
+
+		const res = await deserialize_binary_form(
+			new Request('http://test', {
+				method: 'POST',
+				body,
+				// @ts-expect-error
+				duplex: 'half',
+				headers: { 'Content-Type': BINARY_FORM_CONTENT_TYPE }
+			}),
+			''
+		);
+		expect(res.data.foo).toBe('bar');
+
+		/** @type {Uint8Array<ArrayBuffer>[]} */
+		const parts = [];
+		for await (const part of res.data.file.stream()) {
+			parts.push(part);
+		}
+
+		expect(parts.length).toBeLessThanOrEqual(4);
+		expect(await new Blob(parts).text()).toBe(contents);
+	});
+
 	test('does not preallocate large buffers for incomplete bodies', async () => {
 		const OriginalUint8Array = Uint8Array;
 		const header_bytes = 1 + 4 + 2;
@@ -734,6 +776,7 @@ describe('binary form serializer', () => {
 				offset_buffer.fill(255);
 				offset_buffer.set(chunk, 10);
 				controller.enqueue(offset_buffer.subarray(10));
+				controller.close();
 			}
 		});
 
@@ -962,6 +1005,137 @@ describe('binary form serializer', () => {
 		expect(res.data.empty.size).toBe(0);
 		expect(await res.data.empty.text()).toBe('');
 	});
+
+	/** @param {Array<[string, string]>} entries */
+	function build_form_data_request(entries) {
+		const body = new FormData();
+		for (const [name, value] of entries) body.append(name, value);
+		return new Request('http://test', { method: 'POST', body });
+	}
+
+	test('accepts array indexes in any order', async () => {
+		const res = await deserialize_binary_form(
+			build_form_data_request([
+				['items[1].name/form', 'b'],
+				['items[0].name/form', 'a'],
+				['b:items[1].done/form', 'on']
+			]),
+			'form'
+		);
+		expect(res.data).toEqual({ items: [{ name: 'a' }, { name: 'b', done: true }] });
+	});
+
+	/** @param {Array<[string, string]>} entries */
+	const convert = (entries) => deserialize_binary_form(build_form_data_request(entries), 'form');
+
+	test('keeps gaps left by controls that submit nothing', async () => {
+		const { data } = await convert([
+			// only the second checkbox is checked, and only the third question is answered
+			['b:flags[1]/form', 'on'],
+			['answers[2]/form', 'c'],
+			['name/form', 'x']
+		]);
+
+		expect(data.flags).toHaveLength(2);
+		expect(0 in data.flags).toBe(false);
+		expect(data.flags[1]).toBe(true);
+		expect(Object.keys(data.answers)).toEqual(['2']);
+		expect(data.answers).toHaveLength(3);
+	});
+
+	test('allows up to 1000 gaps', async () => {
+		const { data } = await convert([['tags[1000]/form', 'x']]);
+		expect(data.tags).toHaveLength(1001);
+
+		const split = await convert([
+			['a[500]/form', 'x'],
+			['b[500]/form', 'x']
+		]);
+		expect(split.data.a).toHaveLength(501);
+		expect(split.data.b).toHaveLength(501);
+	});
+
+	test.each([
+		{ name: 'more gaps than allowed', entries: [['tags[1001]/form', 'x']] },
+		{ name: 'very large index', entries: [['items[99999999]/form', 'x']] },
+		{ name: 'largest array index', entries: [['items[4294967294]/form', 'x']] },
+		{ name: 'gaps in nested arrays', entries: [['list[600].tags[600]/form', 'x']] },
+		{
+			// each array is within the limit, but not both of them combined
+			name: 'gaps across arrays',
+			entries: [
+				['a[600]/form', 'x'],
+				['b[600]/form', 'x']
+			]
+		},
+		{
+			// other submitted values don't raise the limit
+			name: 'more gaps than allowed, alongside other values',
+			entries: [
+				...Array.from({ length: 2000 }, () => ['values[]/form', 'x']),
+				['tags[1001]/form', 'x']
+			]
+		}
+	])('rejects form data with too many gaps: $name', async ({ entries }) => {
+		await expect(convert(/** @type {Array<[string, string]>} */ (entries))).rejects.toThrow(
+			'form_field_too_many_gaps'
+		);
+	});
+
+	test('rejects many huge indexes without iterating over them', async () => {
+		/** @type {Array<[string, string]>} */
+		const entries = [];
+		for (let i = 0; i < 10_000; i += 1) entries.push([`a${i}[99999999]/form`, 'x']);
+
+		await expect(convert(entries)).rejects.toThrow('form_field_too_many_gaps');
+	}, 1000);
+
+	test.each(['tags[01]', 'items[4294967295]', 'items[99999999999999999999]'])(
+		'rejects non-canonical array indexes: %s',
+		async (name) => {
+			await expect(convert([[`${name}/form`, 'x']])).rejects.toThrow('form_field_invalid_name');
+		}
+	);
+
+	/** @param {any} data @param {any} [meta] */
+	const deserialize = (data, meta = {}) =>
+		deserialize_binary_form(build_raw_request(devalue.stringify([data, meta]), ''), '');
+
+	/** @param {number} length @param {number} index */
+	const sparse = (length, index) => Object.assign(new Array(length), { [index]: 'x' });
+
+	test('accepts sparse arrays in binary forms within the limit', async () => {
+		// very sparse arrays use devalue's compact encoding
+		const payload = devalue.stringify([{ flags: sparse(1000, 999) }, {}]);
+		expect(payload).toContain('[-7,');
+
+		const { data } = await deserialize({ flags: sparse(1001, 1000) });
+		expect(data.flags).toHaveLength(1001);
+		expect(Object.keys(data.flags)).toEqual(['1000']);
+
+		// mildly sparse arrays encode each gap as a hole
+		const holes = await deserialize({ flags: sparse(3, 2) });
+		expect(holes.data.flags).toHaveLength(3);
+		expect(Object.keys(holes.data.flags)).toEqual(['2']);
+	});
+
+	test.each([
+		{ name: 'very large length', data: { items: sparse(100_000_000, 99_999_999) }, meta: {} },
+		{ name: 'more gaps than allowed', data: { items: sparse(1002, 1001) }, meta: {} },
+		{
+			name: 'gaps across arrays',
+			data: { a: sparse(600, 0), b: sparse(600, 0) },
+			meta: {}
+		},
+		{
+			name: 'nested in a Map',
+			data: { a: new Map([['k', sparse(100_000_000, 0)]]) },
+			meta: {}
+		},
+		{ name: 'in metadata', data: {}, meta: { remote_refreshes: sparse(100_000_000, 0) } }
+	])('rejects binary forms with too many gaps: $name', async ({ data, meta }) => {
+		await expect(deserialize(data, meta)).rejects.toThrow('too many missing array indexes');
+	});
 });
 
 describe('deep_set', () => {
@@ -1006,6 +1180,15 @@ describe('deep_set', () => {
 		deep_set(target, ['nested', 'file'], DELETE_KEY);
 
 		expect(target).toEqual({ nested: {} });
+	});
+});
+
+describe('flatten_issues', () => {
+	test('reuses the result for the same issue array', () => {
+		const issues = [{ name: 'items[0]', path: ['items', 0], message: 'invalid', server: true }];
+		const flattened = flatten_issues(issues);
+
+		expect(flatten_issues(issues)).toBe(flattened);
 	});
 });
 

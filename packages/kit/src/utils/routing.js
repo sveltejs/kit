@@ -17,6 +17,16 @@ export function decode_escape_sequence(code) {
 }
 
 /**
+ * Returns `true` if a part of a segment split by `parse_route_id` is static text rather than a
+ * param. Even indices are the text between brackets, and escape sequences are static too
+ * @param {string} content
+ * @param {number} i
+ */
+function is_literal(content, i) {
+	return i % 2 === 0 || content.startsWith('x+') || content.startsWith('u+');
+}
+
+/**
  * Encodes the characters that `decode_pathname` leaves untouched, so that a decoded
  * escape sequence still matches the pattern `parse_route_id` builds for it
  * @param {string} str
@@ -72,6 +82,7 @@ export function parse_route_id(id) {
 							}
 
 							const parts = segment.split(/\[(.+?)\](?!\])/);
+
 							const result = parts
 								.map((content, i) => {
 									if (i % 2) {
@@ -95,7 +106,26 @@ export function parse_route_id(id) {
 											rest: !!is_rest,
 											chained: is_rest ? i === 1 && parts[0] === '' : false
 										});
-										return is_rest ? '([^]*?)' : is_optional ? '([^/]*)?' : '([^/]+?)';
+										if (is_rest) return '([^]*?)';
+										if (is_optional) return '([^/]*)?';
+
+										// if this param is followed by a static separator and then another param,
+										// stop at the first occurrence of the separator. This is equivalent to
+										// the lazy match, but means each param can only match in one way
+										let j = i + 1;
+										let separator = '';
+										while (j < parts.length && is_literal(parts[j], j)) {
+											const part = parts[j];
+											separator +=
+												j % 2 ? escape(decode_escape_sequence(part.slice(2))) : escape(part);
+											j += 1;
+										}
+
+										if (separator && j < parts.length) {
+											return `([^/](?:(?!${separator})[^/])*?)`;
+										}
+
+										return '([^/]+?)';
 									}
 
 									return escape(content);

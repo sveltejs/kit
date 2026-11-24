@@ -6,6 +6,9 @@ import { noop } from '../../utils/functions.js';
 /** @type {WeakMap<import('http').IncomingMessage, (chunk: Buffer) => void>} */
 const body_data_listeners = new WeakMap();
 
+/** @type {WeakSet<import('http').IncomingMessage>} */
+const draining = new WeakSet();
+
 /**
  * @param {import('http').IncomingMessage} req
  * @param {number} [body_size_limit]
@@ -32,6 +35,7 @@ function get_raw_body(req, body_size_limit) {
 
 	let size = 0;
 	let cancelled = false;
+	let ended = false;
 
 	return new ReadableStream({
 		start(controller) {
@@ -53,8 +57,16 @@ function get_raw_body(req, body_size_limit) {
 			};
 
 			const on_end = () => {
+				ended = true;
 				if (cancelled) return;
 				controller.close();
+			};
+
+			// a request destroyed before its body ended doesn't always emit `error`
+			const on_close = () => {
+				if (ended || cancelled) return;
+				cancelled = true;
+				controller.error(new Error('Request closed before the body was fully received'));
 			};
 
 			/** @param {Buffer} chunk */
@@ -94,6 +106,7 @@ function get_raw_body(req, body_size_limit) {
 
 			req.on('error', on_error);
 			req.on('end', on_end);
+			req.on('close', on_close);
 			req.on('data', on_data);
 			body_data_listeners.set(req, on_data);
 		},
@@ -196,6 +209,24 @@ function drain_request(res) {
 	if (on_data) {
 		req.removeListener('data', on_data);
 		body_data_listeners.delete(req);
+	}
+
+	// Once the response has finished, Node stops tracking the request, so if the
+	// connection closes before the body is complete the request is never ended or
+	// destroyed. Destroy it ourselves so the body stream is closed and released.
+	const socket = req.socket;
+	if (req.httpVersionMajor === 1 && socket && !draining.has(req)) {
+		draining.add(req);
+
+		if (socket.destroyed) {
+			req.destroy();
+		} else {
+			const on_close = () => {
+				if (!req.readableEnded) req.destroy();
+			};
+			socket.once('close', on_close);
+			req.once('end', () => socket.off('close', on_close));
+		}
 	}
 
 	req.resume();

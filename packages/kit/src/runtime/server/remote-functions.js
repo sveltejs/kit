@@ -180,7 +180,8 @@ export async function get_remote_function(id, manifest) {
 	const remotes = manifest.remotes;
 	if (!Object.hasOwn(remotes, hash)) return;
 
-	const module = await remotes[hash]();
+	// load the module outside the request store, so that the module doesn't retain the event
+	const module = await with_request_store(null, () => remotes[hash]());
 	if (!Object.hasOwn(module.default, name)) return;
 
 	return {
@@ -524,13 +525,23 @@ export async function collect_remote_data(data, event, state) {
 }
 
 /**
- * @param {string[] | undefined} refreshes
+ * @param {unknown} refreshes
  */
 function create_requested_map(refreshes) {
 	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
-	for (const key of refreshes ?? []) {
+	if (refreshes === undefined) return requested;
+
+	if (!Array.isArray(refreshes)) {
+		throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+	}
+
+	for (const key of refreshes) {
+		if (typeof key !== 'string' || !key.includes('/')) {
+			throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+		}
+
 		const parts = split_remote_key(key);
 
 		const existing = requested.get(parts.id);

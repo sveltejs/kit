@@ -2,9 +2,14 @@
 import { lookup } from '../../../utils/mime.js';
 import fs from 'node:fs';
 import path from 'node:path';
+import process from 'node:process';
 import { resolve_entry, walk } from '../../../utils/filesystem.js';
 import { posixify } from '../../../utils/os.js';
-import { parse_route_id, validate_route_id_params } from '../../../utils/routing.js';
+import {
+	get_route_segments,
+	parse_route_id,
+	validate_route_id_params
+} from '../../../utils/routing.js';
 import { runtime_directory } from '../../utils.js';
 import * as e from '../../../messages/build-errors.js';
 import * as w from '../../../messages/build-warnings.js';
@@ -19,6 +24,51 @@ const component_name_pattern = /^\+(?:(page(?:@(.*))?)|(layout(?:@(.*))?)|(error
 
 const module_name_pattern =
 	/^\+(?:(server)|(page(?:(@[a-zA-Z0-9_-]*))?(\.server)?)|(layout(?:(@[a-zA-Z0-9_-]*))?(\.server)?))$/;
+
+/**
+ * The IDs of routes that `route_params_slow` has been logged for, so that it isn't repeated
+ * every time the manifest is recreated during development
+ * @type {Set<string>}
+ */
+const warned_slow_params = new Set();
+
+/**
+ * Returns why a route doesn't follow the rules that guarantee that `parse_route_id` creates a
+ * pattern that matches in linear time, if it doesn't. Within a directory, every param except the
+ * last one must be required, so that each of them can be restricted to end at the first
+ * occurrence of the separator after it, and there can be at most one rest param, since rest
+ * params can match across directories.
+ * TODO in SvelteKit 4, make this an error
+ * @param {string} id
+ * @returns {string | undefined}
+ */
+export function get_slow_params_reason(id) {
+	/** @type {string[]} */
+	const rests = [];
+
+	for (const segment of get_route_segments(id)) {
+		const params = segment
+			.split(/\[(.+?)\](?!\])/)
+			.filter((content, i) => i % 2 === 1 && !content.startsWith('x+') && !content.startsWith('u+'))
+			.map((content) => `[${content}]`);
+
+		for (let i = 0; i < params.length; i += 1) {
+			const param = params[i];
+			const is_optional = param.startsWith('[[');
+			const is_rest = param.startsWith('[...');
+
+			if (is_rest) rests.push(param);
+
+			if ((is_optional || is_rest) && i < params.length - 1) {
+				return `\`${param}\` is followed by another parameter in the same directory`;
+			}
+		}
+	}
+
+	if (rests.length > 1) {
+		return `it has more than one rest parameter (${rests.map((rest) => `\`${rest}\``).join(', ')})`;
+	}
+}
 
 /**
  * Generates the manifest data used for the client-side manifest and types generation.
@@ -499,6 +549,21 @@ function create_routes_and_nodes(cwd, config, fallback) {
 	for (const route of routes) {
 		if (route.endpoint) {
 			route.endpoint.page_options = get_page_options(route.endpoint.file, cwd);
+		}
+
+		// forked processes, such as the one that analyses routes during the build, create the
+		// manifest again, but the warning has already been logged by the main process
+		if (
+			(route.page || route.endpoint) &&
+			!process.env.SVELTEKIT_FORK &&
+			!warned_slow_params.has(route.id)
+		) {
+			const reason = get_slow_params_reason(route.id);
+
+			if (reason) {
+				warned_slow_params.add(route.id);
+				w.route_params_slow({ id: route.id, reason });
+			}
 		}
 
 		if (route.page && route.endpoint) {

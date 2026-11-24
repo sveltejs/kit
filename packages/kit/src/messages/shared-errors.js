@@ -69,6 +69,19 @@ export function form_field_invalid_name(_values) {
 }
 
 /**
+ * Form field `%name%` has too many missing array indexes
+ * @param {{ "name": string }} _values
+ * @returns {never}
+ */
+export function form_field_too_many_gaps(_values) {
+	if (DEV || (!BROWSER && verbose)) {
+		throw_error('form_field_too_many_gaps', `Form field \`${_values.name}\` has too many missing array indexes`, form_field_too_many_gaps);
+	}
+
+	throw new Error('https://svelte.dev/e/kit/form_field_too_many_gaps');
+}
+
+/**
  * Form contained a field that wasn't created with `form.fields.as(...)`: `%name%`
  * @param {{ "name": string }} _values
  * @returns {never}

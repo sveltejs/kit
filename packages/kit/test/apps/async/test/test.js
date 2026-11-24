@@ -860,6 +860,36 @@ test.describe('remote functions', () => {
 		await expect(page.locator('input[name^="user._password"]')).toHaveValue('');
 	});
 
+	test('form fills gaps from unchecked checkboxes and unselected radios', async ({ page }) => {
+		await page.goto('/remote/form/gaps');
+
+		await page.fill('input[name^="name"]', 'abc');
+		await page.locator('input[data-flag="1"]').check();
+		await page.locator('input[data-answer="1-b"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('#result')).toHaveText(
+			'{"name":"abc","flags":[false,true],"answers":[null,"b"]}'
+		);
+	});
+
+	test('form keeps gaps from unchecked checkboxes and unselected radios when validation fails', async ({
+		page
+	}) => {
+		await page.goto('/remote/form/gaps');
+
+		await page.fill('input[name^="name"]', 'ab');
+		await page.locator('input[data-flag="1"]').check();
+		await page.locator('input[data-answer="1-b"]').check();
+		await page.locator('button').click();
+
+		await expect(page.locator('#issue')).toHaveText('too short');
+		await expect(page.locator('#result')).toHaveText('none');
+		await expect(page.locator('input[data-flag="0"]')).not.toBeChecked();
+		await expect(page.locator('input[data-flag="1"]')).toBeChecked();
+		await expect(page.locator('input[data-answer="1-b"]')).toBeChecked();
+	});
+
 	test('prerendered entries not called in prod', async ({ page, clicknav }) => {
 		await page.goto('/remote/prerender');
 		await clicknav('[href="/remote/prerender/whole-page"]');

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, vi } from 'vitest';
-import create_manifest_data from './index.js';
+import create_manifest_data, { get_slow_params_reason } from './index.js';
 import { sort_routes } from './sort.js';
 import { validate_config } from '../../config/index.js';
 
@@ -623,7 +623,7 @@ test('allows multiple slugs', () => {
 	expect(routes.filter((route) => route.endpoint).map(simplify_route)).toEqual([
 		{
 			id: '/[file].[ext]',
-			pattern: '/^/([^/]+?).([^/]+?)/?$/',
+			pattern: '/^/([^/](?:(?!.)[^/])*?).([^/]+?)/?$/',
 			endpoint: {
 				file: 'samples/multiple-slugs/[file].[ext]/+server.js',
 				page_options: {}
@@ -724,6 +724,55 @@ test('ignores things that look like lockfiles', () => {
 			}
 		}
 	]);
+});
+
+test('warns about routes with params that can be slow to match', () => {
+	const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+	try {
+		const { routes } = create('samples/slow-params');
+
+		const warnings = spy.mock.calls.map((call) => call[0]);
+		expect(warnings).toHaveLength(3);
+		expect(warnings[0]).toContainKitDiagnostic('route_params_slow', {
+			contains: ['/[[a]]-[b]', '`[[a]]` is followed by another parameter in the same directory']
+		});
+		expect(warnings[1]).toContainKitDiagnostic('route_params_slow', {
+			contains: ['/rest/[...a]/x/[...b]', 'more than one rest parameter (`[...a]`, `[...b]`)']
+		});
+		expect(warnings[2]).toContainKitDiagnostic('route_params_slow', {
+			contains: ['/rest/[...a]/x/[...b]/y']
+		});
+
+		// the routes still work
+		expect(routes.map((route) => route.id)).toContain('/[[a]]-[b]');
+		expect(routes.map((route) => route.id)).toContain('/rest/[...a]/x/[...b]');
+	} finally {
+		spy.mockRestore();
+	}
+});
+
+test.each([
+	'/[a]',
+	'/[a]-[b]-[c].json',
+	'/[a]-[b]-[[c]]',
+	'/[a]-[...rest]',
+	'/prefix-[...rest]',
+	'/[[lang]]/[...rest]',
+	'/[[a]]/[[b]]/[c]',
+	'/[a][x+2d][b]'
+])('does not warn about %s', (id) => {
+	expect(get_slow_params_reason(id)).toBeUndefined();
+});
+
+test.each([
+	['/[[a]]-[b]', '`[[a]]` is followed by another parameter in the same directory'],
+	['/[...a]-[b]', '`[...a]` is followed by another parameter in the same directory'],
+	['/[a]-[[b]]-[c]', '`[[b]]` is followed by another parameter in the same directory'],
+	['/[...a]/x/[...b]', 'it has more than one rest parameter (`[...a]`, `[...b]`)'],
+	['/[...a]/[b]-[...c=matcher]', 'it has more than one rest parameter (`[...a]`, `[...c=matcher]`)']
+])('warns about %s', (id, reason) => {
+	expect(get_slow_params_reason(id)).toBe(reason);
 });
 
 test('only suggests a + prefix for names valid with the file extension', () => {

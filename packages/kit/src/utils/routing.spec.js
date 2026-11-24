@@ -112,6 +112,14 @@ describe('parse_route_id', () => {
 		'/[x+5d]': {
 			pattern: /^\/\]\/?$/,
 			params: []
+		},
+		'/[a]-[b]-[c].json': {
+			pattern: /^\/([^/](?:(?!-)[^/])*?)-([^/](?:(?!-)[^/])*?)-([^/]+?)\.json\/?$/,
+			params: [
+				{ name: 'a', matcher: undefined, optional: false, rest: false, chained: false },
+				{ name: 'b', matcher: undefined, optional: false, rest: false, chained: false },
+				{ name: 'c', matcher: undefined, optional: false, rest: false, chained: false }
+			]
 		}
 	};
 
@@ -360,6 +368,21 @@ describe('exec', () => {
 			route: '/(group1)/[slug]/(group2)',
 			path: '/123',
 			expected: { slug: '123' }
+		},
+		{
+			route: '/[a]-[b]-[c].json',
+			path: '/x--y-z-w.json',
+			expected: { a: 'x', b: '-y', c: 'z-w' }
+		},
+		{
+			route: '/[a]-x[b]',
+			path: '/q-y-xr',
+			expected: { a: 'q-y', b: 'r' }
+		},
+		{
+			route: '/[a][x+2d][b]-[c]',
+			path: '/1-2-3-4',
+			expected: { a: '1', b: '2', c: '3-4' }
 		}
 	];
 
@@ -375,6 +398,13 @@ describe('exec', () => {
 			expect(actual).toEqual(expected);
 		});
 	}
+
+	test('matches params separated within a segment in linear time', () => {
+		const { pattern } = parse_route_id('/[a]-[b]-[c].json');
+		const start = performance.now();
+		expect(pattern.exec('/' + '-'.repeat(5000) + 'x')).toBeNull();
+		expect(performance.now() - start).toBeLessThan(1000);
+	});
 
 	test('exec validates and transforms params with a standard schema', () => {
 		const route = '/items/[id=number]';

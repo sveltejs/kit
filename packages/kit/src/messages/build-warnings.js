@@ -99,6 +99,14 @@ export function route_file_prefix_missing(_values) {
 }
 
 /**
+ * The `%id%` route can be slow to match, which could allow denial-of-service attacks, and won't be supported in SvelteKit 4: %reason%
+ * @param {{ "id": string; "reason": string }} _values
+ */
+export function route_params_slow(_values) {
+	warn('route_params_slow', `The \`${_values.id}\` route can be slow to match, which could allow denial-of-service attacks, and won't be supported in SvelteKit 4: ${_values.reason}`);
+}
+
+/**
  * The following plugins may not work correctly because they use the `transformIndexHtml` hook which is not supported:
 %plugins%
  * @param {{ "plugins": string }} _values
