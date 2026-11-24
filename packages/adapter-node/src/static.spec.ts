@@ -75,7 +75,13 @@ const files = create_file_map({
 			['/always/http:example.com/', about],
 			['/always/https:example.com/', about],
 			['/never/http:example.com', about],
-			['/never/https:example.com', about]
+			['/never/https:example.com', about],
+			['/always/日本語/', about],
+			['/never/日本語', about],
+			['/never/café', about],
+			['/never/🚀', about],
+			['/never/a b', about],
+			['/never/100%25', about]
 		],
 		aliases: []
 	}
@@ -202,6 +208,29 @@ test('keeps scheme-like prerendered paths on the original origin', async () => {
 				`${trailing_slash === 'always' ? `./${segment}/` : `../${segment}`}?ref=test`
 			);
 		}
+	}
+});
+
+test('percent-encodes non-ASCII characters in trailing-slash redirects', async () => {
+	const cases = [
+		['/always/%E6%97%A5%E6%9C%AC%E8%AA%9E', './%E6%97%A5%E6%9C%AC%E8%AA%9E/'],
+		['/never/%E6%97%A5%E6%9C%AC%E8%AA%9E/', '../%E6%97%A5%E6%9C%AC%E8%AA%9E'],
+		['/never/caf%C3%A9/', '../caf%C3%A9'],
+		['/never/%F0%9F%9A%80/', '../%F0%9F%9A%80'],
+		['/never/a%20b/', '../a%20b'],
+		['/never/100%25/', '../100%25']
+	];
+
+	for (const [from, location] of cases) {
+		for (const method of ['GET', 'HEAD']) {
+			const response = await get(`${from}?x=1`, { method });
+			expect(response.status, from).toBe(308);
+			expect(response.headers['location'], from).toBe(`${location}?x=1`);
+		}
+
+		// following the redirect lands on the prerendered page
+		const target = new URL(location, new URL(from, origin));
+		expect((await get(target.pathname)).body, from).toBe('<h1>about</h1>');
 	}
 });
 

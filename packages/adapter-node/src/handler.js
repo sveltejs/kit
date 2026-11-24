@@ -51,24 +51,7 @@ await server.init({
 });
 
 /** @type {Middleware} */
-const ssr = async (req, res, next) => {
-	try {
-		await render(req, res, next);
-	} catch (error) {
-		console.error(error);
-
-		if (res.headersSent) {
-			res.destroy();
-			return;
-		}
-
-		res.getHeaderNames().forEach((name) => res.removeHeader(name));
-		res.writeHead(500).end('Internal Server Error');
-	}
-};
-
-/** @type {Middleware} */
-const render = async (req, res) => {
+const ssr = async (req, res) => {
 	/** @type {Request} */
 	let request;
 	let request_origin = public_origin;
@@ -193,5 +176,28 @@ const serve = serve_static(
 	create_file_map({ dir, base, app_path, mime_types, assets, prerendered_assets })
 );
 
-/** @type {Middleware} */
-export const handler = (req, res, next) => serve(req, res, () => ssr(req, res, next));
+/**
+ * If anything throws or rejects while handling a request (serving a static or
+ * prerendered file, or rendering), log the error and respond with a 500 instead
+ * of letting it become an uncaught exception that takes down the whole process
+ * @type {Middleware}
+ */
+export const handler = async (req, res, next) => {
+	try {
+		await serve(req, res, () => ssr(req, res, next));
+	} catch (error) {
+		console.error(error);
+
+		if (res.headersSent) {
+			res.destroy();
+			return;
+		}
+
+		res.getHeaderNames().forEach((name) => res.removeHeader(name));
+
+		// set `content-length` explicitly: if the error came from a failed `writeHead`,
+		// Node.js may still hold on to the `content-length` it was given
+		const body = 'Internal Server Error';
+		res.writeHead(500, { 'content-type': 'text/plain', 'content-length': body.length }).end(body);
+	}
+};

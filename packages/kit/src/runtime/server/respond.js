@@ -294,6 +294,9 @@ export async function internal_respond(request, state) {
 	/** @type {PageNodes | undefined} */
 	let page_nodes;
 
+	/** @type {import('types').SSRRoute | null} */
+	let route = null;
+
 	/** @type {string} */
 	let decoded_pathname;
 
@@ -340,9 +343,6 @@ export async function internal_respond(request, state) {
 			return await handle_fatal_error(event, state, error);
 		}
 	}
-
-	/** @type {import('types').SSRRoute | null} */
-	let route = null;
 
 	if (base && !state.prerendering?.fallback) {
 		if (!resolved_path.startsWith(base)) {
@@ -511,11 +511,41 @@ export async function internal_respond(request, state) {
 									return with_request_store(null, () =>
 										resolve(merge_tracing(event, resolve_span), page_nodes, opts).then(
 											(response) => {
+												// If the route contains a page and an endpoint, the response depends on
+												// the `accept` header, so we need to add a `Vary: Accept` header. This
+												// happens here rather than inside `resolve` so that it covers every
+												// response, including errors and those with `setHeaders` values
+												const negotiated =
+													(request.method === 'GET' || request.method === 'HEAD') &&
+													!remote_id &&
+													!!route?.page &&
+													!!route.endpoint;
+
+												if (negotiated) {
+													// the returned response might have immutable headers,
+													// so we have to clone them before trying to mutate them
+													response = new Response(response.body, {
+														status: response.status,
+														statusText: response.statusText,
+														headers: new Headers(response.headers)
+													});
+												}
+
 												// add headers/cookies here, rather than inside `resolve`, so that we
 												// can do it once for all responses instead of once per `return`
 												for (const key in headers) {
 													const value = headers[key];
 													response.headers.set(key, /** @type {string} */ (value));
+												}
+
+												if (negotiated) {
+													const vary = response.headers
+														.get('vary')
+														?.split(',')
+														.map((v) => v.trim().toLowerCase());
+													if (!(vary?.includes('accept') || vary?.includes('*'))) {
+														response.headers.append('Vary', 'Accept');
+													}
 												}
 
 												add_cookies_to_headers(response.headers, new_cookies.values());
@@ -697,29 +727,6 @@ export async function internal_respond(request, state) {
 					} else {
 						// a route will always have a page or an endpoint, but TypeScript doesn't know that
 						throw new Error('Route is neither page nor endpoint. This should never happen');
-					}
-				}
-
-				// If the route contains a page and an endpoint, we need to add a
-				// `Vary: Accept` header to the response because of browser caching
-				if (
-					(request.method === 'GET' || request.method === 'HEAD') &&
-					route.page &&
-					route.endpoint
-				) {
-					const vary = response.headers
-						.get('vary')
-						?.split(',')
-						?.map((v) => v.trim().toLowerCase());
-					if (!(vary?.includes('accept') || vary?.includes('*'))) {
-						// the returned response might have immutable headers,
-						// so we have to clone them before trying to mutate them
-						response = new Response(response.body, {
-							status: response.status,
-							statusText: response.statusText,
-							headers: new Headers(response.headers)
-						});
-						response.headers.append('Vary', 'Accept');
 					}
 				}
 
