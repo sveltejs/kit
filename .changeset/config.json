@@ -7,7 +7,7 @@
 	"commit": false,
 	"linked": [],
 	"access": "public",
-	"baseBranch": "main",
+	"baseBranch": "adapter-cloudflare-8",
 	"bumpVersionsWithWorkspaceProtocolOnly": true,
 	"ignore": ["!(@sveltejs/*)"],
 	"format": false

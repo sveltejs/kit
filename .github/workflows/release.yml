@@ -3,12 +3,12 @@ name: Release
 on:
   push:
     branches:
-      - main
+      - adapter-cloudflare-8
 
 concurrency:
   # prevent two release workflows from running at once
   # race conditions here can result in releases failing
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref_name }}
 
 permissions: {}
 jobs:
@@ -38,8 +38,11 @@ jobs:
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish-script: pnpm changeset:release
+          # maintenance releases must not move the latest tag on npm
+          publish-script: pnpm changeset:release --tag adapter-cloudflare-8
           version-script: pnpm changeset:version
+          pr-base-branch: ${{ github.ref_name }}
+          pr-title: Version Packages (${{ github.ref_name }})
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # TODO alert discord

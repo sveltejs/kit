@@ -1,8 +1,10 @@
 /** @import { Plugin } from 'vite' */
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
+import MagicString from 'magic-string';
 
 const useful_cloudflare_plugins = new Set([
 	// resolves the plugin config that the other plugins read
@@ -10,7 +12,9 @@ const useful_cloudflare_plugins = new Set([
 	// alias Node.js builtins to the polyfills workerd uses and leave the rest as imports
 	'vite-plugin-cloudflare:nodejs-als',
 	'vite-plugin-cloudflare:nodejs-compat',
-	'vite-plugin-cloudflare:nodejs-compat-warnings'
+	'vite-plugin-cloudflare:nodejs-compat-warnings',
+	// turns `.wasm?init` imports into `.wasm` imports
+	'vite-plugin-cloudflare:wasm-helper'
 ]);
 
 /** @type {Plugin['apply']} */
@@ -64,9 +68,87 @@ export function plugin_config(config_path, set_worker_config) {
 	}
 
 	return [
-		...plugins
-			.filter((plugin) => useful_cloudflare_plugins.has(plugin.name))
-			.map((plugin) => /** @satisfies {Plugin} */ ({ ...plugin, apply: is_dev_or_build })),
+		...plugins.flatMap((plugin) => {
+			if (useful_cloudflare_plugins.has(plugin.name)) {
+				return [{ ...plugin, apply: is_dev_or_build }];
+			}
+
+			// leaves `.wasm` imports in the server output for workerd to import
+			if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
+				const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
+					plugin.resolveId
+				);
+
+				const wasm = /\.wasm(\?module)?$/;
+				/** @type {Map<string, string>} the module references we created and the files they point to */
+				const references = new Map();
+
+				return /** @satisfies {Plugin[]} */ ([
+					{
+						...plugin,
+						apply: 'build',
+						resolveId: {
+							filter: { id: [wasm, /^#/] },
+							async handler(source, importer, options) {
+								const resolved = await this.resolve(source, importer, options);
+								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
+								if (!resolved || !wasm.test(resolved.id)) return resolved;
+
+								const result = await resolve_id.handler.call(this, source, importer, options);
+								if (result && typeof result === 'object') {
+									references.set(result.id, resolved.id.replace(wasm, '.wasm'));
+								}
+								return result;
+							}
+						},
+						// the plugin's own hook reads and emits any file named by text shaped like a
+						// reference, so we only rewrite the exact references we created
+						renderChunk: {
+							filter: { code: { include: '__CLOUDFLARE_MODULE__' } },
+							async handler(code, chunk) {
+								/** @type {MagicString | undefined} */
+								let s;
+
+								for (const [id, file] of references) {
+									let index = code.indexOf(id);
+									if (index === -1) continue;
+
+									const file_name = this.getFileName(
+										this.emitFile({
+											type: 'asset',
+											name: path.basename(file),
+											originalFileName: file,
+											source: await fs.promises.readFile(file)
+										})
+									);
+									const relative = path.posix.relative(
+										path.posix.dirname(chunk.fileName),
+										file_name
+									);
+									const import_path = relative.startsWith('.') ? relative : `./${relative}`;
+
+									s ??= new MagicString(code);
+									for (; index !== -1; index = code.indexOf(id, index + id.length)) {
+										s.update(index, index + id.length, import_path);
+									}
+								}
+
+								if (!s) return;
+
+								return {
+									code: s.toString(),
+									map: this.environment.config.build.sourcemap
+										? s.generateMap({ hires: 'boundary' })
+										: null
+								};
+							}
+						}
+					}
+				]);
+			}
+
+			return [];
+		}),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
