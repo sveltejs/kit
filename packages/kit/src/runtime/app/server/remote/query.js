@@ -576,12 +576,16 @@ function create_live_query_resource(__, payload, event, state, get_generator) {
 			return get_promise().then(onfulfilled, onrejected);
 		},
 		[Symbol.asyncIterator]() {
-			const key = create_remote_key(__.id, payload);
-			const cache = (state.remote.live_iterators ??= new Map());
-			let cached = cache.get(key);
+			const iterators = (state.remote.live_iterators ??= new Map());
+			let cache = iterators.get(__);
+			if (!cache) {
+				cache = new Map();
+				iterators.set(__, cache);
+			}
+			let cached = cache.get(payload);
 			if (!cached) {
 				cached = create_shared_live_iterator(event.request.signal, get_generator);
-				cache.set(key, cached);
+				cache.set(payload, cached);
 			}
 			return cached.subscribe();
 		},

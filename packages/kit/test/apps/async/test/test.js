@@ -147,6 +147,12 @@ test.describe('remote functions', () => {
 		await expect(page.locator('#results')).toHaveText('a:one, b:TWO, a:same, b:SAME');
 	});
 
+	test('private (non-exported) query.live functions do not share an iterator', async ({ page }) => {
+		await page.goto('/remote/live-private');
+
+		await expect(page.locator('#results')).toHaveText('a:same, b:same');
+	});
+
 	test('queries cannot access the route/url of the page they were called from', async ({
 		page,
 		clicknav
