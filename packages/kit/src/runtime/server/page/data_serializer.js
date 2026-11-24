@@ -1,9 +1,10 @@
+/** @import { JavaScriptTag } from 'devalue' */
 import * as devalue from 'devalue';
 import { compact } from '../../../utils/array.js';
 import { create_async_iterator } from '../../../utils/streaming.js';
 import { serialize_uses, throw_devalue_error } from '../utils.js';
 import { handle_error_and_jsonify } from '../errors.js';
-import { encoders } from '#app/internal/transport';
+import { encoders, replacer as transport_replacer } from '#app/internal/transport';
 import { capture_error } from '../../../messages/internal/server.js';
 import * as e from '../../../messages/server-errors.js';
 
@@ -23,8 +24,11 @@ export function server_data_serializer(event, state) {
 
 	/** @param {number} index */
 	function get_replacer(index) {
-		/** @param {any} thing */
-		return function replacer(thing) {
+		/**
+		 * @param {any} thing
+		 * @param {JavaScriptTag} js
+		 */
+		return function replacer(thing, js) {
 			if (typeof thing?.then === 'function') {
 				const id = promise_id++;
 
@@ -66,15 +70,11 @@ export function server_data_serializer(event, state) {
 
 				iterator.add(promise);
 
-				return `${global}.defer(${id})`;
-			} else {
-				for (const key in encoders) {
-					const encoded = encoders[key](thing);
-					if (encoded) {
-						return `app.decode('${key}', ${devalue.uneval(encoded, replacer)})`;
-					}
-				}
+				// template text must be static, so the global's name goes in as a value
+				return js`globalThis[${global}].defer(${id})`;
 			}
+
+			return transport_replacer(thing, js);
 		};
 	}
 
