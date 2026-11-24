@@ -99,7 +99,7 @@ export async function init() {
 async function respond_to(request, options) {
 	const request_state = create_request_state(options);
 
-	const response = await handle(request, request_state);
+	let response = await handle(request, request_state);
 
 	if (DEV) {
 		const error = decoded_responses.get(response);
@@ -107,6 +107,9 @@ async function respond_to(request, options) {
 	}
 
 	if (request_state.rerouted_url) {
+		// the returned response might have immutable headers,
+		// so we have to clone them before trying to mutate them
+		response = new Response(response.body, response);
 		response.headers.set(REROUTED_URL_HEADER, request_state.rerouted_url);
 	}
 
