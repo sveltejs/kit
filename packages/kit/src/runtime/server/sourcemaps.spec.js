@@ -21,13 +21,19 @@ test('only reads files referenced by stack frames, not by the error message', ()
 });
 
 test('does not read files that are not regular files', () => {
-	const read = vi.spyOn(fs, 'readFileSync');
-	const error = new Error('oops');
-	error.stack = `Error: oops\n    at a (file:///dev/null:1:1)`;
+	const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'kit-sourcemaps-'));
 
-	fix_stack_trace(error);
+	try {
+		const read = vi.spyOn(fs, 'readFileSync');
+		const error = new Error('oops');
+		error.stack = `Error: oops\n    at a (${url.pathToFileURL(dir).href}:1:1)`;
 
-	expect(read).not.toHaveBeenCalled();
+		fix_stack_trace(error);
+
+		expect(read).not.toHaveBeenCalled();
+	} finally {
+		fs.rmSync(dir, { recursive: true, force: true });
+	}
 });
 
 test('still applies to genuine stack frames', () => {
