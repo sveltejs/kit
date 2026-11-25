@@ -739,6 +739,56 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	for (const trigger of ['same-page link', 'goto', 'command', 'form']) {
+		test(`internal query.live reconnects handle interruption via ${trigger}`, async ({
+			page,
+			app
+		}) => {
+			/** @type {string[]} */
+			const errors = [];
+			page.on('pageerror', (error) => errors.push(error.message));
+
+			await page.goto('/remote/live');
+			await page.click('#reset');
+			await expect(page.locator('#connected')).toHaveText('true');
+
+			// Hold the next connection before its headers arrive, so the following
+			// reconnect interrupts its handshake rather than an established stream.
+			/** @type {PromiseWithResolvers<import('@playwright/test').Route>} */
+			const blocked = Promise.withResolvers();
+			await page.route('**/_app/remote/**/get_count', (route) => blocked.resolve(route), {
+				times: 1
+			});
+
+			async function reconnect() {
+				if (trigger === 'goto') {
+					await app.goto('/remote/live', { refreshAll: true });
+				} else {
+					const selector =
+						trigger === 'same-page link'
+							? '#same-page'
+							: trigger === 'command'
+								? '#reconnect-live'
+								: '#reconnect-live-form';
+					await page.click(selector);
+				}
+			}
+
+			await reconnect();
+			const route = await blocked.promise;
+			await expect(page.locator('#connected')).toHaveText('false');
+
+			await reconnect();
+			await expect(page.locator('#connected')).toHaveText('true');
+			await route.abort();
+
+			// The replacement connection must still deliver updates normally.
+			await page.click('#increment');
+			await expect(page.locator('#count')).toHaveText('1');
+			expect(errors).toEqual([]);
+		});
+	}
+
 	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {
