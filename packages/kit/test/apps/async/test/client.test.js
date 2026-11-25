@@ -739,6 +739,46 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('#connected')).toHaveText('true');
 	});
 
+	for (const trigger of ['a', '#goto', '#command', '#direct']) {
+		test(`interrupted live query reconnects are handled (${trigger})`, async ({ page }) => {
+			/** @type {string[]} */
+			const errors = [];
+			page.on('pageerror', (error) => errors.push(error.message));
+			await page.goto('/remote/live-reconnect');
+			await expect(page.locator('#connected')).toHaveText('true');
+
+			// Hold the first reconnect before headers arrive. The next reconnect
+			// must interrupt it, without depending on how fast the server responds.
+			let requests = 0;
+			/** @type {() => void} */
+			let release = () => {};
+			const pending = new Promise((resolve) => (release = () => resolve(undefined)));
+			await page.route('**/_app/remote/**/live', async (route) => {
+				if (++requests === 1) await pending;
+				await route.continue();
+			});
+
+			try {
+				await page.click(trigger);
+				await expect.poll(() => requests).toBe(1);
+				await expect(page.locator('#connected')).toHaveText('false');
+				await page.click(trigger);
+				await expect.poll(() => requests).toBe(2);
+				release();
+				await expect(page.locator('#connected')).toHaveText('true');
+				await expect(page.locator('#value')).toHaveText('connected');
+				if (trigger === '#direct') {
+					await expect(page.locator('#result')).toHaveText(
+						'Live query connection was interrupted,connected'
+					);
+				}
+				expect(errors).toEqual([]);
+			} finally {
+				release();
+			}
+		});
+	}
+
 	test('query.live marks finite iterators as done and only reconnects explicitly', async ({
 		page
 	}) => {
