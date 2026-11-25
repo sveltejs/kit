@@ -54,16 +54,18 @@ export function try_get_request_store() {
  * @template T
  * @param {RequestStore | null} store
  * @param {() => T} fn
+ * @param {boolean} [restore] Restore the enclosing synchronous store after a temporary re-entry.
  */
-export function with_request_store(store, fn) {
+export function with_request_store(store, fn, restore = false) {
+	const previous_store = sync_store;
 	try {
 		sync_store = store;
 		return als ? als.run(store, fn) : fn();
 	} finally {
 		// Since AsyncLocalStorage is not working in webcontainers, we don't reset `sync_store`
 		// and handle only one request at a time in `src/runtime/server/index.js`.
-		if (!IN_WEBCONTAINER) {
-			sync_store = null;
+		if (restore || !IN_WEBCONTAINER) {
+			sync_store = restore ? previous_store : null;
 		}
 	}
 }
