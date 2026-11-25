@@ -149,6 +149,61 @@ function assert_is_valid_runtime(key) {
 // this is what to update when Vercel adds a new Node runtime or deprecates an old one! leave the rest of the code alone
 /** @typedef {typeof valid_non_node_runtimes[number] | 'nodejs22.x' | 'nodejs24.x' | 'nodejs26.x' | ({} & `nodejs${number}.x`)} RuntimeKey */
 
+const valid_deployment_id_regex = /^[a-zA-Z0-9_-]+$/;
+const max_deployment_id_length = 32;
+
+/**
+ * Resolves the deployment ID to use for Vercel Skew Protection, if enabled.
+ * On Vercel builds this uses `VERCEL_DEPLOYMENT_ID`; for prebuilt deployments
+ * without `VERCEL_DEPLOYMENT_ID` it reuses SvelteKit's `version.name`.
+ *
+ * @param {string} version_name
+ * @param {NodeJS.ProcessEnv} [env]
+ * @returns {{ id: string, custom: boolean } | undefined}
+ */
+export function resolve_deployment_id(version_name, env = process.env) {
+	const enabled = env.VERCEL_SKEW_PROTECTION_ENABLED;
+	if (!enabled || enabled === '0' || enabled.toLowerCase() === 'false') {
+		return undefined;
+	}
+
+	if (env.VERCEL_DEPLOYMENT_ID) {
+		return { id: env.VERCEL_DEPLOYMENT_ID, custom: false };
+	}
+
+	assert_is_valid_deployment_id(version_name);
+	return { id: version_name, custom: true };
+}
+
+/**
+ * @param {string} id
+ */
+function assert_is_valid_deployment_id(id) {
+	if (typeof id !== 'string' || !id) {
+		throw new Error(
+			'Invalid deployment ID from SvelteKit `version.name` config: must be a non-empty string.'
+		);
+	}
+
+	if (id.startsWith('dpl_')) {
+		throw new Error(
+			`Invalid deployment ID "${id}" from SvelteKit \`version.name\` config: must not start with "dpl_".`
+		);
+	}
+
+	if (id.length > max_deployment_id_length) {
+		throw new Error(
+			`Invalid deployment ID "${id}" from SvelteKit \`version.name\` config: must be at most ${max_deployment_id_length} characters (got ${id.length}). If you use a commit hash, shorten it (e.g. \`git rev-parse --short HEAD\`).`
+		);
+	}
+
+	if (!valid_deployment_id_regex.test(id)) {
+		throw new Error(
+			`Invalid deployment ID "${id}" from SvelteKit \`version.name\` config: must only contain alphanumeric characters (a-z, A-Z, 0-9), hyphens (-), and underscores (_).`
+		);
+	}
+}
+
 /** Creates a checker whose package metadata cache lasts for a single function bundle. */
 export function create_optional_peer_dependency_checker() {
 	/** @type {Map<string, Set<string>>} */

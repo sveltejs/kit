@@ -8,6 +8,7 @@ import {
 	escape_src,
 	parse_isr_expiration,
 	pattern_to_src,
+	resolve_deployment_id,
 	resolve_runtime
 } from './utils.js';
 
@@ -357,4 +358,87 @@ describe('optional peer dependency warnings', () => {
 			false
 		);
 	});
+});
+
+describe('resolve_deployment_id', () => {
+	test.each([undefined, '', '0', 'false', 'FALSE'])(
+		'returns undefined when VERCEL_SKEW_PROTECTION_ENABLED is %j',
+		(value) => {
+			const env = value === undefined ? {} : { VERCEL_SKEW_PROTECTION_ENABLED: value };
+			assert.equal(resolve_deployment_id('1700000000000', env), undefined);
+			// invalid custom deployment IDs are ignored when skew protection is off
+			assert.equal(resolve_deployment_id('a'.repeat(40), env), undefined);
+			assert.equal(resolve_deployment_id('1.2.3', env), undefined);
+		}
+	);
+
+	test('uses VERCEL_DEPLOYMENT_ID without marking custom when building on Vercel', () => {
+		const result = resolve_deployment_id('a'.repeat(40), {
+			VERCEL_SKEW_PROTECTION_ENABLED: '1',
+			VERCEL_DEPLOYMENT_ID: 'dpl_abc123'
+		});
+		assert.deepEqual(result, { id: 'dpl_abc123', custom: false });
+	});
+
+	test.each([
+		['1700000000000', '1'],
+		['abc-123_XYZ', '1'],
+		['DPL_123', '1'],
+		['my_dpl_123', '1'],
+		['a'.repeat(32), '1'],
+		['release-1', 'true']
+	])(
+		'uses version.name as custom deploymentId for prebuilt builds (%s, enabled=%s)',
+		(version_name, enabled) => {
+			const result = resolve_deployment_id(version_name, {
+				VERCEL_SKEW_PROTECTION_ENABLED: enabled
+			});
+			assert.deepEqual(result, { id: version_name, custom: true });
+		}
+	);
+
+	test('falls back to version.name when VERCEL_DEPLOYMENT_ID is empty', () => {
+		const result = resolve_deployment_id('build_42', {
+			VERCEL_SKEW_PROTECTION_ENABLED: '1',
+			VERCEL_DEPLOYMENT_ID: ''
+		});
+		assert.deepEqual(result, { id: 'build_42', custom: true });
+	});
+
+	test('rejects an empty version.name for prebuilt skew protection', () => {
+		assert.throws(
+			() => resolve_deployment_id('', { VERCEL_SKEW_PROTECTION_ENABLED: '1' }),
+			/must be a non-empty string/
+		);
+	});
+
+	test.each(['dpl_', 'dpl_123', 'dpl_abcdef'])(
+		'rejects version.name starting with dpl_ (%s)',
+		(version_name) => {
+			assert.throws(
+				() => resolve_deployment_id(version_name, { VERCEL_SKEW_PROTECTION_ENABLED: '1' }),
+				/must not start with "dpl_"/
+			);
+		}
+	);
+
+	test.each(['a'.repeat(33), 'a'.repeat(40)])(
+		'rejects version.name longer than 32 characters',
+		(version_name) => {
+			assert.throws(
+				() => resolve_deployment_id(version_name, { VERCEL_SKEW_PROTECTION_ENABLED: '1' }),
+				/at most 32 characters.*git rev-parse --short HEAD/
+			);
+		}
+	);
+
+	test.each(['1.2.3', 'v1/2', 'foo bar', 'foo; Path=/', 'v1+meta'])(
+		'rejects version.name with invalid characters (%s)',
+		(version_name) => {
+			assert.throws(
+				() => resolve_deployment_id(version_name, { VERCEL_SKEW_PROTECTION_ENABLED: '1' }),
+				/alphanumeric characters/
+			);
+		}
+	);
 });

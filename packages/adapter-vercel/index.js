@@ -9,6 +9,7 @@ import {
 	escape_src,
 	parse_isr_expiration,
 	pattern_to_src,
+	resolve_deployment_id,
 	resolve_runtime
 } from './utils.js';
 
@@ -479,7 +480,9 @@ function static_vercel_config(builder, config) {
 	];
 
 	// https://vercel.com/docs/deployments/skew-protection
-	if (process.env.VERCEL_SKEW_PROTECTION_ENABLED) {
+	const deployment = resolve_deployment_id(builder.config.version.name);
+
+	if (deployment) {
 		routes.push({
 			src: '/.*',
 			has: [
@@ -497,7 +500,7 @@ function static_vercel_config(builder, config) {
 					op: 'append',
 					target: { key: 'Set-Cookie' },
 					args: [
-						`__vdpl=${process.env.VERCEL_DEPLOYMENT_ID}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`,
+						`__vdpl=${deployment.id}; Path=${builder.config.paths.base}/; SameSite=Strict; Secure; HttpOnly`,
 						`__vdpl=; Path=/${builder.getAppPath()}/version.json; SameSite=Strict; Secure; HttpOnly`
 					]
 				}
@@ -526,6 +529,7 @@ function static_vercel_config(builder, config) {
 
 	return {
 		version: 3,
+		...(deployment?.custom && { deploymentId: deployment.id }),
 		routes,
 		overrides,
 		images

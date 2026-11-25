@@ -188,6 +188,8 @@ When a new version of your app is deployed, assets belonging to the previous ver
 
 [Skew protection](https://vercel.com/docs/deployments/skew-protection) is a Vercel feature that routes client requests to their original deployment. When a user visits your app, a cookie is set with the deployment ID, and any subsequent requests will be routed to that deployment for as long as skew protection is active. When they reload the page, they will get the newest deployment. (`updated.current` is exempted from this behaviour, and so will continue to report new deployments.) To enable it, visit the Advanced section of your project settings on Vercel.
 
+If you build your app outside Vercel and deploy it with `vercel deploy --prebuilt`, Vercel doesn't assign the deployment ID until deploy time. In this case, set `VERCEL_SKEW_PROTECTION_ENABLED=1` when building and the adapter will use your app's [`version.name`](@sveltejs-kit-vite#version) as a [custom deployment ID](https://vercel.com/docs/skew-protection#custom-deployment-id). It must be unique per project, must not start with `dpl_`, must be at most 32 characters long (so use a short commit hash such as `git rev-parse --short HEAD` rather than a full one) and can only contain letters, numbers, `-` and `_` — the build fails otherwise. This requires a Vercel CLI version newer than 50.3.3.
+
 Cookie-based skew protection comes with one caveat: if a user has multiple versions of your app open in multiple tabs, requests from older versions will be routed to the newer one, meaning they will fall back to SvelteKit's built-in skew protection.
 
 ## Notes
