@@ -54,7 +54,7 @@ export function is_csrf_forbidden({ request, request_origin, self_origin, truste
 	return (
 		can_skip_preflight(request) &&
 		mutating_form_methods.has(request.method) &&
-		request_origin !== self_origin &&
+		!is_same_origin(request_origin, self_origin) &&
 		(!request_origin || !trusted_origins.includes(request_origin))
 	);
 }
@@ -77,5 +77,15 @@ export function is_csrf_forbidden({ request, request_origin, self_origin, truste
  * @returns {boolean}
  */
 export function is_remote_forbidden({ request, request_origin, self_origin }) {
-	return request.method !== 'GET' && request_origin !== self_origin;
+	return request.method !== 'GET' && !is_same_origin(request_origin, self_origin);
+}
+
+/**
+ * @param {string | null} request_origin
+ * @param {string} self_origin
+ * @returns {boolean}
+ */
+function is_same_origin(request_origin, self_origin) {
+	// Opaque origins serialize to "null", but are never same-origin.
+	return request_origin !== null && request_origin !== 'null' && request_origin === self_origin;
 }

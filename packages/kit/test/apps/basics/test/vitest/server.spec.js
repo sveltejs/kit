@@ -206,6 +206,29 @@ describe('Cookies', () => {
 });
 
 describe.skipIf(dev)('CSRF', () => {
+	test.each([
+		[
+			'/csrf',
+			'application/x-www-form-urlencoded',
+			'Cross-site POST form submissions are forbidden'
+		],
+		['/_app/remote/foo/bar', 'application/json', 'Cross-site remote requests are forbidden']
+	])(
+		'Blocks opaque origins with an opaque request URL origin (%s)',
+		async (pathname, content_type, message) => {
+			const response = await server.respond(
+				new Request(`custom://self.test${pathname}`, {
+					method: 'POST',
+					headers: { origin: 'null', 'content-type': content_type, accept: 'application/json' }
+				}),
+				{ getClientAddress: () => '' }
+			);
+
+			expect(response.status).toBe(403);
+			expect(await response.json()).toEqual({ message });
+		}
+	);
+
 	test('Blocks requests with incorrect origin', async () => {
 		const content_types = [
 			'application/x-www-form-urlencoded',
