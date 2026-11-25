@@ -1,13 +1,8 @@
 <script lang="ts">
+	import { get_index } from '../data.remote.js';
+
 	let { params } = $props();
-
-	function load(index: string) {
-		if (!index) throw new Error('missing index');
-		return Promise.resolve(index);
-	}
-
-	const query_output = $derived(await load(params.index));
+	const query_output = $derived(await get_index(params.index));
 </script>
 
-<p>Index {params.index}</p>
-{query_output}
+<p>Index {query_output}</p>

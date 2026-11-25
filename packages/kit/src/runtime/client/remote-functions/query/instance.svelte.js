@@ -28,6 +28,8 @@ export class Query {
 	#raw = $state.raw();
 	/** @type {Promise<void> | null} */
 	#promise = $state.raw(null);
+	// Unlike #promise, this is shared between forked and live views.
+	#promise_started = false;
 	/** @type {Array<(old: T) => T>} */
 	#overrides = $state([]);
 
@@ -88,7 +90,10 @@ export class Query {
 	}
 
 	#get_promise() {
-		void untrack(() => (this.#promise ??= this.#run()));
+		if (this.#promise === null) {
+			this.#promise_started = true;
+			void untrack(() => (this.#promise = this.#run()));
+		}
 		return /** @type {Promise<T>} */ (this.#promise);
 	}
 
@@ -98,7 +103,9 @@ export class Query {
 		// if all the tests still pass with the latest svelte version
 		// if they do, congrats, you can remove tick.then
 		void tick()
-			.then(() => this.#get_promise())
+			.then(() => {
+				if (!this.#promise_started) void this.#get_promise();
+			})
 			.catch(noop);
 	}
 
@@ -230,6 +237,7 @@ export class Query {
 	 */
 	refresh() {
 		delete query_responses[this.#key];
+		this.#promise_started = true;
 		return (this.#promise = this.#run());
 	}
 
@@ -250,6 +258,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = undefined;
 		this.#raw = value;
+		this.#promise_started = true;
 
 		if (!in_flight) {
 			this.#promise = Promise.resolve();
@@ -266,6 +275,7 @@ export class Query {
 		this.#loading = false;
 		this.#error = error.body;
 
+		this.#promise_started = true;
 		const promise = Promise.reject(error);
 
 		promise.catch(noop);
@@ -299,6 +309,7 @@ export class Query {
 	 * rendered queries to get fresh data
 	 */
 	reset() {
+		this.#promise_started = false;
 		this.#promise = null;
 		delete query_responses[this.#key];
 	}
