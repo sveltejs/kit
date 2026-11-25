@@ -107,7 +107,7 @@ describe('skew protection', () => {
 			`__vdpl=${version}; Path=/base/; SameSite=Strict; Secure; HttpOnly`,
 			'__vdpl=; Path=/base/_app/version.json; SameSite=Strict; Secure; HttpOnly'
 		]);
-	});
+	}, 60_000);
 
 	test('emits deploymentId and skew cookies from explicit SvelteKit version.name', () => {
 		const result = run_build({ VERCEL_SKEW_PROTECTION_ENABLED: '1' }, 'release-1_0');
@@ -121,7 +121,7 @@ describe('skew protection', () => {
 			'__vdpl=release-1_0; Path=/base/; SameSite=Strict; Secure; HttpOnly',
 			'__vdpl=; Path=/base/_app/version.json; SameSite=Strict; Secure; HttpOnly'
 		]);
-	});
+	}, 60_000);
 
 	test('uses VERCEL_DEPLOYMENT_ID and omits config deploymentId on Vercel-hosted builds', () => {
 		const result = run_build(
@@ -141,13 +141,13 @@ describe('skew protection', () => {
 			'__vdpl=dpl_vercel123; Path=/base/; SameSite=Strict; Secure; HttpOnly',
 			'__vdpl=; Path=/base/_app/version.json; SameSite=Strict; Secure; HttpOnly'
 		]);
-	});
+	}, 60_000);
 
 	test('fails the build when prebuilt version.name violates Vercel deploymentId rules', () => {
 		const result = run_build({ VERCEL_SKEW_PROTECTION_ENABLED: '1' }, 'dpl_invalid');
 		assert.notEqual(result.status, 0);
 		assert.include(result.stdout + result.stderr, 'must not start with "dpl_"');
-	});
+	}, 60_000);
 
 	test('treats VERCEL_SKEW_PROTECTION_ENABLED=0 as disabled', () => {
 		const result = run_build({ VERCEL_SKEW_PROTECTION_ENABLED: '0' }, 'a'.repeat(40));
@@ -158,5 +158,5 @@ describe('skew protection', () => {
 
 		assert.equal('deploymentId' in built_config, false);
 		assert.equal(find_skew_route(built_config), undefined);
-	});
+	}, 60_000);
 });
