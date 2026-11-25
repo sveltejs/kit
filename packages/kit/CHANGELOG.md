@@ -1,5 +1,43 @@
 # @sveltejs/kit
 
+## 3.4.1
+
+### Patch Changes
+
+- fix: avoid repeatedly processing unchanged remote form issues ([`1c27a1e`](https://github.com/sveltejs/kit/commit/1c27a1e1961d8852583113023411d2dc3d6f216b))
+
+- fix: leave unchanged route types in place during sync ([#17735](https://github.com/sveltejs/kit/pull/17735))
+
+- fix: allow literal true in remote form schemas ([#17835](https://github.com/sveltejs/kit/pull/17835))
+
+- fix: limit arrays submitted to remote forms to 1,000 missing indexes, and allow `undefined` in `RemoteFormInput` arrays ([`062fff6`](https://github.com/sveltejs/kit/commit/062fff65f4873be67b5af454d105d15a178dbf25))
+
+- fix: re-run nested queries on each iteration of a `query.live` function instead of returning the value from the first iteration ([#17758](https://github.com/sveltejs/kit/pull/17758))
+
+- fix: apply origin checks to more browser-generated request content types ([`7019207`](https://github.com/sveltejs/kit/commit/70192073e4b0b0c2caf035f8f4878497a5a07100))
+
+- fix: always add `Vary: Accept` to responses from routes with both a page and an endpoint ([`3a5d967`](https://github.com/sveltejs/kit/commit/3a5d967042a7de4b748e6410082bb5fc609e20c0))
+
+- fix: copy responses before adding internal headers ([`023d0e5`](https://github.com/sveltejs/kit/commit/023d0e570e25de09386bc3b36c41d2cd6100cb55))
+
+- fix: key per-request `query.live` iterators by function ([`5d611c6`](https://github.com/sveltejs/kit/commit/5d611c623012d7afc4407ea542d224c9717db608))
+
+- fix: return 400 for malformed request paths in development ([#17651](https://github.com/sveltejs/kit/pull/17651))
+
+- fix: improve performance of matching routes with multiple params in a segment ([`aa525f1`](https://github.com/sveltejs/kit/commit/aa525f148eea75d6ded689ab58c438533936f267))
+
+- fix: harden stack trace handling and validate remote function request metadata ([`0b98dae`](https://github.com/sveltejs/kit/commit/0b98daea3c2bcac184905c6c9244332016909b24))
+
+- fix: warn about routes with params that can be slow to match ([`aa525f1`](https://github.com/sveltejs/kit/commit/aa525f148eea75d6ded689ab58c438533936f267))
+
+- fix: ship less client JavaScript when the app has no `reroute` hook ([#17817](https://github.com/sveltejs/kit/pull/17817))
+
+- fix: improve memory usage when reading request bodies ([`8f2e881`](https://github.com/sveltejs/kit/commit/8f2e8818ee4e4997c8d30df85707d4f13a7f63a4))
+
+- fix: avoid retaining duplicate remote metadata during development ([#17611](https://github.com/sveltejs/kit/pull/17611))
+
+- fix: preserve shallow state updates made during refreshes ([#17839](https://github.com/sveltejs/kit/pull/17839))
+
 ## 3.4.0
 
 ### Minor Changes
