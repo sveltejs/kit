@@ -1,5 +1,18 @@
 # @sveltejs/adapter-bun
 
+## 1.0.3
+
+### Patch Changes
+
+- fix: use a relative `Location` when redirecting to a prerendered page's trailing-slash form, like adapter-node ([#17861](https://github.com/sveltejs/kit/pull/17861))
+
+- chore: bump `bun-types` to `^1.4.0` ([#17842](https://github.com/sveltejs/kit/pull/17842))
+
+- fix: only use `PORT_HEADER` when the forwarded host has no port ([#17859](https://github.com/sveltejs/kit/pull/17859))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.2.0
+  - @sveltejs/kit@3.4.1
+
 ## 1.0.2
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @sveltejs/adapter-cloudflare
 
+## 9.0.1
+
+### Patch Changes
+
+- fix: prevent text in server code from causing files on the build machine to be published ([#17863](https://github.com/sveltejs/kit/pull/17863))
+
+- fix: build apps that import a `.txt` file ([#17823](https://github.com/sveltejs/kit/pull/17823))
+
+- fix: support `.wasm` imports during dev and build ([#17823](https://github.com/sveltejs/kit/pull/17823))
+- Updated dependencies:
+  - @sveltejs/kit@3.4.1
+
 ## 9.0.0
 
 ### Major Changes

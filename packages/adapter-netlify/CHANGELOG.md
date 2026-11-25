@@ -1,5 +1,16 @@
 # @sveltejs/adapter-netlify
 
+## 7.1.0
+
+### Minor Changes
+
+- feat: allow configuring the Node.js runtime version with the adapter's optional `nodeVersion` option ([#17272](https://github.com/sveltejs/kit/pull/17272))
+
+### Patch Changes
+
+- Updated dependencies:
+  - @sveltejs/kit@3.4.1
+
 ## 7.0.1
 
 ### Patch Changes

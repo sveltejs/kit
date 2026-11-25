@@ -1,5 +1,18 @@
 # @sveltejs/adapter-node
 
+## 6.0.6
+
+### Patch Changes
+
+- fix: respond with a 500 instead of crashing the server when serving a static or prerendered file fails unexpectedly ([`1648ec3`](https://github.com/sveltejs/kit/commit/1648ec35d898e29e0e531c8bda4b0c4098ecf01c))
+
+- fix: only use `PORT_HEADER` when the forwarded host has no port ([#17859](https://github.com/sveltejs/kit/pull/17859))
+
+- fix: percent-encode the `location` header of trailing-slash redirects for prerendered pages ([`1648ec3`](https://github.com/sveltejs/kit/commit/1648ec35d898e29e0e531c8bda4b0c4098ecf01c))
+- Updated dependencies:
+  - @sveltejs/adapter-server@0.2.0
+  - @sveltejs/kit@3.4.1
+
 ## 6.0.5
 
 ### Patch Changes
