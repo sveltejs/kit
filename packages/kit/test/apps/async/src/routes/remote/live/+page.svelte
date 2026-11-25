@@ -6,6 +6,7 @@
 		reset,
 		drop,
 		get_count,
+		get_finite_count,
 		reconnect_live,
 		reconnect_requested_live,
 		reconnect_live_form,
@@ -78,6 +79,20 @@
 			refresh_state = 'rejected';
 		}
 	}
+
+	let overlapping_results = $state<string[]>([]);
+
+	async function run_overlapping_updates(update: () => Promise<void>, stagger = false) {
+		overlapping_results = ['pending', 'pending', 'pending'];
+		for (let i = 0; i < overlapping_results.length; i += 1) {
+			update().then(
+				() => (overlapping_results[i] = 'fulfilled'),
+				() => (overlapping_results[i] = 'rejected')
+			);
+			// refreshAll() batches synchronous calls, so let invalidation begin first.
+			if (stagger) await Promise.resolve();
+		}
+	}
 </script>
 
 <button id="increment" onclick={() => increment()}>increment</button>
@@ -113,3 +128,22 @@
 <p id="stream-log">{stream_log}</p>
 <button id="run-refresh-all" onclick={run_refresh_all}>refresh all</button>
 <p id="refresh-state">{refresh_state}</p>
+
+<button
+	id="overlapping-reconnect"
+	onclick={() => run_overlapping_updates(() => get_count().reconnect())}
+>
+	overlapping reconnects
+</button>
+<button
+	id="overlapping-finite-reconnect"
+	onclick={() => run_overlapping_updates(() => get_finite_count().reconnect())}
+>
+	overlapping finite reconnects
+</button>
+<button id="overlapping-refresh" onclick={() => run_overlapping_updates(refreshAll, true)}>
+	overlapping refreshes
+</button>
+{#each overlapping_results as result}
+	<p class="overlapping-result">{result}</p>
+{/each}

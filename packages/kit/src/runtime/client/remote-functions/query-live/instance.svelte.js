@@ -351,7 +351,12 @@ export class LiveQuery {
 	}
 
 	async reconnect() {
-		await this.#interrupt?.();
+		// Another reconnect may have started a loop while we were waiting for the
+		// previous one to stop. Interrupt it too, rather than dropping our handshake.
+		// Always await at least once so starting the loop doesn't track reactive state.
+		do {
+			await this.#interrupt?.();
+		} while (this.#interrupt);
 		/** @type {PromiseWithResolvers<void>} */
 		const { promise, resolve: on_connect, reject: on_connect_failed } = with_resolvers();
 		promise.catch(noop);
