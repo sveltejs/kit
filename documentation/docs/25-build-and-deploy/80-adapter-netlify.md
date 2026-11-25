@@ -8,9 +8,9 @@ This adapter will be installed by default when you use [`adapter-auto`](adapter-
 
 ## SvelteKit features
 
-The `edge: false` default deploys to Netlify Functions, which run on AWS Lambda. AWS Lambda buffers responses, so [streaming with promises](load#streaming-with-promises) is not available. Set `edge: true` to deploy to Netlify Edge Functions if you need streaming support.
+Netlify Functions and Netlify Edge Functions both support [streaming with promises](load#streaming-with-promises). Netlify Functions run on Node.js and support Node.js APIs, while Netlify Edge Functions run on Deno and do not provide all Node.js APIs.
 
-Netlify Functions run on Node.js and support Node.js APIs. Netlify Edge Functions run on Deno and do not provide all Node.js APIs.
+Use `edge: true` only when you need an Edge Function specifically. The default Netlify Functions deployment cannot be combined with the `nodeVersion` option when Edge Functions are enabled.
 
 ## Usage
 
