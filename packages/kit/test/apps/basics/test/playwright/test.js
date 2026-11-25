@@ -1093,6 +1093,18 @@ test.describe('searchParams', () => {
 });
 
 test.describe('Matchers', () => {
+	test('Optional matchers do not move values across static segments', async ({
+		page,
+		clicknav
+	}) => {
+		await page.goto('/routing/optional-matcher/ABC/docs/intro');
+		expect(await page.textContent('h1')).toBe('docs {"lang":"ABC","path":"intro"}');
+		await clicknav('[href="/routing/optional-matcher/fr/docs/intro"]');
+		expect(await page.textContent('h1')).toBe('catchall {"catchall":"fr/docs/intro"}');
+		await page.reload();
+		expect(await page.textContent('h1')).toBe('catchall {"catchall":"fr/docs/intro"}');
+	});
+
 	test('Matches parameters', async ({ page, clicknav }) => {
 		await page.goto('/routing/matched');
 
