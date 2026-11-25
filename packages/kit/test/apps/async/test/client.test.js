@@ -22,6 +22,78 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
 
+	for (const kind of ['single', 'batch']) {
+		test(`${kind} query getters do not schedule rendering work after starting`, async ({
+			page,
+			app
+		}) => {
+			let requests = 0;
+			page.on('request', (r) => (requests += r.url().includes('/_app/remote/') ? 1 : 0));
+			await page.goto(`/remote/query-start/${kind}`);
+			await expect(page.locator('#initial')).toHaveText('1');
+			await page.click('#inspect-answer');
+			await expect(page.locator('output')).toHaveText('0');
+			expect(requests).toBe(0);
+
+			const held = Promise.withResolvers();
+			const started = Promise.withResolvers();
+			await page.route('**/_app/remote/**', async (route) => {
+				started.resolve(undefined);
+				await held.promise;
+				await route.continue();
+			});
+			try {
+				await page.click('#start');
+				await started.promise;
+				await expect(page.locator('#waiting')).toHaveText('false /');
+				await page.click('#inspect-waiting');
+				await expect(page.locator('output')).toHaveText('0');
+			} finally {
+				held.resolve(undefined);
+			}
+			await expect(page.locator('#waiting')).toHaveText('true / 2');
+			expect(requests).toBe(1);
+			await page.unrouteAll({ behavior: 'wait' });
+
+			await Promise.all([
+				page.waitForResponse((r) => r.url().includes('/_app/remote/')),
+				page.click('#refresh')
+			]);
+			expect(requests).toBe(2);
+			await expect(page.locator('#answer')).toHaveText('1');
+
+			// Navigation resets both queries, including the non-awaited one.
+			await app.goto(`/remote/query-start/${kind}`, { refreshAll: true });
+			await expect.poll(() => requests).toBe(kind === 'batch' ? 3 : 4);
+			await expect(page.locator('#waiting')).toHaveText('true / 2');
+		});
+
+		test(`${kind} query getters work after committed and discarded preload forks`, async ({
+			page,
+			app
+		}) => {
+			/** @type {string[]} */
+			const errors = [];
+			page.on('pageerror', (error) => errors.push(error.message));
+			await page.goto('/fork');
+			const preloaded = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+			await app.preloadData(`/remote/query-start/${kind}`);
+			await (await preloaded).finished();
+			await app.preloadData('/'); // discard the first fork
+			await app.preloadData(`/remote/query-start/${kind}`);
+			await app.goto(`/remote/query-start/${kind}`); // commit the second fork
+			await expect(page.locator('#initial')).toHaveText('1');
+			await page.click('#inspect-answer');
+			await expect(page.locator('output')).toHaveText('0');
+
+			const response = page.waitForResponse((r) => r.url().includes('/_app/remote/'));
+			await app.goto(`/remote/query-start/${kind}`, { refreshAll: true });
+			await response;
+			await expect(page.locator('#answer')).toHaveText('1');
+			expect(errors).toEqual([]);
+		});
+	}
+
 	test('remote query responses are not cacheable', async ({ page }) => {
 		// the query is kicked off during SSR but fetched by the client after
 		// hydration, so we can observe the response headers on the wire
