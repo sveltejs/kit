@@ -6,6 +6,12 @@ To deploy to Netlify, use [`adapter-netlify`](https://github.com/sveltejs/kit/tr
 
 This adapter will be installed by default when you use [`adapter-auto`](adapter-auto), but adding it to your project allows you to specify Netlify-specific options.
 
+## SvelteKit features
+
+The `edge: false` default deploys to Netlify Functions, which run on AWS Lambda. AWS Lambda buffers responses, so [streaming with promises](load#streaming-with-promises) is not available. Set `edge: true` to deploy to Netlify Edge Functions if you need streaming support.
+
+Netlify Functions run on Node.js and support Node.js APIs. Netlify Edge Functions run on Deno and do not provide all Node.js APIs.
+
 ## Usage
 
 Run [`npx sv add sveltekit-adapter="adapter:netlify"`](/docs/cli/sveltekit-adapter), or install with `npm i -D @sveltejs/adapter-netlify` and add the adapter to your `vite.config.js`:
