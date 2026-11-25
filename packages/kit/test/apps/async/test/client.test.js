@@ -22,6 +22,87 @@ test.describe('remote functions', () => {
 		await expect(page.locator('p')).toHaveText('foobaz');
 	});
 
+	for (const batch of [false, true]) {
+		test(`query${batch ? '.batch' : ''} preserves awaited values after an offline refresh`, async ({
+			page,
+			context
+		}) => {
+			await page.goto(`/remote/query-refresh-error${batch ? '?batch' : ''}`);
+			await expect(page.locator('#template-count')).toHaveText(/\d+/);
+			const value = (await page.locator('#template-count').textContent()) ?? '';
+			await expect(page.locator('#script-count')).toHaveText(value);
+
+			await context.setOffline(true);
+			await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+			await expect(page.locator('#refresh')).toHaveText('rejected');
+			await expect(page.locator('#loading')).toHaveText('false');
+			await expect(page.locator('#error')).not.toHaveText('none');
+			await expect(page.locator('#current')).toHaveText(value);
+			await expect(page.locator('#template-count')).toHaveText(value);
+			await expect(page.locator('#script-count')).toHaveText(value);
+
+			await context.setOffline(false);
+			await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+			await expect(page.locator('#refresh')).toHaveText('resolved');
+			await expect(page.locator('#error')).toHaveText('none');
+			await expect(page.locator('#template-count')).not.toHaveText(value);
+			await expect(page.locator('#script-count')).toHaveText(
+				(await page.locator('#current').textContent()) ?? ''
+			);
+		});
+	}
+
+	test('query distinguishes transient HTTP responses from application errors and refusals', async ({
+		page,
+		context
+	}) => {
+		await page.goto('/remote/query-refresh-error');
+		await expect(page.locator('#template-count')).toHaveText(/\d+/);
+		const value = (await page.locator('#template-count').textContent()) ?? '';
+		const url = '**/_app/remote/**';
+
+		await page.route(url, (route) => route.fulfill({ status: 503, body: 'Service Unavailable' }));
+		await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+		await expect(page.locator('#refresh')).toHaveText('rejected');
+		await expect(page.locator('#template-count')).toHaveText(value);
+		await expect(page.locator('#script-count')).toHaveText(value);
+
+		await page.unroute(url);
+		await page.route(url, (route) => route.fulfill({ status: 404, body: 'Not Found' }));
+		await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+		await expect(page.locator('#template-failed')).toHaveText('Not Found');
+		await expect(page.locator('#script-failed')).toHaveText('Not Found');
+
+		await page.unroute(url);
+		await context.setOffline(true);
+		await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+		await expect(page.locator('#error')).not.toHaveText('Not Found');
+		const error = (await page.locator('#error').textContent()) ?? '';
+		await page.getByRole('button', { name: 'Reset template' }).click();
+		await page.getByRole('button', { name: 'Reset script' }).click();
+		await expect(page.locator('#template-failed')).toHaveText(error);
+		await expect(page.locator('#script-failed')).toHaveText(error);
+		await expect(page.locator('#current')).toHaveText(value);
+
+		await context.setOffline(false);
+		await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+		await expect(page.locator('#refresh')).toHaveText('resolved');
+		await page.getByRole('button', { name: 'Reset template' }).click();
+		await page.getByRole('button', { name: 'Reset script' }).click();
+		await expect(page.locator('#template-count')).not.toHaveText(value);
+
+		// A structured error from the application is authoritative, even for 503.
+		await page.route(url, (route) =>
+			route.fulfill({
+				status: 503,
+				json: { type: 'error', error: { status: 503, message: 'application error' } }
+			})
+		);
+		await page.getByRole('button', { name: 'Refresh', exact: true }).click();
+		await expect(page.locator('#template-failed')).toHaveText('application error');
+		await expect(page.locator('#script-failed')).toHaveText('application error');
+	});
+
 	test('remote query responses are not cacheable', async ({ page }) => {
 		// the query is kicked off during SSR but fetched by the client after
 		// hydration, so we can observe the response headers on the wire
