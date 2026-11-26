@@ -201,10 +201,10 @@ A new [`$app/service-worker`]($app-service-worker) provides type-safe access to 
 
 ### `page.url` is now readonly
 
-`page.url` is now typed as a `ReadonlyURL` with `ReadonlyURLSearchParams`, so mutating it — e.g. `page.url.searchParams.set(...)` or assigning to `page.url.pathname` — is now a type error. If you need a mutable URL, copy it first:
+`page.url` is now typed as a `ReadonlyURL` with `ReadonlyURLSearchParams`. A readonly page URL is accepted by APIs that take `URL` (`new URL(...)`, `goto(...)`, `fetch(...)`). Assigning to `pathname` or `href`, or calling `searchParams.set`, `append`, `delete`, or `sort`, remains a type error. `page.url.href` stays valid. If you need a mutable URL, copy it first:
 
 ```js
-const url = +++new URL(page.url.href);+++
+const url = +++new URL(page.url);+++
 url.searchParams.set('q', 'svelte');
 ```
 

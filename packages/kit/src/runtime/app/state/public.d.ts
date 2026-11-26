@@ -6,7 +6,13 @@ import type {
 
 export { page, navigating, updated } from './client.svelte.js';
 
-export type ReadonlyURLSearchParams = Omit<URLSearchParams, 'set' | 'append' | 'delete' | 'sort'>;
+// Uncallable (`never` arguments). `void` returns keep this assignable to and from `URLSearchParams`.
+export type ReadonlyURLSearchParams = Omit<
+	URLSearchParams,
+	'append' | 'delete' | 'set' | 'sort'
+> & {
+	readonly [K in 'append' | 'delete' | 'set' | 'sort']: (...args: never) => void;
+};
 
 export type ReadonlyURL = Readonly<
 	Omit<URL, 'searchParams'> & {
