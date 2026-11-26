@@ -2,6 +2,9 @@
 /** @import { LiveQuery } from './query-live/instance.svelte.js' */
 import { tick } from 'svelte';
 import { once } from '../../../utils/functions.js';
+import { DEV } from 'esm-env';
+import { create_remote_key } from '../../shared.js';
+import { unregister_resource } from './devtools.svelte.js';
 
 /**
  * @template [R=Query<any> | LiveQuery<any>]
@@ -155,5 +158,7 @@ export class CacheController {
 		if (entries && entries.size === 0) {
 			this.#cache_map.delete(id);
 		}
+
+		if (DEV) unregister_resource(create_remote_key(id, payload));
 	};
 }

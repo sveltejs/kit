@@ -70,6 +70,7 @@ import * as e from '../../messages/client-errors.js';
 import * as w from '../../messages/client-warnings.js';
 import * as shared_errors from '../../messages/shared-errors.js';
 import { capture_error } from '../../messages/internal/shared.js';
+import { install_hook as install_devtools_hook } from './remote-functions/devtools.svelte.js';
 
 /**
  * @typedef {{
@@ -485,6 +486,8 @@ async function _start(_app, _target, data) {
 	app = _app;
 
 	init_transport(app.hooks.transport ?? {});
+
+	if (DEV) install_devtools_hook({ app: () => app, query_map });
 
 	await _app.hooks.init?.();
 

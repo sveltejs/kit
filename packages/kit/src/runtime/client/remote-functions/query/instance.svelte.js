@@ -5,6 +5,13 @@ import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
 import { tick, untrack } from 'svelte';
+import { DEV } from 'esm-env';
+import {
+	listening_reactive,
+	register_resource,
+	resource_changed,
+	set_source
+} from '../devtools.svelte.js';
 
 /**
  * The actual query instance. There should only ever be one active query instance per key.
@@ -75,6 +82,38 @@ export class Query {
 		this.#key = key;
 		this.#fn = fn;
 
+		if (DEV) {
+			register_resource(key, {
+				read: () =>
+					untrack(() => ({
+						status: this.#loading
+							? this.#ready
+								? 'refreshing'
+								: 'loading'
+							: this.#error
+								? 'error'
+								: 'ready',
+						value: this.#current,
+						error: this.#error,
+						overrides: this.#overrides.length
+					}))
+			});
+
+			// reruns on each state change while a devtool is attached, torn down with the cache entry
+			try {
+				$effect(() => {
+					if (!listening_reactive()) return;
+					this.#loading;
+					this.#ready;
+					this.#current;
+					this.#error;
+					untrack(() => resource_changed(key));
+				});
+			} catch {
+				// constructed outside an effect root in unit tests
+			}
+		}
+
 		if (Object.hasOwn(query_responses, key)) {
 			const node = query_responses[key];
 			delete query_responses[key];
@@ -83,6 +122,7 @@ export class Query {
 				this.fail(new HandledHttpError(node.e));
 			} else {
 				this.set(/** @type {T} */ (node.v));
+				if (DEV) set_source(key, 'ssr');
 			}
 		}
 	}
@@ -133,6 +173,8 @@ export class Query {
 					this.#raw = value;
 					this.#error = undefined;
 				});
+
+				if (DEV) set_source(this.#key, 'fetch');
 			})
 			.catch(async (e) => {
 				// TODO: Our behavior here could be better:
