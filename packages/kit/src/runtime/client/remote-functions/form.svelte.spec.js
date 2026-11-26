@@ -232,3 +232,9 @@ test('form.for keeps its instance when the derived that holds it reconnects', as
 		cleanup();
 	}
 });
+
+test('fields can be read through $state', () => {
+	const remote = form('hash/myForm');
+	const draft = $state({ fields: remote.fields });
+	expect(draft.fields.title.as('text').name).toBe(remote.fields.title.as('text').name);
+});
