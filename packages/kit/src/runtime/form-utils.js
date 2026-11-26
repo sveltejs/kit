@@ -647,6 +647,18 @@ function check_prototype_pollution(key) {
 }
 
 /**
+ * Whether a value is a plain object we can safely descend into when setting a
+ * nested form field. Arrays are handled separately; scalars and non-plain objects
+ * such as `File` are not valid containers for a nested path.
+ * @param {any} value
+ */
+function is_plain_object(value) {
+	if (typeof value !== 'object' || value === null) return false;
+	const proto = Object.getPrototypeOf(value);
+	return proto === Object.prototype || proto === null;
+}
+
+/**
  * Sets a value in a nested object using an array of keys, mutating the original object.
  * @param {Record<string, any>} object
  * @param {string[]} keys
@@ -674,6 +686,12 @@ export function deep_set(object, keys, value) {
 				return;
 			}
 			current[key] = is_array ? [] : {};
+		} else if (!is_array && !is_plain_object(inner)) {
+			// the existing value is a scalar (string, number, boolean, etc.) or a
+			// non-plain object such as a `File`, so we can't descend into it to set a
+			// nested property. Report a deliberate conflict rather than letting the
+			// assignment below throw a raw `TypeError` (or silently mutate the object)
+			e.form_field_array_conflict({ key: keys[i + 1] });
 		}
 
 		current = current[key];

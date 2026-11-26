@@ -1174,6 +1174,31 @@ describe('deep_set', () => {
 		expect(target).toEqual({ nested: { name: 'hello' } });
 	});
 
+	test.each(['scalar', 42, true])(
+		'rejects a nested path through a scalar intermediate value (%s)',
+		(value) => {
+			const target = { a: value };
+			expect(() => deep_set(target, ['a', 'b'], 'nested')).toThrowKitError(
+				'form_field_array_conflict',
+				{ contains: ['b'] }
+			);
+			expect(target).toEqual({ a: value });
+		}
+	);
+
+	test('rejects a nested path through a File intermediate value', () => {
+		const file = new File(['contents'], 'upload.txt');
+		const target = { a: file };
+		expect(() => deep_set(target, ['a', 'b'], 'nested')).toThrowKitError(
+			'form_field_array_conflict',
+			{ contains: ['b'] }
+		);
+		// the File is left untouched rather than silently mutated
+		expect(target.a).toBe(file);
+		// @ts-ignore
+		expect(file.b).toBeUndefined();
+	});
+
 	test('deletes a nested value', () => {
 		const target = { nested: { file: 'hello' } };
 
