@@ -33,10 +33,7 @@ export function deploy(dir, { prod = false } = {}) {
  */
 export function location(dir, prod = false) {
 	const hash = createHash('sha1').update(dir).digest('hex').slice(0, 8);
-	// the real path, because Windows' temp dir can be a short 8.3 path (`RUNNER~1`) that Vite
-	// resolves to the long one, so files wouldn't match their keys in the Vite manifest
-	const tmp = fs.realpathSync.native(os.tmpdir());
-	return path.join(tmp, `${name(dir)}-${hash}${prod ? '-prod' : ''}`);
+	return path.join(os.tmpdir(), `${name(dir)}-${hash}${prod ? '-prod' : ''}`);
 }
 
 /** @param {string} dir */

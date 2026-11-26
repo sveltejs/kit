@@ -11,11 +11,12 @@ export const timeout = 60_000;
  * output (stdout and stderr, without colours). Fails the test if the build succeeds
  * @param {string} app
  * @param {Record<string, string>} [env] added to `process.env`
+ * @param {string} [root] the root to build instead of the current directory
  * @returns {string}
  */
-export function build(app, env) {
+export function build(app, env, root) {
 	try {
-		execSync('pnpm build', {
+		execSync(root ? `pnpm build "${root}"` : 'pnpm build', {
 			cwd: path.join(import.meta.dirname, 'apps', app),
 			stdio: 'pipe',
 			timeout,
