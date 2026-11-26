@@ -2,7 +2,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import MagicString from 'magic-string';
 import { walk, resolve_entry } from '../../../utils/filesystem.js';
-import { compact } from '../../../utils/array.js';
 import { posixify } from '../../../utils/os.js';
 import { ts } from '../ts.js';
 import { write_if_changed, property_key } from '../utils.js';
@@ -79,89 +78,23 @@ export function write_all_types(config, manifest_data, root) {
 		remove_empty_directories(types_dir);
 	}
 
-	// Read/write meta data on each invocation, not once per node process,
-	// it could be invoked by another process in the meantime.
-	const meta_data_file = `${types_dir}/route_meta_data.json`;
-	const has_meta_data = fs.existsSync(meta_data_file);
-	const meta_data = has_meta_data
-		? /** @type {Record<string, string[]>} */ (JSON.parse(fs.readFileSync(meta_data_file, 'utf-8')))
-		: {};
 	const routes_map = create_routes_map(manifest_data);
 	// For each directory, write $types.d.ts
 	for (const route of manifest_data.routes) {
 		if (!route.leaf && !route.layout && !route.endpoint) continue; // nothing to do
 
 		const outdir = path.join(config.outDir, 'types', routes_dir, route.id);
+		fs.mkdirSync(outdir, { recursive: true });
 
-		// check if the types are out of date
-		/** @type {string[]} */
-		const input_files = [];
-
-		/** @type {import('types').PageNode | null} */
-		let node = route.leaf;
-		while (node) {
-			if (node.universal) input_files.push(node.universal);
-			if (node.server) input_files.push(node.server);
-			node = node.parent ?? null;
-		}
-
-		/** @type {import('types').PageNode | null} */
-		node = route.layout;
-		while (node) {
-			if (node.universal) input_files.push(node.universal);
-			if (node.server) input_files.push(node.server);
-			node = node.parent ?? null;
-		}
-
-		if (route.endpoint) {
-			input_files.push(route.endpoint.file);
-		}
-
-		try {
-			fs.mkdirSync(outdir, { recursive: true });
-		} catch {}
-
-		const output_files = compact(
-			fs.readdirSync(outdir).map((name) => {
-				const stats = fs.statSync(path.join(outdir, name));
-				if (stats.isDirectory()) return;
-				return {
-					name,
-					updated: stats.mtimeMs
-				};
-			})
+		// track which old files end up being surplus to requirements
+		const to_delete = new Set(
+			fs
+				.readdirSync(outdir, { withFileTypes: true })
+				.filter((entry) => entry.isFile())
+				.map((entry) => entry.name)
 		);
-
-		const source_last_updated = Math.max(
-			// ctimeMs includes move operations whereas mtimeMs does not
-			...input_files.map((file) => fs.statSync(path.resolve(root, file)).ctimeMs)
-		);
-		const types_last_updated = Math.max(...output_files.map((file) => file.updated));
-
-		const should_generate =
-			// source files were generated more recently than the types
-			source_last_updated > types_last_updated ||
-			// no meta data file exists yet
-			!has_meta_data ||
-			// some file was deleted
-			!meta_data[route.id]?.every((file) => input_files.includes(file));
-
-		if (should_generate) {
-			// track which old files end up being surplus to requirements
-			const to_delete = new Set(output_files.map((file) => file.name));
-			update_types(config, routes_map, route, root, to_delete);
-			meta_data[route.id] = input_files;
-		}
+		update_types(config, routes_map, route, root, to_delete);
 	}
-
-	// Remove entries for routes that no longer exist so the file does not
-	// accumulate stale keys after routes are deleted.
-	const current_route_ids = new Set(manifest_data.routes.map((route) => route.id));
-	for (const id of Object.keys(meta_data)) {
-		if (!current_route_ids.has(id)) delete meta_data[id];
-	}
-
-	fs.writeFileSync(meta_data_file, JSON.stringify(meta_data, null, '\t'));
 }
 
 /**
@@ -400,7 +333,7 @@ function update_types(config, routes, route, root, to_delete = new Set()) {
 	to_delete.delete('$types.d.ts');
 
 	for (const file of to_delete) {
-		fs.unlinkSync(path.join(outdir, file));
+		fs.rmSync(path.join(outdir, file), { force: true });
 	}
 }
 

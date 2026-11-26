@@ -372,6 +372,19 @@ describe('Cleans up unused files', () => {
 		assert.ok(fs.existsSync(path.join(about_dir, '$types.d.ts')));
 	});
 
+	test('removes proxies that are no longer needed', () => {
+		const page = path.join(root, 'src/routes/+page.ts');
+		fs.writeFileSync(page, "export const load: import('./$types').PageLoad = () => ({});");
+
+		const proxy = path.join(sync(), 'src/routes/proxy+page.ts');
+		assert.ok(fs.existsSync(proxy));
+
+		fs.writeFileSync(page, 'export const load = () => ({});');
+		sync();
+
+		assert.ok(!fs.existsSync(proxy));
+	});
+
 	test('leaves unchanged files in place', () => {
 		fs.writeFileSync(
 			path.join(root, 'src/routes/+page.ts'),
@@ -391,34 +404,4 @@ describe('Cleans up unused files', () => {
 			assert.equal(fs.statSync(file).mtimeMs, then.getTime(), file);
 		}
 	});
-});
-
-test('prunes stale entries from route_meta_data.json when routes are deleted', () => {
-	const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'sveltekit-prune-test-'));
-	try {
-		const config = validate_config({});
-		config.files.assets = path.resolve(cwd, 'static');
-		config.files.params = path.resolve(tmp, 'params');
-		config.files.routes = path.resolve(tmp);
-		config.outDir = path.resolve(tmp, '.svelte-kit');
-
-		// Pre-populate the meta data file with a stale entry for a route that no longer exists.
-		const types_dir = path.join(config.outDir, 'types');
-		fs.mkdirSync(types_dir, { recursive: true });
-		const meta_data_file = path.join(types_dir, 'route_meta_data.json');
-		fs.writeFileSync(meta_data_file, JSON.stringify({ '/deleted-route': [] }));
-
-		// Create an empty routes directory so manifest generation finds no routes.
-		fs.mkdirSync(path.resolve(tmp, 'params'), { recursive: true });
-
-		const manifest = create_manifest_data(config, tmp);
-		write_all_types(config, manifest, tmp);
-
-		const result = /** @type {Record<string, unknown>} */ (
-			JSON.parse(fs.readFileSync(meta_data_file, 'utf-8'))
-		);
-		expect(result).not.toHaveProperty('/deleted-route');
-	} finally {
-		fs.rmSync(tmp, { force: true, recursive: true });
-	}
 });
