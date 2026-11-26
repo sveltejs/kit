@@ -7,7 +7,11 @@ const config = {
 		minify: false
 	},
 	clearScreen: false,
-	devtools: { apply: 'serve' },
+	devtools: {
+		apply: 'serve',
+		// trusted by the devtools channel test
+		clientAuthTokens: ['devtools-e2e-token']
+	},
 	optimizeDeps: {
 		// for CI, we need to explicitly prebundle deps, since
 		// the reload confuses Playwright

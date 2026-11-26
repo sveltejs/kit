@@ -1,6 +1,7 @@
 /** @import { Span, Tracer } from '@opentelemetry/api' */
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { init_tracing, otel, record_span } from './telemetry.js';
+import { with_devtools_request } from './devtools.js';
 import { HttpError, Redirect } from '@sveltejs/kit/internal';
 
 const { tracer, span } = vi.hoisted(() => {
@@ -183,5 +184,66 @@ describe('record_span', () => {
 			code: expect.any(Number)
 		});
 		expect(span.end).toHaveBeenCalled();
+	});
+});
+
+describe('devtools', () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		tracer.startActiveSpan = /** @type {any} */ (vi.fn((_name, _options, fn) => fn(span)));
+	});
+
+	test('records a shadow span for devtools without changing the OpenTelemetry span', async () => {
+		await vi.waitFor(() => import('node:async_hooks'));
+		/** @type {any[]} */
+		const sent = [];
+		globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = {
+			active: true,
+			send: (event) => sent.push(event),
+			format: (args) => args.join(' ')
+		};
+
+		try {
+			const error = new HttpError({ status: 500, message: 'oops' });
+			/** @type {unknown[]} */
+			const spans_seen = [];
+
+			const response = with_devtools_request(new Request('http://localhost/'), async () => {
+				await record_span({
+					name: 'outer',
+					attributes: { a: 1 },
+					fn: async (outer) => {
+						spans_seen.push(outer);
+						await record_span({
+							name: 'inner',
+							attributes: {},
+							fn: (inner) => {
+								spans_seen.push(inner);
+								return Promise.reject(error);
+							}
+						}).catch(() => {});
+					}
+				});
+				return new Response('ok');
+			});
+
+			await response;
+
+			expect(spans_seen).toEqual([span, span]);
+			expect(span.recordException).toHaveBeenCalledWith({ name: 'HttpError', message: 'oops' });
+
+			const [request] = sent;
+			expect(request.type).toBe('request:completed');
+			const [inner, outer] = request.spans;
+			expect(outer).toMatchObject({ name: 'outer', parent_id: null, attributes: { a: 1 } });
+			expect(inner).toMatchObject({
+				name: 'inner',
+				parent_id: outer.id,
+				status: 'error',
+				error: { name: 'HttpError', message: 'oops' }
+			});
+		} finally {
+			globalThis.__SVELTEKIT_DEVTOOLS_CHANNEL__ = undefined;
+		}
 	});
 });

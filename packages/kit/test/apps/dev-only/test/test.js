@@ -243,6 +243,107 @@ test.describe('Remote functions', () => {
 	});
 });
 
+test.describe('Devtools channel', () => {
+	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
+
+	/** @param {string} base_url */
+	async function subscribe_to_devtools(base_url) {
+		const client = await (await fetch(`${base_url}/@vite/client`)).text();
+		const token = /const wsToken = "([^"]+)"/.exec(client)?.[1];
+		const ws = new WebSocket(`${base_url.replace(/^http/, 'ws')}/?token=${token}`, 'vite-hmr');
+
+		/** @type {Array<{ event: string, data: any }>} */
+		const events = [];
+		ws.addEventListener('message', ({ data }) => {
+			const message = JSON.parse(data);
+			if (message.type === 'custom') events.push(message);
+		});
+
+		await new Promise((resolve) => ws.addEventListener('open', resolve));
+		ws.send(
+			JSON.stringify({
+				type: 'custom',
+				event: 'sveltekit:devtools:subscribe',
+				data: { token: 'devtools-e2e-token' }
+			})
+		);
+		await expect
+			.poll(() => events.some((e) => e.event === 'sveltekit:devtools:subscribed'))
+			.toBe(true);
+
+		/** @param {(event: { event: string, data: any }) => boolean} predicate */
+		const find = async (predicate) => {
+			await expect.poll(() => events.some(predicate)).toBe(true);
+			return /** @type {{ event: string, data: any }} */ (events.find(predicate)).data;
+		};
+
+		return { ws, find };
+	}
+
+	test('sends the spans and logs of a request', async ({ baseURL }) => {
+		const { ws, find } = await subscribe_to_devtools(/** @type {string} */ (baseURL));
+
+		try {
+			const response = await fetch(`${baseURL}/devtools`);
+			expect(response.status).toBe(200);
+			const id = /sveltekit;desc="([^"]+)"/.exec(response.headers.get('server-timing') ?? '')?.[1];
+			expect(id).toBeTruthy();
+
+			const request = await find(
+				(e) => e.data?.type === 'request:completed' && e.data.request_id === id
+			);
+			expect(request.status).toBe(200);
+
+			/** @param {string} name */
+			const span = (name) => request.spans.find((/** @type {any} */ s) => s.name === name);
+			const root = span('sveltekit.handle.root');
+			const resolve = span('sveltekit.resolve');
+			const load = span('sveltekit.load');
+			expect(root.parent_id).toBe(null);
+			expect(root.attributes['http.route']).toBe('/devtools');
+			expect(resolve.parent_id).toBe(root.id);
+			expect(load.parent_id).toBe(resolve.id);
+			expect(load.end).toBeGreaterThanOrEqual(load.start);
+
+			const log = await find((e) => e.data?.type === 'log:written');
+			expect(log).toMatchObject({ request_id: id, level: 'log', message: 'loading /devtools' });
+		} finally {
+			ws.close();
+		}
+	});
+
+	test('sends validation issues without changing the response', async ({ baseURL }) => {
+		const module = await (await fetch(`${baseURL}/src/routes/devtools/data.remote.js`)).text();
+		const remote_id = /'([^']+\/greet)'/.exec(module)?.[1];
+		// devalue stringify of 1, which the schema rejects
+		const url = `${baseURL}/_app/remote/${remote_id}?payload=${Buffer.from('[1]').toString('base64url')}`;
+
+		const without_devtools = await (await fetch(url)).text();
+
+		const { ws, find } = await subscribe_to_devtools(/** @type {string} */ (baseURL));
+
+		try {
+			const response = await fetch(url);
+			expect(await response.text()).toBe(without_devtools);
+			expect(without_devtools).toBe(
+				JSON.stringify({ type: 'error', error: { status: 400, message: 'Bad Request' } })
+			);
+
+			const id = /sveltekit;desc="([^"]+)"/.exec(response.headers.get('server-timing') ?? '')?.[1];
+			const validation = await find((e) => e.data?.type === 'validation:failed');
+			expect(validation).toMatchObject({
+				request_id: id,
+				id: remote_id,
+				name: 'greet',
+				file: 'src/routes/devtools/data.remote.js',
+				issues: [{ message: 'Expected a string', path: ['name'] }]
+			});
+		} finally {
+			ws.close();
+		}
+	});
+});
+
 test.describe('Vite DevTools', () => {
 	test.skip(({ javaScriptEnabled }) => !process.env.DEV || !javaScriptEnabled);
 

@@ -5,7 +5,11 @@ import { create_request_state } from './state.js';
 import { get_hooks } from '<sveltekit:generated>/server.js';
 import { set_hooks, fix_stack_trace } from './internal.js';
 import { restore, save } from './dev.js';
-import { init_tracing } from '@sveltejs/kit/internal/server';
+import {
+	init_tracing,
+	send_devtools_log,
+	with_devtools_request
+} from '@sveltejs/kit/internal/server';
 import { DEV } from 'esm-env';
 import { init_transport } from '#app/internal/transport';
 import { capture_error } from '../../messages/internal/server.js';
@@ -24,6 +28,7 @@ let init_promise;
 const decoded_responses = new WeakMap();
 
 const unwrapped_fetch_key = Symbol.for('sveltekit.unwrapped_fetch');
+const unwrapped_console_key = Symbol.for('sveltekit.unwrapped_console');
 
 if (DEV) {
 	// `instance.js` is re-evaluated on every server reload in dev. Reuse the
@@ -51,6 +56,21 @@ if (DEV) {
 
 	save(unwrapped_fetch_key, fetch);
 	globalThis.fetch = wrapped_fetch;
+
+	// wrap console once across reloads, so devtools can show logs per request
+	/** @type {Record<string, (...args: any[]) => void>} */
+	const original_console = restore(unwrapped_console_key) ?? {};
+
+	for (const level of /** @type {const} */ (['log', 'info', 'warn', 'error', 'debug'])) {
+		const original = (original_console[level] ??= console[level]);
+
+		console[level] = (...args) => {
+			original.apply(console, args);
+			send_devtools_log(level, args);
+		};
+	}
+
+	save(unwrapped_console_key, original_console);
 }
 
 /**
@@ -97,6 +117,29 @@ export async function init() {
  * @param {import('types').InternalRequestOptions} options
  */
 async function respond_to(request, options) {
+	if (DEV) {
+		const response = with_devtools_request(request, async (id) => {
+			const response = await respond_internal(request, options);
+			try {
+				// server timing is readable from navigation timing, unlike other headers
+				response.headers.append('server-timing', `sveltekit;desc="${id}"`);
+			} catch {
+				// immutable headers, like a fetch response returned from an endpoint
+			}
+			return response;
+		});
+
+		if (response) return response;
+	}
+
+	return respond_internal(request, options);
+}
+
+/**
+ * @param {Request} request
+ * @param {import('types').InternalRequestOptions} options
+ */
+async function respond_internal(request, options) {
 	const request_state = create_request_state(options);
 
 	let response = await handle(request, request_state);
