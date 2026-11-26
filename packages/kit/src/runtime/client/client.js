@@ -3230,6 +3230,17 @@ function _start_router() {
 
 			update_url(url);
 
+			// firefox fires no hashchange when the hash goes from absent to empty
+			if (hash === '' && current_hash === undefined && 'navigation' in window) {
+				/** @type {EventTarget} */ (window.navigation).addEventListener(
+					'currententrychange',
+					() => {
+						if (location.href === url.href) finish_hash_navigation();
+					},
+					{ once: true }
+				);
+			}
+
 			if (!options.replace_state) return;
 
 			// hashchange event shouldn't occur if the router is replacing state.
@@ -3421,7 +3432,7 @@ function _start_router() {
 		}
 	});
 
-	addEventListener('hashchange', () => {
+	function finish_hash_navigation() {
 		// if the hashchange happened as a result of clicking on a link,
 		// we need to update history, otherwise we have to leave it alone
 		if (hash_navigating) {
@@ -3442,7 +3453,9 @@ function _start_router() {
 			);
 			set_history_options(current_history_index, history_metadata);
 		}
-	});
+	}
+
+	addEventListener('hashchange', finish_hash_navigation);
 
 	// fix link[rel=icon], because browsers will occasionally try to load relative
 	// URLs after a pushState/replaceState, resulting in a 404 — see
