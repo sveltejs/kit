@@ -1,67 +1,99 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { beforeAll, describe, expect, test } from 'vitest';
-import { build, deploy } from '../../../../../test-utils/deploy.vitest.js';
+import { expect, test } from 'vitest';
+import { deploy } from '../../../../../test-utils/deploy.vitest.js';
 
 const app = deploy(import.meta.dirname);
 
-describe.each([{ edge: false }, { edge: true }])('edge: $edge', ({ edge }) => {
-	// the serverless build from `deploy` is rebuilt as edge functions in place
-	if (edge) beforeAll(() => build(app, { EDGE: 'true' }), 60_000);
+test('_redirects are copied to publish directory', () => {
+	const redirects = fs.readFileSync(path.join(app, 'build/_redirects'), 'utf-8');
+	expect(redirects).toContain('/redirect-me /greeting/redirected 301');
+});
 
-	const functions_dir = path.join(
-		app,
-		edge ? '.netlify/v1/edge-functions' : '.netlify/v1/functions'
+const functions_dirs = {
+	node: path.join(app, '.netlify/v1/functions'),
+	edge: path.join(app, '.netlify/v1/edge-functions')
+};
+
+const config_path = path.join(app, '.netlify/v1/config.json');
+
+test('generates Node.js and Edge functions', () => {
+	const config = JSON.parse(fs.readFileSync(config_path, 'utf-8'));
+	expect(config).not.toHaveProperty('functions.nodeVersion');
+	expect(fs.existsSync(functions_dirs.node)).toBe(true);
+	expect(fs.existsSync(functions_dirs.edge)).toBe(true);
+
+	const inherited = read_functions('node', (content) =>
+		content.includes('"name": "SvelteKit /collision/foo.bar"')
+	);
+	expect(inherited).toHaveLength(1);
+	expect(inherited[0]).not.toContain('"nodeVersion"');
+
+	const explicit = read_functions('node', (content) =>
+		content.includes('"name": "SvelteKit /greeting/[name]"')
+	);
+	expect(explicit).toHaveLength(1);
+	expect(explicit[0]).toContain('"nodeVersion": "24"');
+});
+
+/**
+ * @param {'node' | 'edge'} runtime
+ * @param {(content: string) => boolean} filter
+ */
+function read_functions(runtime, filter) {
+	return fs
+		.readdirSync(functions_dirs[runtime])
+		.filter((f) => f.startsWith('sveltekit-') && f.endsWith(runtime === 'edge' ? '.js' : '.mjs'))
+		.map((f) => fs.readFileSync(path.join(functions_dirs[runtime], f), 'utf-8'))
+		.filter(filter);
+}
+
+test('split generates multiple function files', () => {
+	const functions = read_functions('edge', (content) =>
+		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
+	);
+	expect(functions.length).toBe(1);
+	expect(functions[0]).not.toContain('"nodeVersion"');
+	expect(functions[0]).toMatch(
+		/"path": \[\s*"\/collection\/:param1\?\/article",\s*"\/collection\/:param1\?\/article\/__data\.json"\s*\]/
+	);
+});
+
+test('split false overrides inherited configuration and groups routes', () => {
+	const functions = read_functions(
+		'node',
+		(content) =>
+			content.includes('"/dynamic"') && !content.includes('"name": "SvelteKit catch-all"')
+	);
+	expect(functions).toHaveLength(1);
+	expect(functions[0]).toContain('"/dynamic/__data.json"');
+	expect(functions[0]).toContain('"/dynamic/:param1"');
+	expect(functions[0]).toContain('"/dynamic/:param1/__data.json"');
+});
+
+test('functions have human friendly display names', () => {
+	const functions = read_functions('edge', (content) =>
+		content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
+	);
+	expect(functions[0]).toContain('"name": "SvelteKit /collection/[[optional]]/article"');
+
+	const catch_all = read_functions('node', (content) =>
+		content.includes('"name": "SvelteKit catch-all"')
+	);
+	expect(catch_all.length).toBe(1);
+	expect(catch_all[0]).toContain('"name": "SvelteKit catch-all"');
+});
+
+test('routes that sanitize to the same pattern generate separate functions', () => {
+	const foo_dot = read_functions('node', (content) =>
+		content.includes('"name": "SvelteKit /collision/foo.bar"')
+	);
+	const foo_bar = read_functions('node', (content) =>
+		content.includes('"name": "SvelteKit /collision/foo_bar"')
 	);
 
-	/** @param {(content: string) => boolean} filter */
-	function read_functions(filter) {
-		return fs
-			.readdirSync(functions_dir)
-			.filter((f) => f.startsWith('sveltekit-') && f.endsWith(edge ? '.js' : '.mjs'))
-			.map((f) => fs.readFileSync(path.join(functions_dir, f), 'utf-8'))
-			.filter(filter);
-	}
-
-	test('_redirects are copied to publish directory', () => {
-		const redirects = fs.readFileSync(path.join(app, 'build/_redirects'), 'utf-8');
-		expect(redirects).toContain('/redirect-me /greeting/redirected 301');
-	});
-
-	test('split generates multiple function files', () => {
-		const functions = read_functions((content) =>
-			content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
-		);
-		expect(functions.length).toBe(1);
-		expect(functions[0]).toMatch(
-			/"path": \[\s*"\/collection\/:param1\?\/article",\s*"\/collection\/:param1\?\/article\/__data\.json"\s*\]/
-		);
-	});
-
-	test('functions have human friendly display names', () => {
-		const functions = read_functions((content) =>
-			content.includes('"name": "SvelteKit /collection/[[optional]]/article"')
-		);
-		expect(functions[0]).toContain('"name": "SvelteKit /collection/[[optional]]/article"');
-
-		const catch_all = read_functions((content) =>
-			content.includes('"name": "SvelteKit catch-all"')
-		);
-		expect(catch_all.length).toBe(1);
-		expect(catch_all[0]).toContain('"name": "SvelteKit catch-all"');
-	});
-
-	test('routes that sanitize to the same pattern generate separate functions', () => {
-		const foo_dot = read_functions((content) =>
-			content.includes('"name": "SvelteKit /collision/foo.bar"')
-		);
-		const foo_bar = read_functions((content) =>
-			content.includes('"name": "SvelteKit /collision/foo_bar"')
-		);
-
-		expect(foo_dot.length).toBe(1);
-		expect(foo_bar.length).toBe(1);
-		expect(foo_dot[0]).toContain('"name": "SvelteKit /collision/foo.bar"');
-		expect(foo_bar[0]).toContain('"name": "SvelteKit /collision/foo_bar"');
-	});
+	expect(foo_dot.length).toBe(1);
+	expect(foo_bar.length).toBe(1);
+	expect(foo_dot[0]).toContain('"name": "SvelteKit /collision/foo.bar"');
+	expect(foo_bar[0]).toContain('"name": "SvelteKit /collision/foo_bar"');
 });

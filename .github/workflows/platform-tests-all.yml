@@ -28,9 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         variant: [basic, edge, instrumentation, split]
-        include:
-          - variant: split-edge
-            app: split
     uses: ./.github/workflows/platform-test.yml
     with:
       sha: ${{ inputs.sha || github.sha }}
