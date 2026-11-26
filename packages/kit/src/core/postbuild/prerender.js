@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { walk } from '../../utils/filesystem.js';
 import { noop } from '../../utils/functions.js';
-import { decode_uri, is_root_relative, resolve } from '../../utils/url.js';
+import { decode_uri, is_root_relative, percent_decode, resolve } from '../../utils/url.js';
 import { escape_html } from '../../utils/escape.js';
 import { logger } from '../utils.js';
 import { write } from '../sync/utils.js';
@@ -510,13 +510,14 @@ async function prerender({
 				if (!is_root_relative(href)) continue;
 
 				const { pathname, search, hash } = new URL(href, 'http://localhost');
+				const decoded_pathname = decode_uri(pathname);
 
 				if (search) {
 					// TODO warn that query strings have no effect on statically-exported pages
 				}
 
 				if (hash) {
-					const key = decode_uri(pathname + hash);
+					const key = decoded_pathname + hash;
 
 					if (!expected_hashlinks.has(key)) {
 						expected_hashlinks.set(key, new Set());
@@ -525,7 +526,7 @@ async function prerender({
 					/** @type {Set<string>} */ (expected_hashlinks.get(key)).add(decoded);
 				}
 
-				void enqueue(decoded, decode_uri(pathname), pathname);
+				void enqueue(decoded, decoded_pathname, pathname);
 			}
 		}
 	}
@@ -730,13 +731,15 @@ async function prerender({
 	for (const [key, referrers] of expected_hashlinks) {
 		const index = key.indexOf('#');
 		const path = key.slice(0, index);
-		const id = key.slice(index + 1);
+		const fragment = key.slice(index + 1);
+		const id = percent_decode(fragment);
 
 		const hashlinks = actual_hashlinks.get(path);
 		// ignore fragment links to pages that were not prerendered
 		if (!hashlinks) continue;
 
-		if (!hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
+		// browsers look for the fragment as written before percent-decoding it
+		if (!hashlinks.has(fragment) && !hashlinks.has(id) && !SPECIAL_HASHLINKS.has(id)) {
 			handle_missing_id({ id, path, referrers: Array.from(referrers) });
 		}
 	}

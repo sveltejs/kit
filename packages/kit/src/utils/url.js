@@ -1,6 +1,7 @@
 import { BROWSER, DEV } from 'esm-env';
 import * as e from '../messages/shared-errors.js';
 import * as server_errors from '../messages/server-errors.js';
+import { text_decoder } from '../runtime/utils.js';
 
 /**
  * Matches a URI scheme. See https://www.rfc-editor.org/rfc/rfc3986#section-3.1
@@ -106,6 +107,17 @@ export function decode_uri(uri) {
 		}
 		throw e;
 	}
+}
+
+/**
+ * Percent-decodes a string the way browsers decode a URL fragment
+ * @param {string} str
+ * @returns {string}
+ */
+export function percent_decode(str) {
+	return str.replace(/(%[0-9a-f]{2})+/gi, (sequence) =>
+		text_decoder.decode(Uint8Array.from(sequence.slice(1).split('%'), (hex) => parseInt(hex, 16)))
+	);
 }
 
 /**
