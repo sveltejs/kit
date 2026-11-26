@@ -1077,6 +1077,29 @@ test.describe('remote function mutations', () => {
 		await expect(page.locator('h1')).toHaveText('hello from remote function!');
 	});
 
+	test('transport decode knows which remote call a value came from', async ({ page }) => {
+		await page.goto('/remote/transport-call');
+
+		// load data and values rendered on the server don't come from a remote call
+		await expect(page.locator('#load')).toHaveText('undefined');
+		await expect(page.locator('#query')).toHaveText('undefined');
+
+		await page.click('#call');
+		await expect(page.locator('#calls')).toHaveText(/^\d+$/);
+		const first = Number(await page.locator('#calls').textContent());
+
+		// the query's single-flight update belongs to the command call that carried it
+		await expect(page.locator('#query')).toHaveText(String(first));
+
+		await page.click('#call');
+		await expect(page.locator('#calls')).toHaveText(/^\d+,\d+$/);
+		const second = Number((await page.locator('#calls').textContent())?.split(',')[1]);
+
+		expect(second).toBeGreaterThan(first);
+		await expect(page.locator('#query')).toHaveText(String(second));
+		await expect(page.locator('#load')).toHaveText('undefined');
+	});
+
 	test('denied by hook: transport 403 surfaces as error.status 403 on query resource', async ({
 		page
 	}) => {

@@ -417,6 +417,18 @@ describe('parse_remote_arg', () => {
 		]);
 	});
 
+	test('transport decode of a remote argument on the server has no call', () => {
+		const decode = vi.fn((/** @type {{ a: number; z: number }} */ value) => {
+			return new Thing(value.a, value.z);
+		});
+		init_transport({ Thing: { encode: transport.Thing.encode, decode } });
+
+		const parsed = parse_remote_arg(stringify_remote_arg(new Thing(1, 2)));
+
+		expect(parsed).toBeInstanceOf(Thing);
+		expect(decode).toHaveBeenCalledWith({ a: 1, z: 2 }, { call: undefined });
+	});
+
 	test('restores null-prototype objects', () => {
 		const value = Object.assign(Object.create(null), {
 			z: 1,

@@ -3,7 +3,13 @@ import { app_dir, base } from '#app/paths';
 import { version } from '$app/env';
 import * as devalue from 'devalue';
 import { app, _goto, handle_error, prerender_responses } from '../client.js';
-import { get_remote_request_headers, remote_request, unwrap_node } from './shared.svelte.js';
+import {
+	create_call_decoders,
+	get_remote_request_headers,
+	next_request_id,
+	remote_request,
+	unwrap_node
+} from './shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../shared.js';
 import { noop } from '../../../utils/functions.js';
 import { HandledHttpError } from '@sveltejs/kit/internal';
@@ -89,7 +95,7 @@ export function prerender(id) {
 
 						if (cached_response) {
 							const cached_result = await cached_response.text();
-							return devalue.parse(cached_result, app.decoders);
+							return devalue.parse(cached_result, create_call_decoders(next_request_id()));
 						}
 					} catch {
 						void prerender_cache.delete(url);

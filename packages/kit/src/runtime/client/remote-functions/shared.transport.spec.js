@@ -1,11 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
+import { describe, expect, test, vi, afterEach, beforeEach } from 'vitest';
 
 // Mock `client.js` — the real module pulls in the SvelteKit router/hydration
 // machinery and resolves `$app/paths` to a server-side virtual module that only
 // exists during a real SvelteKit build. We only need stubs for the names that
 // `shared.svelte.js` imports.
 vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
-	app: { decoders: {} },
+	app: { decoders: {}, hooks: { transport: {} } },
 	query_map: new Map(),
 	query_responses: {},
 	live_query_map: new Map(),
@@ -24,7 +24,7 @@ vi.mock('#app/state/client', () => ({
 const { fail_unhandled_refreshes, remote_request, categorize_updates, QUERY_OVERRIDE_KEY } =
 	await import('./shared.svelte.js');
 const { HttpError, HandledHttpError } = await import('@sveltejs/kit/internal');
-const { query_map, live_query_map } = await import('../client.js');
+const { app, query_map, live_query_map } = await import('../client.js');
 const devalue = await import('devalue');
 const { command } = await import('./command.svelte.js');
 
@@ -240,5 +240,94 @@ describe('remote_request transport error handling', () => {
 		fail_unhandled_refreshes(refreshes);
 
 		expect(fail).not.toHaveBeenCalled();
+	});
+});
+
+describe('transport decode context', () => {
+	class Point {
+		/** @param {number} x */
+		constructor(x) {
+			this.x = x;
+		}
+	}
+
+	/** @type {Array<{ x: number, call: { id: number } | undefined }>} */
+	let decoded = [];
+
+	/** @param {any} value */
+	const encode = (value) => devalue.stringify(value, { Point: (v) => v instanceof Point && [v.x] });
+
+	/** @param {any} value */
+	const respond = (value) =>
+		mock_response({
+			json: () => Promise.resolve({ type: 'result', data: encode(value) })
+		});
+
+	beforeEach(() => {
+		vi.unstubAllGlobals();
+		query_map.clear();
+		decoded = [];
+		app.hooks.transport = {
+			Point: {
+				encode: (value) => value instanceof Point && [value.x],
+				decode: ([x], { call }) => {
+					decoded.push({ x, call });
+					return new Point(x);
+				}
+			}
+		};
+	});
+
+	afterEach(() => {
+		app.hooks.transport = {};
+	});
+
+	test('decode sees a higher call id for each remote request', async () => {
+		vi.stubGlobal('fetch', () => respond({ _: new Point(1) }));
+		await remote_request('/x');
+
+		vi.stubGlobal('fetch', () => respond({ _: new Point(2) }));
+		await remote_request('/x');
+
+		expect(decoded.map((d) => d.x)).toEqual([1, 2]);
+		expect(decoded[0].call?.id).toBeTypeOf('number');
+		expect(/** @type {number} */ (decoded[1].call?.id)).toBeGreaterThan(
+			/** @type {number} */ (decoded[0].call?.id)
+		);
+	});
+
+	test('decode orders values by when the request was sent, not when its response arrived', async () => {
+		/** @type {Array<(value: any) => void>} */
+		const responses = [];
+		vi.stubGlobal('fetch', () => new Promise((fulfil) => responses.push(fulfil)));
+
+		const first = remote_request('/x');
+		const second = remote_request('/x');
+
+		// the second request responds first
+		responses[1](await respond({ _: new Point(2) }));
+		await second;
+		responses[0](await respond({ _: new Point(1) }));
+		await first;
+
+		expect(decoded.map((d) => d.x)).toEqual([2, 1]);
+		expect(/** @type {number} */ (decoded[1].call?.id)).toBeLessThan(
+			/** @type {number} */ (decoded[0].call?.id)
+		);
+	});
+
+	test('single-flight updates in a response share the call of the request that carried them', async () => {
+		const set = vi.fn();
+		query_map.set('hash/query', /** @type {any} */ (new Map([['[-1]', { resource: { set } }]])));
+		vi.stubGlobal('fetch', () =>
+			respond({ _: new Point(1), q: { 'hash/query/[-1]': { v: new Point(2) } } })
+		);
+
+		await remote_request('/x', undefined, new Set(['hash/query/[-1]']));
+
+		expect(set).toHaveBeenCalledWith(new Point(2));
+		expect(decoded).toHaveLength(2);
+		expect(decoded[0].call).toBeDefined();
+		expect(decoded[1].call).toBe(decoded[0].call);
 	});
 });
