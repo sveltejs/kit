@@ -200,6 +200,42 @@ test.each(['ignored', 'field', 'all'])(
 	}
 );
 
+test('validate() follows reordered array fields when the parent array is set', async () => {
+	let validate_calls = 0;
+	const remote = form('hash/reorderForm').preflight({
+		'~standard': {
+			version: 1,
+			vendor: 'test',
+			validate: () => {
+				validate_calls++;
+				return {
+					issues:
+						validate_calls === 1
+							? [{ message: 'Required', path: ['items', 1, 'name'] }]
+							: [{ message: 'Required', path: ['items', 0, 'name'] }]
+				};
+			}
+		}
+	});
+	const { attach: mount } = attach(remote);
+	const detach = mount();
+	try {
+		remote.fields.items.set([{ name: 'a' }, { name: '' }]);
+		await remote.validate();
+		expect(remote.fields.items[1].name.issues()).toHaveLength(1);
+
+		flushSync(() => remote.fields.items.set([{ name: '' }, { name: 'a' }]));
+		expect(remote.fields.items[0].name.touched()).toBe(true);
+		expect(remote.fields.items[0].name.dirty()).toBe(true);
+
+		await remote.validate();
+		expect(remote.fields.items[0].name.issues()).toHaveLength(1);
+		expect(remote.fields.items[1].name.issues()).toBeUndefined();
+	} finally {
+		detach();
+	}
+});
+
 test('form.for keeps its instance when the derived that holds it reconnects', async () => {
 	const remote = form('id');
 	let connected = $state(true);

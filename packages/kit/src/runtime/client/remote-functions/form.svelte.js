@@ -61,6 +61,39 @@ function merge_with_server_issues(form_data, current_issues, client_issues) {
 }
 
 /**
+ * Visit every nested field path under `path` and invoke `visit` with its
+ * normalized key. Cycles in a replaced value must not cause infinite loops.
+ * @param {any} input
+ * @param {(string | number)[]} path
+ * @param {(key: string) => void} visit
+ */
+function mark_children(input, path, visit) {
+	const value = deep_get(input, path);
+	if (!value || typeof value !== 'object') return;
+
+	/** @type {(string | number)[][]} */
+	const pending = [path];
+	const seen = new Set();
+
+	while (pending.length > 0) {
+		const current = /** @type {(string | number)[]} */ (pending.pop());
+		const child = deep_get(input, current);
+		if (!child || typeof child !== 'object' || seen.has(child)) continue;
+		seen.add(child);
+
+		for (const name in child) {
+			const next = [...current, /^\d+$/.test(name) ? Number(name) : name];
+			const next_key = build_path_string(next);
+
+			visit(next_key);
+
+			const grandchild = child[name];
+			if (grandchild && typeof grandchild === 'object') pending.push(next);
+		}
+	}
+}
+
+/**
  * Client-version of the `form` function from `$app/server`.
  * @template {RemoteFormInput} T
  * @template U
@@ -646,6 +679,16 @@ export function form(id) {
 									touched[key] = true;
 									dirty[key] = true;
 									can_validate[key] = true;
+
+									// A parent field such as `items` can be set with a new array
+									// whose children have been reordered or replaced. Their
+									// validation state is keyed by path, so mark every child
+									// path in the new value as validated too.
+									mark_children(input, path, (next_key) => {
+										touched[next_key] = true;
+										dirty[next_key] = true;
+										can_validate[next_key] = true;
+									});
 								}
 							}
 						},
