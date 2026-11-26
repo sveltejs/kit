@@ -94,3 +94,30 @@ export function serialize_data(fetched, filter, prerendering = false) {
 
 	return `<script ${attrs.join(' ')}>${safe_payload}</script>`;
 }
+
+/**
+ * What the client looks a serialized response up by (see `build_selector` in `fetcher.js`).
+ * @param {import('./types.js').Fetched} fetched
+ */
+function get_request_key({ url, request_headers, request_body }) {
+	return request_headers || request_body
+		? `${url} ${hash_request(request_headers, request_body)}`
+		: url;
+}
+
+/**
+ * Responses are recorded when they are read, so their order depends on which one arrived first.
+ * Sorting them means the same responses always produce the same page, and therefore the same ETag.
+ *
+ * Responses to the same request stay in the order they were read, because the client
+ * consumes the script elements that match a request in document order.
+ *
+ * @param {import('./types.js').Fetched[]} fetched
+ * @returns {import('./types.js').Fetched[]}
+ */
+export function sort_fetched(fetched) {
+	return fetched
+		.map((item) => ({ item, key: get_request_key(item) }))
+		.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
+		.map(({ item }) => item);
+}
