@@ -80,4 +80,6 @@ export function read(asset) {
 
 export { getRequestEvent } from '@sveltejs/kit/internal/server';
 
+export { withRequestEvent } from './request-event.js';
+
 export { query, prerender, command, form, requested } from './remote/index.js';
