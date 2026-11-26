@@ -191,10 +191,11 @@ export function validate_config(config) {
 			}
 		}
 
-		if (typeof config.adapter?.vite === 'function') {
-			validated.adapter.vite = config.adapter.vite({
-				config: validated
-			});
+		for (const key of /** @type {const} */ (['dev', 'vite'])) {
+			const option = config.adapter?.[key];
+			if (typeof option === 'function') {
+				validated.adapter[key] = option({ config: validated });
+			}
 		}
 
 		return validated;

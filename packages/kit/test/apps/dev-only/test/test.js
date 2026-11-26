@@ -251,3 +251,8 @@ test.describe('Vite DevTools', () => {
 		await expect(page.locator('devframes-dock-embedded')).toBeAttached();
 	});
 });
+
+test('adapters can render requests themselves', async ({ request }) => {
+	const response = await request.get('/adapter-respond');
+	expect(await response.text()).toBe('rendered by the adapter');
+});

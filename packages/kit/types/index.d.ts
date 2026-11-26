@@ -46,10 +46,32 @@ declare module '@sveltejs/kit' {
 		 */
 		emulate?: () => MaybePromise<Emulator>;
 		/**
+		 * Options that only apply during `vite dev`
+		 * @since 3.3.0
+		 */
+		dev?: AdapterDevConfig | ((ctx: { config: ValidatedConfig }) => AdapterDevConfig);
+		/**
 		 * Options for configuring and interacting with Vite
 		 * @since 3.0.0
 		 */
 		vite?: AdapterViteConfig | ((ctx: { config: ValidatedConfig }) => AdapterViteConfig);
+	}
+
+	export interface AdapterDevConfig {
+		/**
+		 * This function overrides the default behaviour of the SvelteKit server responding to a request during `vite dev`.
+		 * To call the original `respond`, return the result of `options.resolve(request)`.
+		 * @since 3.3.0
+		 */
+		respond?: (
+			request: Request,
+			options: {
+				/** Returns the IP address of the client that sent the request */
+				getClientAddress: () => string;
+				/** Renders the request in Node */
+				resolve: (request: Request) => Promise<Response>;
+			}
+		) => Promise<Response>;
 	}
 
 	export interface AdapterViteConfig {
@@ -989,7 +1011,7 @@ declare module '@sveltejs/kit' {
 	type ValidatedConfig = RecursiveRequired<
 		Omit<Config, 'preprocess' | 'adapter' | 'typescript'>
 	> & {
-		adapter: Adapter & { vite?: AdapterViteConfig };
+		adapter: Adapter & { dev?: AdapterDevConfig; vite?: AdapterViteConfig };
 		preprocess: Config['preprocess'];
 		typescript: { config: NonNullable<Config['typescript']>['config'] };
 	};
