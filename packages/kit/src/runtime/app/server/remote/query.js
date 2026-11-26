@@ -7,6 +7,7 @@ import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
 import { prerendering } from '#app/env/server';
 import {
 	create_validator,
+	get_schema,
 	get_cache,
 	get_response,
 	run_remote_function,
@@ -75,6 +76,7 @@ export function query(validate_or_fn, maybe_fn) {
 		type: 'query',
 		id: '',
 		name: '',
+		schema: get_schema(validate_or_fn, maybe_fn),
 		validate,
 		bind(payload, validated_arg) {
 			const { event, state } = get_request_store();
@@ -177,6 +179,7 @@ function live(validate_or_fn, maybe_fn) {
 		type: 'query_live',
 		id: '',
 		name: '',
+		schema: get_schema(validate_or_fn, maybe_fn),
 		run: (event, state, arg) => run(event, state, () => validate(arg)),
 		validate,
 		bind(payload, validated_arg) {
@@ -326,6 +329,7 @@ function batch(validate_or_fn, maybe_fn) {
 		type: 'query_batch',
 		id: '',
 		name: '',
+		schema: get_schema(validate_or_fn, maybe_fn),
 		validate,
 		run: async (args) => {
 			const { event, state } = get_request_store();

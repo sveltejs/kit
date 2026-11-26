@@ -11,7 +11,7 @@ import {
 	parse_form_key,
 	group_formdata
 } from '../../../form-utils.js';
-import { get_cache, get_implicit_lookup, run_remote_function } from './shared.js';
+import { get_cache, get_implicit_lookup, get_schema, run_remote_function } from './shared.js';
 import { ActionFailure, ValidationError } from '@sveltejs/kit/internal';
 import { DEV } from 'esm-env';
 import * as e from '../../../../messages/server-errors.js';
@@ -68,8 +68,7 @@ export function form(validate_or_fn, maybe_fn) {
 	const fn = maybe_fn ?? validate_or_fn;
 
 	/** @type {StandardSchemaV1 | null} */
-	const schema =
-		!maybe_fn || validate_or_fn === 'unchecked' ? null : /** @type {any} */ (validate_or_fn);
+	const schema = get_schema(validate_or_fn, maybe_fn);
 
 	/**
 	 * @param {string | number | boolean} [key]
@@ -90,6 +89,7 @@ export function form(validate_or_fn, maybe_fn) {
 			type: 'form',
 			name: '',
 			id: '',
+			schema,
 			fn: async (data, meta, form_data) => {
 				const output =
 					/** @type {{ submission: true, input?: Record<string, any>, issues?: InternalRemoteFormIssue[], result: Output }} */ ({});

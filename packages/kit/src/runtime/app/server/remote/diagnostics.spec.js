@@ -109,7 +109,13 @@ test('validator issues retain their class and identity', async () => {
 
 test('validator issues attach remote function metadata', async () => {
 	const issues = [{ message: 'user issue', path: ['name'] }];
-	const __ = { type: 'query', id: 'hash/myQuery', name: 'myQuery', file: 'src/lib/test.remote.js' };
+	const __ = {
+		type: 'query',
+		id: 'hash/myQuery',
+		name: 'myQuery',
+		schema: null,
+		file: 'src/lib/test.remote.js'
+	};
 	const validate = create_validator(
 		{ '~standard': { validate: () => ({ issues }) } },
 		() => {},
