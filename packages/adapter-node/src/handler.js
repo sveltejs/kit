@@ -153,6 +153,8 @@ function get_origin(headers) {
 
 	const host =
 		normalise_header(host_header, headers[host_header]) ||
+		// HTTP/2 requests carry the host in the `:authority` pseudo-header
+		normalise_header(':authority', headers[':authority']) ||
 		normalise_header('host', headers['host']);
 	if (!host) {
 		const header_names = host_header ? `${host_header} or host headers` : 'host header';

@@ -1,5 +1,6 @@
 import { once } from 'node:events';
 import { createServer } from 'node:http';
+import { connect, createServer as createHttp2Server } from 'node:http2';
 import { expect, onTestFinished, test, vi } from 'vitest';
 
 const respond = vi.fn();
@@ -110,5 +111,39 @@ test('applies PORT_HEADER only when the forwarded host has no port', async () =>
 
 		expect(response.status).toBe(200);
 		expect(await response.text()).toBe(expected);
+	}
+});
+
+test('uses the :authority pseudo-header of an HTTP/2 request', async () => {
+	respond.mockImplementation((request) => new Response(request.url));
+	onTestFinished(() => {
+		respond.mockReset();
+	});
+
+	const server = createHttp2Server((req, res) =>
+		handler(/** @type {any} */ (req), /** @type {any} */ (res), () => {})
+	);
+	onTestFinished(() => server[Symbol.asyncDispose]());
+
+	server.listen(0, '127.0.0.1');
+	await once(server, 'listening');
+	const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
+
+	const client = connect(`http://127.0.0.1:${port}`);
+	onTestFinished(() => client.close());
+
+	for (const [request_headers, expected] of /** @type {const} */ ([
+		[{}, `https://127.0.0.1:${port}/page`],
+		// `getRequest` replaces `host` with `:authority`, so the URL has to agree with it
+		[{ ':authority': 'example.com', host: 'other.example' }, 'https://example.com/page']
+	])) {
+		const stream = client.request({ ':path': '/page', ...request_headers });
+		const [headers] = await once(stream, 'response');
+		stream.setEncoding('utf8');
+		let body = '';
+		for await (const chunk of stream) body += chunk;
+
+		expect(headers[':status']).toBe(200);
+		expect(body).toBe(expected);
 	}
 });
