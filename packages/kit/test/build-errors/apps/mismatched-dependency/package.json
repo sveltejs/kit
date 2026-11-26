@@ -1,0 +1,18 @@
+{
+	"name": "mismatched-dependency",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"build": "vite build"
+	},
+	"dependencies": {
+		"cookie": "0.7.2"
+	},
+	"devDependencies": {
+		"@sveltejs/kit": "workspace:^",
+		"@sveltejs/vite-plugin-svelte": "catalog:",
+		"svelte": "catalog:",
+		"vite": "catalog:"
+	},
+	"type": "module"
+}

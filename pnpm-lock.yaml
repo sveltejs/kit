@@ -1487,6 +1487,25 @@ importers:
         specifier: 'catalog:'
         version: 8.3.3(@types/node@22.20.4)(@vitejs/devtools@0.7.6)(esbuild@0.28.2)(yaml@2.9.1)
 
+  packages/kit/test/build-errors/apps/mismatched-dependency:
+    dependencies:
+      cookie:
+        specifier: 0.7.2
+        version: 0.7.2
+    devDependencies:
+      '@sveltejs/kit':
+        specifier: workspace:^
+        version: link:../../../..
+      '@sveltejs/vite-plugin-svelte':
+        specifier: 'catalog:'
+        version: 7.3.1(svelte@5.57.1(@typescript-eslint/types@8.70.1))(vite@8.3.3)
+      svelte:
+        specifier: 'catalog:'
+        version: 5.57.1(@typescript-eslint/types@8.70.1)
+      vite:
+        specifier: 'catalog:'
+        version: 8.3.3(@types/node@22.20.4)(@vitejs/devtools@0.7.6)(esbuild@0.28.2)(yaml@2.9.1)
+
   packages/kit/test/build-errors/apps/prerender-entry-generator-mismatch:
     devDependencies:
       '@sveltejs/adapter-auto':
@@ -3791,6 +3810,10 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  cookie@0.7.2:
+    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
+    engines: {node: '>= 0.6'}
 
   cookie@1.1.1:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
@@ -6646,6 +6669,8 @@ snapshots:
   console-clear@1.1.1: {}
 
   convert-source-map@2.0.0: {}
+
+  cookie@0.7.2: {}
 
   cookie@1.1.1: {}
 
