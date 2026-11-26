@@ -463,7 +463,7 @@ async function _start(_app, _target, data) {
 		w.app_body_unwrapped({ tag: '%sveltekit.body%' });
 	}
 
-	if (payload.data) {
+	if (__SVELTEKIT_REMOTE_FUNCTIONS__ && payload.data) {
 		const { q = {}, p = {}, l = {}, f = {} } = payload.data;
 
 		// store the whole nodes — error records seed the corresponding
@@ -592,7 +592,7 @@ async function _invalidate(reset_page_state = true) {
 	// Rerun queries
 	/** @type {Map<string, Promise<void>>} */
 	const live_query_reconnects = new Map();
-	if (force_invalidation) {
+	if (__SVELTEKIT_REMOTE_FUNCTIONS__ && force_invalidation) {
 		for (const [, { resource }] of cache_entries(query_map)) {
 			void resource.refresh();
 		}
@@ -634,21 +634,23 @@ async function _invalidate(reset_page_state = true) {
 	current = { ...navigation_result.state, nav: current.nav };
 	reset_invalidation();
 
-	// only wait for promises that are connected to queries that still exist
-	/** @type {Promise<any>[]} */
-	const promises = [];
-	for (const [, { resource }] of cache_entries(query_map)) {
-		promises.push(resource);
-	}
-	for (const [key] of cache_entries(live_query_map)) {
-		const promise = live_query_reconnects.get(key);
-		if (promise) {
-			promises.push(promise);
+	if (__SVELTEKIT_REMOTE_FUNCTIONS__) {
+		// only wait for promises that are connected to queries that still exist
+		/** @type {Promise<any>[]} */
+		const promises = [];
+		for (const [, { resource }] of cache_entries(query_map)) {
+			promises.push(resource);
 		}
-	}
+		for (const [key] of cache_entries(live_query_map)) {
+			const promise = live_query_reconnects.get(key);
+			if (promise) {
+				promises.push(promise);
+			}
+		}
 
-	// Don't use allSettled yet because it's too new
-	await Promise.all(promises).catch(noop);
+		// Don't use allSettled yet because it's too new
+		await Promise.all(promises).catch(noop);
+	}
 }
 
 function reset_invalidation() {
@@ -727,17 +729,20 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		accept: () => {
 			if (options.refreshAll) {
 				force_invalidation = true;
-				query_keys = new Set();
-				for (const [key, entry] of cache_entries(query_map)) {
-					// don't refresh yet, as some queries will be unrendered,
-					// but clear caches so that newly rendered queries
-					// don't use stale data. TODO same for `live_query_map`
-					entry.resource?.reset();
-					query_keys.add(key);
-				}
-				live_query_keys = new Set();
-				for (const [key] of cache_entries(live_query_map)) {
-					live_query_keys.add(key);
+
+				if (__SVELTEKIT_REMOTE_FUNCTIONS__) {
+					query_keys = new Set();
+					for (const [key, entry] of cache_entries(query_map)) {
+						// don't refresh yet, as some queries will be unrendered,
+						// but clear caches so that newly rendered queries
+						// don't use stale data. TODO same for `live_query_map`
+						entry.resource?.reset();
+						query_keys.add(key);
+					}
+					live_query_keys = new Set();
+					for (const [key] of cache_entries(live_query_map)) {
+						live_query_keys.add(key);
+					}
 				}
 			}
 
@@ -747,7 +752,7 @@ export async function _goto(url, options = {}, redirect_count = 0, nav_token = {
 		}
 	});
 
-	if (options.refreshAll) {
+	if (__SVELTEKIT_REMOTE_FUNCTIONS__ && options.refreshAll) {
 		// TODO the ticks shouldn't be necessary, something inside Svelte itself is buggy
 		// when a query in a layout that still exists after page change is refreshed earlier than this
 		void tick()
