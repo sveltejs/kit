@@ -195,6 +195,9 @@ export const handle = sequence(
 		if (['/non-existent-route', '/non-existent-route-loop'].includes(event.url.pathname)) {
 			event.locals.url = new URL(event.request.url);
 		}
+		if (event.url.pathname === '/errors/stack-trace') {
+			event.setHeaders({ 'x-handle': 'true' });
+		}
 		return resolve(event);
 	},
 	async ({ event, resolve }) => {

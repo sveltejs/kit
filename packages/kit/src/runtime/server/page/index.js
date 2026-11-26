@@ -52,6 +52,9 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 		return handle_action_json_request(event, state, node?.server);
 	}
 
+	// the error page starts from these, without the headers a failed render set
+	const headers = { ...state.headers };
+
 	try {
 		const leaf_node = /** @type {SSRNode} */ (nodes.page());
 
@@ -350,6 +353,9 @@ export async function render_page(event, state, page, nodes, resolve_opts) {
 
 		// if we end up here, it means the data loaded successfully
 		// but the page failed to render, or that a prerendering error occurred
+		for (const key in state.headers) delete state.headers[key];
+		Object.assign(state.headers, headers);
+
 		return await respond_with_error({
 			event,
 			state,

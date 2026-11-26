@@ -7,7 +7,9 @@ if (JSON.parse(SOME_JSON).answer !== 42) {
 }
 
 /** @type {import('./$types').LayoutServerLoad} */
-export async function load({ cookies, locals, fetch }) {
+export async function load({ cookies, locals, fetch, setHeaders }) {
+	setHeaders({ 'x-root-layout': 'true' });
+
 	if (locals.url?.pathname === '/non-existent-route') {
 		await fetch('/prerendering/prerendered-endpoint/api').then((r) => r.json());
 	}
