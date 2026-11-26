@@ -401,9 +401,14 @@ export async function render_response({
 		if (chunks) {
 			blocks.push('const deferred = new Map();');
 
-			properties.push(`defer: (id) => new Promise((fulfil, reject) => {
-							deferred.set(id, { fulfil, reject });
-						})`);
+			// streamed data can reject before the page has hydrated
+			properties.push(`defer: (id) => {
+							const promise = new Promise((fulfil, reject) => {
+								deferred.set(id, { fulfil, reject });
+							});
+							promise.catch(() => {});
+							return promise;
+						}`);
 
 			let app_declaration = '';
 

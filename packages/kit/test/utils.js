@@ -7,7 +7,7 @@ import http from 'node:http';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, test as base, devices } from '@playwright/test';
+import { defineConfig, expect, test as base, devices } from '@playwright/test';
 import { number_from_env } from '../../../test-utils/index.js';
 import { read_errors, read_traces } from './records.js';
 
@@ -110,7 +110,11 @@ export const test = base.extend({
 		await use(get_computed_style);
 	},
 
-	page: async ({ page, javaScriptEnabled }, use) => {
+	page: async ({ page, javaScriptEnabled }, use, test_info) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
 		// automatically wait for kit started event after navigation functions if js is enabled
 		const page_navigation_functions = /** @type {const} */ (['goto', 'goBack', 'reload']);
 		page_navigation_functions.forEach((fn) => {
@@ -142,6 +146,10 @@ export const test = base.extend({
 		});
 
 		await use(page);
+
+		if (!test_info.annotations.some((annotation) => annotation.type === 'pageerror')) {
+			expect(errors).toEqual([]);
+		}
 	},
 
 	// eslint-disable-next-line no-empty-pattern -- Playwright doesn't let us use `_` as a parameter name. It must be a destructured object

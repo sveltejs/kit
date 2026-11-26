@@ -451,6 +451,7 @@ test.describe('remote functions', () => {
 	});
 
 	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		test.info().annotations.push({ type: 'pageerror' });
 		await page.goto('/remote/form/throwing-error-page');
 
 		await page.fill('input', 'unexpected error');
