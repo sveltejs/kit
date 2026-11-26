@@ -52,6 +52,13 @@ export default function (opts = {}) {
 
 			builder.copy(server, `${out}/server`);
 
+			// the server build emits the assets it imports so their URLs match files in the build,
+			// but they are served from `client/`, so drop the copies from `server/` (#17482)
+			fs.rmSync(`${out}/server/${builder.config.appDir}/immutable/assets`, {
+				recursive: true,
+				force: true
+			});
+
 			// values only known after the build. `dir` needs the output root
 			fs.writeFileSync(
 				`${out}/adapter-node.js`,

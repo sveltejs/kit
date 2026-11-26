@@ -30,3 +30,13 @@ test('dependencies are not bundled', () => {
 test('everything else is bundled', () => {
 	expect(leaked_imports(app, 'build')).toEqual([]);
 });
+
+test('imported assets are served from the client output only', () => {
+	const assets = (dir) => {
+		const assets_dir = path.join(app, 'build', dir, '_app/immutable/assets');
+		return fs.existsSync(assets_dir) ? fs.readdirSync(assets_dir) : [];
+	};
+
+	expect(assets('client').some((file) => /^pattern\..+\.svg$/.test(file))).toBe(true);
+	expect(assets('server')).toEqual([]);
+});
