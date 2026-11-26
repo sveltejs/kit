@@ -1491,6 +1491,22 @@ test.describe('Load', () => {
 
 			expect(warnings.join('\n')).not.toContainKitDiagnostic('window_fetch_in_load');
 		});
+
+		test('awaiting a remote query in load does not cause a warning', async ({ page, app }) => {
+			/** @type {string[]} */
+			const warnings = [];
+			page.on('console', (msg) => {
+				if (msg.type() === 'warning') {
+					warnings.push(msg.text());
+				}
+			});
+
+			await page.goto('/load/window-fetch/correct');
+			await app.goto('/load/window-fetch/remote-query');
+			expect(await page.textContent('h1')).toBe('42');
+
+			expect(warnings.join('\n')).not.toContainKitDiagnostic('window_fetch_in_load');
+		});
 	}
 });
 

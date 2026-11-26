@@ -2,7 +2,9 @@
 /** @import { RemoteQueryUpdate } from '$app/server' */
 /** @import { CacheEntry } from './cache.svelte.js' */
 import * as devalue from 'devalue';
+import { DEV } from 'esm-env';
 import { app, _goto, live_query_map, query_map, query_responses } from '../client.js';
+import { dev_fetch } from '../fetcher.js';
 import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { untrack } from 'svelte';
 import { create_remote_key, split_remote_key } from '../../shared.js';
@@ -113,7 +115,7 @@ export function get_remote_request_headers() {
  * @param {Set<string> | null} [refreshes]
  */
 export async function remote_request(url, init, refreshes) {
-	const response = await fetch(url, init);
+	const response = await (DEV ? dev_fetch : fetch)(url, init);
 	const status = response.status;
 
 	// detect new deployments from the response header
