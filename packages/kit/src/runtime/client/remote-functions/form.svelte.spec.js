@@ -22,6 +22,17 @@ vi.mock(new URL('../client.js', import.meta.url).pathname, () => ({
 	refreshAll: () => {}
 }));
 
+const remote_request = vi.hoisted(() => vi.fn());
+vi.mock(new URL('./shared.svelte.js', import.meta.url).pathname, async (importOriginal) => {
+	/** @type {typeof import('./shared.svelte.js')} */
+	const actual = await importOriginal();
+	return {
+		...actual,
+		/** @param {Parameters<typeof actual.remote_request>} args */
+		remote_request: (...args) => remote_request(...args)
+	};
+});
+
 const { form } = await import('./form.svelte.js');
 
 /** @param {Omit<ReturnType<typeof form>, 'for'>} instance */
@@ -230,5 +241,31 @@ test('form.for keeps its instance when the derived that holds it reconnects', as
 		expect(remote.for('key') === held).toBe(true);
 	} finally {
 		cleanup();
+	}
+});
+
+test('validate treats a redirect response as no issues', async () => {
+	// A redirect carries no data, so remote_request resolves to {}. Without
+	// `result._ ?? []`, validate() stores undefined and later reads of
+	// fields.allIssues() throw (#17396).
+	remote_request.mockReset();
+	remote_request.mockResolvedValue({});
+
+	const remote = form('hash/myForm');
+	const { element, attach: mount } = attach(remote);
+	const input = document.createElement('input');
+	input.name = remote.fields.answer.as('text').name;
+	input.value = 'yes';
+	element.append(input);
+	const detach = mount();
+	try {
+		await remote.validate({ all: true });
+		expect(remote_request).toHaveBeenCalled();
+		// With undefined raw_issues, flatten_issues throws "issues is not iterable".
+		// Empty issues leave allIssues() as undefined (no `$` key), which is fine.
+		expect(() => remote.fields.allIssues()).not.toThrow();
+		expect(remote.fields.allIssues()).toBeUndefined();
+	} finally {
+		detach();
 	}
 });
