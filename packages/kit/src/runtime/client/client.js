@@ -1105,17 +1105,8 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 	/** @type {Record<string, any> | null} */
 	let data = null;
 
-	let is_tracking = true;
-
-	/** @type {import('types').Uses} */
-	const uses = {
-		dependencies: new Set(),
-		params: new Set(),
-		parent: false,
-		route: false,
-		url: false,
-		search_params: new Set()
-	};
+	/** @type {import('./types.js').BranchNode['universal']} */
+	let universal = null;
 
 	const node = await loader();
 
@@ -1135,6 +1126,18 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 	}
 
 	if (__SVELTEKIT_HAS_UNIVERSAL_LOAD__ && node.universal?.load) {
+		let is_tracking = true;
+
+		/** @type {import('types').Uses} */
+		const uses = {
+			dependencies: new Set(),
+			params: new Set(),
+			parent: false,
+			route: false,
+			url: false,
+			search_params: new Set()
+		};
+
 		/** @param {string[]} deps */
 		function depends(...deps) {
 			for (const dep of deps) {
@@ -1247,13 +1250,15 @@ async function load_node({ loader, parent, url, params, route, server_data_node 
 		} else {
 			data = (await node.universal.load.call(null, load_input)) ?? null;
 		}
+
+		universal = { type: 'data', data, uses };
 	}
 
 	return {
 		node,
 		loader,
 		server: server_data_node,
-		universal: node.universal?.load ? { type: 'data', data, uses } : null,
+		universal,
 		data: data ?? server_data_node?.data ?? null,
 		slash: node.universal?.trailingSlash ?? server_data_node?.slash
 	};
@@ -1389,7 +1394,7 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 	const url_changed = current.url ? id !== get_page_key(current.url) : false;
 	// current.route is null after an error-page render, so a missing route counts as changed
 	const route_changed = !current.route || route.id !== current.route.id;
-	const search_params_changed = diff_search_params(current.url, url);
+	const search_params_changed = /* @__PURE__ */ diff_search_params(current.url, url);
 
 	let parent_invalid = false;
 
@@ -1458,14 +1463,16 @@ async function load_route({ id, invalidating, url, params, route, preload, actio
 		const valid =
 			(!server_data_node || server_data_node.type === 'skip') &&
 			loader[1] === previous?.loader &&
-			!has_changed(
-				parent_changed,
-				route_changed,
-				url_changed,
-				search_params_changed,
-				previous.universal?.uses,
-				params
-			);
+			// only universal load functions track dependencies
+			(!__SVELTEKIT_HAS_UNIVERSAL_LOAD__ ||
+				!has_changed(
+					parent_changed,
+					route_changed,
+					url_changed,
+					search_params_changed,
+					previous.universal?.uses,
+					params
+				));
 		if (valid) return previous;
 
 		parent_changed = true;
