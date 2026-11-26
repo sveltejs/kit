@@ -95,6 +95,7 @@
 >
 	<button id="reconnect-live-form" type="submit">reconnect live query (form)</button>
 </form>
+<a id="same-page" href="/remote/live">this page</a>
 <button id="toggle-live" onclick={() => (show_live = !show_live)}>toggle live query</button>
 <button id="stats" onclick={refresh_stats}>refresh stats</button>
 
