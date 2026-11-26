@@ -286,7 +286,10 @@ async function find_deps(vite, node, deps) {
 
 	/** @param {string} url */
 	async function add_by_url(url) {
-		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(url);
+		// Vite wraps ids that are not valid URLs (e.g. `\0`-prefixed virtual modules) in import
+		// specifiers, but the module graph stores them unwrapped
+		const id = url.startsWith('/@id/') ? url.slice('/@id/'.length).replace('__x00__', '\0') : url;
+		const node = await vite.environments.ssr.moduleGraph.getModuleByUrl(id);
 
 		if (node) {
 			await add(node);
