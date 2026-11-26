@@ -4,6 +4,22 @@ import { test } from '../../../utils.js';
 
 test.skip(({ javaScriptEnabled }) => !javaScriptEnabled);
 
+for (const path of ['/after-navigate', '/after-navigate/client-only']) {
+	test(`afterNavigate waits for async components on startup at ${path}`, async ({
+		page,
+		clicknav,
+		app
+	}) => {
+		await page.goto(path);
+		await expect(page.locator('p')).toHaveText('ready');
+		await expect(page.locator('output')).toHaveText('enter');
+		await clicknav('a[href="?again"]');
+		await expect(page.locator('output')).toHaveText('enter link');
+		await app.goto(`${path}?goto`);
+		await expect(page.locator('output')).toHaveText('enter link goto');
+	});
+}
+
 test.describe('remote functions', () => {
 	test('preloading data works when the page component and server load both import a remote function', async ({
 		page,

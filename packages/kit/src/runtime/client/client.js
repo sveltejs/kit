@@ -914,9 +914,8 @@ async function initialize(result, target, should_hydrate) {
 		}
 	});
 
-	// Wait for a microtask in case svelte experimental async is enabled,
-	// which causes component script blocks to run asynchronously
-	void (await Promise.resolve());
+	// Wait for async components to mount before running afterNavigate callbacks and restoring snapshots
+	await settled();
 
 	if (should_hydrate) {
 		/** @type {AfterNavigate} */
