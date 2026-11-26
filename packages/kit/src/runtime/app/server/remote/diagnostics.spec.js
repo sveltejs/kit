@@ -287,8 +287,7 @@ test('server command updates throw without changing the command promise', async 
 	await expect(promise).resolves.toBe('result');
 });
 
-test.each(['query', 'query.batch', 'query.live'])('%s cannot run while prerendering', (type) => {
-	flags.prerendering = true;
+test.each(['query', 'query.batch', 'query.live'])('%s cannot run on prerendered pages', (type) => {
 	const read =
 		type === 'query'
 			? query(() => 1)
@@ -298,9 +297,14 @@ test.each(['query', 'query.batch', 'query.live'])('%s cannot run while prerender
 						yield 1;
 					});
 	init({ read });
-	expect(() => read(undefined)).toThrowKitError('remote_query_prerender', {
-		contains: [`\`${type}\``, '`read`']
-	});
+	const options = { contains: [`\`${type}\``, '`read`'] };
+
+	flags.prerendering = true;
+	expect(() => read(undefined)).toThrowKitError('remote_query_prerender', options);
+
+	flags.prerendering = false;
+	store.state = { ...store.state, prerender_default: true };
+	expect(() => run(() => read(undefined))).toThrowKitError('remote_query_prerender', options);
 });
 
 test('server query overrides throw without starting the query', async () => {
