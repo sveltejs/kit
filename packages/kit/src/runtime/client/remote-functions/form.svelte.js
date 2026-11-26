@@ -17,6 +17,7 @@ import { page } from '#app/state/client';
 import { tick } from 'svelte';
 import { categorize_updates, fail_unhandled_refreshes, remote_request } from './shared.svelte.js';
 import { createAttachmentKey } from 'svelte/attachments';
+import { on } from 'svelte/events';
 import {
 	convert_formdata,
 	flatten_issues,
@@ -582,13 +583,14 @@ export function form(id) {
 
 			form.addEventListener('submit', handle_submit);
 			form.addEventListener('input', handle_input);
-			form.addEventListener('focusout', handle_focusout);
+			// Chromium fires `focusout` when a focused field is removed, which can happen inside an effect
+			const off_focusout = on(form, 'focusout', handle_focusout, { capture: true });
 			form.addEventListener('reset', handle_reset);
 
 			return () => {
 				form.removeEventListener('submit', handle_submit);
 				form.removeEventListener('input', handle_input);
-				form.removeEventListener('focusout', handle_focusout);
+				off_focusout();
 				form.removeEventListener('reset', handle_reset);
 				element = null;
 			};

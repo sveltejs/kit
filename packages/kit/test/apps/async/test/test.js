@@ -451,6 +451,10 @@ test.describe('remote functions', () => {
 	});
 
 	test('form error falls through a throwing +error.svelte to the one above', async ({ page }) => {
+		/** @type {Error[]} */
+		const errors = [];
+		page.on('pageerror', (error) => errors.push(error));
+
 		await page.goto('/remote/form/throwing-error-page');
 
 		await page.fill('input', 'unexpected error');
@@ -461,6 +465,8 @@ test.describe('remote functions', () => {
 				'This is your custom error page saying: "error page render error (500 Internal Error, on /remote/form/throwing-error-page)"'
 			)
 			.waitFor();
+
+		expect(errors).toEqual([]);
 	});
 
 	test('form redirects', async ({ page }) => {
@@ -1046,6 +1052,10 @@ test.describe('remote functions', () => {
 
 		await page.click('#reset-btn');
 		await expect(ageTouched).toHaveText('Age touched: false');
+
+		await page.locator('#name-input').focus();
+		await page.locator('#name-input').blur();
+		await expect(page.locator('#touched-on-focusout')).toHaveText('Name touched on focusout: true');
 	});
 
 	test('selects are not nuked when unrelated controls change', async ({
