@@ -44,7 +44,7 @@ export default defineConfig({
 export const prerender = true;
 ```
 
-> [!NOTE] You must ensure SvelteKit's [`trailingSlash`](page-options#trailingSlash) option is set appropriately for your environment. If your host does not render `/a.html` upon receiving a request for `/a` then you will need to set `trailingSlash: 'always'` in your root layout to create `/a/index.html` instead.
+> [!NOTE] By default, a page at `/about` is written to `about.html`. If your host responds to `/about` with a 404 instead of serving that file (Apache and nginx do, in their default configuration), set [`trailingSlash`](page-options#trailingSlash) to `'always'` in your root layout so that the page is written to `about/index.html`, which those servers serve at `/about/`.
 
 > [!NOTE] You must ensure SvelteKit's [`ssr`](page-options#ssr) option isn't set to `false`. Otherwise, prerendering will save an empty 'shell' page instead of the fully rendered content.
 
@@ -95,6 +95,13 @@ If `true`, precompresses files with brotli and gzip. This will generate `.br` an
 ### strict
 
 By default, `adapter-static` checks that either all pages and endpoints (if any) of your app were prerendered, or you have the `fallback` option set. This check exists to prevent you from accidentally publishing an app where some parts of it are not accessible, because they are not contained in the final output. If you know this is ok (for example when a certain page only exists conditionally), you can set `strict` to `false` to turn off this check.
+
+## Caching
+
+Unless your platform has [zero-config support](#Zero-config-support), configure your host to send these `cache-control` headers:
+
+- `public, max-age=31536000, immutable` for files in the `_app/immutable` directory of the build output (or the equivalent, if you changed [`appDir`](@sveltejs-kit-vite#appDir)). These files have content-hashed names, so a given URL always has the same content
+- `no-cache` for everything else, including your prerendered pages. These files keep the same URL when their content changes, and without this header a browser can reuse a cached copy without checking for a new version
 
 ## GitHub Pages
 
