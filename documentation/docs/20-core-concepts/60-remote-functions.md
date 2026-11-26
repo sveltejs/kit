@@ -734,6 +734,20 @@ You can prevent sensitive data (such as passwords and credit card numbers) from 
 
 In this example, if the data does not validate, only the first `<input>` will be populated when the page reloads.
 
+The underscore only controls what the server sends back. When JavaScript is available the form is submitted without a page reload, so nothing is sent back and both `<input>` elements keep what the user typed. To clear the password after a failed submission, use an [`enhance`](#form-enhance) callback:
+
+```svelte
+<form {...register.enhance(async (form) => {
+	if (await form.submit()) {
+		form.element.reset();
+	} else {
+		+++form.fields._password.set('');+++
+	}
+})}>
+	<!-- -->
+</form>
+```
+
 ### Returns and redirects
 
 The example above uses [`redirect(...)`](@sveltejs-kit#redirect), which sends the user to the newly created page. Alternatively, the callback could return data, in which case it would be available as `createPost.result`:
