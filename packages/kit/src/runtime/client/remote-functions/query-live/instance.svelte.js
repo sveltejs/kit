@@ -1,4 +1,5 @@
-import { query_responses, handle_error } from '../../client.js';
+import { query_responses } from '../../client.js';
+import { remote_env } from '#internal/remote-env';
 import { HttpError, Redirect, HandledHttpError } from '@sveltejs/kit/internal';
 import { noop, once } from '../../../../utils/functions.js';
 import { with_resolvers } from '../../../../utils/promise.js';
@@ -261,6 +262,15 @@ export class LiveQuery {
 		this.#fan_out.done();
 
 		void this.#interrupt?.();
+
+		// the main loop stops without settling a pending first value,
+		// so reject it rather than leave its awaiters hanging
+		if (this.#reject_first) {
+			this.#promise.catch(noop);
+			this.#reject_first(new Error('Live query was destroyed before it received a value'));
+			this.#resolve_first = null;
+			this.#reject_first = null;
+		}
 	}
 
 	/**
@@ -413,7 +423,7 @@ export class LiveQuery {
 
 	/** @param {unknown} e */
 	async #fail(e) {
-		const error = await handle_error(e, {
+		const error = await remote_env.handle_error(e, {
 			params: {},
 			route: { id: null },
 			url: new URL(location.href)

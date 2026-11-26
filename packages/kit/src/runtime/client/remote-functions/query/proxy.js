@@ -6,6 +6,7 @@ import {
 	QUERY_RESOURCE_KEY
 } from '../shared.svelte.js';
 import { create_remote_key, stringify_remote_arg } from '../../../shared.js';
+import { remote_env } from '#internal/remote-env';
 import { Query } from './instance.svelte.js';
 import { cache } from './cache.js';
 
@@ -29,7 +30,7 @@ export class QueryProxy {
 	 */
 	constructor(id, arg, fn) {
 		this.#id = id;
-		this.#payload = stringify_remote_arg(arg);
+		this.#payload = stringify_remote_arg(arg, remote_env.encoders);
 		this.#key = create_remote_key(id, this.#payload);
 		Object.defineProperty(this, QUERY_RESOURCE_KEY, { value: this.#key });
 		this.#fn = fn;

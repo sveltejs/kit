@@ -1,7 +1,6 @@
 /** @import { RemoteFunctionResponse } from 'types' */
 import { app_dir, base } from '#app/paths';
-import { app } from '../../client.js';
-import { notify_version } from '#app/state/client';
+import { remote_env, reset_generation } from '#internal/remote-env';
 import { handle_side_channel_response } from '../shared.svelte.js';
 import * as devalue from 'devalue';
 import { HttpError, HandledHttpError } from '@sveltejs/kit/internal';
@@ -23,14 +22,15 @@ export async function* create_live_iterator(
 	on_connect = noop
 ) {
 	const url = `${base}/${app_dir}/remote/${id}${payload ? `?payload=${payload}` : ''}`;
+	const generation = reset_generation;
 
-	const response = await fetch(url, {
+	const response = await remote_env.fetch(url, {
 		headers: { accept: 'text/event-stream' },
 		signal: controller.signal
 	});
 
 	// detect new deployments from the response header
-	notify_version(response.headers.get('x-sveltekit-version'));
+	remote_env.notify_version(response.headers.get('x-sveltekit-version'));
 
 	if (!response.ok) {
 		/** @type {RemoteFunctionResponse | undefined} */
@@ -44,6 +44,7 @@ export async function* create_live_iterator(
 	if (response.headers.get('content-type')?.includes('application/json')) {
 		// we can end up here if we e.g. redirect in `handle`
 		const result = await response.json();
+		if (generation !== reset_generation) return;
 		await handle_side_channel_response(result);
 		throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 	}
@@ -59,10 +60,11 @@ export async function* create_live_iterator(
 
 		for await (const node of read_sse(reader)) {
 			if (node.type === 'result') {
-				yield devalue.parse(node.result, app.decoders);
+				yield devalue.parse(node.result, remote_env.decoders);
 				continue;
 			}
 
+			if (generation !== reset_generation) return;
 			await handle_side_channel_response(node);
 			throw new HttpError({ status: 500, message: 'Invalid query.live response' });
 		}

@@ -1,5 +1,6 @@
 /** @import { HttpError } from '@sveltejs/kit' */
-import { query_responses, handle_error } from '../../client.js';
+import { query_responses } from '../../client.js';
+import { remote_env } from '#internal/remote-env';
 import { HandledHttpError } from '@sveltejs/kit/internal';
 import { QUERY_OVERRIDE_KEY } from '../shared.svelte.js';
 import { noop } from '../../../../utils/functions.js';
@@ -142,7 +143,7 @@ export class Query {
 				//   LiveQuery does and preserve the last known good value and retry the connection
 				if (!this.#latest.includes(resolve)) return;
 
-				const error = await handle_error(e, {
+				const error = await remote_env.handle_error(e, {
 					params: {},
 					route: { id: null },
 					url: new URL(location.href)
