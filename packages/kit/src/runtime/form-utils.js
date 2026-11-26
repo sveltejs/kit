@@ -80,7 +80,7 @@ export const DELETE_KEY = {};
 /**
  * Groups `FormData` entries by name in a single pass. Calling `data.getAll(name)`
  * for each name is O(n²) in the number of entries, which is a DoS vector.
- * @param {FormData} data
+ * @param {Iterable<[string, FormDataEntryValue]>} data
  * @returns {Map<string, FormDataEntryValue[]>}
  */
 export function group_formdata(data) {
@@ -102,7 +102,7 @@ export function group_formdata(data) {
 /**
  * Convert `FormData` into a POJO
  * @param {string} form_id
- * @param {FormData} data
+ * @param {Iterable<[string, FormDataEntryValue]>} data
  */
 export function convert_formdata(form_id, data) {
 	/** @type {Record<string, any>} */
