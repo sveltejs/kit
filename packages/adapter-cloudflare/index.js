@@ -3,8 +3,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { VERSION } from '@sveltejs/kit';
 import { getRequest } from '@sveltejs/kit/node';
-import { is_dev_or_build, plugin_config } from './config.js';
+import { plugin_config } from './config.js';
 import { plugin_platform } from './platform.js';
 import { plugin_wasm, restore_wasm_imports } from './wasm.js';
 import {
@@ -12,6 +13,7 @@ import {
 	validate_worker_settings,
 	generate_redirects,
 	append_headers,
+	is_dev_or_build,
 	sync_process_env
 } from './utils.js';
 
@@ -174,6 +176,7 @@ export default function (options = {}) {
 			}
 
 			return {
+				customPreview: true,
 				getRequest(options) {
 					const request = getRequest(options);
 					/** @type {import('@cloudflare/workers-types').Request} */ (
@@ -186,6 +189,18 @@ export default function (options = {}) {
 						name: 'vite-plugin-sveltekit-adapter-cloudflare-resolved-config',
 						configResolved(config) {
 							vite_config = config;
+
+							// TODO: remove once the minimum supported Kit version is 3.4.0.
+							// Older versions ignore `customPreview` and always start the Node preview
+							// server, which boots the app outside of workerd before any request is served
+							const [major, minor] = VERSION.split('.').map(Number);
+							if (major === 3 && minor < 4) {
+								for (const plugin of config.plugins) {
+									if (plugin.name === 'vite-plugin-sveltekit-setup') {
+										delete plugin.configurePreviewServer;
+									}
+								}
+							}
 						}
 					},
 					...plugin_config(
@@ -196,7 +211,8 @@ export default function (options = {}) {
 							config.files.hooks.universal,
 							`${config.files.src}/instrumentation.server`
 						].map(posixify),
-						worker
+						worker,
+						options.platformProxy
 					),
 					...plugin_wasm(),
 					{

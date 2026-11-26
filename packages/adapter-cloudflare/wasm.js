@@ -1,6 +1,7 @@
 /** @import { Plugin } from 'vite' */
 import fs from 'node:fs';
 import path from 'node:path';
+import { is_dev } from './utils.js';
 
 // a relative `.wasm` or `.wasm.js` import, up to the closing quote
 const wasm_import = /((?:\bfrom|\bimport)\s*\(?\s*(["'])(\.{1,2}\/[^"'\n]*?\.wasm))(?:\.js)?\2/g;
@@ -19,7 +20,7 @@ export function plugin_wasm() {
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-wasm-dev',
 			enforce: 'pre',
-			apply: 'serve',
+			apply: is_dev,
 			applyToEnvironment: (environment) => environment.name === 'ssr',
 			load: {
 				filter: { id: /\.wasm(\?module)?$/ },

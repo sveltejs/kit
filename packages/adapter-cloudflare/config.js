@@ -1,11 +1,12 @@
 /** @import { WorkerConfig } from '@cloudflare/vite-plugin' */
 /** @import { Plugin } from 'vite' */
+/** @import { GetPlatformProxyOptions } from 'wrangler' */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cloudflare } from '@cloudflare/vite-plugin';
 import MagicString from 'magic-string';
-import { needs_nodejs_als, validate_main } from './utils.js';
+import { is_dev_or_build, needs_nodejs_als, validate_main } from './utils.js';
 
 const worker_entry = fileURLToPath(new URL('./files/worker.js', import.meta.url));
 
@@ -22,23 +23,41 @@ const useful_cloudflare_plugins = new Set([
 
 const useful_cloudflare_build_plugins = new Set(['vite-plugin-cloudflare:output-config']);
 
-/** @type {Plugin['apply']} */
-export const is_dev_or_build = (_config, env) => !env.isPreview;
+/** @type {NonNullable<Plugin['apply']>} */
+const is_preview = (_config, env) => env.isPreview === true;
+
+/** @type {NonNullable<Plugin['apply']>} */
+const is_build_or_preview = (_config, env) => env.isPreview === true || env.command === 'build';
 
 /**
  * Applies the Worker environment config that `@cloudflare/vite-plugin` generates
  * so that dev emulates workerd and the server output suits it.
  * It also generates the Wrangler deployment config for the build output
+ * and runs the built Worker in workerd during preview
  * @param {string | undefined} config_path
  * @param {(config: WorkerConfig) => void} set_worker_config
  * @param {string[]} server_entries paths, without the file extension, to the hooks and
  * instrumentation files. Vite scans them for dependencies along with the route files
  * @param {boolean} worker whether a Worker is deployed
+ * @param {GetPlatformProxyOptions} platform_proxy preferences for the local bindings
  * @returns {Plugin[]}
  */
-export function plugin_config(config_path, set_worker_config, server_entries, worker) {
+export function plugin_config(
+	config_path,
+	set_worker_config,
+	server_entries,
+	worker,
+	platform_proxy = {}
+) {
 	const cloudflare_plugins = cloudflare({
 		configPath: config_path,
+		// during preview, the Cloudflare Vite plugin creates the local bindings instead of
+		// `getPlatformProxy`, so we pass it the same preferences.
+		// TODO: in the next major, make dev and preview share their data when `persist.path`
+		// is set. Currently, preview stores its data in `<persist.path>/v3`, resolved from
+		// the Vite `root`, whereas dev stores its data directly in `<persist.path>`
+		persistState: platform_proxy.persist,
+		remoteBindings: platform_proxy.remoteBindings,
 		viteEnvironment: { name: 'ssr' },
 		config(config) {
 			validate_main(config.main, config.configPath, worker);
@@ -70,91 +89,94 @@ export function plugin_config(config_path, set_worker_config, server_entries, wo
 	}
 
 	return [
-		...cloudflare_plugins.flatMap((plugin) => {
-			if (useful_cloudflare_plugins.has(plugin.name)) {
-				return [{ ...plugin, apply: is_dev_or_build }];
-			}
+		...cloudflare_plugins.flatMap(
+			/** @returns {Plugin[]} */ (plugin) => {
+				if (useful_cloudflare_plugins.has(plugin.name)) {
+					return [{ ...plugin, apply: undefined }];
+				}
 
-			if (useful_cloudflare_build_plugins.has(plugin.name)) {
-				return /** @satisfies {Plugin[]} */ ([{ ...plugin, apply: 'build' }]);
-			}
+				if (useful_cloudflare_build_plugins.has(plugin.name)) {
+					return [{ ...plugin, apply: is_build_or_preview }];
+				}
 
-			// leaves `.wasm` imports in the server output for workerd to import
-			if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
-				const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
-					plugin.resolveId
-				);
+				// leaves `.wasm` imports in the server output for workerd to import
+				if (plugin.name === 'vite-plugin-cloudflare:additional-modules') {
+					const resolve_id = /** @type {Extract<Plugin['resolveId'], { handler: unknown }>} */ (
+						plugin.resolveId
+					);
 
-				const wasm = /\.wasm(\?module)?$/;
-				/** @type {Map<string, string>} the module references we created and the files they point to */
-				const references = new Map();
+					const wasm = /\.wasm(\?module)?$/;
+					/** @type {Map<string, string>} the module references we created and the files they point to */
+					const references = new Map();
 
-				return /** @satisfies {Plugin[]} */ ([
-					{
-						...plugin,
-						apply: 'build',
-						resolveId: {
-							filter: { id: [wasm, /^#/] },
-							async handler(source, importer, options) {
-								const resolved = await this.resolve(source, importer, options);
-								// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
-								if (!resolved || !wasm.test(resolved.id)) return resolved;
+					return [
+						{
+							...plugin,
+							apply: 'build',
+							resolveId: {
+								filter: { id: [wasm, /^#/] },
+								async handler(source, importer, options) {
+									const resolved = await this.resolve(source, importer, options);
+									// it also handles `.txt`, `.html`, `.sql` and `.bin` imports, which we leave to vite
+									if (!resolved || !wasm.test(resolved.id)) return resolved;
 
-								const result = await resolve_id.handler.call(this, source, importer, options);
-								if (result && typeof result === 'object') {
-									references.set(result.id, resolved.id.replace(wasm, '.wasm'));
-								}
-								return result;
-							}
-						},
-						// the plugin's own hook reads and emits any file named by text shaped like a
-						// reference, so we only rewrite the exact references we created
-						renderChunk: {
-							filter: { code: { include: '__CLOUDFLARE_MODULE__' } },
-							async handler(code, chunk) {
-								/** @type {MagicString | undefined} */
-								let s;
-
-								for (const [id, file] of references) {
-									let index = code.indexOf(id);
-									if (index === -1) continue;
-
-									const file_name = this.getFileName(
-										this.emitFile({
-											type: 'asset',
-											name: path.basename(file),
-											originalFileName: file,
-											source: await fs.promises.readFile(file)
-										})
-									);
-									const relative = path.posix.relative(
-										path.posix.dirname(chunk.fileName),
-										file_name
-									);
-									const import_path = relative.startsWith('.') ? relative : `./${relative}`;
-
-									s ??= new MagicString(code);
-									for (; index !== -1; index = code.indexOf(id, index + id.length)) {
-										s.update(index, index + id.length, import_path);
+									const result = await resolve_id.handler.call(this, source, importer, options);
+									if (result && typeof result === 'object') {
+										references.set(result.id, resolved.id.replace(wasm, '.wasm'));
 									}
+									return result;
 								}
+							},
+							// the plugin's own hook reads and emits any file named by text shaped like a
+							// reference, so we only rewrite the exact references we created
+							renderChunk: {
+								filter: { code: { include: '__CLOUDFLARE_MODULE__' } },
+								async handler(code, chunk) {
+									/** @type {MagicString | undefined} */
+									let s;
 
-								if (!s) return;
+									for (const [id, file] of references) {
+										let index = code.indexOf(id);
+										if (index === -1) continue;
 
-								return {
-									code: s.toString(),
-									map: this.environment.config.build.sourcemap
-										? s.generateMap({ hires: 'boundary' })
-										: null
-								};
+										const file_name = this.getFileName(
+											this.emitFile({
+												type: 'asset',
+												name: path.basename(file),
+												originalFileName: file,
+												source: await fs.promises.readFile(file)
+											})
+										);
+										const relative = path.posix.relative(
+											path.posix.dirname(chunk.fileName),
+											file_name
+										);
+										const import_path = relative.startsWith('.') ? relative : `./${relative}`;
+
+										s ??= new MagicString(code);
+										for (; index !== -1; index = code.indexOf(id, index + id.length)) {
+											s.update(index, index + id.length, import_path);
+										}
+									}
+
+									if (!s) return;
+
+									return {
+										code: s.toString(),
+										map: this.environment.config.build.sourcemap
+											? s.generateMap({ hires: 'boundary' })
+											: null
+									};
+								}
 							}
 						}
-					}
-				]);
-			}
+					];
+				}
 
-			return [];
-		}),
+				// the rest are only needed to run the built Worker in workerd during preview
+				return [{ ...plugin, apply: is_preview }];
+			}
+		),
 		{
 			name: 'vite-plugin-sveltekit-adapter-cloudflare-environment',
 			apply: is_dev_or_build,
