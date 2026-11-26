@@ -75,7 +75,8 @@ test.describe('$app/env', () => {
 		expect(content).toContain('hello');
 
 		const service_worker = read('/client/service-worker.js');
-		expect(service_worker).toContain('import { env } from "/basepath/_app/env.js"');
+		// the bundler aliases the import when names collide
+		expect(service_worker).toMatch(/import \{ env(?: as \S+)? \} from "\/basepath\/_app\/env\.js"/);
 	});
 
 	test('does not load env.js in the service worker when there are no public dynamic environment variables', ({
@@ -84,7 +85,7 @@ test.describe('$app/env', () => {
 		test.skip(javaScriptEnabled || !!process.env.DEV || variant === 'dynamic-env');
 
 		const serviceWorker = read('/client/service-worker.js');
-		expect(serviceWorker).not.toContain('import { env } from "/basepath/_app/env.js"');
+		expect(serviceWorker).not.toContain('_app/env.js');
 		expect(fs.existsSync(`${output}/prerendered/dependencies/_app/env.js`)).toBeFalsy();
 	});
 
