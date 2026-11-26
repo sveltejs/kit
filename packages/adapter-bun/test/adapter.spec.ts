@@ -12,6 +12,7 @@ const handoff = '#@sveltejs/adapter-bun';
 let bun_build: Mock<(options: any) => Promise<any>>;
 let read_file: Mock<typeof fs.readFileSync>;
 let write_file: Mock<typeof fs.writeFileSync>;
+let resolve_sync: Mock<typeof Bun.resolveSync>;
 
 // the real Bun.build would bundle and the real hashers would read assets off
 // disk, so the build APIs stay test doubles even under Bun
@@ -21,6 +22,9 @@ beforeEach(() => {
 		logs: [],
 		outputs: []
 	})) as any) as any;
+	resolve_sync = spyOn(Bun, 'resolveSync').mockImplementation(
+		((specifier: string) => specifier) as any
+	);
 	spyOn(Bun, 'file').mockImplementation(((_path: string) => ({
 		stream: () => new Blob([]).stream(),
 		lastModified: 0
@@ -126,6 +130,7 @@ describe('build output', () => {
 			"import './server/adapter-index.js';\n"
 		);
 		expect(bun_build).not.toHaveBeenCalled();
+		expect(resolve_sync).not.toHaveBeenCalled();
 		expect(builder.instrument).not.toHaveBeenCalled();
 		expect(builder.compress).not.toHaveBeenCalled();
 	});
@@ -199,6 +204,22 @@ describe('build output', () => {
 			compile: { outfile: 'server' }
 		});
 		expect(handoff_source()).toContain('export const embed = true;\n');
+	});
+
+	test('re-reads the directories adapt wrote to before compiling', async () => {
+		let probes_before_build = 0;
+		bun_build.mockImplementation(async () => {
+			probes_before_build = resolve_sync.mock.calls.length;
+			return { success: true, logs: [], outputs: [] };
+		});
+
+		await adapter({ buildOptions: { compile: true } }).adapt(create_builder());
+
+		expect(resolve_sync.mock.calls).toEqual([
+			['./server.js', `${process.cwd()}/${server_dir}`],
+			['./adapter-bun.js', `${process.cwd()}/.svelte-kit/output`]
+		]);
+		expect(probes_before_build).toBe(2);
 	});
 
 	test('passes supported advanced options while retaining reserved options', async () => {
