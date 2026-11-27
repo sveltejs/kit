@@ -195,7 +195,9 @@ export function form(validate_or_fn, maybe_fn) {
 					get_issues: () =>
 						flatten_issues(get_cache(__, get_request_store().state)?.['']?.issues ?? []),
 					get_touched: () => ({}),
-					get_dirty: () => ({})
+					get_dirty: () => ({}),
+					// upload progress is always 0 on the server
+					get_progress: () => ({ uploaded: 0, total: 0, percent: 0 })
 				});
 			}
 		});

@@ -114,6 +114,14 @@ export function get_remote_request_headers() {
  */
 export async function remote_request(url, init, refreshes) {
 	const response = await fetch(url, init);
+	return handle_remote_response(response, refreshes);
+}
+
+/**
+ * @param {Response} response
+ * @param {Set<string> | null} [refreshes]
+ */
+export async function handle_remote_response(response, refreshes) {
 	const status = response.status;
 
 	// detect new deployments from the response header
