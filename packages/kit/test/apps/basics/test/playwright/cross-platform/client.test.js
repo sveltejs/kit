@@ -1181,6 +1181,47 @@ test.describe('Routing', () => {
 		expect(await page.textContent('h1')).toBe('b');
 	});
 
+	test('keeps routing after traversing to an entry whose history info was never persisted', async ({
+		page,
+		clicknav
+	}) => {
+		/** @type {string[]} */
+		const errors = [];
+		page.on('pageerror', (err) => errors.push(err.message));
+
+		// model a document that goes away without persisting its history info, as on
+		// iOS Safari, which doesn't fire `beforeunload`: the second document starts
+		// without the records the first one made
+		await page.addInitScript(() => {
+			const documents = Number(sessionStorage.getItem('documents') ?? 0) + 1;
+			sessionStorage.setItem('documents', String(documents));
+			if (documents === 2) sessionStorage.removeItem('sveltekit:history-info');
+		});
+
+		const url = '/load/url-query-param';
+		await page.goto(url);
+		await clicknav(`a[href="${url}?currentClientState=ABC"]`);
+		await clicknav(`a[href="${url}?currentClientState=DEF"]`);
+
+		await page.reload();
+		expect(await page.evaluate(() => sessionStorage.getItem('documents'))).toBe('2');
+
+		await page.goBack();
+		await expect(page.locator('h1')).toHaveText('Hello ABC');
+
+		// leaving an entry without a record used to throw and leave the router stuck
+		await page.goBack();
+		await expect(page.locator('h1')).toHaveText('Hello');
+
+		await page.goForward();
+		await expect(page.locator('h1')).toHaveText('Hello ABC');
+
+		await clicknav(`a[href="${url}?currentClientState=DEF"]`);
+		await expect(page.locator('h1')).toHaveText('Hello DEF');
+
+		expect(errors).toEqual([]);
+	});
+
 	test('page.url.hash is correctly set on page load', async ({ page }) => {
 		await page.goto('/routing/hashes/pagestate#target');
 		expect(await page.textContent('#window-hash')).toBe('#target');
