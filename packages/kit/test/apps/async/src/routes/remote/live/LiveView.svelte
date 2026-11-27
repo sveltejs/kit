@@ -18,6 +18,8 @@
 
 <p id="ready">{String(live.ready)}</p>
 <p id="connected">{String(live.connected)}</p>
+<p id="live-error">{live.error?.message ?? ''}</p>
+<p id="live-done">{String(live.done)}</p>
 <p id="count">{live.current}</p>
 <p id="first-value">{await live}</p>
 <button id="reconnect" onclick={() => live.reconnect()}>reconnect</button>
