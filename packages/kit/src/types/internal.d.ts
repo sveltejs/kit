@@ -439,6 +439,8 @@ export interface ServerMetadata {
 	routes: Map<string, ServerMetadataRoute>;
 	/** For each hashed remote file, a map of export name -> { type, dynamic }, where `dynamic` is `false` for non-dynamic prerender functions */
 	remotes: Map<string, Map<string, { type: RemoteInternals['type']; dynamic: boolean }>>;
+	/** Whether the universal hooks file exports `reroute` */
+	has_reroute: boolean;
 }
 
 export type SSRComponentLoader = () => Promise<Component>;
@@ -794,18 +796,19 @@ export interface RequestState {
 			>
 		>;
 		/**
-		 * A per-request cache of shared live-query iterators, keyed by remote id
-		 * and stringified argument payload. Used so that multiple `for await`
+		 * A per-request cache of shared live-query iterators, keyed by query.live
+		 * internals and stringified argument payload. Used so that multiple `for await`
 		 * consumers of the same `query.live` call within one request multiplex a
 		 * single underlying user generator.
 		 */
-		live_iterators: null | Map<string, SharedIterator<any>>;
+		live_iterators: null | Map<RemoteQueryLiveInternals, Map<string, SharedIterator<any>>>;
 	};
 	readonly is_in_remote_function: boolean;
 	readonly is_in_remote_form_or_command: boolean;
 	readonly is_in_remote_query: boolean;
 	readonly is_in_remote_prerender: boolean;
 	readonly is_in_render: boolean;
+	readonly is_in_server_load: boolean;
 }
 
 export interface RequestStore {

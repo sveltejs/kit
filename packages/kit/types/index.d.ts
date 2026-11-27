@@ -54,6 +54,15 @@ declare module '@sveltejs/kit' {
 
 	export interface AdapterViteConfig {
 		/**
+		 * By default, SvelteKit creates a Node preview server to serve the build
+		 * output during `vite preview`. Set this option to `true` when the adapter
+		 * provides a Vite plugin with a `configurePreviewServer` hook that handles
+		 * previewing the build output on its own.
+		 * @default false
+		 * @since 3.4.0
+		 */
+		customPreview?: boolean;
+		/**
 		 * This function overrides the default behavior during Vite's dev and preview modes
 		 * to convert an `http.IncomingMessage` to a `Request` object.
 		 * To call the original `setRequest` function, import it from `@sveltejs/kit/node`.
@@ -3261,7 +3270,9 @@ declare module '$app/server' {
 	type MaybeArray<T> = T | T[];
 
 	export interface RemoteFormInput {
-		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
+		// arrays can contain `undefined` where an indexed control submitted nothing,
+		// such as an unchecked checkbox or an unselected radio button
+		[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput | undefined>;
 	}
 
 	export interface RemoteFormIssue {
@@ -3610,6 +3621,7 @@ declare module '$app/server' {
 
 	type IsAny<T> = 0 extends 1 & T ? true : false;
 
+	// a required `true` property is allowed, because leaving its checkbox unchecked should fail
 	type HasNonOptionalBoolean<T> =
 		IsAny<T> extends true
 			? never
@@ -3618,7 +3630,7 @@ declare module '$app/server' {
 				: T extends Array<infer U>
 					? HasNonOptionalBoolean<U>
 					: T extends Record<string, any>
-						? { [K in keyof T]: HasNonOptionalBoolean<T[K]> }[keyof T]
+						? { [K in keyof T]: [T[K]] extends [true] ? never : HasNonOptionalBoolean<T[K]> }[keyof T]
 						: never;
 	/**
 	 * Returns the current `RequestEvent`. Can be used inside server hooks, server `load` functions, actions, and endpoints (and functions called by them).
@@ -3675,7 +3687,7 @@ declare module '$app/server' {
 	 *
 	 * @since 2.27
 	 */
-	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? "Error: All booleans in form schemas must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked." : Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
+	export function form<Schema extends StandardSchemaV1<RemoteFormInput, Record<string, any>>, Output>(validate: true extends HasNonOptionalBoolean<StandardSchemaV1.InferInput<Schema>> ? "Error: Boolean fields in form schemas that accept false must be optional (e.g. `v.optional(v.boolean(), false)`) because checkbox inputs do not send a false value when unchecked." : Schema, fn: (data: StandardSchemaV1.InferOutput<Schema>, issue: RemoteFormInvalidField<StandardSchemaV1.InferInput<Schema>>) => MaybePromise<Output>): RemoteForm<StandardSchemaV1.InferInput<Schema>, Output>;
 	/**
 	 * Creates a remote prerender function. When called from the browser, the function will be invoked on the server via a `fetch` call.
 	 *

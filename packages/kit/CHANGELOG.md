@@ -1,5 +1,79 @@
 # @sveltejs/kit
 
+## 3.4.1
+
+### Patch Changes
+
+- fix: avoid repeatedly processing unchanged remote form issues ([`1c27a1e`](https://github.com/sveltejs/kit/commit/1c27a1e1961d8852583113023411d2dc3d6f216b))
+
+- fix: leave unchanged route types in place during sync ([#17735](https://github.com/sveltejs/kit/pull/17735))
+
+- fix: allow literal true in remote form schemas ([#17835](https://github.com/sveltejs/kit/pull/17835))
+
+- fix: limit arrays submitted to remote forms to 1,000 missing indexes, and allow `undefined` in `RemoteFormInput` arrays ([`062fff6`](https://github.com/sveltejs/kit/commit/062fff65f4873be67b5af454d105d15a178dbf25))
+
+- fix: re-run nested queries on each iteration of a `query.live` function instead of returning the value from the first iteration ([#17758](https://github.com/sveltejs/kit/pull/17758))
+
+- fix: apply origin checks to more browser-generated request content types ([`7019207`](https://github.com/sveltejs/kit/commit/70192073e4b0b0c2caf035f8f4878497a5a07100))
+
+- fix: always add `Vary: Accept` to responses from routes with both a page and an endpoint ([`3a5d967`](https://github.com/sveltejs/kit/commit/3a5d967042a7de4b748e6410082bb5fc609e20c0))
+
+- fix: copy responses before adding internal headers ([`023d0e5`](https://github.com/sveltejs/kit/commit/023d0e570e25de09386bc3b36c41d2cd6100cb55))
+
+- fix: key per-request `query.live` iterators by function ([`5d611c6`](https://github.com/sveltejs/kit/commit/5d611c623012d7afc4407ea542d224c9717db608))
+
+- fix: return 400 for malformed request paths in development ([#17651](https://github.com/sveltejs/kit/pull/17651))
+
+- fix: improve performance of matching routes with multiple params in a segment ([`aa525f1`](https://github.com/sveltejs/kit/commit/aa525f148eea75d6ded689ab58c438533936f267))
+
+- fix: harden stack trace handling and validate remote function request metadata ([`0b98dae`](https://github.com/sveltejs/kit/commit/0b98daea3c2bcac184905c6c9244332016909b24))
+
+- fix: warn about routes with params that can be slow to match ([`aa525f1`](https://github.com/sveltejs/kit/commit/aa525f148eea75d6ded689ab58c438533936f267))
+
+- fix: ship less client JavaScript when the app has no `reroute` hook ([#17817](https://github.com/sveltejs/kit/pull/17817))
+
+- fix: improve memory usage when reading request bodies ([`8f2e881`](https://github.com/sveltejs/kit/commit/8f2e8818ee4e4997c8d30df85707d4f13a7f63a4))
+
+- fix: avoid retaining duplicate remote metadata during development ([#17611](https://github.com/sveltejs/kit/pull/17611))
+
+- fix: preserve shallow state updates made during refreshes ([#17839](https://github.com/sveltejs/kit/pull/17839))
+
+## 3.4.0
+
+### Minor Changes
+
+- feat: allow adapters to disable SvelteKit's Node preview server with `vite.customPreview: true` when providing their own preview implementation ([#17750](https://github.com/sveltejs/kit/pull/17750))
+
+- feat: add `sveltekit.remote.call.file` attribute to remote function tracing spans ([#17760](https://github.com/sveltejs/kit/pull/17760))
+
+### Patch Changes
+
+- fix: strip trailing route groups when resolving routes with search parameters or fragments ([#17808](https://github.com/sveltejs/kit/pull/17808))
+
+- fix: correctly display non-ASCII characters for plain text error messages during development ([#17468](https://github.com/sveltejs/kit/pull/17468))
+
+- fix: explain missing TypeScript compiler API instead of crashing with TypeScript 7 ([#17539](https://github.com/sveltejs/kit/pull/17539))
+
+- fix: reject remote function requests that use the wrong HTTP method ([#17740](https://github.com/sveltejs/kit/pull/17740))
+
+- fix: respect `NO_COLOR` and explicit `FORCE_COLOR` settings in forked build processes ([#17618](https://github.com/sveltejs/kit/pull/17618))
+
+## 3.3.1
+
+### Patch Changes
+
+- fix: read environment variables for route analysis and prerendering after all adapter Vite `config` hooks have run ([#17559](https://github.com/sveltejs/kit/pull/17559))
+
+- fix: respect a user-set `build.cssMinify` ([#17797](https://github.com/sveltejs/kit/pull/17797))
+
+- fix: don't serialize the results of remote functions awaited in server `load` functions into the page ([#17759](https://github.com/sveltejs/kit/pull/17759))
+
+## 3.3.0
+
+### Minor Changes
+
+- feat: support the Vite DevTools dock in dev ([#17787](https://github.com/sveltejs/kit/pull/17787))
+
 ## 3.2.1
 
 ### Patch Changes

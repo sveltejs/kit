@@ -180,7 +180,8 @@ export async function get_remote_function(id, manifest) {
 	const remotes = manifest.remotes;
 	if (!Object.hasOwn(remotes, hash)) return;
 
-	const module = await remotes[hash]();
+	// load the module outside the request store, so that the module doesn't retain the event
+	const module = await with_request_store(null, () => remotes[hash]());
 	if (!Object.hasOwn(module.default, name)) return;
 
 	return {
@@ -188,6 +189,21 @@ export async function get_remote_function(id, manifest) {
 		name,
 		additional_args
 	};
+}
+
+/**
+ * @param {RequestEvent} event
+ * @param {string} type
+ * @param {'GET' | 'POST'} method
+ */
+function check_method(event, type, method) {
+	if (event.request.method !== method) {
+		throw new SvelteKitError(
+			405,
+			'Method Not Allowed',
+			`\`${type}\` functions must be invoked via ${method} request, not ${event.request.method}`
+		);
+	}
 }
 
 /**
@@ -207,7 +223,8 @@ async function handle_remote_call_internal(event, state, id) {
 
 	event.tracing.current.setAttributes({
 		'sveltekit.remote.call.type': internals.type,
-		'sveltekit.remote.call.name': internals.name
+		'sveltekit.remote.call.name': internals.name,
+		'sveltekit.remote.call.file': internals.file
 	});
 
 	/** @type {HeadersInit | undefined} */
@@ -219,13 +236,7 @@ async function handle_remote_call_internal(event, state, id) {
 
 		switch (internals.type) {
 			case 'query_live': {
-				if (event.request.method !== 'GET') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`query.live\` functions must be invoked via GET request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'query.live', 'GET');
 
 				const payload = /** @type {string} */ (
 					new URL(event.request.url).searchParams.get('payload')
@@ -235,13 +246,7 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'query_batch': {
-				if (event.request.method !== 'POST') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`query.batch\` functions must be invoked via POST request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'query.batch', 'POST');
 
 				/** @type {{ payloads: string[] }} */
 				const { payloads } = await event.request.json();
@@ -254,13 +259,7 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'form': {
-				if (event.request.method !== 'POST') {
-					throw new SvelteKitError(
-						405,
-						'Method Not Allowed',
-						`\`form\` functions must be invoked via POST request, not ${event.request.method}`
-					);
-				}
+				check_method(event, 'form', 'POST');
 
 				if (!is_form_content_type(event.request)) {
 					throw new SvelteKitError(
@@ -306,6 +305,8 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'command': {
+				check_method(event, 'command', 'POST');
+
 				/** @type {{ payload: string, refreshes?: string[] }} */
 				const { payload, refreshes } = await event.request.json();
 				state.remote.requested = create_requested_map(refreshes);
@@ -320,6 +321,8 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'prerender': {
+				check_method(event, 'prerender', 'GET');
+
 				data._ = await with_request_store({ event, state }, () =>
 					fn(parse_remote_arg(additional_args))
 				);
@@ -328,6 +331,8 @@ async function handle_remote_call_internal(event, state, id) {
 			}
 
 			case 'query': {
+				check_method(event, 'query', 'GET');
+
 				const payload = /** @type {string} */ (
 					// new URL(...) necessary because we're hiding the URL from the user in the event object
 					new URL(event.request.url).searchParams.get('payload')
@@ -520,13 +525,23 @@ export async function collect_remote_data(data, event, state) {
 }
 
 /**
- * @param {string[] | undefined} refreshes
+ * @param {unknown} refreshes
  */
 function create_requested_map(refreshes) {
 	/** @type {Map<string, Set<string>>} */
 	const requested = new Map();
 
-	for (const key of refreshes ?? []) {
+	if (refreshes === undefined) return requested;
+
+	if (!Array.isArray(refreshes)) {
+		throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+	}
+
+	for (const key of refreshes) {
+		if (typeof key !== 'string' || !key.includes('/')) {
+			throw new SvelteKitError(400, 'Bad Request', 'Invalid refreshes');
+		}
+
 		const parts = split_remote_key(key);
 
 		const existing = requested.get(parts.id);

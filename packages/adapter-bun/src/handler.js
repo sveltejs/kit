@@ -1,4 +1,5 @@
 /** @import { Server as BunServer } from 'bun' */
+import { forwardedAddress } from '@sveltejs/adapter-server/runtime';
 import { env_prefix, origin, server } from '#@sveltejs/adapter-bun';
 import { serve_static, server_assets } from './assets.js';
 import { env, number_env, origin_env } from './env.js';
@@ -103,8 +104,11 @@ function get_origin(request, url) {
 		);
 	}
 
+	// the host keeps the port the browser sent; PORT_HEADER only fills in a missing one
+	const authority = port && !/:\d*$/.test(host) ? `${host}:${port}` : host;
+
 	// canonicalized so the caller's comparison with url.origin matches (case, default ports)
-	return new URL(`${protocol}://${host}${port ? `:${port}` : ''}`).origin;
+	return new URL(`${protocol}://${authority}`).origin;
 }
 
 /**
@@ -118,19 +122,10 @@ function get_client_address(request, bun_server) {
 		return /** @type {string} */ (bun_server.requestIP(request)?.address);
 	}
 
-	const value = request.headers.get(address_header);
-	if (value === null) {
-		throw new Error(
-			`Address header was specified with ${env_prefix}ADDRESS_HEADER=${address_header} but is absent from request`
-		);
-	}
-	if (address_header !== 'x-forwarded-for') return value;
-
-	const addresses = value.split(',');
-	if (xff_depth > addresses.length) {
-		throw new Error(
-			`${env_prefix}XFF_DEPTH is ${xff_depth}, but only found ${addresses.length} addresses`
-		);
-	}
-	return addresses[addresses.length - xff_depth].trim();
+	return forwardedAddress({
+		header: address_header,
+		value: request.headers.get(address_header),
+		depth: xff_depth,
+		envPrefix: env_prefix
+	});
 }

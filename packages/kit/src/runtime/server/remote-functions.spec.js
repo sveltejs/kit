@@ -2,6 +2,8 @@ import { beforeAll, expect, test, vi } from 'vitest';
 import { init_transport, parse } from '#app/internal/transport';
 import { get_request_store } from '@sveltejs/kit/internal/server';
 
+vi.mock('#app/env/server', () => ({ prerendering: false }));
+
 const decoder = new TextDecoder();
 
 /** @type {typeof import('./remote-functions.js').create_live_query_response} */
@@ -101,6 +103,32 @@ test('cancellation aborts the generator request signal and runs cleanup', async 
 	await vi.waitFor(() => expect(cleaned_up).toHaveBeenCalledOnce());
 });
 
+// https://github.com/sveltejs/kit/issues/15954
+test('nested queries are re-run on each iteration of a live query', async () => {
+	const { query } = await import('../app/server/remote/query.js');
+
+	let count = 0;
+	const get_count = query(() => ++count);
+	const live_count = query.live(async function* () {
+		for (let i = 0; i < 3; i += 1) {
+			yield await get_count();
+		}
+	});
+
+	const response = create_live_query_response(
+		/** @type {import('@sveltejs/kit').RequestEvent} */ ({
+			request: new Request('http://localhost/_app/remote/test?payload=undefined')
+		}),
+		/** @type {import('types').RequestState} */ (/** @type {unknown} */ ({ remote: {} })),
+		/** @type {any} */ (live_count).__,
+		undefined
+	);
+
+	expect(await response.text()).toBe(
+		[1, 2, 3].map((n) => `data: {"type":"result","result":"[${n}]"}\n\n`).join('')
+	);
+});
+
 test('serializes explicitly ignored requested updates', async () => {
 	const command = () => {
 		get_request_store().state.remote.ignored = new Set(['hash/query/[-1]']);
@@ -130,6 +158,38 @@ test('serializes explicitly ignored requested updates', async () => {
 	const result = await response.json();
 	expect(parse(result.data)).toEqual({ _: null, i: ['hash/query/[-1]'] });
 });
+
+test.each([[[['hash/query/[-1]']]], [[1]], ['hash/query/[-1]'], [{}]])(
+	'command rejects malformed refreshes %j',
+	async (refreshes) => {
+		const handleError = vi.fn();
+		set_hooks(/** @type {any} */ ({ handleError }));
+		const command = vi.fn(() => null);
+		Object.assign(command, { __: { type: 'command', name: 'command', fn: command } });
+		set_manifest(
+			/** @type {any} */ ({ remotes: { hash: () => Promise.resolve({ default: { command } }) } })
+		);
+
+		const response = await handle_remote_call(
+			/** @type {any} */ ({
+				request: new Request('http://localhost/_app/remote/hash/command', {
+					method: 'POST',
+					body: JSON.stringify({ payload: '', refreshes })
+				}),
+				tracing: { current: { setAttributes: vi.fn() } }
+			}),
+			/** @type {any} */ ({ remote: { requested: null, ignored: null } }),
+			'hash/command'
+		);
+
+		expect(await response.json()).toEqual({
+			type: 'error',
+			error: { status: 400, message: 'Bad Request' }
+		});
+		expect(command).not.toHaveBeenCalled();
+		expect(handleError).toHaveBeenCalledWith(expect.objectContaining({ kind: 'framework' }));
+	}
+);
 
 test.each([
 	{ type: 'query_live', method: 'POST', status: 405, body: 'Method Not Allowed' },

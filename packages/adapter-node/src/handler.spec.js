@@ -11,8 +11,12 @@ vi.mock('#@sveltejs/adapter-node', () => ({
 	base: '',
 	app_path: '_app',
 	origin: undefined,
-	mime_types: {},
-	assets: { entries: [], aliases: [] },
+	// a content type Node.js refuses to send, so serving this file throws
+	mime_types: { '.txt': 'text/plain\n' },
+	assets: {
+		entries: [['/broken.txt', { file: 'broken.txt', size: 1, etag: 'x' }]],
+		aliases: []
+	},
 	prerendered_assets: { entries: [], aliases: [] }
 }));
 
@@ -43,6 +47,22 @@ test('responds with 500 when the server fails to respond', async () => {
 	expect(console_error).toHaveBeenCalledWith(error);
 });
 
+test('responds with 500 when serving a static file throws', async () => {
+	const console_error = vi.spyOn(console, 'error').mockImplementation(() => {});
+	onTestFinished(() => console_error.mockRestore());
+
+	const origin = await start();
+	const response = await fetch(`${origin}/broken.txt`);
+
+	expect(response.status).toBe(500);
+	expect(await response.text()).toBe('Internal Server Error');
+	expect(console_error).toHaveBeenCalledWith(expect.objectContaining({ code: 'ERR_INVALID_CHAR' }));
+
+	// the server is still up for other requests
+	respond.mockResolvedValueOnce(new Response('ok'));
+	expect((await fetch(`${origin}/page`)).status).toBe(200);
+});
+
 test('passes successful responses through', async () => {
 	respond.mockResolvedValueOnce(new Response('hello', { headers: { 'x-test': 'yes' } }));
 
@@ -54,7 +74,7 @@ test('passes successful responses through', async () => {
 	expect(await response.text()).toBe('hello');
 });
 
-test('applies PORT_HEADER when the forwarded host already includes the port', async () => {
+test('applies PORT_HEADER only when the forwarded host has no port', async () => {
 	vi.stubEnv('HOST_HEADER', 'x-forwarded-host');
 	vi.stubEnv('PORT_HEADER', 'x-forwarded-port');
 	onTestFinished(() => {
@@ -77,10 +97,11 @@ test('applies PORT_HEADER when the forwarded host already includes the port', as
 	await once(server, 'listening');
 	const { port } = /** @type {import('node:net').AddressInfo} */ (server.address());
 
-	// a proxy listening on a non-standard port can forward the host with that port included
+	// the host's own port is the one the browser used, so it wins over the forwarded port
 	for (const [host, expected] of [
 		['example.com', 'https://example.com:8443/page'],
 		['example.com:8443', 'https://example.com:8443/page'],
+		['example.com:9443', 'https://example.com:9443/page'],
 		['[::1]:8443', 'https://[::1]:8443/page']
 	]) {
 		const response = await fetch(`http://127.0.0.1:${port}/page`, {

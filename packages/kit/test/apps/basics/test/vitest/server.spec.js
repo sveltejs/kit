@@ -211,7 +211,8 @@ describe.skipIf(dev)('CSRF', () => {
 			'application/x-www-form-urlencoded',
 			'multipart/form-data',
 			'text/plain',
-			'text/plaiN'
+			'text/plaiN',
+			'text/ping'
 		];
 		const methods = ['POST', 'PUT', 'PATCH', 'DELETE'];
 		for (const method of methods) {
@@ -362,6 +363,25 @@ describe('Endpoints', () => {
 		expect(html_response.headers.get('content-type')).toContain('text/html');
 		expect(html_response.headers.get('vary')).toBe('Accept');
 		expect(await html_response.text()).toContain('Hi');
+	});
+
+	test('content negotiation: Vary includes Accept alongside headers set by the app', async () => {
+		for (const path of [
+			'/routing/content-negotiation-headers',
+			'/routing/content-negotiation-headers?error'
+		]) {
+			for (const accept of ['application/json', 'text/html']) {
+				const response = await get(path, { headers: { accept } });
+
+				const vary = response.headers
+					.get('vary')
+					?.split(',')
+					.map((v) => v.trim().toLowerCase());
+
+				expect(vary).toContain('accept');
+				expect(vary).toContain('accept-language');
+			}
+		}
 	});
 
 	test('multiple set-cookie on endpoints using GET', async () => {
@@ -975,12 +995,7 @@ describe('reroute', () => {
 
 	test('Returns a 400 response if reroute rewrites a malformed pathname', async () => {
 		const response = await get('/%c0%ae/reroute/malformed');
-		if (dev) {
-			// Vite rejects malformed URIs before they reach SvelteKit
-			expect(response.status).toBeGreaterThanOrEqual(400);
-		} else {
-			expect(response.status).toBe(400);
-		}
+		expect(response.status).toBe(400);
 	});
 });
 
@@ -1041,14 +1056,15 @@ describe('web workers', () => {
 describe('tracing', () => {
 	/**
 	 * @param {import('../../../../types.js').SpanTree} span
+	 * @param {string} name
 	 * @returns {import('../../../../types.js').SpanTree | null}
 	 */
-	function find_resolve_root_span(span) {
-		if (span.name === 'sveltekit.resolve') {
+	function find_span(span, name) {
+		if (span.name === name) {
 			return span;
 		}
 		for (const child of span.children || []) {
-			const found = find_resolve_root_span(child);
+			const found = find_span(child, name);
 			if (found) return found;
 		}
 		return null;
@@ -1089,7 +1105,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1179,7 +1195,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1252,7 +1268,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the redirect resolve.root span
-		const redirect_resolve_root_span = find_resolve_root_span(redirect_trace);
+		const redirect_resolve_root_span = find_span(redirect_trace, 'sveltekit.resolve');
 		expect(redirect_resolve_root_span).not.toBeNull();
 		expect(redirect_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1308,7 +1324,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the destination resolve.root span
-		const destination_resolve_root_span = find_resolve_root_span(destination_trace);
+		const destination_resolve_root_span = find_span(destination_trace, 'sveltekit.resolve');
 		expect(destination_resolve_root_span).not.toBeNull();
 		expect(destination_resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1398,7 +1414,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1462,7 +1478,7 @@ describe('tracing', () => {
 		});
 
 		// Find and verify the resolve.root span
-		const resolve_root_span = find_resolve_root_span(trace);
+		const resolve_root_span = find_span(trace, 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span).toEqual({
 			name: 'sveltekit.resolve',
@@ -1497,7 +1513,7 @@ describe('tracing', () => {
 		expect(response.status).toBe(200);
 
 		const traces = read_traces(test_id);
-		const resolve_root_span = find_resolve_root_span(traces[0]);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span?.children).toEqual([
 			expect.objectContaining({
@@ -1518,7 +1534,7 @@ describe('tracing', () => {
 		expect(response.status).toBe(500);
 
 		const traces = read_traces(test_id);
-		const resolve_root_span = find_resolve_root_span(traces[0]);
+		const resolve_root_span = find_span(traces[0], 'sveltekit.resolve');
 		expect(resolve_root_span).not.toBeNull();
 		expect(resolve_root_span?.children).toEqual([
 			expect.objectContaining({
@@ -1530,6 +1546,41 @@ describe('tracing', () => {
 				})
 			})
 		]);
+	});
+
+	test('correct spans are created for a remote function call', async () => {
+		/**
+		 * same as `hash` in `src/utils/hash.js`, which can't be imported here
+		 * @param {string} value
+		 */
+		function hash(value) {
+			let h = 5381;
+			let i = value.length;
+			while (i) h = (h * 33) ^ value.charCodeAt(--i);
+			return (h >>> 0).toString(36);
+		}
+
+		// in dev, remote modules are only registered once something on the server imports them
+		expect((await get('/tracing/remote')).status).toBe(200);
+
+		const file = 'src/routes/tracing/remote/data.remote.js';
+		const test_id = randomBytes(8).toString('hex');
+		const response = await get(`/_app/remote/${hash(file)}/get_message?test_id=${test_id}`);
+		expect(response.status).toBe(200);
+
+		const traces = read_traces(test_id);
+		const remote_span = find_span(traces[0], 'sveltekit.remote.call');
+		expect(remote_span).toEqual(
+			expect.objectContaining({
+				status: { code: 0 },
+				attributes: {
+					'sveltekit.remote.call.id': `${hash(file)}/get_message`,
+					'sveltekit.remote.call.type': 'query',
+					'sveltekit.remote.call.name': 'get_message',
+					'sveltekit.remote.call.file': file
+				}
+			})
+		);
 	});
 });
 

@@ -131,9 +131,57 @@ export function convert_formdata(form_id, data) {
 	return result;
 }
 
+/**
+ * Browsers don't submit unchecked checkboxes, unselected radio buttons or disabled controls, so
+ * indexed fields like `items[3].done` can leave gaps in arrays. To prevent a small request from
+ * creating huge arrays — whose cost is paid by anything that iterates over them, like a schema
+ * validator — the total number of gaps across all arrays in a submission is limited
+ */
+const MAX_GAPS = 1000;
+
+/**
+ * Throws if arrays in form data converted from `FormData` have too many gaps
+ * @param {Record<string, any>} data
+ */
+function check_gaps(data) {
+	let gaps = 0;
+
+	/** @type {Array<[value: unknown, name: string]>} */
+	const stack = [[data, '']];
+
+	while (stack.length > 0) {
+		const [value, name] = /** @type {[unknown, string]} */ (stack.pop());
+
+		if (Array.isArray(value)) {
+			// count the elements that exist rather than iterating up to `length`, which is
+			// the very thing this is guarding against. `split_path` only allows canonical
+			// indexes, so every key is an array index
+			const keys = Object.keys(value);
+			gaps += value.length - keys.length;
+
+			if (gaps > MAX_GAPS) {
+				e.form_field_too_many_gaps({ name });
+			}
+
+			for (const key of keys) {
+				stack.push([value[/** @type {any} */ (key)], `${name}[${key}]`]);
+			}
+		} else if (value !== null && typeof value === 'object') {
+			// only plain objects — files are left alone
+			if (Object.getPrototypeOf(value) !== Object.prototype) continue;
+
+			for (const [key, entry] of Object.entries(value)) {
+				stack.push([entry, name === '' ? key : `${name}.${key}`]);
+			}
+		}
+	}
+}
+
 export const BINARY_FORM_CONTENT_TYPE = 'application/x-sveltekit-formdata';
 const BINARY_FORM_VERSION = 0;
 const HEADER_BYTES = 1 + 4 + 2;
+/** Smaller reads from the request body are combined until they reach this size */
+const MIN_CHUNK_SIZE = 16 * 1024;
 /**
  * The binary format is as follows:
  * - 1 byte: Format version
@@ -207,7 +255,10 @@ export function serialize_binary_form(data, meta) {
 export async function deserialize_binary_form(request, form_id) {
 	if (request.headers.get('content-type') !== BINARY_FORM_CONTENT_TYPE) {
 		const form_data = await request.formData();
-		return { data: convert_formdata(form_id, form_data), meta: {}, form_data };
+		const data = convert_formdata(form_id, form_data);
+		check_gaps(data);
+
+		return { data, meta: {}, form_data };
 	}
 	if (!request.body) {
 		throw deserialize_error('no body');
@@ -217,6 +268,38 @@ export async function deserialize_binary_form(request, form_id) {
 
 	/** @type {Array<Promise<Uint8Array<ArrayBuffer> | undefined>>} */
 	const chunks = [];
+
+	/**
+	 * Reads the next chunk, combining small reads so that the number of stored
+	 * chunks is bounded by the body size rather than by how the body was split up
+	 * @returns {Promise<Uint8Array<ArrayBuffer> | undefined>}
+	 */
+	async function read_chunk() {
+		const first = await reader.read();
+		if (first.done) return undefined;
+		if (first.value.byteLength >= MIN_CHUNK_SIZE) return first.value;
+
+		/** @type {Uint8Array<ArrayBuffer>[]} */
+		const parts = [first.value];
+		let size = first.value.byteLength;
+
+		while (size < MIN_CHUNK_SIZE) {
+			const { done, value } = await reader.read();
+			if (done) break;
+			parts.push(value);
+			size += value.byteLength;
+		}
+
+		if (parts.length === 1) return parts[0];
+
+		const chunk = new Uint8Array(size);
+		let cursor = 0;
+		for (const part of parts) {
+			chunk.set(part, cursor);
+			cursor += part.byteLength;
+		}
+		return chunk;
+	}
 
 	/**
 	 * @param {number} index
@@ -229,7 +312,7 @@ export async function deserialize_binary_form(request, form_id) {
 		while (i <= index) {
 			// chain reads so only one is ever pending — workerd forbids concurrent reads
 			const previous = chunks[i - 1] ?? Promise.resolve(undefined);
-			chunks[i] = previous.then(() => reader.read()).then((chunk) => chunk.value);
+			chunks[i] = previous.then(read_chunk);
 			i++;
 		}
 		return chunks[index];
@@ -303,42 +386,81 @@ export async function deserialize_binary_form(request, form_id) {
 
 	/** @type {Array<{ offset: number, size: number }>} */
 	const file_spans = [];
-	const [data, meta] = devalue.parse(text_decoder.decode(data_buffer), {
-		File: ([name, type, size, last_modified, index]) => {
-			if (
-				typeof name !== 'string' ||
-				typeof type !== 'string' ||
-				!Number.isSafeInteger(size) ||
-				size < 0 ||
-				!Number.isSafeInteger(last_modified) ||
-				!Number.isSafeInteger(index) ||
-				index < 0 ||
-				file_offsets === undefined
-			) {
-				throw deserialize_error('invalid file metadata');
+
+	// Record every array where it's created, wherever it ends up (including in Maps, Sets or
+	// `meta`). Walking the result instead would miss some arrays, and could be made very
+	// expensive with repeated references to the same values
+	/** @type {unknown[][]} */
+	const arrays = [];
+
+	/** @type {devalue.ParseOptions} */
+	const options = {
+		operations: {
+			createArray: (length) => {
+				const array = devalue.defaultParseOperations.createArray(length);
+				arrays.push(array);
+				return array;
+			},
+			createSparseArray: (length) => {
+				// this doesn't allocate storage proportional to `length`
+				const array = devalue.defaultParseOperations.createSparseArray(length);
+				arrays.push(array);
+				return array;
 			}
-
-			let offset = file_offsets[index];
-
-			// Check that the file offset table entry has not been already
-			// used. If not, immediately mark it as used.
-			if (offset === undefined) {
-				throw deserialize_error('duplicate file offset table index');
-			}
-			file_offsets[index] = undefined;
-
-			offset += files_start_offset;
-
-			file_spans.push({ offset, size });
-
-			return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
-				getPrototypeOf() {
-					// Trick validators into thinking this is a normal File
-					return File.prototype;
-				}
-			});
 		}
-	});
+	};
+
+	const [data, meta] = devalue.parse(
+		text_decoder.decode(data_buffer),
+		{
+			File: ([name, type, size, last_modified, index]) => {
+				if (
+					typeof name !== 'string' ||
+					typeof type !== 'string' ||
+					!Number.isSafeInteger(size) ||
+					size < 0 ||
+					!Number.isSafeInteger(last_modified) ||
+					!Number.isSafeInteger(index) ||
+					index < 0 ||
+					file_offsets === undefined
+				) {
+					throw deserialize_error('invalid file metadata');
+				}
+
+				let offset = file_offsets[index];
+
+				// Check that the file offset table entry has not been already
+				// used. If not, immediately mark it as used.
+				if (offset === undefined) {
+					throw deserialize_error('duplicate file offset table index');
+				}
+				file_offsets[index] = undefined;
+
+				offset += files_start_offset;
+
+				file_spans.push({ offset, size });
+
+				return new Proxy(new LazyFile(name, type, size, last_modified, get_chunk, offset), {
+					getPrototypeOf() {
+						// Trick validators into thinking this is a normal File
+						return File.prototype;
+					}
+				});
+			}
+		},
+		options
+	);
+
+	// the same limit as for `check_gaps`. Counting each array's elements is cheap, even for
+	// a sparse array with a huge length, and devalue arrays only have index keys
+	let gaps = 0;
+	for (const array of arrays) {
+		gaps += array.length - Object.keys(array).length;
+	}
+
+	if (gaps > MAX_GAPS) {
+		throw deserialize_error('too many missing array indexes');
+	}
 
 	// Sort file spans in increasing order primarily by offset
 	// and secondarily by size (to allow 0-length files).
@@ -490,7 +612,10 @@ class LazyFile {
 	}
 }
 
-const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[\d+\])*$/;
+const path_regex = /^[a-zA-Z_$]\w*(\.[a-zA-Z_$]\w*|\[(?:0|[1-9]\d*)\])*$/;
+
+/** The largest valid array index */
+const MAX_ARRAY_INDEX = 2 ** 32 - 2;
 
 /**
  * @param {string} path
@@ -500,7 +625,15 @@ export function split_path(path) {
 		e.form_field_invalid_name({ name: path });
 	}
 
-	return path.split(/\.|\[|\]/).filter(Boolean);
+	const keys = path.split(/\.|\[|\]/).filter(Boolean);
+
+	// larger numbers are not array indexes, but would still be treated as such,
+	// which would throw off the counting in `check_gaps`
+	if (keys.some((key) => /^\d/.test(key) && Number(key) > MAX_ARRAY_INDEX)) {
+		e.form_field_invalid_name({ name: path });
+	}
+
+	return keys;
 }
 
 /**
@@ -587,12 +720,19 @@ export function normalize_issue(issue, server = false) {
 	return normalized;
 }
 
+/** @type {WeakMap<InternalRemoteFormIssue[], Record<string, InternalRemoteFormIssue[]>>} */
+const flattened_issues = new WeakMap();
+
 /**
  * @param {InternalRemoteFormIssue[]} issues
  */
 export function flatten_issues(issues) {
+	const cached = flattened_issues.get(issues);
+	if (cached) return cached;
+
 	/** @type {Record<string, InternalRemoteFormIssue[]>} */
 	const result = Object.create(null);
+	flattened_issues.set(issues, result);
 
 	for (const issue of issues) {
 		(result.$ ??= []).push(issue);

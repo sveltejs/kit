@@ -253,7 +253,9 @@ type RecursiveFormFields = RemoteFormFieldContainer<any> & {
 type MaybeArray<T> = T | T[];
 
 export interface RemoteFormInput {
-	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput> | undefined;
+	// arrays can contain `undefined` where an indexed control submitted nothing,
+	// such as an unchecked checkbox or an unselected radio button
+	[key: string]: MaybeArray<string | number | boolean | File | RemoteFormInput | undefined>;
 }
 
 export interface RemoteFormIssue {

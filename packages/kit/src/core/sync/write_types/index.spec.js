@@ -371,6 +371,26 @@ describe('Cleans up unused files', () => {
 		assert.ok(!fs.existsSync(path.join(about_dir, 'team')));
 		assert.ok(fs.existsSync(path.join(about_dir, '$types.d.ts')));
 	});
+
+	test('leaves unchanged files in place', () => {
+		fs.writeFileSync(
+			path.join(root, 'src/routes/+page.ts'),
+			"export const load: import('./$types').PageLoad = () => ({});"
+		);
+
+		const types_dir = sync();
+		const files = ['$types.d.ts', 'proxy+page.ts', 'about/$types.d.ts'].map((file) =>
+			path.join(types_dir, 'src/routes', file)
+		);
+		const then = new Date('2020-01-01');
+		for (const file of files) fs.utimesSync(file, then, then);
+
+		sync();
+
+		for (const file of files) {
+			assert.equal(fs.statSync(file).mtimeMs, then.getTime(), file);
+		}
+	});
 });
 
 test('prunes stale entries from route_meta_data.json when routes are deleted', () => {

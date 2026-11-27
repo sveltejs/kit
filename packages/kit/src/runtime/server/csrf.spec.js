@@ -165,6 +165,24 @@ describe('is_csrf_forbidden', () => {
 		);
 	});
 
+	test.each(['text/ping', 'Text/Ping', 'text/ping; charset=utf-8'])(
+		'forbids browser-generated content type %s with a foreign origin',
+		(content_type) => {
+			assert.equal(
+				is_csrf_forbidden({
+					request: new Request('http://self.test/csrf', {
+						method: 'POST',
+						headers: { 'content-type': content_type, origin: 'https://malicious.test' }
+					}),
+					request_origin: 'https://malicious.test',
+					self_origin: 'http://self.test',
+					trusted_origins: []
+				}),
+				true
+			);
+		}
+	);
+
 	test.each(['POST', 'PUT', 'PATCH', 'DELETE'])(
 		'forbids %s with a foreign origin and form content type',
 		(method) => {

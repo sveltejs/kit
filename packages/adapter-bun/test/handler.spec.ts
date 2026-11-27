@@ -83,7 +83,12 @@ test.each(['https://env.example', '', 'not-a-url'])(
 	}
 );
 
-test('derives the public origin from configured proxy headers', async () => {
+test.each([
+	['public.example', 'https://public.example:8443/path'],
+	['public.example:8443', 'https://public.example:8443/path'],
+	['public.example:9443', 'https://public.example:9443/path'],
+	['[::1]:8443', 'https://[::1]:8443/path']
+])('derives the public origin from configured proxy headers for host %s', async (host, url) => {
 	set_env('APP_PROTOCOL_HEADER', 'x-forwarded-proto');
 	set_env('APP_HOST_HEADER', 'x-forwarded-host');
 	set_env('APP_PORT_HEADER', 'x-forwarded-port');
@@ -91,14 +96,14 @@ test('derives the public origin from configured proxy headers', async () => {
 	const request = new Request('http://internal/path', {
 		headers: {
 			'x-forwarded-proto': 'https',
-			'x-forwarded-host': 'public.example',
+			'x-forwarded-host': host,
 			'x-forwarded-port': '8443'
 		}
 	});
 
 	await loaded.handler(request, loaded.bun_server);
 
-	expect(loaded.respond.mock.calls[0][0].url).toBe('https://public.example:8443/path');
+	expect(loaded.respond.mock.calls[0][0].url).toBe(url);
 });
 
 test.each([

@@ -177,6 +177,11 @@ test('precompressed variants are negotiated with their own validators', async ()
 	expect(file).toHaveBeenCalledWith(`${dir}/client/app.js.gz`);
 
 	expect(
+		get('/app.js', { headers: { 'accept-encoding': 'br;q=0.5, gzip' } })?.headers.get(
+			'content-encoding'
+		)
+	).toBe('gzip');
+	expect(
 		get('/app.js', { headers: { 'accept-encoding': '*' } })?.headers.get('content-encoding')
 	).toBe('br');
 	expect(
@@ -241,12 +246,13 @@ test('prerendered assets use the base path and preserve their content type', asy
 });
 
 test.each([
-	['/base/page/', '/base/page', '/base/page/?from=test'],
-	['/base/page', '/base/page/', '/base/page?from=test'],
-	['/base/café/', '/base/caf%C3%A9', '/base/caf%C3%A9/?from=test'],
+	['/base/page/', '/base/page', './page/?from=test'],
+	['/base/page', '/base/page/', '../page?from=test'],
+	['/base/café/', '/base/caf%C3%A9', './caf%C3%A9/?from=test'],
 	// kit keeps reserved characters percent-encoded in prerendered paths
-	['/base/c%23/', '/base/c%23', '/base/c%23/?from=test'],
-	['/base/a%2Fb', '/base/a%2Fb/', '/base/a%2Fb?from=test']
+	['/base/c%23/', '/base/c%23', './c%23/?from=test'],
+	['/base/a%2Fb', '/base/a%2Fb/', '../a%2Fb?from=test'],
+	['/base/a:b/', '/base/a:b', './a:b/?from=test']
 ])(
 	'prerendered page %s redirects its alternate form %s to the canonical URL',
 	async (canonical, alternate, location) => {
