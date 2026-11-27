@@ -761,6 +761,45 @@ test.describe('Scrolling', () => {
 });
 
 test.describe('CSS', () => {
+	for (const preload of [false, true]) {
+		test(`loads styles from a deeper page${preload ? ' after preloading code' : ''}`, async ({
+			page,
+			app
+		}) => {
+			await page.goto('/routing/rest/xyz/abc/qwe/deep');
+
+			if (preload) await app.preloadCode('/css/encöded');
+			await app.goto('/css/encöded');
+
+			await expect(page.locator('h1')).toHaveCSS('color', 'rgb(128, 0, 128)');
+		});
+	}
+
+	test('reuses server-rendered styles after preloading from a deeper page', async ({
+		page,
+		app
+	}) => {
+		test.skip(!!process.env.DEV);
+
+		await page.goto('/css/encöded');
+		const assets = await page
+			.locator('link[rel="stylesheet"]')
+			.evaluateAll((links) =>
+				links.map((link) => /** @type {HTMLLinkElement} */ (link).href.split('/').at(-1))
+			);
+		expect(assets.length).toBeGreaterThan(0);
+
+		await app.goto('/routing/rest/xyz/abc/qwe/deep');
+		await app.preloadData('/css/encöded');
+		await app.goto('/css/encöded');
+
+		await expect(page.locator('h1')).toHaveCSS('color', 'rgb(128, 0, 128)');
+		for (const asset of assets) {
+			// Compare filenames to also catch duplicate links with incorrectly resolved URLs.
+			await expect(page.locator(`link[rel="stylesheet"][href$="/${asset}"]`)).toHaveCount(1);
+		}
+	});
+
 	test('applies generated component styles (hides announcer)', async ({
 		page,
 		clicknav,
