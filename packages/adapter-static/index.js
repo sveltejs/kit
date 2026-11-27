@@ -1,11 +1,15 @@
-import { rmSync } from 'node:fs';
+import { createReadStream, existsSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
+import sirv from 'sirv';
 import { platforms } from './platforms.js';
 
 /** @type {typeof import('./index.js').default} */
 export default function (options) {
 	return {
 		name: '@sveltejs/adapter-static',
+		vite: ({ config }) => ({
+			plugins: [preview(options, config.paths.base)]
+		}),
 		async adapt(builder) {
 			if (!options?.fallback && builder.config.router?.type !== 'hash') {
 				const dynamic_routes = builder.routes.filter((route) => route.prerender !== true);
@@ -97,6 +101,132 @@ ${dynamic_routes.map((route) => `  - ${path.posix.join(prefix, route.id)}`).join
 			}
 
 			if (!options) platform?.done(builder);
+		}
+	};
+}
+
+/**
+ * makes vite preview serve the build output like a static host instead of rendering on the server
+ * @param {import('./index.js').AdapterOptions | undefined} options
+ * @param {string} base
+ * @returns {import('vite').Plugin}
+ */
+function preview(options, base) {
+	return {
+		name: 'vite-plugin-sveltekit-adapter-static',
+		configurePreviewServer(server) {
+			const {
+				pages = 'build',
+				assets = pages,
+				fallback,
+				precompress
+			} = options ??
+			platforms.find((platform) => platform.test())?.defaults ??
+			/** @type {import('./index.js').AdapterOptions} */ ({});
+
+			/** @type {Map<string, import('sirv').RequestHandler>} */
+			const dirs = new Map();
+
+			for (const dir of new Set([assets, pages])) {
+				if (!existsSync(dir)) {
+					const error = new Error(
+						`@sveltejs/adapter-static: \`${dir}\` does not exist. Run \`vite build\` before \`vite preview\``
+					);
+					error.stack = '';
+					throw error;
+				}
+
+				// sirv picks precompressed files and handles conditional and range requests
+				const serve = sirv(dir, {
+					dev: true,
+					etag: true,
+					extensions: [],
+					brotli: precompress,
+					gzip: precompress
+				});
+
+				dirs.set(path.resolve(dir), serve);
+			}
+
+			/** @type {Array<[file: string, status: number]>} */
+			const not_found_pages = [['404.html', 404]];
+			if (fallback) not_found_pages.unshift([fallback, fallback === '404.html' ? 404 : 200]);
+
+			/** @param {string} file a decoded path relative to the output directories */
+			const find = (file) => {
+				for (const [dir, serve] of dirs) {
+					const resolved = path.join(dir, file);
+
+					// decoding can introduce path separators on windows, so check containment after joining
+					if (
+						resolved.startsWith(dir + path.sep) &&
+						statSync(resolved, { throwIfNoEntry: false })?.isFile()
+					) {
+						return { file: resolved, serve };
+					}
+				}
+			};
+
+			/** @param {import('node:http').ServerResponse} res */
+			const not_found = (res) => {
+				for (const [file, status] of not_found_pages) {
+					const match = find(file);
+					if (match) {
+						res.writeHead(status, { 'content-type': 'text/html; charset=utf-8' });
+						createReadStream(match.file).pipe(res);
+						return;
+					}
+				}
+
+				res.writeHead(404).end('Not Found');
+			};
+
+			// runs after vite middleware such as preview.proxy, but before sveltekit renders the request
+			return () => {
+				server.middlewares.use((req, res) => {
+					if (req.method !== 'GET' && req.method !== 'HEAD') {
+						res.writeHead(405, { allow: 'GET, HEAD' }).end('Method Not Allowed');
+						return;
+					}
+
+					// vite may have removed the base from req.url
+					const { pathname, search } = new URL(
+						req.originalUrl ?? req.url ?? '/',
+						'http://localhost'
+					);
+
+					if (pathname !== base && !pathname.startsWith(base + '/')) {
+						res.writeHead(404).end('Not Found');
+						return;
+					}
+
+					const encoded = pathname.slice(base.length);
+
+					/** @type {string} */
+					let decoded;
+					try {
+						decoded = decodeURI(encoded);
+					} catch {
+						return not_found(res);
+					}
+
+					for (const suffix of encoded.endsWith('/') ? ['index.html'] : ['', '.html']) {
+						const match = find(decoded + suffix);
+						if (match) {
+							req.url = encoded + suffix;
+							return match.serve(req, res, () => not_found(res));
+						}
+					}
+
+					// static hosts redirect a directory to add the trailing slash
+					if (!encoded.endsWith('/') && find(decoded + '/index.html')) {
+						res.writeHead(308, { location: `${base}${encoded}/${search}` }).end();
+						return;
+					}
+
+					not_found(res);
+				});
+			};
 		}
 	};
 }
