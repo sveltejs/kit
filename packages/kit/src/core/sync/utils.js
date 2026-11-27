@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { resolve_entry } from '../../utils/filesystem.js';
 import * as w from '../../messages/build-warnings.js';
 
@@ -23,7 +24,16 @@ export function write_if_changed(file, code) {
  */
 export function write(file, code) {
 	fs.mkdirSync(path.dirname(file), { recursive: true });
-	fs.writeFileSync(file, code);
+	// Concurrent syncs can write different contents (e.g. when outDir differs). Publish
+	// a complete file so neither readers nor other writers see a truncated destination.
+	// Avoid extending the destination basename, which may already be near filesystem limits.
+	const temporary = path.join(path.dirname(file), `${randomUUID()}.tmp`);
+	try {
+		fs.writeFileSync(temporary, code);
+		fs.renameSync(temporary, file);
+	} finally {
+		fs.rmSync(temporary, { force: true });
+	}
 }
 
 /**
