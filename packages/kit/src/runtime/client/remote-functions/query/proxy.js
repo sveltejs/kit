@@ -62,18 +62,22 @@ export class QueryProxy {
 	}
 
 	get current() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().current;
 	}
 
 	get error() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().error;
 	}
 
 	get loading() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().loading;
 	}
 
 	get ready() {
+		pin_in_effect(query_map, cache, this.#id, this.#payload);
 		return this.#get_cached_query().ready;
 	}
 

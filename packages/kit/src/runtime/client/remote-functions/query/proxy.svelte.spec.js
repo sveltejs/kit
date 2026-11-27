@@ -225,6 +225,80 @@ describe('QueryProxy', () => {
 		expect(query_map.has('q')).toBe(false);
 	});
 
+	test('a derived that reads `current` gets the value after the proxy is collected', async () => {
+		/** @type {(value: string) => void} */
+		let resolve = () => {};
+		const fn = () => new Promise((r) => (resolve = r));
+
+		/** @type {any[]} */
+		const seen = [];
+
+		const destroy = $effect.root(() => {
+			const value = $derived(new QueryProxy('q', 'arg', fn).current);
+			$effect(() => {
+				seen.push(value);
+			});
+		});
+
+		await tick();
+
+		// nothing holds the proxy once the derived has run, so it's collected
+		// while the request is still on its way
+		await run_gc();
+		expect(query_map.has('q')).toBe(true);
+
+		resolve('value');
+		await tick();
+		await tick();
+
+		expect(seen).toEqual([undefined, 'value']);
+
+		destroy();
+	});
+
+	test.each(['current', 'error', 'loading', 'ready'])(
+		'reading `%s` inside an effect pins the cache entry until the effect is destroyed',
+		async (property) => {
+			/** @type {(value: string) => void} */
+			let resolve = () => {};
+			const fn = () => new Promise((r) => (resolve = r));
+
+			/** @type {WeakRef<any>} */
+			let proxy_ref;
+
+			const destroy = $effect.root(() => {
+				$effect.pre(() => {
+					const proxy = new QueryProxy('q', 'arg', fn);
+					proxy_ref = new WeakRef(proxy);
+					void (/** @type {any} */ (proxy)[property]);
+				});
+			});
+
+			await tick();
+
+			// the proxy is gone, but whatever read it is still around, so the
+			// query must stay in the cache to deliver its value when it arrives
+			await wait_for(() => proxy_ref.deref() === undefined);
+
+			expect(query_map.has('q')).toBe(true);
+			const entries = /** @type {Map<string, any>} */ (query_map.get('q'));
+			const [entry] = /** @type {Iterable<any>} */ (entries.values());
+			expect(entry.proxy_count).toBe(1);
+
+			resolve('value');
+			await tick();
+			await tick();
+			expect(entry.resource.current).toBe('value');
+
+			// the value arriving re-runs the effect for `current`, `loading` and
+			// `ready`, which makes a new proxy, so wait for that one to be collected too
+			destroy();
+			await wait_for(() => !query_map.has('q'));
+
+			expect(query_map.has('q')).toBe(false);
+		}
+	);
+
 	test('reading `then` outside an effect does not pin the cache entry', async () => {
 		const fn = () => Promise.resolve('value');
 

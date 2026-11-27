@@ -170,6 +170,38 @@ describe('LiveQueryProxy', () => {
 		expect(live_query_map.has('q')).toBe(false);
 	});
 
+	test.each(['current', 'error', 'loading', 'ready', 'connected', 'done'])(
+		'reading `%s` inside an effect pins the cache entry until the effect is destroyed',
+		async (property) => {
+			/** @type {WeakRef<any>} */
+			let proxy_ref;
+
+			const destroy = $effect.root(() => {
+				$effect.pre(() => {
+					const proxy = new LiveQueryProxy('q', 'arg');
+					proxy_ref = new WeakRef(proxy);
+					void (/** @type {any} */ (proxy)[property]);
+				});
+			});
+
+			await tick();
+
+			await wait_for(() => proxy_ref.deref() === undefined);
+
+			expect(live_query_map.has('q')).toBe(true);
+			const entries = /** @type {Map<string, any>} */ (live_query_map.get('q'));
+			const [entry] = /** @type {Iterable<any>} */ (entries.values());
+			expect(entry.proxy_count).toBe(1);
+			expect(entry.resource.destroyed).toBe(false);
+
+			destroy();
+			await tick();
+			await tick();
+
+			expect(live_query_map.has('q')).toBe(false);
+		}
+	);
+
 	test('reading `then` outside an effect does not pin the cache entry', async () => {
 		(() => {
 			const proxy = new LiveQueryProxy('q', 'arg');
