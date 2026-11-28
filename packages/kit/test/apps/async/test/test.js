@@ -1139,6 +1139,27 @@ test.describe('remote functions', () => {
 		}
 	});
 
+	test('resolve and asset can be called from a remote query', async ({
+		page,
+		app,
+		javaScriptEnabled
+	}) => {
+		// paths can't be relative to the page inside a query, since `event.url` is unavailable
+		const expected = JSON.stringify({
+			resolved: '/remote/query-resolve',
+			asset: '/robots.txt'
+		});
+
+		await page.goto('/remote/query-resolve');
+		await expect(page.locator('#result')).toHaveText(expected);
+
+		if (javaScriptEnabled) {
+			await page.goto('/remote');
+			await app.goto('/remote/query-resolve');
+			await expect(page.locator('#result')).toHaveText(expected);
+		}
+	});
+
 	test('queries cannot set cookies or headers', async ({ page }) => {
 		await page.goto('/remote/query-event-guards');
 

@@ -46,7 +46,9 @@ function prefix_path(resolved) {
 	if (relative) {
 		const store = try_get_request_store();
 
-		if (store && !store.state.prerendering?.fallback) {
+		// a query's result is reused across pages, so it can't contain a path relative to
+		// the current page (which is also why `event.url` is unavailable in queries)
+		if (store && !store.state.prerendering?.fallback && !store.state.is_in_remote_query) {
 			const after_base = store.event.url.pathname.slice(base.length);
 			const segments = after_base.split('/').slice(2);
 			const prefix = segments.map(() => '..').join('/') || '.';
